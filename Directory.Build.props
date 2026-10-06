@@ -5,7 +5,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
-    <Version>0.1.0</Version>
+    <!-- Symbols inside the assemblies: no loose .pdb files, but stack traces keep line numbers. -->
+    <DebugType>embedded</DebugType>
+    <!-- Local builds only. Release builds get their version from the release workflow (git tags). -->
+    <Version>0.0.0-dev</Version>
     <Product>BorgStudio</Product>
   </PropertyGroup>
 </Project>
