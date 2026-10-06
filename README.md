@@ -19,15 +19,25 @@ looks for borg inside WSL. borg 2 is still in beta and not supported yet. The UI
 ```
 BorgStudio.slnx
 ├── src/
-│   ├── BorgStudio.App     Avalonia desktop UI (MVVM, CommunityToolkit.Mvvm)
-│   └── BorgStudio.Core    UI-independent logic: borg CLI, repositories, schedules
+│   ├── BorgStudio.App                  Avalonia desktop UI (MVVM, CommunityToolkit.Mvvm)
+│   ├── BorgStudio.Core                 UI-independent logic: borg CLI, plugins, repositories
+│   ├── BorgStudio.Plugins.Abstractions Public plugin API (repository providers)
+│   └── BorgStudio.Providers.Local      Built-in provider: local folder
+├── samples/
+│   └── BorgStudio.SamplePlugin         Example external plugin (not part of the release)
 ├── tests/
-│   └── BorgStudio.Tests   xUnit tests for Core
-├── build/                 Packaging assets (macOS Info.plist)
-└── .github/               CI, packaging and release workflows
+│   └── BorgStudio.Tests                xUnit tests
+├── docs/                               Developer documentation
+├── build/                              Packaging assets (macOS Info.plist)
+└── .github/                            CI, packaging and release workflows
 ```
 
 Shared build settings (target framework, nullable, version) live in `Directory.Build.props`.
+
+## Plugins
+
+Repository providers (local folder, SSH server, storage services, …) are plugins. Built-in providers use the same
+API as external ones; see [docs/plugins.md](docs/plugins.md) for writing and installing a plugin.
 
 ## Build, test, run
 

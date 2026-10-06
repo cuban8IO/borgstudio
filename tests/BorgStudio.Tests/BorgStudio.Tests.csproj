@@ -17,6 +17,20 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\BorgStudio.Core\BorgStudio.Core.csproj" />
+    <ProjectReference Include="..\..\src\BorgStudio.Providers.Local\BorgStudio.Providers.Local.csproj" />
+    <!-- Built first, but not referenced: the tests load it like a real external plugin (see below). -->
+    <ProjectReference Include="..\..\samples\BorgStudio.SamplePlugin\BorgStudio.SamplePlugin.csproj"
+                      ReferenceOutputAssembly="false" Private="false" />
   </ItemGroup>
+
+  <!-- The sample plugin's build output, as it would be installed: test output/plugins/BorgStudio.SamplePlugin/ -->
+  <Target Name="CopySamplePlugin" AfterTargets="Build">
+    <ItemGroup>
+      <_SamplePluginFile Include="$(MSBuildThisFileDirectory)..\..\samples\BorgStudio.SamplePlugin\bin\$(Configuration)\$(TargetFramework)\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_SamplePluginFile)"
+          DestinationFolder="$(OutDir)plugins\BorgStudio.SamplePlugin\%(RecursiveDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
 
 </Project>

@@ -1,9 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- UI-independent logic: talking to the borg CLI, repositories, schedules. -->
+  <!-- UI-independent logic: talking to the borg CLI, repositories, schedules, plugins. -->
 
   <ItemGroup>
     <InternalsVisibleTo Include="BorgStudio.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BorgStudio.Plugins.Abstractions\BorgStudio.Plugins.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,6 +1,7 @@
 using System.Globalization;
 using BorgStudio.App.Resources;
 using BorgStudio.Core.Borg;
+using BorgStudio.Core.Plugins;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -10,14 +11,18 @@ public partial class MainViewModel : ViewModelBase
 {
     private readonly BorgDetector _borgDetector;
 
-    public MainViewModel() : this(BorgDetector.CreateDefault())
+    // Designer only.
+    public MainViewModel() : this(BorgDetector.CreateDefault(), PluginCatalog.Empty)
     {
     }
 
-    public MainViewModel(BorgDetector borgDetector)
+    public MainViewModel(BorgDetector borgDetector, PluginCatalog plugins)
     {
         _borgDetector = borgDetector;
+        Plugins = plugins;
     }
+
+    public PluginCatalog Plugins { get; }
 
     /// <summary>Status bar text, e.g. "borg 1.4.5 · /usr/bin/borg".</summary>
     [ObservableProperty]

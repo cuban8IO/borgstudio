@@ -2,12 +2,34 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="BorgStudio.App.App"
              xmlns:local="using:BorgStudio.App"
+             Name="BorgStudio"
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.DataTemplates>
         <local:ViewLocator />
     </Application.DataTemplates>
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="StatusBarBackground" Color="#F0F0F0" />
+                    <SolidColorBrush x:Key="WarningBackground" Color="#FFF4CE" />
+                    <SolidColorBrush x:Key="WarningBorder" Color="#E8C15A" />
+                    <SolidColorBrush x:Key="CardBorder" Color="#DDDDDD" />
+                    <SolidColorBrush x:Key="ErrorForeground" Color="#B3261E" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="StatusBarBackground" Color="#2B2B2B" />
+                    <SolidColorBrush x:Key="WarningBackground" Color="#433519" />
+                    <SolidColorBrush x:Key="WarningBorder" Color="#8A6D1E" />
+                    <SolidColorBrush x:Key="CardBorder" Color="#444444" />
+                    <SolidColorBrush x:Key="ErrorForeground" Color="#F2B8B5" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
 
     <Application.Styles>
         <FluentTheme />

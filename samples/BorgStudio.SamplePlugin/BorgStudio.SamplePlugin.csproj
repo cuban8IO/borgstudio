@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Template for external plugins (see docs/plugins.md). Not part of the BorgStudio release. -->
+
+  <PropertyGroup>
+    <!-- Produces a .deps.json and copies private dependencies, as needed for loading at runtime. -->
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Compile against the plugin API, but don't ship a copy: BorgStudio provides it at runtime. -->
+    <ProjectReference Include="..\..\src\BorgStudio.Plugins.Abstractions\BorgStudio.Plugins.Abstractions.csproj">
+      <Private>false</Private>
+    </ProjectReference>
+  </ItemGroup>
+
+</Project>
