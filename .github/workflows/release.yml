@@ -1,0 +1,104 @@
+name: release
+
+# Every push to main is a release, and nothing else creates one:
+# tests -> next version (.github/scripts/next-release.sh) -> portable packages -> tag vX.Y.Z + GitHub release.
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      version: ${{ steps.next.outputs.version }}
+      notes: ${{ steps.next.outputs.notes }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history and tags for the version calculation
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Test
+        run: dotnet test BorgStudio.slnx --configuration Release
+
+      - name: Next version
+        id: next
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(bash .github/scripts/next-release.sh notes.md)
+          if git rev-parse -q --verify "refs/tags/v$version" > /dev/null; then
+            echo "::error::Tag v$version already exists"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          {
+            echo "notes<<EOF_NOTES"
+            cat notes.md
+            echo "EOF_NOTES"
+          } >> "$GITHUB_OUTPUT"
+          echo "Releasing **v$version**" >> "$GITHUB_STEP_SUMMARY"
+
+  package:
+    needs: prepare
+    uses: ./.github/workflows/package.yml
+    with:
+      version: ${{ needs.prepare.outputs.version }}
+
+  release:
+    needs: [prepare, package]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+      NOTES: ${{ needs.prepare.outputs.notes }}
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: package-*
+          path: dist
+          merge-multiple: true
+
+      - name: Create GitHub release
+        run: |
+          {
+            printf '%s\n\n' "$NOTES"
+            cat << 'EOF'
+          ### Downloads
+
+          | Platform | File |
+          |---|---|
+          | Windows (x64) | `…-win-x64.zip` |
+          | macOS (Apple Silicon) | `…-osx-arm64.zip` |
+          | macOS (Intel) | `…-osx-x64.zip` |
+          | Linux (x64) | `…-linux-x64.tar.gz` |
+
+          Portable builds with the .NET runtime included: unpack and start, no installation needed.
+          [BorgBackup](https://www.borgbackup.org/) itself must be installed separately.
+
+          **macOS:** the app is not notarized by Apple. If macOS refuses to open it, allow it under
+          System Settings → Privacy & Security → "Open Anyway", or run `xattr -dr com.apple.quarantine BorgStudio.app` once.
+          EOF
+          } > notes.md
+          gh release create "v$VERSION" dist/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "BorgStudio $VERSION" \
+            --notes-file notes.md
