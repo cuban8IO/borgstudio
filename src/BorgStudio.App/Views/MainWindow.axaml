@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:BorgStudio.App.ViewModels"
+        xmlns:res="using:BorgStudio.App.Resources"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
@@ -17,9 +18,48 @@
         <vm:MainViewModel />
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}"
-               FontSize="24"
-               HorizontalAlignment="Center"
-               VerticalAlignment="Center" />
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="StatusBarBackground" Color="#F0F0F0" />
+                    <SolidColorBrush x:Key="WarningBackground" Color="#FFF4CE" />
+                    <SolidColorBrush x:Key="WarningBorder" Color="#E8C15A" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="StatusBarBackground" Color="#2B2B2B" />
+                    <SolidColorBrush x:Key="WarningBackground" Color="#433519" />
+                    <SolidColorBrush x:Key="WarningBorder" Color="#8A6D1E" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <DockPanel>
+        <!-- Status bar -->
+        <Border DockPanel.Dock="Bottom" Padding="12,5" Background="{DynamicResource StatusBarBackground}">
+            <TextBlock Text="{Binding BorgStatus}" FontSize="12" />
+        </Border>
+
+        <!-- Shown when borg is missing, too old or not supported -->
+        <Border DockPanel.Dock="Top" IsVisible="{Binding HasBorgProblem}"
+                Margin="16,16,16,0" Padding="16,12" CornerRadius="6" BorderThickness="1"
+                Background="{DynamicResource WarningBackground}" BorderBrush="{DynamicResource WarningBorder}">
+            <StackPanel Spacing="6">
+                <TextBlock Text="{Binding BorgProblemTitle}" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding BorgProblemText}" TextWrapping="Wrap" />
+                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+                    <Button Content="{x:Static res:Strings.CheckAgain}" Command="{Binding CheckBorgCommand}" />
+                    <HyperlinkButton Content="{x:Static res:Strings.InstallationGuide}"
+                                     NavigateUri="{Binding InstallationGuideUrl}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <TextBlock Text="{x:Static res:Strings.Welcome}"
+                   FontSize="24"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center" />
+    </DockPanel>
 
 </Window>

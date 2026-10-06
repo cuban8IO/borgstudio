@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- UI texts, English (default). German: Strings.de.resx. Keep both files in sync. -->
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Welcome" xml:space="preserve">
+    <value>Welcome to BorgStudio</value>
+  </data>
+  <data name="BorgChecking" xml:space="preserve">
+    <value>Looking for borg…</value>
+  </data>
+  <data name="BorgStatusNative" xml:space="preserve">
+    <value>borg {0} · {1}</value>
+    <comment>{0} = version, {1} = path of the executable</comment>
+  </data>
+  <data name="BorgStatusWsl" xml:space="preserve">
+    <value>borg {0} · WSL: {1}</value>
+    <comment>{0} = version, {1} = path inside WSL</comment>
+  </data>
+  <data name="BorgStatusNotFound" xml:space="preserve">
+    <value>borg not found</value>
+  </data>
+  <data name="BorgMissingTitle" xml:space="preserve">
+    <value>BorgBackup is not installed</value>
+  </data>
+  <data name="BorgMissingText" xml:space="preserve">
+    <value>BorgStudio needs BorgBackup {0} or newer. Install it, then check again.</value>
+    <comment>{0} = minimum version</comment>
+  </data>
+  <data name="BorgMissingWindowsHint" xml:space="preserve">
+    <value>On Windows, borg runs either in WSL (Windows Subsystem for Linux) or as a native borg.exe.</value>
+  </data>
+  <data name="BorgTooOldTitle" xml:space="preserve">
+    <value>borg {0} is too old</value>
+    <comment>{0} = installed version</comment>
+  </data>
+  <data name="BorgTooOldText" xml:space="preserve">
+    <value>BorgStudio needs borg {0} or newer. Please update BorgBackup.</value>
+    <comment>{0} = minimum version</comment>
+  </data>
+  <data name="BorgNotYetSupportedTitle" xml:space="preserve">
+    <value>borg {0} is not supported yet</value>
+    <comment>{0} = installed version</comment>
+  </data>
+  <data name="BorgNotYetSupportedText" xml:space="preserve">
+    <value>borg 2 is still in beta and works differently. BorgStudio currently supports borg 1.x – please install borg 1.4.</value>
+  </data>
+  <data name="BorgCheckFailedTitle" xml:space="preserve">
+    <value>Could not check for borg</value>
+  </data>
+  <data name="InstallationGuide" xml:space="preserve">
+    <value>Installation guide</value>
+  </data>
+  <data name="CheckAgain" xml:space="preserve">
+    <value>Check again</value>
+  </data>
+</root>
