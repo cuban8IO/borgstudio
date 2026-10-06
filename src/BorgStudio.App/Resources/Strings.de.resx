@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- UI texts, German. Keep in sync with Strings.resx. -->
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Welcome" xml:space="preserve">
+    <value>Willkommen bei BorgStudio</value>
+  </data>
+  <data name="BorgChecking" xml:space="preserve">
+    <value>Suche nach borg …</value>
+  </data>
+  <data name="BorgStatusNative" xml:space="preserve">
+    <value>borg {0} · {1}</value>
+  </data>
+  <data name="BorgStatusWsl" xml:space="preserve">
+    <value>borg {0} · WSL: {1}</value>
+  </data>
+  <data name="BorgStatusNotFound" xml:space="preserve">
+    <value>borg nicht gefunden</value>
+  </data>
+  <data name="BorgMissingTitle" xml:space="preserve">
+    <value>BorgBackup ist nicht installiert</value>
+  </data>
+  <data name="BorgMissingText" xml:space="preserve">
+    <value>BorgStudio benötigt BorgBackup {0} oder neuer. Nach der Installation hier erneut prüfen.</value>
+  </data>
+  <data name="BorgMissingWindowsHint" xml:space="preserve">
+    <value>Unter Windows läuft borg entweder in WSL (Windows-Subsystem für Linux) oder als natives borg.exe.</value>
+  </data>
+  <data name="BorgTooOldTitle" xml:space="preserve">
+    <value>borg {0} ist zu alt</value>
+  </data>
+  <data name="BorgTooOldText" xml:space="preserve">
+    <value>BorgStudio benötigt borg {0} oder neuer. Bitte BorgBackup aktualisieren.</value>
+  </data>
+  <data name="BorgNotYetSupportedTitle" xml:space="preserve">
+    <value>borg {0} wird noch nicht unterstützt</value>
+  </data>
+  <data name="BorgNotYetSupportedText" xml:space="preserve">
+    <value>borg 2 ist noch in der Beta-Phase und funktioniert anders. BorgStudio unterstützt derzeit borg 1.x – bitte borg 1.4 installieren.</value>
+  </data>
+  <data name="BorgCheckFailedTitle" xml:space="preserve">
+    <value>Prüfung auf borg fehlgeschlagen</value>
+  </data>
+  <data name="InstallationGuide" xml:space="preserve">
+    <value>Installationsanleitung</value>
+  </data>
+  <data name="CheckAgain" xml:space="preserve">
+    <value>Erneut prüfen</value>
+  </data>
+</root>

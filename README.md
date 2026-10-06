@@ -8,7 +8,11 @@ Cross-platform desktop app (Windows, Linux, macOS) built with .NET 10 and [Avalo
 
 Portable builds for Windows (x64), macOS (Apple Silicon and Intel) and Linux (x64) are on the
 [Releases](https://github.com/cuban8IO/borgstudio/releases) page. They include the .NET runtime:
-unpack and start, no installation needed. [BorgBackup](https://www.borgbackup.org/) must be installed separately.
+unpack and start, no installation needed.
+
+[BorgBackup](https://www.borgbackup.org/) 1.2 or newer (1.4 recommended) must be installed separately.
+BorgStudio finds it on `PATH` and in the usual install locations (e.g. Homebrew); on Windows it also
+looks for borg inside WSL. borg 2 is still in beta and not supported yet. The UI is available in English and German.
 
 ## Project structure
 
@@ -28,7 +32,7 @@ Shared build settings (target framework, nullable, version) live in `Directory.B
 ## Build, test, run
 
 Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) and, to actually use the app,
-[BorgBackup](https://www.borgbackup.org/) on `PATH` (1.x; 2.x is detected separately).
+BorgBackup (see above). UI texts live in `src/BorgStudio.App/Resources/Strings*.resx`.
 
 ```bash
 dotnet build
