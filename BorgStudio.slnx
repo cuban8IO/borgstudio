@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/BorgStudio.App/BorgStudio.App.csproj" />
+    <Project Path="src/BorgStudio.Core/BorgStudio.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/BorgStudio.Tests/BorgStudio.Tests.csproj" />
+  </Folder>
+</Solution>

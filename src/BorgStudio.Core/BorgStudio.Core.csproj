@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- UI-independent logic: talking to the borg CLI, repositories, schedules. -->
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="BorgStudio.Tests" />
+  </ItemGroup>
+
+</Project>
