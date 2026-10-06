@@ -1,9 +1,12 @@
 name: build
 
+# Build, test and package check for every branch except main (main is handled by release.yml).
 on:
   push:
-    branches: [main]
-  pull_request:
+    branches-ignore: [main]
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -28,3 +31,9 @@ jobs:
 
       - name: Test
         run: dotnet test BorgStudio.slnx --configuration Release --no-build
+
+  package:
+    needs: build
+    uses: ./.github/workflows/package.yml
+    with:
+      version: 0.0.0-ci.${{ github.run_number }}
