@@ -55,5 +55,6 @@
   <ItemGroup>
     <ProjectReference Include="..\BorgStudio.Core\BorgStudio.Core.csproj" />
     <ProjectReference Include="..\BorgStudio.Providers.Local\BorgStudio.Providers.Local.csproj" />
+    <ProjectReference Include="..\BorgStudio.Providers.Ssh\BorgStudio.Providers.Ssh.csproj" />
   </ItemGroup>
 </Project>

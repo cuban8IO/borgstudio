@@ -1,38 +1,48 @@
 using BorgStudio.App.Resources;
 using BorgStudio.App.ViewModels;
 using BorgStudio.Core.Borg;
-using BorgStudio.Core.Plugins;
 using BorgStudio.Core.Repositories;
-using BorgStudio.Providers.Local;
 using BorgStudio.Tests.TestSupport;
 
 namespace BorgStudio.Tests.ViewModels;
 
 public sealed class RepositoryEditorViewModelTests : IDisposable
 {
-    private readonly TemporaryDirectory _directory = new();
-    private readonly FakeBorg _borg = new();
-    private readonly FakeSecretStore _secrets = new();
-    private readonly PluginCatalog _plugins = PluginCatalog.Load([new LocalProviderPlugin()], "no-plugins-here");
+    private readonly TestServices _test = new();
 
-    public void Dispose() => _directory.Dispose();
+    public void Dispose() => _test.Dispose();
 
-    private RepositoryEditorViewModel NewEditor(BorgInstallation? borg = null) =>
-        new(_plugins, new BorgClient(_borg), _secrets, borg ?? FakeBorg.Installation);
+    private FakeBorg Borg => _test.Borg;
 
-    private void Fill(RepositoryEditorViewModel editor, string name = "External disk", string? path = null)
+    /// <summary>An add dialog with the local provider picked.</summary>
+    private RepositoryEditorViewModel NewEditor(TestServices? services = null, bool withBorg = true)
+    {
+        var test = services ?? _test;
+        var editor = new RepositoryEditorViewModel(test.Services, withBorg ? FakeBorg.Installation : null);
+        editor.SelectedProvider = editor.Providers.Single(option => option.Provider.Id == "local");
+        editor.NextCommand.Execute(null);
+        return editor;
+    }
+
+    private void Fill(RepositoryEditorViewModel editor, string name = "External disk")
     {
         editor.Name = name;
-        editor.Fields.Single().Value = path ?? _directory.Combine("repo");
+        editor.Fields.Single().Value = _test.Directory.Combine("repo");
     }
 
     [Fact]
-    public void With_only_one_provider_it_starts_with_the_details()
+    public void Starts_with_the_provider_choice_and_goes_on_to_the_details()
     {
-        var editor = NewEditor();
+        var editor = new RepositoryEditorViewModel(_test.Services, FakeBorg.Installation);
+        Assert.True(editor.IsProviderPage);
+        Assert.Equal(["local", "ssh"], editor.Providers.Select(option => option.Provider.Id));
+
+        editor.SelectedProvider = editor.Providers[0];
+        editor.NextCommand.Execute(null);
 
         Assert.True(editor.IsDetailsPage);
-        Assert.False(editor.CanGoBack);
+        Assert.True(editor.CanGoBack);
+        Assert.False(editor.IsSsh);
         Assert.Equal("path", Assert.Single(editor.Fields).Key);
         Assert.Equal(Strings.EditorConnect, editor.ConfirmText);
     }
@@ -51,7 +61,7 @@ public sealed class RepositoryEditorViewModelTests : IDisposable
         Assert.Equal(3, editor.Errors.Count);
         Assert.Contains(Strings.EditorNameRequired, editor.Errors);
         Assert.Contains(Strings.EditorPassphraseMismatch, editor.Errors);
-        Assert.Empty(_borg.Calls);
+        Assert.Empty(Borg.Calls);
         Assert.Null(editor.Result);
     }
 
@@ -70,9 +80,10 @@ public sealed class RepositoryEditorViewModelTests : IDisposable
 
         Assert.Empty(editor.Errors);
         Assert.True(closed);
-        Assert.Equal(["init", "info"], _borg.Commands);
-        Assert.Contains("--encryption=repokey-blake2", _borg.Calls[0].Arguments);
-        Assert.All(_borg.Calls, call => Assert.Equal("secret", call.Passphrase));
+        Assert.Equal(["init", "info"], Borg.Commands);
+        Assert.Contains("--encryption=repokey-blake2", Borg.Calls[0].Arguments);
+        Assert.All(Borg.Calls, call => Assert.Equal("secret", call.Passphrase));
+        Assert.All(Borg.Environments, environment => Assert.False(environment.ContainsKey("BORG_RSH")));
 
         var result = editor.Result!;
         Assert.True(result.Created);
@@ -80,13 +91,14 @@ public sealed class RepositoryEditorViewModelTests : IDisposable
         Assert.Equal(PassphraseMode.Stored, result.Repository.PassphraseMode);
         Assert.Equal("repokey-blake2", result.Repository.EncryptionMode);
         Assert.Equal("repo-id-1", result.Repository.BorgRepositoryId);
-        Assert.Equal("secret", _secrets.Secrets[result.Repository.SecretKey]);
+        Assert.Null(result.Repository.SshKeyFile);
+        Assert.Equal("secret", _test.Secrets.Secrets[result.Repository.SecretKey]);
     }
 
     [Fact]
     public async Task Unencrypted_repositories_have_no_passphrase()
     {
-        _borg.EncryptionMode = "none";
+        Borg.EncryptionMode = "none";
         var editor = NewEditor();
         Fill(editor);
         editor.CreateNew = true;
@@ -96,15 +108,15 @@ public sealed class RepositoryEditorViewModelTests : IDisposable
         await editor.ConfirmCommand.ExecuteAsync(null);
 
         Assert.Empty(editor.Errors);
-        Assert.Contains("--encryption=none", _borg.Calls[0].Arguments);
+        Assert.Contains("--encryption=none", Borg.Calls[0].Arguments);
         Assert.Equal(PassphraseMode.None, editor.Result!.Repository.PassphraseMode);
-        Assert.Empty(_secrets.Secrets);
+        Assert.Empty(_test.Secrets.Secrets);
     }
 
     [Fact]
     public async Task Connecting_with_a_wrong_passphrase_keeps_the_dialog_open()
     {
-        _borg.CorrectPassphrase = "right";
+        Borg.CorrectPassphrase = "right";
         var editor = NewEditor();
         Fill(editor);
         editor.Passphrase = "wrong";
@@ -113,15 +125,16 @@ public sealed class RepositoryEditorViewModelTests : IDisposable
 
         Assert.Equal(Strings.BorgErrorPassphraseWrong, Assert.Single(editor.Errors));
         Assert.Null(editor.Result);
-        Assert.Equal(["info"], _borg.Commands);
+        Assert.Equal(["info"], Borg.Commands);
     }
 
     [Fact]
     public async Task Without_a_keychain_the_passphrase_is_asked_for_every_time()
     {
-        var editor = new RepositoryEditorViewModel(_plugins, new BorgClient(_borg), new FakeSecretStore(available: false),
-            FakeBorg.Installation);
-        Fill(editor);
+        using var noKeychain = new TestServices(keychainAvailable: false);
+        var editor = NewEditor(noKeychain);
+        editor.Name = "Disk";
+        editor.Fields.Single().Value = noKeychain.Directory.Combine("repo");
         editor.Passphrase = "secret";
 
         Assert.False(editor.StorePassphrase);
@@ -134,7 +147,7 @@ public sealed class RepositoryEditorViewModelTests : IDisposable
     [Fact]
     public async Task Needs_a_supported_borg_and_refuses_borg2()
     {
-        var withoutBorg = new RepositoryEditorViewModel(_plugins, new BorgClient(_borg), _secrets, borg: null);
+        var withoutBorg = NewEditor(withBorg: false);
         Fill(withoutBorg);
         await withoutBorg.ConfirmCommand.ExecuteAsync(null);
         Assert.Equal(Strings.BorgNotReady, Assert.Single(withoutBorg.Errors));
@@ -145,7 +158,7 @@ public sealed class RepositoryEditorViewModelTests : IDisposable
         await borg2.ConfirmCommand.ExecuteAsync(null);
         Assert.Equal(Strings.Borg2NotSupported, Assert.Single(borg2.Errors));
 
-        Assert.Empty(_borg.Calls);
+        Assert.Empty(Borg.Calls);
     }
 
     [Fact]
@@ -156,15 +169,16 @@ public sealed class RepositoryEditorViewModelTests : IDisposable
             Id = Guid.NewGuid(),
             Name = "Old name",
             ProviderId = "local",
-            ProviderValues = new Dictionary<string, string> { ["path"] = _directory.Combine("repo") },
+            ProviderValues = new Dictionary<string, string> { ["path"] = _test.Directory.Combine("repo") },
             PassphraseMode = PassphraseMode.Stored,
             EncryptionMode = "repokey-blake2",
         };
-        _secrets.Secrets[existing.SecretKey] = "secret";
+        _test.Secrets.Secrets[existing.SecretKey] = "secret";
 
-        var toAsk = new RepositoryEditorViewModel(_plugins, new BorgClient(_borg), _secrets, FakeBorg.Installation, existing);
+        var toAsk = new RepositoryEditorViewModel(_test.Services, FakeBorg.Installation, existing);
         Assert.Equal("Old name", toAsk.Name);
         Assert.True(toAsk.StorePassphrase);
+        Assert.False(toAsk.IsSsh);
         toAsk.Name = "New name";
         toAsk.StorePassphrase = false;
         await toAsk.ConfirmCommand.ExecuteAsync(null);
@@ -172,10 +186,10 @@ public sealed class RepositoryEditorViewModelTests : IDisposable
         var asked = toAsk.Result!.Repository;
         Assert.Equal("New name", asked.Name);
         Assert.Equal(PassphraseMode.Ask, asked.PassphraseMode);
-        Assert.Empty(_secrets.Secrets);
-        Assert.Empty(_borg.Calls);
+        Assert.Empty(_test.Secrets.Secrets);
+        Assert.Empty(Borg.Calls);
 
-        var toStored = new RepositoryEditorViewModel(_plugins, new BorgClient(_borg), _secrets, FakeBorg.Installation, asked);
+        var toStored = new RepositoryEditorViewModel(_test.Services, FakeBorg.Installation, asked);
         toStored.StorePassphrase = true;
         await toStored.ConfirmCommand.ExecuteAsync(null);
         Assert.Equal(Strings.EditorPassphraseRequiredToStore, Assert.Single(toStored.Errors));
@@ -183,6 +197,6 @@ public sealed class RepositoryEditorViewModelTests : IDisposable
         toStored.Passphrase = "new secret";
         await toStored.ConfirmCommand.ExecuteAsync(null);
         Assert.Equal(PassphraseMode.Stored, toStored.Result!.Repository.PassphraseMode);
-        Assert.Equal("new secret", _secrets.Secrets[existing.SecretKey]);
+        Assert.Equal("new secret", _test.Secrets.Secrets[existing.SecretKey]);
     }
 }

@@ -18,6 +18,8 @@ internal static class BorgTexts
             BorgErrorKind.RepositoryExists => Strings.BorgErrorRepositoryExists,
             BorgErrorKind.Locked => Strings.BorgErrorLocked,
             BorgErrorKind.ConnectionFailed => Strings.BorgErrorConnectionFailed,
+            BorgErrorKind.SshHostKeyFailed => Strings.BorgErrorSshHostKeyFailed,
+            BorgErrorKind.SshAuthenticationFailed => Strings.BorgErrorSshAuthenticationFailed,
             BorgErrorKind.Timeout => Strings.BorgErrorTimeout,
             BorgErrorKind.NotStartable => Strings.BorgErrorNotStartable,
             BorgErrorKind.UnsupportedPath => Strings.BorgErrorUnsupportedPath,

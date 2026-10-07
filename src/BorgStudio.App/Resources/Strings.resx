@@ -395,4 +395,108 @@
   <data name="BorgErrorOther" xml:space="preserve">
     <value>borg reported an error.</value>
   </data>
+  <data name="BorgErrorSshHostKeyFailed" xml:space="preserve">
+    <value>The server's identity (host key) could not be verified – ssh refused to connect.</value>
+  </data>
+  <data name="BorgErrorSshAuthenticationFailed" xml:space="preserve">
+    <value>The server refused the SSH key.</value>
+  </data>
+  <!-- SSH -->
+  <data name="LabelSshKey" xml:space="preserve">
+    <value>SSH key</value>
+  </data>
+  <data name="SshKeyManagedText" xml:space="preserve">
+    <value>Created by BorgStudio</value>
+  </data>
+  <data name="SshKeyRestrictedSuffix" xml:space="preserve">
+    <value>(restricted to borg)</value>
+  </data>
+  <data name="SshKeyOwnText" xml:space="preserve">
+    <value>Own key: {0}</value>
+    <comment>{0} = key file path</comment>
+  </data>
+  <data name="SshKeyMissing" xml:space="preserve">
+    <value>No SSH key set up – edit the repository to set one up.</value>
+  </data>
+  <data name="RemoveSshHint" xml:space="preserve">
+    <value>A key created by BorgStudio is deleted; its entry in ~/.ssh/authorized_keys on the server stays and can be removed there.</value>
+  </data>
+  <data name="HostKeyTitle" xml:space="preserve">
+    <value>Confirm server</value>
+  </data>
+  <data name="HostKeyMessage" xml:space="preserve">
+    <value>First connection to {0}. The server identifies itself with this {1} key:
+
+{2}
+
+Only trust it if this fingerprint matches the server's. On the server, "ssh-keygen -lf /etc/ssh/ssh_host_*_key.pub" shows it.</value>
+    <comment>{0} = server, {1} = key type, {2} = fingerprint</comment>
+  </data>
+  <data name="HostKeyTrust" xml:space="preserve">
+    <value>Trust</value>
+  </data>
+  <data name="HostKeyRejected" xml:space="preserve">
+    <value>The server was not confirmed – no connection made.</value>
+  </data>
+  <data name="HostKeyChanged" xml:space="preserve">
+    <value>Warning: {0} now presents a different host key than before. This can mean the server was reinstalled – or that someone is intercepting the connection. BorgStudio does not connect. If the change is expected, remove the old entry from {1}.</value>
+    <comment>{0} = server, {1} = known_hosts path</comment>
+  </data>
+  <data name="SshConnectionFailed" xml:space="preserve">
+    <value>The server could not be reached ({0}).</value>
+  </data>
+  <data name="SshLoginFailed" xml:space="preserve">
+    <value>Login failed – wrong user or password.</value>
+  </data>
+  <data name="SshHostKeyChangedDuringLogin" xml:space="preserve">
+    <value>The server presented a different host key during login – aborted.</value>
+  </data>
+  <data name="SshInstallFailed" xml:space="preserve">
+    <value>Installing the key on the server failed ({0}).</value>
+  </data>
+  <data name="ContactingServer" xml:space="preserve">
+    <value>Contacting the server…</value>
+  </data>
+  <data name="InstallingKey" xml:space="preserve">
+    <value>Installing the key on the server…</value>
+  </data>
+  <data name="EditorSshLogin" xml:space="preserve">
+    <value>SSH login</value>
+  </data>
+  <data name="EditorKeyKeep" xml:space="preserve">
+    <value>Keep the current key</value>
+  </data>
+  <data name="EditorKeyGenerate" xml:space="preserve">
+    <value>Create a new key for this repository and install it on the server with the password</value>
+  </data>
+  <data name="EditorKeyExisting" xml:space="preserve">
+    <value>Use an existing SSH key</value>
+  </data>
+  <data name="EditorServerPassword" xml:space="preserve">
+    <value>Server password</value>
+  </data>
+  <data name="EditorServerPasswordHint" xml:space="preserve">
+    <value>Used once to install the key, never stored.</value>
+  </data>
+  <data name="EditorRestrictKey" xml:space="preserve">
+    <value>Restrict the key to borg and this repository (recommended)</value>
+  </data>
+  <data name="EditorRestrictKeyHint" xml:space="preserve">
+    <value>The key can then only run "borg serve" for this repository – no shell, no other folders.</value>
+  </data>
+  <data name="EditorKeyFile" xml:space="preserve">
+    <value>Private key file</value>
+  </data>
+  <data name="EditorKeyFileHint" xml:space="preserve">
+    <value>The key must not have a passphrase (or must be loaded in ssh-agent).</value>
+  </data>
+  <data name="EditorKeyFileRequired" xml:space="preserve">
+    <value>Please choose the key file.</value>
+  </data>
+  <data name="EditorKeyFileMissing" xml:space="preserve">
+    <value>The key file does not exist.</value>
+  </data>
+  <data name="EditorServerPasswordRequired" xml:space="preserve">
+    <value>Please enter the server password.</value>
+  </data>
 </root>

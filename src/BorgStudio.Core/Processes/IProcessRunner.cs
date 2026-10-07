@@ -13,11 +13,13 @@ public interface IProcessRunner
     /// Additional environment variables (e.g. secrets that must not appear on the command line);
     /// a <c>null</c> value removes the variable.
     /// </param>
+    /// <param name="standardInput">Written to the program's standard input (UTF-8), which is then closed.</param>
     /// <exception cref="TimeoutException">The program did not exit within <paramref name="timeout"/>; it has been killed.</exception>
     Task<ProcessResult?> RunAsync(
         string fileName,
         IReadOnlyList<string> arguments,
         TimeSpan timeout,
         IReadOnlyDictionary<string, string?>? environment = null,
+        string? standardInput = null,
         CancellationToken cancellationToken = default);
 }

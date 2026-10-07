@@ -57,7 +57,7 @@ public partial class MainViewModel
     [RelayCommand(CanExecute = nameof(CanAdd))]
     private async Task AddRepositoryAsync()
     {
-        var editor = new RepositoryEditorViewModel(Plugins, _services.BorgClient, _services.SecretStore, Borg);
+        var editor = new RepositoryEditorViewModel(_services, Borg);
         await _services.Dialogs.ShowRepositoryEditorAsync(editor);
         if (editor.Result is not { } result)
             return;
@@ -81,7 +81,7 @@ public partial class MainViewModel
     private async Task EditRepositoryAsync()
     {
         var item = SelectedRepository!;
-        var editor = new RepositoryEditorViewModel(Plugins, _services.BorgClient, _services.SecretStore, Borg, item.Config);
+        var editor = new RepositoryEditorViewModel(_services, Borg, item.Config);
         await _services.Dialogs.ShowRepositoryEditorAsync(editor);
         if (editor.Result is not { } result)
             return;
@@ -96,9 +96,14 @@ public partial class MainViewModel
     private async Task RemoveRepositoryAsync()
     {
         var item = SelectedRepository!;
-        if (!await _services.Dialogs.ConfirmAsync(Strings.RemoveTitle,
-                BorgTexts.Format(Strings.RemoveMessage, item.Name), Strings.Remove))
+        var message = BorgTexts.Format(Strings.RemoveMessage, item.Name);
+        if (item.Config.SshKeyFile is not null)
+            message += " " + Strings.RemoveSshHint;
+        if (!await _services.Dialogs.ConfirmAsync(Strings.RemoveTitle, message, Strings.Remove))
             return;
+
+        if (item.Config is { SshKeyManaged: true, SshKeyFile: { } keyFile })
+            _services.SshKeys.Delete(keyFile);
 
         if (item.Config.PassphraseMode == PassphraseMode.Stored)
         {
@@ -129,11 +134,13 @@ public partial class MainViewModel
         var item = SelectedRepository!;
         if (!TryGetLocation(item, out var location))
             return;
+        if (await GetSshAccessAsync(item, location) is not { } ssh)
+            return;
         if (await GetPassphraseAsync(item) is not { } passphrase)
             return;
 
         var result = await RunAsync(Strings.Checking,
-            () => _services.BorgClient.InfoAsync(Borg!, location, passphrase.Value));
+            () => _services.BorgClient.InfoAsync(Borg!, location, passphrase.Value, ssh.Access));
         if (!result.Succeeded)
         {
             item.ShowResult(BorgTexts.Describe(result.Error!), isError: true);
@@ -165,13 +172,15 @@ public partial class MainViewModel
         var item = SelectedRepository!;
         if (!TryGetLocation(item, out var location))
             return;
+        if (await GetSshAccessAsync(item, location) is not { } ssh)
+            return;
 
         var target = await _services.Dialogs.PickSaveFileAsync(Strings.ExportKeyTitle, $"{SafeFileName(item.Name)}-borg-key.txt");
         if (target is null)
             return;
 
         var result = await RunAsync(Strings.ExportingKey,
-            () => _services.BorgClient.ExportKeyAsync(Borg!, location, target));
+            () => _services.BorgClient.ExportKeyAsync(Borg!, location, target, ssh.Access));
         item.ShowResult(
             result.Succeeded ? BorgTexts.Format(Strings.KeyExported, target) : BorgTexts.Describe(result.Error!),
             isError: !result.Succeeded);
@@ -192,6 +201,37 @@ public partial class MainViewModel
         item.ShowResult(Strings.Borg2NotSupported, isError: true);
         return false;
     }
+
+    /// <summary>
+    /// How borg logs in (<c>Access</c> is <c>null</c> for local repositories); <c>null</c> if that's not possible –
+    /// the reason is shown on the item. A server not known yet must be confirmed first.
+    /// </summary>
+    private async Task<SshAccessHolder?> GetSshAccessAsync(RepositoryItemViewModel item, RepositoryLocation location)
+    {
+        if (location.Ssh is not { } endpoint)
+            return new SshAccessHolder(null);
+
+        if (item.Config.SshKeyFile is not { } keyFile)
+        {
+            item.ShowResult(Strings.SshKeyMissing, isError: true);
+            return null;
+        }
+
+        var trust = _services.SshTrust;
+        if (!trust.IsKnown(endpoint.Host, endpoint.Port))
+        {
+            var (hostKey, problem) = await SshTrustDialog.EnsureTrustedAsync(trust, endpoint, _services.Dialogs);
+            if (hostKey is null)
+            {
+                item.ShowResult(problem!, isError: true);
+                return null;
+            }
+        }
+
+        return new SshAccessHolder(new SshAccess(keyFile, _services.SshKeys.KnownHostsFile));
+    }
+
+    private sealed record SshAccessHolder(SshAccess? Access);
 
     /// <summary>The passphrase to use (<c>Value</c> is <c>null</c> for unencrypted repositories); <c>null</c> if cancelled.</summary>
     private async Task<PassphraseHolder?> GetPassphraseAsync(RepositoryItemViewModel item)

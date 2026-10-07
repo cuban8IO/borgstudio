@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Texts of the SSH provider, English (default). German: Strings.de.resx. -->
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="DisplayName" xml:space="preserve">
+    <value>SSH server</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>Your own server, NAS or VPS with SSH access and borg installed.</value>
+  </data>
+  <data name="HostLabel" xml:space="preserve">
+    <value>Server</value>
+  </data>
+  <data name="HostHint" xml:space="preserve">
+    <value>Host name or IP address, e.g. backup.example.com</value>
+  </data>
+  <data name="PortLabel" xml:space="preserve">
+    <value>Port</value>
+  </data>
+  <data name="UserLabel" xml:space="preserve">
+    <value>User</value>
+  </data>
+  <data name="PathLabel" xml:space="preserve">
+    <value>Repository path</value>
+  </data>
+  <data name="PathHint" xml:space="preserve">
+    <value>Absolute (/srv/borg/laptop) or relative to the user's home directory (backups/laptop).</value>
+  </data>
+  <data name="RemoteBorgLabel" xml:space="preserve">
+    <value>borg command on the server</value>
+  </data>
+  <data name="RemoteBorgHint" xml:space="preserve">
+    <value>Only needed if borg is not simply "borg" on the server, e.g. /usr/local/bin/borg</value>
+  </data>
+  <data name="HostRequired" xml:space="preserve">
+    <value>Please enter the server.</value>
+  </data>
+  <data name="HostInvalid" xml:space="preserve">
+    <value>The server name must not contain spaces, "@", "/" or quotes.</value>
+  </data>
+  <data name="PortInvalid" xml:space="preserve">
+    <value>The port must be a number between 1 and 65535.</value>
+  </data>
+  <data name="UserRequired" xml:space="preserve">
+    <value>Please enter the user.</value>
+  </data>
+  <data name="UserInvalid" xml:space="preserve">
+    <value>The user name must not contain spaces, "@", ":", "/" or quotes.</value>
+  </data>
+  <data name="PathRequired" xml:space="preserve">
+    <value>Please enter the repository path.</value>
+  </data>
+  <data name="PathInvalid" xml:space="preserve">
+    <value>The repository path must not start with "-" or contain quotes, backslashes, "$" or "`".</value>
+  </data>
+  <data name="RemoteBorgInvalid" xml:space="preserve">
+    <value>The borg command must not contain spaces, quotes, backslashes, "$" or "`".</value>
+  </data>
+</root>

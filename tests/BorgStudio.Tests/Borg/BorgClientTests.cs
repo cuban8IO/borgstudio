@@ -19,21 +19,100 @@ public class BorgClientTests
         }
         """;
 
-    /// <summary>Records the call and answers with a fixed result.</summary>
+    /// <summary>Records the calls and answers every one with a fixed result.</summary>
     private sealed class RecordingRunner(ProcessResult? result) : IProcessRunner
     {
+        public List<(string FileName, IReadOnlyList<string> Arguments, string? Input)> Calls { get; } = [];
         public string? FileName { get; private set; }
         public IReadOnlyList<string> Arguments { get; private set; } = [];
         public IReadOnlyDictionary<string, string?> Environment { get; private set; } = new Dictionary<string, string?>();
 
         public Task<ProcessResult?> RunAsync(string fileName, IReadOnlyList<string> arguments, TimeSpan timeout,
-            IReadOnlyDictionary<string, string?>? environment = null, CancellationToken cancellationToken = default)
+            IReadOnlyDictionary<string, string?>? environment = null, string? standardInput = null,
+            CancellationToken cancellationToken = default)
         {
+            Calls.Add((fileName, arguments, standardInput));
             FileName = fileName;
             Arguments = arguments;
             Environment = environment ?? new Dictionary<string, string?>();
             return Task.FromResult(result);
         }
+    }
+
+    private static readonly RepositoryLocation SshLocation = new("ssh://backup@nas.local:2222/./borg/laptop")
+    {
+        Ssh = new SshEndpoint("nas.local", 2222, "backup", "borg/laptop"),
+    };
+
+    [Fact]
+    public async Task SSH_repositories_get_a_strict_batch_mode_ssh_command()
+    {
+        var runner = new RecordingRunner(new ProcessResult(0, InfoJson, ""));
+        var ssh = new SshAccess("/home/me/.local/share/BorgStudio/ssh/key 1", "/home/me/.local/share/BorgStudio/ssh/known_hosts");
+
+        await new BorgClient(runner).InfoAsync(NativeBorg, SshLocation, "secret", ssh);
+
+        Assert.Equal(
+            "ssh -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
+            + " -o UserKnownHostsFile='/home/me/.local/share/BorgStudio/ssh/known_hosts'"
+            + " -i '/home/me/.local/share/BorgStudio/ssh/key 1'",
+            runner.Environment["BORG_RSH"]);
+        Assert.Equal("ssh://backup@nas.local:2222/./borg/laptop", runner.Arguments[^1]);
+    }
+
+    [Fact]
+    public async Task Local_repositories_get_no_ssh_command()
+    {
+        var runner = new RecordingRunner(new ProcessResult(0, InfoJson, ""));
+
+        await new BorgClient(runner).InfoAsync(NativeBorg, new RepositoryLocation("/backups/repo"), "secret",
+            new SshAccess("/key", "/known_hosts"));
+
+        Assert.False(runner.Environment.ContainsKey("BORG_RSH"));
+    }
+
+    [Fact]
+    public async Task WSL_gets_private_copies_of_key_and_known_hosts()
+    {
+        using var directory = new TestSupport.TemporaryDirectory();
+        var key = directory.Combine("0123-key");
+        var knownHosts = directory.Combine("known_hosts");
+        File.WriteAllText(key, "PRIVATE KEY");
+        File.WriteAllText(knownHosts, "[nas.local]:2222 ssh-ed25519 AAAA\n");
+        var runner = new RecordingRunner(new ProcessResult(0, InfoJson, ""));
+
+        await new BorgClient(runner, Wsl).InfoAsync(WslBorg, SshLocation, "secret", new SshAccess(key, knownHosts));
+
+        Assert.Equal(3, runner.Calls.Count);
+        Assert.Equal("PRIVATE KEY", runner.Calls[0].Input);
+        Assert.Contains("umask 077", runner.Calls[0].Arguments[^1]);
+        Assert.EndsWith("cat > ~/.borgstudio/ssh/key-0123-key", runner.Calls[0].Arguments[^1]);
+        Assert.Equal("[nas.local]:2222 ssh-ed25519 AAAA\n", runner.Calls[1].Input);
+        Assert.Equal(
+            "ssh -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
+            + " -o UserKnownHostsFile='~/.borgstudio/ssh/known_hosts' -i '~/.borgstudio/ssh/key-0123-key'",
+            runner.Environment["BORG_RSH"]);
+        Assert.Contains("BORG_RSH", runner.Environment["WSLENV"]!.Split(':'));
+    }
+
+    [Theory]
+    [InlineData("Remote: Host key verification failed.", BorgErrorKind.SshHostKeyFailed)]
+    [InlineData("Remote: backup@nas.local: Permission denied (publickey).", BorgErrorKind.SshAuthenticationFailed)]
+    public void SSH_problems_reported_by_borg_are_recognized(string remoteLine, BorgErrorKind expected)
+    {
+        var standardError = $$"""{"type": "log_message", "levelname": "WARNING", "message": "{{remoteLine}}"}""" + "\n"
+            + ErrorLine("ConnectionClosedWithHint", "Connection closed by remote host");
+
+        Assert.Equal(expected, BorgClient.ParseError(standardError).Kind);
+    }
+
+    [Theory]
+    [InlineData("plain", "'plain'")]
+    [InlineData(@"C:\Users\me\key", @"'C:\Users\me\key'")]
+    [InlineData("it's", "'it'\"'\"'s'")]
+    public void ShellQuote_keeps_backslashes_and_escapes_quotes(string value, string expected)
+    {
+        Assert.Equal(expected, BorgClient.ShellQuote(value));
     }
 
     private static string ErrorLine(string msgid, string message) =>

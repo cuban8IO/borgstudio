@@ -120,6 +120,36 @@
                                    FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
                     </StackPanel>
 
+                    <!-- SSH login -->
+                    <StackPanel Spacing="6" IsVisible="{Binding IsSsh}">
+                        <TextBlock Text="{x:Static res:Strings.EditorSshLogin}" FontWeight="SemiBold" />
+                        <RadioButton GroupName="SshKey" IsChecked="{Binding KeyChoiceKeep}" IsVisible="{Binding ShowKeepKeyOption}"
+                                     Content="{x:Static res:Strings.EditorKeyKeep}" />
+                        <RadioButton GroupName="SshKey" IsChecked="{Binding KeyChoiceGenerate}">
+                            <TextBlock Text="{x:Static res:Strings.EditorKeyGenerate}" TextWrapping="Wrap" />
+                        </RadioButton>
+                        <StackPanel Spacing="4" Margin="28,0,0,4" IsVisible="{Binding KeyChoiceGenerate}">
+                            <TextBlock Text="{x:Static res:Strings.EditorServerPassword}" />
+                            <TextBox Text="{Binding ServerPassword}" PasswordChar="•" />
+                            <TextBlock Text="{x:Static res:Strings.EditorServerPasswordHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                            <CheckBox IsChecked="{Binding RestrictKey}" Margin="0,4,0,0">
+                                <TextBlock Text="{x:Static res:Strings.EditorRestrictKey}" TextWrapping="Wrap" />
+                            </CheckBox>
+                            <TextBlock Text="{x:Static res:Strings.EditorRestrictKeyHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <RadioButton GroupName="SshKey" IsChecked="{Binding KeyChoiceExisting}"
+                                     Content="{x:Static res:Strings.EditorKeyExisting}" />
+                        <StackPanel Spacing="4" Margin="28,0,0,4" IsVisible="{Binding KeyChoiceExisting}">
+                            <TextBlock Text="{x:Static res:Strings.EditorKeyFile}" />
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBox Text="{Binding ExistingKeyFile}" />
+                                <Button Grid.Column="1" Margin="8,0,0,0" Content="{x:Static res:Strings.EditorBrowse}"
+                                        Click="BrowseKeyFile_Click" />
+                            </Grid>
+                            <TextBlock Text="{x:Static res:Strings.EditorKeyFileHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </StackPanel>
+
                     <Expander Header="{x:Static res:Strings.EditorAdvanced}" HorizontalAlignment="Stretch">
                         <StackPanel Spacing="4">
                             <TextBlock Text="{x:Static res:Strings.EditorBorgVersion}" />

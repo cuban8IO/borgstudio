@@ -40,6 +40,26 @@ public sealed class BorgFactAttribute : FactAttribute
 }
 
 /// <summary>
+/// Runs against a real SSH server with password login and borg installed (prepared by the Linux CI job):
+/// BORGSTUDIO_SSH_TEST_HOST, _USER and _PASSWORD (optionally _PORT).
+/// </summary>
+public sealed class SshServerFactAttribute : FactAttribute
+{
+    public static string? Host => Environment.GetEnvironmentVariable("BORGSTUDIO_SSH_TEST_HOST");
+    public static int Port => int.TryParse(Environment.GetEnvironmentVariable("BORGSTUDIO_SSH_TEST_PORT"), out var port) ? port : 22;
+    public static string User => Environment.GetEnvironmentVariable("BORGSTUDIO_SSH_TEST_USER") ?? "";
+    public static string Password => Environment.GetEnvironmentVariable("BORGSTUDIO_SSH_TEST_PASSWORD") ?? "";
+
+    public SshServerFactAttribute()
+    {
+        if (Host is null)
+            Skip = "Set BORGSTUDIO_SSH_TEST_HOST/_USER/_PASSWORD to test against an SSH server.";
+        else if (BorgFactAttribute.Borg.Value is null)
+            Skip = "No supported borg installed.";
+    }
+}
+
+/// <summary>
 /// Runs against the real keychain: always on Windows (Credential Manager), on macOS and Linux only when
 /// BORGSTUDIO_KEYCHAIN_TESTS=1 (CI prepares an unlocked keychain there; locally it might pop up dialogs).
 /// </summary>

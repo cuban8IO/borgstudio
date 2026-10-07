@@ -21,8 +21,8 @@
     <!-- View models only; they don't touch Avalonia types. -->
     <ProjectReference Include="..\..\src\BorgStudio.App\BorgStudio.App.csproj" />
     <!-- Built first, but not referenced: the tests load it like a real external plugin (see below). -->
-    <ProjectReference Include="..\..\samples\BorgStudio.SamplePlugin\BorgStudio.SamplePlugin.csproj"
-                      ReferenceOutputAssembly="false" Private="false" />
+    <ProjectReference Include="..\..\samples\BorgStudio.SamplePlugin\BorgStudio.SamplePlugin.csproj" ReferenceOutputAssembly="false" Private="false" />
+    <ProjectReference Include="..\..\src\BorgStudio.Providers.Ssh\BorgStudio.Providers.Ssh.csproj" />
   </ItemGroup>
 
   <!-- The sample plugin's build output, as it would be installed: test output/plugins/BorgStudio.SamplePlugin/ -->
@@ -30,9 +30,7 @@
     <ItemGroup>
       <_SamplePluginFile Include="$(MSBuildThisFileDirectory)..\..\samples\BorgStudio.SamplePlugin\bin\$(Configuration)\$(TargetFramework)\**\*" />
     </ItemGroup>
-    <Copy SourceFiles="@(_SamplePluginFile)"
-          DestinationFolder="$(OutDir)plugins\BorgStudio.SamplePlugin\%(RecursiveDir)"
-          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_SamplePluginFile)" DestinationFolder="$(OutDir)plugins\BorgStudio.SamplePlugin\%(RecursiveDir)" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>

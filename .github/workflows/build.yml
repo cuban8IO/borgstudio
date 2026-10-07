@@ -34,6 +34,16 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y borgbackup gnome-keyring dbus-x11 libsecret-1-0
 
+      # A throw-away SSH account with password login on this throw-away runner, for the SSH integration tests.
+      - name: Start an SSH server (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get install -y openssh-server
+          sudo useradd --create-home --shell /bin/bash borgtest
+          echo 'borgtest:ci-only-password' | sudo chpasswd
+          printf 'PasswordAuthentication yes\nKbdInteractiveAuthentication yes\n' | sudo tee /etc/ssh/sshd_config.d/00-borgstudio-ci.conf
+          sudo systemctl restart ssh
+
       # An unlocked keychain without auto-lock, so the keychain tests never wait for a password dialog.
       - name: Prepare keychain (macOS)
         if: runner.os == 'macOS'
@@ -50,10 +60,13 @@ jobs:
           BORGSTUDIO_KEYCHAIN_TESTS: "1"
         run: dotnet test BorgStudio.slnx --configuration Release --no-build
 
-      - name: Test (Linux, with Secret Service)
+      - name: Test (Linux, with Secret Service and SSH server)
         if: runner.os == 'Linux'
         env:
           BORGSTUDIO_KEYCHAIN_TESTS: "1"
+          BORGSTUDIO_SSH_TEST_HOST: localhost
+          BORGSTUDIO_SSH_TEST_USER: borgtest
+          BORGSTUDIO_SSH_TEST_PASSWORD: ci-only-password
         run: |
           dbus-run-session -- bash -c '
             echo -n ci-only | gnome-keyring-daemon --unlock --components=secrets > /dev/null

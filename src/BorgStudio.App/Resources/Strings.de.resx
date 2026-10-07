@@ -378,4 +378,105 @@
   <data name="BorgErrorOther" xml:space="preserve">
     <value>borg hat einen Fehler gemeldet.</value>
   </data>
+  <data name="BorgErrorSshHostKeyFailed" xml:space="preserve">
+    <value>Die Identität des Servers (Host-Schlüssel) konnte nicht bestätigt werden – ssh hat die Verbindung verweigert.</value>
+  </data>
+  <data name="BorgErrorSshAuthenticationFailed" xml:space="preserve">
+    <value>Der Server hat den SSH-Schlüssel abgelehnt.</value>
+  </data>
+  <!-- SSH -->
+  <data name="LabelSshKey" xml:space="preserve">
+    <value>SSH-Schlüssel</value>
+  </data>
+  <data name="SshKeyManagedText" xml:space="preserve">
+    <value>Von BorgStudio erzeugt</value>
+  </data>
+  <data name="SshKeyRestrictedSuffix" xml:space="preserve">
+    <value>(auf borg beschränkt)</value>
+  </data>
+  <data name="SshKeyOwnText" xml:space="preserve">
+    <value>Eigener Schlüssel: {0}</value>
+  </data>
+  <data name="SshKeyMissing" xml:space="preserve">
+    <value>Kein SSH-Schlüssel eingerichtet – zum Einrichten das Repository bearbeiten.</value>
+  </data>
+  <data name="RemoveSshHint" xml:space="preserve">
+    <value>Ein von BorgStudio erzeugter Schlüssel wird gelöscht; sein Eintrag in ~/.ssh/authorized_keys auf dem Server bleibt bestehen und kann dort entfernt werden.</value>
+  </data>
+  <data name="HostKeyTitle" xml:space="preserve">
+    <value>Server bestätigen</value>
+  </data>
+  <data name="HostKeyMessage" xml:space="preserve">
+    <value>Erste Verbindung zu {0}. Der Server weist sich mit diesem {1}-Schlüssel aus:
+
+{2}
+
+Nur vertrauen, wenn dieser Fingerabdruck mit dem des Servers übereinstimmt. Auf dem Server zeigt ihn „ssh-keygen -lf /etc/ssh/ssh_host_*_key.pub“ an.</value>
+  </data>
+  <data name="HostKeyTrust" xml:space="preserve">
+    <value>Vertrauen</value>
+  </data>
+  <data name="HostKeyRejected" xml:space="preserve">
+    <value>Der Server wurde nicht bestätigt – keine Verbindung aufgebaut.</value>
+  </data>
+  <data name="HostKeyChanged" xml:space="preserve">
+    <value>Achtung: {0} zeigt jetzt einen anderen Host-Schlüssel als zuvor. Das kann bedeuten, dass der Server neu installiert wurde – oder dass jemand die Verbindung abfängt. BorgStudio verbindet sich nicht. Ist die Änderung erwartet, den alten Eintrag aus {1} entfernen.</value>
+  </data>
+  <data name="SshConnectionFailed" xml:space="preserve">
+    <value>Der Server ist nicht erreichbar ({0}).</value>
+  </data>
+  <data name="SshLoginFailed" xml:space="preserve">
+    <value>Anmeldung fehlgeschlagen – Benutzer oder Passwort falsch.</value>
+  </data>
+  <data name="SshHostKeyChangedDuringLogin" xml:space="preserve">
+    <value>Der Server hat bei der Anmeldung einen anderen Host-Schlüssel gezeigt – abgebrochen.</value>
+  </data>
+  <data name="SshInstallFailed" xml:space="preserve">
+    <value>Das Hinterlegen des Schlüssels auf dem Server ist fehlgeschlagen ({0}).</value>
+  </data>
+  <data name="ContactingServer" xml:space="preserve">
+    <value>Server wird kontaktiert …</value>
+  </data>
+  <data name="InstallingKey" xml:space="preserve">
+    <value>Schlüssel wird auf dem Server hinterlegt …</value>
+  </data>
+  <data name="EditorSshLogin" xml:space="preserve">
+    <value>SSH-Anmeldung</value>
+  </data>
+  <data name="EditorKeyKeep" xml:space="preserve">
+    <value>Bisherigen Schlüssel behalten</value>
+  </data>
+  <data name="EditorKeyGenerate" xml:space="preserve">
+    <value>Neuen Schlüssel für dieses Repository erzeugen und mit dem Passwort auf dem Server hinterlegen</value>
+  </data>
+  <data name="EditorKeyExisting" xml:space="preserve">
+    <value>Vorhandenen SSH-Schlüssel verwenden</value>
+  </data>
+  <data name="EditorServerPassword" xml:space="preserve">
+    <value>Server-Passwort</value>
+  </data>
+  <data name="EditorServerPasswordHint" xml:space="preserve">
+    <value>Wird nur einmal zum Hinterlegen des Schlüssels verwendet und nicht gespeichert.</value>
+  </data>
+  <data name="EditorRestrictKey" xml:space="preserve">
+    <value>Schlüssel auf borg und dieses Repository beschränken (empfohlen)</value>
+  </data>
+  <data name="EditorRestrictKeyHint" xml:space="preserve">
+    <value>Der Schlüssel kann dann nur „borg serve“ für dieses Repository ausführen – keine Shell, keine anderen Ordner.</value>
+  </data>
+  <data name="EditorKeyFile" xml:space="preserve">
+    <value>Private Schlüsseldatei</value>
+  </data>
+  <data name="EditorKeyFileHint" xml:space="preserve">
+    <value>Der Schlüssel darf keine Passphrase haben (oder muss im ssh-agent geladen sein).</value>
+  </data>
+  <data name="EditorKeyFileRequired" xml:space="preserve">
+    <value>Bitte die Schlüsseldatei auswählen.</value>
+  </data>
+  <data name="EditorKeyFileMissing" xml:space="preserve">
+    <value>Die Schlüsseldatei existiert nicht.</value>
+  </data>
+  <data name="EditorServerPasswordRequired" xml:space="preserve">
+    <value>Bitte das Server-Passwort eingeben.</value>
+  </data>
 </root>
