@@ -30,4 +30,10 @@ public interface IRepositoryProvider
 
     /// <summary>Builds the borg repository location from valid values.</summary>
     RepositoryLocation GetLocation(IReadOnlyDictionary<string, string> values);
+
+    /// <summary>
+    /// Whether repositories are reached over SSH. BorgStudio then asks how to log in (new key or existing key)
+    /// and expects <see cref="RepositoryLocation.Ssh"/> to be set.
+    /// </summary>
+    bool UsesSsh => false;
 }

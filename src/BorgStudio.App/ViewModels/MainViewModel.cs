@@ -4,6 +4,7 @@ using BorgStudio.Core.Borg;
 using BorgStudio.Core.Plugins;
 using BorgStudio.Core.Repositories;
 using BorgStudio.Core.Secrets;
+using BorgStudio.Core.Ssh;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -16,7 +17,12 @@ public sealed record AppServices(
     RepositoryStore RepositoryStore,
     ISecretStore SecretStore,
     BorgClient BorgClient,
-    IDialogService Dialogs);
+    ISshService Ssh,
+    SshKeyStore SshKeys,
+    IDialogService Dialogs)
+{
+    public SshHostTrust SshTrust => new(Ssh, new KnownHostsFile(SshKeys.KnownHostsFile));
+}
 
 public partial class MainViewModel : ViewModelBase
 {
@@ -24,7 +30,8 @@ public partial class MainViewModel : ViewModelBase
 
     // Designer only.
     public MainViewModel() : this(new AppServices(BorgDetector.CreateDefault(), PluginCatalog.Empty,
-        RepositoryStore.CreateDefault(), SecretStores.CreateDefault(), BorgClient.CreateDefault(), new NoDialogs()))
+        RepositoryStore.CreateDefault(), SecretStores.CreateDefault(), BorgClient.CreateDefault(),
+        new SshNetService(), SshKeyStore.CreateDefault(), new NoDialogs()))
     {
     }
 

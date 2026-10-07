@@ -14,6 +14,13 @@ public enum BorgErrorKind
     Locked,
 
     ConnectionFailed,
+
+    /// <summary>ssh refused the server: its host key does not match the confirmed one (or is unknown).</summary>
+    SshHostKeyFailed,
+
+    /// <summary>The server refused the SSH key.</summary>
+    SshAuthenticationFailed,
+
     Timeout,
 
     /// <summary>borg (or wsl.exe) could not be started.</summary>

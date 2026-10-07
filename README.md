@@ -23,6 +23,9 @@ looks for borg inside WSL. borg 2 is still in beta and not supported yet. The UI
   Linux Secret Service such as GNOME Keyring or KWallet) or asked for every time.
 - **Repository keys:** BorgStudio offers to export the key after creating a repository. Keep the key file and the
   passphrase safe and separate – without them, backups cannot be restored.
+- **SSH:** login keys created by BorgStudio (one per repository) and the confirmed server host keys
+  (`known_hosts`) are kept in the `ssh` sub folder of the data folder. Server passwords are only used once to
+  install a key and are never stored.
 
 ## Project structure
 
@@ -32,7 +35,8 @@ BorgStudio.slnx
 │   ├── BorgStudio.App                  Avalonia desktop UI (MVVM, CommunityToolkit.Mvvm)
 │   ├── BorgStudio.Core                 UI-independent logic: borg CLI, plugins, repositories
 │   ├── BorgStudio.Plugins.Abstractions Public plugin API (repository providers)
-│   └── BorgStudio.Providers.Local      Built-in provider: local folder
+│   ├── BorgStudio.Providers.Local      Built-in provider: local folder
+│   └── BorgStudio.Providers.Ssh        Built-in provider: SSH server with borg
 ├── samples/
 │   └── BorgStudio.SamplePlugin         Example external plugin (not part of the release)
 ├── tests/

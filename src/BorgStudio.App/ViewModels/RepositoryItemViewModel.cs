@@ -11,7 +11,8 @@ public sealed partial class RepositoryItemViewModel(RepositoryConfig config, Plu
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Name), nameof(Provider), nameof(ProviderName), nameof(Location), nameof(LocationText),
-        nameof(EncryptionText), nameof(IsKeyfile), nameof(IsEncrypted), nameof(PassphraseText), nameof(BorgVersionText))]
+        nameof(EncryptionText), nameof(IsKeyfile), nameof(IsEncrypted), nameof(PassphraseText), nameof(BorgVersionText),
+        nameof(IsSsh), nameof(SshKeyText))]
     public partial RepositoryConfig Config { get; set; } = config;
 
     public string Name => Config.Name;
@@ -47,6 +48,16 @@ public sealed partial class RepositoryItemViewModel(RepositoryConfig config, Plu
     public string PassphraseText => BorgTexts.PassphraseMode(Config.PassphraseMode);
 
     public string BorgVersionText => BorgTexts.BorgVersion(Config.BorgVersion);
+
+    public bool IsSsh => Provider?.UsesSsh == true;
+
+    public string SshKeyText => Config switch
+    {
+        { SshKeyFile: null } => Strings.SshKeyMissing,
+        { SshKeyManaged: true, SshKeyRestricted: true } => $"{Strings.SshKeyManagedText} {Strings.SshKeyRestrictedSuffix}",
+        { SshKeyManaged: true } => Strings.SshKeyManagedText,
+        _ => BorgTexts.Format(Strings.SshKeyOwnText, Config.SshKeyFile),
+    };
 
     /// <summary>Outcome of the last action on this repository (test, key export, ...).</summary>
     [ObservableProperty]

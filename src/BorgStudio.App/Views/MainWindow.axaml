@@ -98,7 +98,7 @@
                         <TextBlock Text="{Binding SelectedRepository.ProviderName}" Opacity="0.7" />
                     </StackPanel>
 
-                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto">
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
                         <Grid.Styles>
                             <Style Selector="TextBlock.label">
                                 <Setter Property="Opacity" Value="0.7" />
@@ -117,6 +117,10 @@
                         <SelectableTextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedRepository.PassphraseText}" />
                         <TextBlock Grid.Row="3" Classes="label" Text="{x:Static res:Strings.LabelBorgVersion}" />
                         <SelectableTextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedRepository.BorgVersionText}" />
+                        <TextBlock Grid.Row="4" Classes="label" Text="{x:Static res:Strings.LabelSshKey}"
+                                   IsVisible="{Binding SelectedRepository.IsSsh}" />
+                        <SelectableTextBlock Grid.Row="4" Grid.Column="1" Text="{Binding SelectedRepository.SshKeyText}"
+                                             IsVisible="{Binding SelectedRepository.IsSsh}" />
                     </Grid>
 
                     <Border IsVisible="{Binding SelectedRepository.IsKeyfile}" Padding="12,10" CornerRadius="6" BorderThickness="1"

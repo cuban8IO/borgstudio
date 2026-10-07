@@ -11,6 +11,7 @@ public sealed class ProcessRunner : IProcessRunner
         IReadOnlyList<string> arguments,
         TimeSpan timeout,
         IReadOnlyDictionary<string, string?>? environment = null,
+        string? standardInput = null,
         CancellationToken cancellationToken = default)
     {
         var startInfo = new ProcessStartInfo(fileName)
@@ -22,6 +23,7 @@ public sealed class ProcessRunner : IProcessRunner
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
+            StandardInputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
             StandardOutputEncoding = Encoding.UTF8,
             StandardErrorEncoding = Encoding.UTF8,
         };
@@ -44,6 +46,8 @@ public sealed class ProcessRunner : IProcessRunner
         {
             return null;
         }
+        if (standardInput is not null)
+            await process.StandardInput.WriteAsync(standardInput.AsMemory(), cancellationToken);
         process.StandardInput.Close();
 
         var standardOutput = process.StandardOutput.ReadToEndAsync(cancellationToken);

@@ -6,9 +6,15 @@ using BorgStudio.Plugins;
 
 namespace BorgStudio.Core.Borg;
 
+/// <summary>How borg logs in to an SSH repository.</summary>
+/// <param name="PrivateKeyFile">The SSH key (on this computer).</param>
+/// <param name="KnownHostsFile">BorgStudio's known_hosts with the confirmed host key.</param>
+public sealed record SshAccess(string PrivateKeyFile, string KnownHostsFile);
+
 /// <summary>
 /// Runs borg 1.x commands on a repository – natively or, on Windows, inside WSL – without ever
-/// letting borg ask on a terminal: the passphrase comes from the environment, confirmations are pre-answered.
+/// letting borg ask on a terminal: the passphrase comes from the environment, confirmations are pre-answered,
+/// and ssh runs in batch mode with a strictly checked host key.
 /// </summary>
 public sealed partial class BorgClient(IProcessRunner processRunner, string? wslExecutable = null)
 {
@@ -16,10 +22,14 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
     private static readonly TimeSpan InfoTimeout = TimeSpan.FromMinutes(30);
     private static readonly TimeSpan InitTimeout = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan KeyExportTimeout = TimeSpan.FromMinutes(2);
+    private static readonly TimeSpan CopyTimeout = TimeSpan.FromSeconds(30);
+
+    /// <summary>Where SSH files are copied to inside WSL (ssh there rejects keys with Windows permissions).</summary>
+    private const string WslSshDirectory = "~/.borgstudio/ssh";
 
     private static readonly string[] ForwardedVariables =
     [
-        "BORG_PASSPHRASE", "BORG_DISPLAY_PASSPHRASE",
+        "BORG_PASSPHRASE", "BORG_DISPLAY_PASSPHRASE", "BORG_RSH",
         "BORG_RELOCATED_REPO_ACCESS_IS_OK", "BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK",
     ];
 
@@ -28,9 +38,10 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         OperatingSystem.IsWindows() ? Path.Combine(Environment.SystemDirectory, "wsl.exe") : null);
 
     public async Task<BorgResult<BorgRepositoryInfo>> InfoAsync(
-        BorgInstallation borg, RepositoryLocation location, string? passphrase, CancellationToken cancellationToken = default)
+        BorgInstallation borg, RepositoryLocation location, string? passphrase, SshAccess? ssh = null,
+        CancellationToken cancellationToken = default)
     {
-        var result = await RunAsync(borg, location, ["info"], ["--json"], [], passphrase, InfoTimeout, cancellationToken);
+        var result = await RunAsync(borg, location, ssh, ["info"], ["--json"], [], passphrase, InfoTimeout, cancellationToken);
         if (!result.Succeeded)
             return BorgResult<BorgRepositoryInfo>.Failure(result.Error!);
 
@@ -46,22 +57,23 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
 
     public async Task<BorgResult<bool>> InitAsync(
         BorgInstallation borg, RepositoryLocation location, BorgEncryption encryption, string? passphrase,
-        CancellationToken cancellationToken = default)
+        SshAccess? ssh = null, CancellationToken cancellationToken = default)
     {
-        var result = await RunAsync(borg, location, ["init"],
+        var result = await RunAsync(borg, location, ssh, ["init"],
             [$"--encryption={EncryptionName(encryption)}", "--make-parent-dirs"], [], passphrase, InitTimeout, cancellationToken);
         return result.Succeeded ? BorgResult<bool>.Success(true) : BorgResult<bool>.Failure(result.Error!);
     }
 
     /// <summary>Writes the repository key to <paramref name="targetFile"/> (a path on this computer).</summary>
     public async Task<BorgResult<bool>> ExportKeyAsync(
-        BorgInstallation borg, RepositoryLocation location, string targetFile, CancellationToken cancellationToken = default)
+        BorgInstallation borg, RepositoryLocation location, string targetFile, SshAccess? ssh = null,
+        CancellationToken cancellationToken = default)
     {
         var target = borg.Runtime == BorgRuntime.Wsl ? ToWslPath(targetFile) : targetFile;
         if (target is null)
             return BorgResult<bool>.Failure(new BorgError(BorgErrorKind.UnsupportedPath, targetFile));
 
-        var result = await RunAsync(borg, location, ["key", "export"], [], [target], null, KeyExportTimeout, cancellationToken);
+        var result = await RunAsync(borg, location, ssh, ["key", "export"], [], [target], null, KeyExportTimeout, cancellationToken);
         return result.Succeeded ? BorgResult<bool>.Success(true) : BorgResult<bool>.Failure(result.Error!);
     }
 
@@ -89,15 +101,29 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
     }
 
     /// <summary>
+    /// The ssh command line for BORG_RSH (borg splits it like a POSIX shell): key only, no prompts,
+    /// host key checked against BorgStudio's known_hosts.
+    /// </summary>
+    public static string SshCommand(string privateKeyFile, string knownHostsFile) =>
+        "ssh -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
+        + $" -o UserKnownHostsFile={ShellQuote(knownHostsFile)} -i {ShellQuote(privateKeyFile)}";
+
+    /// <summary>POSIX shell single quoting (keeps Windows backslashes as they are).</summary>
+    public static string ShellQuote(string value) => "'" + value.Replace("'", "'\"'\"'") + "'";
+
+    /// <summary>
     /// <c>borg &lt;command&gt; --log-json &lt;provider arguments&gt; &lt;options&gt; &lt;repository&gt; &lt;trailing&gt;</c>;
     /// returns standard output on success.
     /// </summary>
     private async Task<BorgResult<string>> RunAsync(
-        BorgInstallation borg, RepositoryLocation location,
+        BorgInstallation borg, RepositoryLocation location, SshAccess? ssh,
         IReadOnlyList<string> command, IReadOnlyList<string> options, IReadOnlyList<string> trailing,
         string? passphrase, TimeSpan timeout, CancellationToken cancellationToken)
     {
         var wsl = borg.Runtime == BorgRuntime.Wsl;
+        if (wsl && wslExecutable is null)
+            return BorgResult<string>.Failure(new BorgError(BorgErrorKind.NotStartable, "wsl.exe"));
+
         var repository = location.Url;
         if (wsl && !IsUrl(repository))
         {
@@ -119,13 +145,19 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
             ["BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK"] = "yes",
         };
 
+        SshAccess? sshFiles = null;
+        if (location.Ssh is not null && ssh is not null)
+        {
+            sshFiles = wsl ? await CopySshFilesIntoWslAsync(ssh, cancellationToken) : ssh;
+            if (sshFiles is null)
+                return BorgResult<string>.Failure(new BorgError(BorgErrorKind.NotStartable, "wsl.exe (copying the SSH key)"));
+            environment["BORG_RSH"] = SshCommand(sshFiles.PrivateKeyFile, sshFiles.KnownHostsFile);
+        }
+
         string fileName;
         if (wsl)
         {
-            if (wslExecutable is null)
-                return BorgResult<string>.Failure(new BorgError(BorgErrorKind.NotStartable, "wsl.exe"));
-
-            fileName = wslExecutable;
+            fileName = wslExecutable!;
             arguments.InsertRange(0, ["-e", borg.Path]);
             // WSL only passes on the Windows environment variables listed in WSLENV.
             var existing = Environment.GetEnvironmentVariable("WSLENV");
@@ -139,7 +171,7 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         ProcessResult? result;
         try
         {
-            result = await processRunner.RunAsync(fileName, arguments, timeout, environment, cancellationToken);
+            result = await processRunner.RunAsync(fileName, arguments, timeout, environment, cancellationToken: cancellationToken);
         }
         catch (TimeoutException)
         {
@@ -150,9 +182,76 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
             return BorgResult<string>.Failure(new BorgError(BorgErrorKind.NotStartable, fileName));
 
         // 0 = success, 1 = success with warnings, everything else is an error.
-        return result.ExitCode is 0 or 1
-            ? BorgResult<string>.Success(result.StandardOutput)
-            : BorgResult<string>.Failure(ParseError(result.StandardError));
+        if (result.ExitCode is 0 or 1)
+            return BorgResult<string>.Success(result.StandardOutput);
+
+        var error = ParseError(result.StandardError);
+        if (error.Kind == BorgErrorKind.ConnectionFailed && location.Ssh is { } endpoint && sshFiles is not null)
+            error = await DiagnoseSshAsync(endpoint, sshFiles, wsl, cancellationToken) ?? error;
+        return BorgResult<string>.Failure(error);
+    }
+
+    /// <summary>
+    /// borg forwards ssh's own error ("Host key verification failed", "Permission denied") only if it reads it
+    /// before noticing the closed connection – a race. When borg just says "connection closed", one plain ssh login
+    /// with the same settings tells reliably what's wrong; <c>null</c> if it doesn't tell more.
+    /// </summary>
+    private async Task<BorgError?> DiagnoseSshAsync(
+        SshEndpoint endpoint, SshAccess sshFiles, bool wsl, CancellationToken cancellationToken)
+    {
+        List<string> arguments =
+        [
+            "-o", "BatchMode=yes", "-o", "IdentitiesOnly=yes", "-o", "StrictHostKeyChecking=yes",
+            "-o", $"UserKnownHostsFile={sshFiles.KnownHostsFile}", "-i", sshFiles.PrivateKeyFile,
+            "-o", "ConnectTimeout=15", "-p", endpoint.Port.ToString(CultureInfo.InvariantCulture),
+            $"{endpoint.User}@{endpoint.Host}", "exit",
+        ];
+        if (wsl)
+            arguments.InsertRange(0, ["-e", "ssh"]);
+
+        ProcessResult? result;
+        try
+        {
+            result = await processRunner.RunAsync(wsl ? wslExecutable! : "ssh", arguments, CopyTimeout,
+                cancellationToken: cancellationToken);
+        }
+        catch (TimeoutException)
+        {
+            return null;
+        }
+
+        var output = result?.StandardError.Trim() ?? "";
+        if (output.Contains("Host key verification failed", StringComparison.Ordinal))
+            return new BorgError(BorgErrorKind.SshHostKeyFailed, output);
+        if (output.Contains("Permission denied", StringComparison.Ordinal))
+            return new BorgError(BorgErrorKind.SshAuthenticationFailed, output);
+        return null;
+    }
+
+    /// <summary>Copies key and known_hosts to ~/.borgstudio/ssh inside WSL (private permissions); returns those paths.</summary>
+    private async Task<SshAccess?> CopySshFilesIntoWslAsync(SshAccess ssh, CancellationToken cancellationToken)
+    {
+        var keyName = "key-" + SafeName().Replace(Path.GetFileName(ssh.PrivateKeyFile), "_");
+        foreach (var (source, name) in new[] { (ssh.PrivateKeyFile, keyName), (ssh.KnownHostsFile, "known_hosts") })
+        {
+            var content = File.Exists(source) ? await File.ReadAllTextAsync(source, cancellationToken) : "";
+            ProcessResult? copied;
+            try
+            {
+                copied = await processRunner.RunAsync(wslExecutable!,
+                    ["-e", "sh", "-c", $"umask 077 && mkdir -p {WslSshDirectory} && cat > {WslSshDirectory}/{name}"],
+                    CopyTimeout, standardInput: content, cancellationToken: cancellationToken);
+            }
+            catch (TimeoutException)
+            {
+                return null;
+            }
+            if (copied is not { ExitCode: 0 })
+                return null;
+        }
+
+        // ssh expands the "~" itself.
+        return new SshAccess($"{WslSshDirectory}/{keyName}", $"{WslSshDirectory}/known_hosts");
     }
 
     /// <summary>The last error from borg's JSON log on standard error, classified by its message id.</summary>
@@ -160,6 +259,7 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
     {
         string? messageId = null;
         string? message = null;
+        var allText = new List<string>();
         var plainText = new List<string>();
 
         foreach (var line in standardError.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
@@ -168,23 +268,34 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
             {
                 using var document = JsonDocument.Parse(line);
                 var root = document.RootElement;
-                if (root.ValueKind != JsonValueKind.Object
-                    || root.GetProperty("type").GetString() != "log_message"
-                    || root.GetProperty("levelname").GetString() is not ("ERROR" or "CRITICAL"))
+                if (root.ValueKind != JsonValueKind.Object || root.GetProperty("type").GetString() != "log_message")
                     continue;
 
-                message = root.TryGetProperty("message", out var text) ? text.GetString() : message;
+                var text = root.TryGetProperty("message", out var textElement) ? textElement.GetString() : null;
+                if (text is not null)
+                    allText.Add(text);
+                if (root.GetProperty("levelname").GetString() is not ("ERROR" or "CRITICAL"))
+                    continue;
+
+                message = text ?? message;
                 if (root.TryGetProperty("msgid", out var id) && id.GetString() is { Length: > 0 } value)
                     messageId = value;
             }
             catch (Exception exception) when (exception is JsonException or KeyNotFoundException or InvalidOperationException)
             {
                 plainText.Add(line);
+                allText.Add(line);
             }
         }
 
+        // ssh's own complaints arrive as "Remote: …" lines before borg's generic "connection closed".
+        var sshHostKeyFailed = allText.Any(text => text.Contains("Host key verification failed", StringComparison.Ordinal));
+        var sshPermissionDenied = allText.Any(text => text.Contains("Permission denied", StringComparison.Ordinal));
+
         var kind = messageId switch
         {
+            _ when sshHostKeyFailed => BorgErrorKind.SshHostKeyFailed,
+            _ when sshPermissionDenied => BorgErrorKind.SshAuthenticationFailed,
             null => BorgErrorKind.Other,
             _ when messageId.Contains("PassphraseWrong", StringComparison.Ordinal) => BorgErrorKind.PassphraseWrong,
             _ when messageId.Contains("DoesNotExist", StringComparison.Ordinal) => BorgErrorKind.RepositoryNotFound,
@@ -218,4 +329,7 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
 
     [GeneratedRegex(@"^(?<drive>[A-Za-z]):[\\/]?(?<rest>.*)$", RegexOptions.CultureInvariant)]
     private static partial Regex DrivePath();
+
+    [GeneratedRegex(@"[^A-Za-z0-9._-]", RegexOptions.CultureInvariant)]
+    private static partial Regex SafeName();
 }

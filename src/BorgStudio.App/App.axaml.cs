@@ -9,7 +9,9 @@ using BorgStudio.Core.Borg;
 using BorgStudio.Core.Plugins;
 using BorgStudio.Core.Repositories;
 using BorgStudio.Core.Secrets;
+using BorgStudio.Core.Ssh;
 using BorgStudio.Providers.Local;
+using BorgStudio.Providers.Ssh;
 
 namespace BorgStudio.App;
 
@@ -25,7 +27,7 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             // Built-in providers use the same plugin API as external ones.
-            var plugins = PluginCatalog.Load([new LocalProviderPlugin()], AppPaths.PluginsDirectory);
+            var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new SshProviderPlugin()], AppPaths.PluginsDirectory);
 
             var window = new MainWindow();
             var viewModel = new MainViewModel(new AppServices(
@@ -34,6 +36,8 @@ public partial class App : Application
                 RepositoryStore.CreateDefault(),
                 SecretStores.CreateDefault(),
                 BorgClient.CreateDefault(),
+                new SshNetService(),
+                SshKeyStore.CreateDefault(),
                 new DialogService(window)));
             window.DataContext = viewModel;
             desktop.MainWindow = window;

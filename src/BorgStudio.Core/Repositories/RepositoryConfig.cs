@@ -49,6 +49,15 @@ public sealed record RepositoryConfig
     /// <summary>borg's repository id, to notice when a location suddenly holds a different repository.</summary>
     public string? BorgRepositoryId { get; init; }
 
+    /// <summary>SSH repositories: the private key borg logs in with.</summary>
+    public string? SshKeyFile { get; init; }
+
+    /// <summary>The SSH key was created by BorgStudio for this repository (and is deleted with it).</summary>
+    public bool SshKeyManaged { get; init; }
+
+    /// <summary>The key was installed restricted to <c>borg serve</c> for this repository only.</summary>
+    public bool SshKeyRestricted { get; init; }
+
     /// <summary>Key of the stored passphrase in the keychain.</summary>
     [JsonIgnore]
     public string SecretKey => $"repository/{Id:N}";

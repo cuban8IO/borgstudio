@@ -1,8 +1,14 @@
 using BorgStudio.App.Services;
 using BorgStudio.App.ViewModels;
 using BorgStudio.Core.Borg;
+using BorgStudio.Core.Plugins;
 using BorgStudio.Core.Processes;
+using BorgStudio.Core.Repositories;
 using BorgStudio.Core.Secrets;
+using BorgStudio.Core.Ssh;
+using BorgStudio.Plugins;
+using BorgStudio.Providers.Local;
+using BorgStudio.Providers.Ssh;
 
 namespace BorgStudio.Tests.TestSupport;
 
@@ -15,6 +21,8 @@ public sealed class FakeBorg : IProcessRunner
 
     public List<(IReadOnlyList<string> Arguments, string? Passphrase)> Calls { get; } = [];
 
+    public List<IReadOnlyDictionary<string, string?>> Environments { get; } = [];
+
     /// <summary>Encryption mode reported by "info"; null makes "info" fail with <see cref="InfoError"/>.</summary>
     public string? EncryptionMode { get; set; } = "repokey-blake2";
 
@@ -26,9 +34,11 @@ public sealed class FakeBorg : IProcessRunner
     public IEnumerable<string> Commands => Calls.Select(call => call.Arguments[0]);
 
     public Task<ProcessResult?> RunAsync(string fileName, IReadOnlyList<string> arguments, TimeSpan timeout,
-        IReadOnlyDictionary<string, string?>? environment = null, CancellationToken cancellationToken = default)
+        IReadOnlyDictionary<string, string?>? environment = null, string? standardInput = null,
+        CancellationToken cancellationToken = default)
     {
         var passphrase = environment?.GetValueOrDefault("BORG_PASSPHRASE");
+        Environments.Add(environment ?? new Dictionary<string, string?>());
         Calls.Add((arguments, passphrase));
 
         if (fileName == BorgPath && arguments is ["--version"])
@@ -55,6 +65,69 @@ public sealed class FakeBorg : IProcessRunner
     private static Task<ProcessResult?> Error(string msgid) =>
         Task.FromResult<ProcessResult?>(new ProcessResult(2, "",
             $$"""{"type": "log_message", "levelname": "ERROR", "message": "borg says no", "msgid": "{{msgid}}"}"""));
+}
+
+/// <summary>Plays an SSH server: presents a host key and records password logins.</summary>
+public sealed class FakeSsh : ISshService
+{
+    public static readonly SshHostKey ServerKey = new(HostKeyBlob("ssh-ed25519", 1));
+
+    public SshHostKey PresentedKey { get; set; } = ServerKey;
+
+    public SshOperationException? LoginFailure { get; set; }
+
+    public List<(SshEndpoint Endpoint, string Password, string Command)> Logins { get; } = [];
+
+    public int HostKeyRequests { get; private set; }
+
+    public Task<SshHostKey> GetHostKeyAsync(string host, int port, CancellationToken cancellationToken = default)
+    {
+        HostKeyRequests++;
+        return Task.FromResult(PresentedKey);
+    }
+
+    public Task RunWithPasswordAsync(SshEndpoint endpoint, string password, SshHostKey trustedHostKey, string command,
+        CancellationToken cancellationToken = default)
+    {
+        if (LoginFailure is not null)
+            throw LoginFailure;
+        Logins.Add((endpoint, password, command));
+        return Task.CompletedTask;
+    }
+
+    /// <summary>A syntactically valid host key blob ("type" + 32 bytes of key material).</summary>
+    public static byte[] HostKeyBlob(string type, byte fill)
+    {
+        var typeBytes = System.Text.Encoding.ASCII.GetBytes(type);
+        return [0, 0, 0, (byte)typeBytes.Length, .. typeBytes, 0, 0, 0, 32, .. Enumerable.Repeat(fill, 32)];
+    }
+}
+
+/// <summary>All services of the app wired to fakes, in a temporary directory.</summary>
+public sealed class TestServices : IDisposable
+{
+    public TemporaryDirectory Directory { get; } = new();
+    public FakeBorg Borg { get; } = new();
+    public FakeSecretStore Secrets { get; } = new();
+    public FakeSsh Ssh { get; } = new();
+    public FakeDialogs Dialogs { get; } = new();
+    public RepositoryStore Store { get; }
+    public SshKeyStore SshKeys { get; }
+    public AppServices Services { get; }
+
+    public TestServices(bool keychainAvailable = true)
+    {
+        if (!keychainAvailable)
+            Secrets = new FakeSecretStore(available: false);
+        Store = new RepositoryStore(Directory.Combine("repositories.json"));
+        SshKeys = new SshKeyStore(Directory.Combine("ssh"));
+        var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new SshProviderPlugin()], "no-plugins-here");
+        Services = new AppServices(Borg.Detector(), plugins, Store, Secrets, new BorgClient(Borg), Ssh, SshKeys, Dialogs);
+    }
+
+    public KnownHostsFile KnownHosts => new(SshKeys.KnownHostsFile);
+
+    public void Dispose() => Directory.Dispose();
 }
 
 public sealed class FakeSecretStore(bool available = true) : ISecretStore
