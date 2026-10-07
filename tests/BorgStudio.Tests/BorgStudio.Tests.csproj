@@ -18,6 +18,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\BorgStudio.Core\BorgStudio.Core.csproj" />
     <ProjectReference Include="..\..\src\BorgStudio.Providers.Local\BorgStudio.Providers.Local.csproj" />
+    <!-- View models only; they don't touch Avalonia types. -->
+    <ProjectReference Include="..\..\src\BorgStudio.App\BorgStudio.App.csproj" />
     <!-- Built first, but not referenced: the tests load it like a real external plugin (see below). -->
     <ProjectReference Include="..\..\samples\BorgStudio.SamplePlugin\BorgStudio.SamplePlugin.csproj"
                       ReferenceOutputAssembly="false" Private="false" />

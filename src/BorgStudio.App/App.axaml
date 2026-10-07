@@ -19,6 +19,7 @@
                     <SolidColorBrush x:Key="WarningBorder" Color="#E8C15A" />
                     <SolidColorBrush x:Key="CardBorder" Color="#DDDDDD" />
                     <SolidColorBrush x:Key="ErrorForeground" Color="#B3261E" />
+                    <SolidColorBrush x:Key="SuccessForeground" Color="#1E7B34" />
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Dark">
                     <SolidColorBrush x:Key="StatusBarBackground" Color="#2B2B2B" />
@@ -26,6 +27,7 @@
                     <SolidColorBrush x:Key="WarningBorder" Color="#8A6D1E" />
                     <SolidColorBrush x:Key="CardBorder" Color="#444444" />
                     <SolidColorBrush x:Key="ErrorForeground" Color="#F2B8B5" />
+                    <SolidColorBrush x:Key="SuccessForeground" Color="#7DD99A" />
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>

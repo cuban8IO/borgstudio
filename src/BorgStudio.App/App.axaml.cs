@@ -1,11 +1,14 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using BorgStudio.App.Services;
 using BorgStudio.App.ViewModels;
 using BorgStudio.App.Views;
 using BorgStudio.Core;
 using BorgStudio.Core.Borg;
 using BorgStudio.Core.Plugins;
+using BorgStudio.Core.Repositories;
+using BorgStudio.Core.Secrets;
 using BorgStudio.Providers.Local;
 
 namespace BorgStudio.App;
@@ -24,11 +27,16 @@ public partial class App : Application
             // Built-in providers use the same plugin API as external ones.
             var plugins = PluginCatalog.Load([new LocalProviderPlugin()], AppPaths.PluginsDirectory);
 
-            var viewModel = new MainViewModel(BorgDetector.CreateDefault(), plugins);
-            desktop.MainWindow = new MainWindow
-            {
-                DataContext = viewModel,
-            };
+            var window = new MainWindow();
+            var viewModel = new MainViewModel(new AppServices(
+                BorgDetector.CreateDefault(),
+                plugins,
+                RepositoryStore.CreateDefault(),
+                SecretStores.CreateDefault(),
+                BorgClient.CreateDefault(),
+                new DialogService(window)));
+            window.DataContext = viewModel;
+            desktop.MainWindow = window;
             viewModel.CheckBorgCommand.Execute(null);
         }
 

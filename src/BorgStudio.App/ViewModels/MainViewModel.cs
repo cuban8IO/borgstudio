@@ -1,28 +1,45 @@
-using System.Globalization;
 using BorgStudio.App.Resources;
+using BorgStudio.App.Services;
 using BorgStudio.Core.Borg;
 using BorgStudio.Core.Plugins;
+using BorgStudio.Core.Repositories;
+using BorgStudio.Core.Secrets;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 namespace BorgStudio.App.ViewModels;
 
+/// <summary>Everything the main window works with; replaced by fakes in tests.</summary>
+public sealed record AppServices(
+    BorgDetector BorgDetector,
+    PluginCatalog Plugins,
+    RepositoryStore RepositoryStore,
+    ISecretStore SecretStore,
+    BorgClient BorgClient,
+    IDialogService Dialogs);
+
 public partial class MainViewModel : ViewModelBase
 {
-    private readonly BorgDetector _borgDetector;
+    private readonly AppServices _services;
 
     // Designer only.
-    public MainViewModel() : this(BorgDetector.CreateDefault(), PluginCatalog.Empty)
+    public MainViewModel() : this(new AppServices(BorgDetector.CreateDefault(), PluginCatalog.Empty,
+        RepositoryStore.CreateDefault(), SecretStores.CreateDefault(), BorgClient.CreateDefault(), new NoDialogs()))
     {
     }
 
-    public MainViewModel(BorgDetector borgDetector, PluginCatalog plugins)
+    public MainViewModel(AppServices services)
     {
-        _borgDetector = borgDetector;
-        Plugins = plugins;
+        _services = services;
+        LoadRepositories();
     }
 
-    public PluginCatalog Plugins { get; }
+    public PluginCatalog Plugins => _services.Plugins;
+
+    /// <summary>The borg used for all repository operations; <c>null</c> until found.</summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(TestRepositoryCommand), nameof(ExportKeyCommand))]
+    public partial BorgInstallation? Borg { get; private set; }
 
     /// <summary>Status bar text, e.g. "borg 1.4.5 · /usr/bin/borg".</summary>
     [ObservableProperty]
@@ -45,10 +62,11 @@ public partial class MainViewModel : ViewModelBase
         BorgStatus = Strings.BorgChecking;
         try
         {
-            ShowBorgResult(await Task.Run(() => _borgDetector.DetectAsync()));
+            ShowBorgResult(await Task.Run(() => _services.BorgDetector.DetectAsync()));
         }
         catch (Exception exception)
         {
+            Borg = null;
             BorgStatus = Strings.BorgStatusNotFound;
             ShowProblem(Strings.BorgCheckFailedTitle, exception.Message);
         }
@@ -56,26 +74,27 @@ public partial class MainViewModel : ViewModelBase
 
     private void ShowBorgResult(BorgInstallation? borg)
     {
+        Borg = borg;
         if (borg is null)
         {
             BorgStatus = Strings.BorgStatusNotFound;
-            var text = Format(Strings.BorgMissingText, BorgCompatibility.MinimumVersion);
+            var text = BorgTexts.Format(Strings.BorgMissingText, BorgCompatibility.MinimumVersion);
             ShowProblem(Strings.BorgMissingTitle,
                 OperatingSystem.IsWindows() ? text + " " + Strings.BorgMissingWindowsHint : text);
             return;
         }
 
-        BorgStatus = Format(borg.Runtime == BorgRuntime.Wsl ? Strings.BorgStatusWsl : Strings.BorgStatusNative,
+        BorgStatus = BorgTexts.Format(borg.Runtime == BorgRuntime.Wsl ? Strings.BorgStatusWsl : Strings.BorgStatusNative,
             borg.Version, borg.Path);
 
         switch (borg.Support)
         {
             case BorgSupport.TooOld:
-                ShowProblem(Format(Strings.BorgTooOldTitle, borg.Version),
-                    Format(Strings.BorgTooOldText, BorgCompatibility.MinimumVersion));
+                ShowProblem(BorgTexts.Format(Strings.BorgTooOldTitle, borg.Version),
+                    BorgTexts.Format(Strings.BorgTooOldText, BorgCompatibility.MinimumVersion));
                 break;
             case BorgSupport.NotYetSupported:
-                ShowProblem(Format(Strings.BorgNotYetSupportedTitle, borg.Version), Strings.BorgNotYetSupportedText);
+                ShowProblem(BorgTexts.Format(Strings.BorgNotYetSupportedTitle, borg.Version), Strings.BorgNotYetSupportedText);
                 break;
             default:
                 HasBorgProblem = false;
@@ -90,6 +109,13 @@ public partial class MainViewModel : ViewModelBase
         HasBorgProblem = true;
     }
 
-    private static string Format(string format, params object[] arguments) =>
-        string.Format(CultureInfo.CurrentCulture, format, arguments);
+    /// <summary>For the designer, which has no windows to show dialogs in.</summary>
+    private sealed class NoDialogs : IDialogService
+    {
+        public Task<bool> ConfirmAsync(string title, string message, string confirmText, string? cancelText = null) => Task.FromResult(false);
+        public Task ShowMessageAsync(string title, string message) => Task.CompletedTask;
+        public Task<string?> AskPassphraseAsync(string repositoryName) => Task.FromResult<string?>(null);
+        public Task<string?> PickSaveFileAsync(string title, string suggestedFileName) => Task.FromResult<string?>(null);
+        public Task ShowRepositoryEditorAsync(RepositoryEditorViewModel editor) => Task.CompletedTask;
+    }
 }
