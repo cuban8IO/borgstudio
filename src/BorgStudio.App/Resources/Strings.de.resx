@@ -106,4 +106,276 @@
   <data name="PluginErrorDuplicateProvider" xml:space="preserve">
     <value>Provider „{0}“ übersprungen: {1} verwendet diese ID bereits.</value>
   </data>
+  <!-- Allgemein -->
+  <data name="Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Abbrechen</value>
+  </data>
+  <data name="Later" xml:space="preserve">
+    <value>Später</value>
+  </data>
+  <data name="Optional" xml:space="preserve">
+    <value>optional</value>
+  </data>
+  <!-- Repository-Liste und Details -->
+  <data name="RepositoriesHeader" xml:space="preserve">
+    <value>Repositories</value>
+  </data>
+  <data name="AddRepository" xml:space="preserve">
+    <value>Repository hinzufügen</value>
+  </data>
+  <data name="NoRepositoriesText" xml:space="preserve">
+    <value>Ein neues Repository anlegen oder ein vorhandenes verbinden – in einem lokalen Ordner oder auf einem angeschlossenen Laufwerk.</value>
+  </data>
+  <data name="LabelLocation" xml:space="preserve">
+    <value>Ort</value>
+  </data>
+  <data name="LabelEncryption" xml:space="preserve">
+    <value>Verschlüsselung</value>
+  </data>
+  <data name="LabelPassphrase" xml:space="preserve">
+    <value>Passphrase</value>
+  </data>
+  <data name="LabelBorgVersion" xml:space="preserve">
+    <value>borg-Version</value>
+  </data>
+  <data name="EncryptionUnknown" xml:space="preserve">
+    <value>Unbekannt (Verbindung testen)</value>
+  </data>
+  <data name="ProviderMissing" xml:space="preserve">
+    <value>Provider „{0}“ ist nicht verfügbar (Plugin fehlt?).</value>
+  </data>
+  <data name="KeyfileWarning" xml:space="preserve">
+    <value>Der Schlüssel dieses Repositories liegt nur auf diesem Computer. Ohne Sicherung des Schlüssels sind die Backups wertlos, wenn der Computer verloren geht.</value>
+  </data>
+  <data name="TestConnection" xml:space="preserve">
+    <value>Verbindung testen</value>
+  </data>
+  <data name="ExportKey" xml:space="preserve">
+    <value>Schlüssel exportieren</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Bearbeiten</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>Entfernen</value>
+  </data>
+  <data name="Checking" xml:space="preserve">
+    <value>Repository wird geprüft …</value>
+  </data>
+  <data name="Creating" xml:space="preserve">
+    <value>Repository wird angelegt …</value>
+  </data>
+  <data name="ExportingKey" xml:space="preserve">
+    <value>Schlüssel wird exportiert …</value>
+  </data>
+  <data name="TestSucceeded" xml:space="preserve">
+    <value>Verbindung in Ordnung. Letzte Änderung: {0}</value>
+  </data>
+  <data name="TestSucceededNoDate" xml:space="preserve">
+    <value>Verbindung in Ordnung.</value>
+  </data>
+  <data name="RepositoryIdChanged" xml:space="preserve">
+    <value>Achtung: An diesem Ort liegt ein anderes Repository als beim Einrichten.</value>
+  </data>
+  <data name="RepositoryCreated" xml:space="preserve">
+    <value>Repository angelegt.</value>
+  </data>
+  <data name="RepositoryConnected" xml:space="preserve">
+    <value>Repository verbunden.</value>
+  </data>
+  <data name="ExportKeyTitle" xml:space="preserve">
+    <value>Repository-Schlüssel speichern</value>
+  </data>
+  <data name="KeyExported" xml:space="preserve">
+    <value>Schlüssel gespeichert unter {0}. Sicher aufbewahren – getrennt von der Passphrase.</value>
+  </data>
+  <data name="RemoveTitle" xml:space="preserve">
+    <value>Repository entfernen</value>
+  </data>
+  <data name="RemoveMessage" xml:space="preserve">
+    <value>„{0}“ aus der Liste entfernen? Das Repository und seine Backups bleiben unangetastet; eine gespeicherte Passphrase wird aus dem Schlüsselbund gelöscht.</value>
+  </data>
+  <data name="BackupKeyTitle" xml:space="preserve">
+    <value>Schlüssel sichern</value>
+  </data>
+  <data name="BackupKeyRepokey" xml:space="preserve">
+    <value>Der Schlüssel liegt im Repository und ist durch die Passphrase geschützt. Eine separate Sicherung schützt vor Datenverlust, falls das Repository beschädigt wird. Schlüssel jetzt sichern?</value>
+  </data>
+  <data name="BackupKeyKeyfile" xml:space="preserve">
+    <value>Der Schlüssel liegt nur auf diesem Computer. Ohne Sicherung des Schlüssels sind die Backups wertlos, wenn der Computer verloren geht. Schlüssel jetzt sichern?</value>
+  </data>
+  <data name="BackupKeyConfirm" xml:space="preserve">
+    <value>Schlüssel sichern</value>
+  </data>
+  <data name="PassphrasePromptTitle" xml:space="preserve">
+    <value>Passphrase</value>
+  </data>
+  <data name="PassphrasePromptText" xml:space="preserve">
+    <value>Passphrase für „{0}“:</value>
+  </data>
+  <data name="StoreBrokenWarning" xml:space="preserve">
+    <value>Die Repository-Liste war nicht lesbar und wurde nach {0} verschoben. BorgStudio startet mit einer leeren Liste.</value>
+  </data>
+  <data name="KeychainError" xml:space="preserve">
+    <value>Fehler beim Schlüsselbund: {0}</value>
+  </data>
+  <data name="SecretLabel" xml:space="preserve">
+    <value>BorgStudio: {0}</value>
+  </data>
+  <data name="Borg2NotSupported" xml:space="preserve">
+    <value>borg-2-Repositories werden noch nicht unterstützt.</value>
+  </data>
+  <data name="BorgNotReady" xml:space="preserve">
+    <value>Dafür wird ein unterstütztes borg (1.2 oder neuer) benötigt.</value>
+  </data>
+  <!-- Passphrase-Arten, borg-Versionen, Verschlüsselung -->
+  <data name="PassphraseModeNone" xml:space="preserve">
+    <value>Keine (unverschlüsselt)</value>
+  </data>
+  <data name="PassphraseModeStored" xml:space="preserve">
+    <value>Im Schlüsselbund gespeichert</value>
+  </data>
+  <data name="PassphraseModeAsk" xml:space="preserve">
+    <value>Wird jedes Mal abgefragt</value>
+  </data>
+  <data name="BorgVersionAuto" xml:space="preserve">
+    <value>Automatisch</value>
+  </data>
+  <data name="BorgVersionBorg1" xml:space="preserve">
+    <value>borg 1.x</value>
+  </data>
+  <data name="BorgVersionBorg2" xml:space="preserve">
+    <value>borg 2.x (noch nicht unterstützt)</value>
+  </data>
+  <data name="EncryptionRepokey" xml:space="preserve">
+    <value>repokey-blake2 – Schlüssel im Repository (empfohlen)</value>
+  </data>
+  <data name="EncryptionKeyfile" xml:space="preserve">
+    <value>keyfile-blake2 – Schlüssel nur auf diesem Computer</value>
+  </data>
+  <data name="EncryptionNone" xml:space="preserve">
+    <value>none – unverschlüsselt</value>
+  </data>
+  <data name="EncryptionKeyfileHint" xml:space="preserve">
+    <value>Der Schlüssel liegt nur auf diesem Computer. BorgStudio bietet nach dem Anlegen an, ihn zu sichern.</value>
+  </data>
+  <data name="EncryptionNoneHint" xml:space="preserve">
+    <value>Jeder mit Zugriff auf das Repository kann die Backups lesen.</value>
+  </data>
+  <!-- Repository-Assistent -->
+  <data name="EditorTitleAdd" xml:space="preserve">
+    <value>Repository hinzufügen</value>
+  </data>
+  <data name="EditorTitleEdit" xml:space="preserve">
+    <value>Repository bearbeiten</value>
+  </data>
+  <data name="EditorChooseProvider" xml:space="preserve">
+    <value>Wo liegt das Repository?</value>
+  </data>
+  <data name="EditorName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="EditorNameHint" xml:space="preserve">
+    <value>Wird in der Liste angezeigt, z. B. „Externe Festplatte“.</value>
+  </data>
+  <data name="EditorModeConnect" xml:space="preserve">
+    <value>Vorhandenes Repository verbinden</value>
+  </data>
+  <data name="EditorModeCreate" xml:space="preserve">
+    <value>Neues Repository anlegen</value>
+  </data>
+  <data name="EditorEncryption" xml:space="preserve">
+    <value>Verschlüsselung</value>
+  </data>
+  <data name="EditorPassphrase" xml:space="preserve">
+    <value>Passphrase</value>
+  </data>
+  <data name="EditorPassphraseConfirmation" xml:space="preserve">
+    <value>Passphrase wiederholen</value>
+  </data>
+  <data name="EditorPassphraseConnectHint" xml:space="preserve">
+    <value>Bei unverschlüsselten Repositories leer lassen.</value>
+  </data>
+  <data name="EditorPassphraseCreateHint" xml:space="preserve">
+    <value>Ohne Passphrase lassen sich die Backups nicht wiederherstellen. Gut aufschreiben und sicher aufbewahren.</value>
+  </data>
+  <data name="EditorPassphraseEditHint" xml:space="preserve">
+    <value>Nur nötig, um eine (neue) Passphrase im Schlüsselbund zu speichern.</value>
+  </data>
+  <data name="EditorStorePassphrase" xml:space="preserve">
+    <value>Passphrase im Schlüsselbund speichern (sonst wird sie jedes Mal abgefragt)</value>
+  </data>
+  <data name="EditorKeychainUnavailable" xml:space="preserve">
+    <value>Auf diesem System ist kein Schlüsselbund verfügbar – die Passphrase wird jedes Mal abgefragt.</value>
+  </data>
+  <data name="EditorAdvanced" xml:space="preserve">
+    <value>Erweitert</value>
+  </data>
+  <data name="EditorBorgVersion" xml:space="preserve">
+    <value>borg-Version</value>
+  </data>
+  <data name="EditorBrowse" xml:space="preserve">
+    <value>Durchsuchen …</value>
+  </data>
+  <data name="EditorBack" xml:space="preserve">
+    <value>Zurück</value>
+  </data>
+  <data name="EditorNext" xml:space="preserve">
+    <value>Weiter</value>
+  </data>
+  <data name="EditorConnect" xml:space="preserve">
+    <value>Verbinden</value>
+  </data>
+  <data name="EditorCreate" xml:space="preserve">
+    <value>Anlegen</value>
+  </data>
+  <data name="EditorSave" xml:space="preserve">
+    <value>Speichern</value>
+  </data>
+  <data name="EditorNameRequired" xml:space="preserve">
+    <value>Bitte einen Namen eingeben.</value>
+  </data>
+  <data name="EditorPassphraseRequired" xml:space="preserve">
+    <value>Bitte eine Passphrase eingeben.</value>
+  </data>
+  <data name="EditorPassphraseMismatch" xml:space="preserve">
+    <value>Die Passphrasen stimmen nicht überein.</value>
+  </data>
+  <data name="EditorPassphraseRequiredToStore" xml:space="preserve">
+    <value>Bitte die Passphrase eingeben, um sie im Schlüsselbund zu speichern.</value>
+  </data>
+  <!-- borg-Fehler -->
+  <data name="BorgErrorPassphraseWrong" xml:space="preserve">
+    <value>Die Passphrase ist falsch.</value>
+  </data>
+  <data name="BorgErrorRepositoryNotFound" xml:space="preserve">
+    <value>An diesem Ort gibt es kein Repository.</value>
+  </data>
+  <data name="BorgErrorNotARepository" xml:space="preserve">
+    <value>Dieser Ordner ist kein borg-Repository.</value>
+  </data>
+  <data name="BorgErrorRepositoryExists" xml:space="preserve">
+    <value>An diesem Ort gibt es bereits ein Repository oder andere Daten.</value>
+  </data>
+  <data name="BorgErrorLocked" xml:space="preserve">
+    <value>Das Repository ist gesperrt – ein anderer borg-Prozess verwendet es.</value>
+  </data>
+  <data name="BorgErrorConnectionFailed" xml:space="preserve">
+    <value>Die Verbindung zum Repository ist fehlgeschlagen.</value>
+  </data>
+  <data name="BorgErrorTimeout" xml:space="preserve">
+    <value>borg ist nicht rechtzeitig fertig geworden.</value>
+  </data>
+  <data name="BorgErrorNotStartable" xml:space="preserve">
+    <value>borg konnte nicht gestartet werden.</value>
+  </data>
+  <data name="BorgErrorUnsupportedPath" xml:space="preserve">
+    <value>Dieser Pfad ist mit borg in WSL nicht nutzbar (nur Laufwerksbuchstaben, keine Netzwerkfreigaben).</value>
+  </data>
+  <data name="BorgErrorOther" xml:space="preserve">
+    <value>borg hat einen Fehler gemeldet.</value>
+  </data>
 </root>

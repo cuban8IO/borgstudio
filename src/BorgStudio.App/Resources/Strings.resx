@@ -116,4 +116,283 @@
     <value>Provider "{0}" skipped: {1} already uses this ID.</value>
     <comment>{0} = provider id, {1} = plugin that owns the id</comment>
   </data>
+  <!-- General -->
+  <data name="Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Later" xml:space="preserve">
+    <value>Later</value>
+  </data>
+  <data name="Optional" xml:space="preserve">
+    <value>optional</value>
+  </data>
+  <!-- Repository list and details -->
+  <data name="RepositoriesHeader" xml:space="preserve">
+    <value>Repositories</value>
+  </data>
+  <data name="AddRepository" xml:space="preserve">
+    <value>Add repository</value>
+  </data>
+  <data name="NoRepositoriesText" xml:space="preserve">
+    <value>Create a new repository or connect an existing one – in a local folder or on an attached drive.</value>
+  </data>
+  <data name="LabelLocation" xml:space="preserve">
+    <value>Location</value>
+  </data>
+  <data name="LabelEncryption" xml:space="preserve">
+    <value>Encryption</value>
+  </data>
+  <data name="LabelPassphrase" xml:space="preserve">
+    <value>Passphrase</value>
+  </data>
+  <data name="LabelBorgVersion" xml:space="preserve">
+    <value>borg version</value>
+  </data>
+  <data name="EncryptionUnknown" xml:space="preserve">
+    <value>Unknown (test the connection)</value>
+  </data>
+  <data name="ProviderMissing" xml:space="preserve">
+    <value>Provider "{0}" is not available (plugin missing?).</value>
+    <comment>{0} = provider id</comment>
+  </data>
+  <data name="KeyfileWarning" xml:space="preserve">
+    <value>The key of this repository is stored only on this computer. Without a backup of the key, the backups are worthless if this computer is lost.</value>
+  </data>
+  <data name="TestConnection" xml:space="preserve">
+    <value>Test connection</value>
+  </data>
+  <data name="ExportKey" xml:space="preserve">
+    <value>Export key</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Checking" xml:space="preserve">
+    <value>Checking the repository…</value>
+  </data>
+  <data name="Creating" xml:space="preserve">
+    <value>Creating the repository…</value>
+  </data>
+  <data name="ExportingKey" xml:space="preserve">
+    <value>Exporting the key…</value>
+  </data>
+  <data name="TestSucceeded" xml:space="preserve">
+    <value>Connection OK. Last change: {0}</value>
+    <comment>{0} = date and time</comment>
+  </data>
+  <data name="TestSucceededNoDate" xml:space="preserve">
+    <value>Connection OK.</value>
+  </data>
+  <data name="RepositoryIdChanged" xml:space="preserve">
+    <value>Attention: this location holds a different repository than when it was set up.</value>
+  </data>
+  <data name="RepositoryCreated" xml:space="preserve">
+    <value>Repository created.</value>
+  </data>
+  <data name="RepositoryConnected" xml:space="preserve">
+    <value>Repository connected.</value>
+  </data>
+  <data name="ExportKeyTitle" xml:space="preserve">
+    <value>Save repository key</value>
+  </data>
+  <data name="KeyExported" xml:space="preserve">
+    <value>Key saved to {0}. Keep it safe – separately from the passphrase.</value>
+    <comment>{0} = file path</comment>
+  </data>
+  <data name="RemoveTitle" xml:space="preserve">
+    <value>Remove repository</value>
+  </data>
+  <data name="RemoveMessage" xml:space="preserve">
+    <value>Remove "{0}" from the list? The repository and its backups stay untouched; a stored passphrase is deleted from the keychain.</value>
+    <comment>{0} = repository name</comment>
+  </data>
+  <data name="BackupKeyTitle" xml:space="preserve">
+    <value>Back up the key</value>
+  </data>
+  <data name="BackupKeyRepokey" xml:space="preserve">
+    <value>The key is stored in the repository, protected by the passphrase. A separate backup protects against data loss if the repository gets damaged. Save the key now?</value>
+  </data>
+  <data name="BackupKeyKeyfile" xml:space="preserve">
+    <value>The key is stored only on this computer. Without a backup of the key, the backups are worthless if this computer is lost. Save the key now?</value>
+  </data>
+  <data name="BackupKeyConfirm" xml:space="preserve">
+    <value>Save key</value>
+  </data>
+  <data name="PassphrasePromptTitle" xml:space="preserve">
+    <value>Passphrase</value>
+  </data>
+  <data name="PassphrasePromptText" xml:space="preserve">
+    <value>Passphrase for "{0}":</value>
+    <comment>{0} = repository name</comment>
+  </data>
+  <data name="StoreBrokenWarning" xml:space="preserve">
+    <value>The repository list could not be read and was moved to {0}. BorgStudio starts with an empty list.</value>
+    <comment>{0} = file path</comment>
+  </data>
+  <data name="KeychainError" xml:space="preserve">
+    <value>Keychain error: {0}</value>
+  </data>
+  <data name="SecretLabel" xml:space="preserve">
+    <value>BorgStudio: {0}</value>
+    <comment>Label of the keychain entry; {0} = repository name</comment>
+  </data>
+  <data name="Borg2NotSupported" xml:space="preserve">
+    <value>borg 2 repositories are not supported yet.</value>
+  </data>
+  <data name="BorgNotReady" xml:space="preserve">
+    <value>A supported borg (1.2 or newer) is needed for this.</value>
+  </data>
+  <!-- Passphrase modes, borg versions, encryption -->
+  <data name="PassphraseModeNone" xml:space="preserve">
+    <value>None (unencrypted)</value>
+  </data>
+  <data name="PassphraseModeStored" xml:space="preserve">
+    <value>Stored in the keychain</value>
+  </data>
+  <data name="PassphraseModeAsk" xml:space="preserve">
+    <value>Asked for every time</value>
+  </data>
+  <data name="BorgVersionAuto" xml:space="preserve">
+    <value>Automatic</value>
+  </data>
+  <data name="BorgVersionBorg1" xml:space="preserve">
+    <value>borg 1.x</value>
+  </data>
+  <data name="BorgVersionBorg2" xml:space="preserve">
+    <value>borg 2.x (not supported yet)</value>
+  </data>
+  <data name="EncryptionRepokey" xml:space="preserve">
+    <value>repokey-blake2 – key in the repository (recommended)</value>
+  </data>
+  <data name="EncryptionKeyfile" xml:space="preserve">
+    <value>keyfile-blake2 – key only on this computer</value>
+  </data>
+  <data name="EncryptionNone" xml:space="preserve">
+    <value>none – unencrypted</value>
+  </data>
+  <data name="EncryptionKeyfileHint" xml:space="preserve">
+    <value>The key is stored only on this computer. BorgStudio offers to back it up after creating the repository.</value>
+  </data>
+  <data name="EncryptionNoneHint" xml:space="preserve">
+    <value>Anyone with access to the repository can read the backups.</value>
+  </data>
+  <!-- Repository editor -->
+  <data name="EditorTitleAdd" xml:space="preserve">
+    <value>Add repository</value>
+  </data>
+  <data name="EditorTitleEdit" xml:space="preserve">
+    <value>Edit repository</value>
+  </data>
+  <data name="EditorChooseProvider" xml:space="preserve">
+    <value>Where is the repository?</value>
+  </data>
+  <data name="EditorName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="EditorNameHint" xml:space="preserve">
+    <value>Shown in the list, e.g. "External disk".</value>
+  </data>
+  <data name="EditorModeConnect" xml:space="preserve">
+    <value>Connect an existing repository</value>
+  </data>
+  <data name="EditorModeCreate" xml:space="preserve">
+    <value>Create a new repository</value>
+  </data>
+  <data name="EditorEncryption" xml:space="preserve">
+    <value>Encryption</value>
+  </data>
+  <data name="EditorPassphrase" xml:space="preserve">
+    <value>Passphrase</value>
+  </data>
+  <data name="EditorPassphraseConfirmation" xml:space="preserve">
+    <value>Repeat passphrase</value>
+  </data>
+  <data name="EditorPassphraseConnectHint" xml:space="preserve">
+    <value>Leave empty for unencrypted repositories.</value>
+  </data>
+  <data name="EditorPassphraseCreateHint" xml:space="preserve">
+    <value>Without the passphrase the backups cannot be restored. Write it down and keep it safe.</value>
+  </data>
+  <data name="EditorPassphraseEditHint" xml:space="preserve">
+    <value>Only needed to store a (new) passphrase in the keychain.</value>
+  </data>
+  <data name="EditorStorePassphrase" xml:space="preserve">
+    <value>Store passphrase in the keychain (otherwise it is asked for every time)</value>
+  </data>
+  <data name="EditorKeychainUnavailable" xml:space="preserve">
+    <value>No keychain available on this system – the passphrase will be asked for every time.</value>
+  </data>
+  <data name="EditorAdvanced" xml:space="preserve">
+    <value>Advanced</value>
+  </data>
+  <data name="EditorBorgVersion" xml:space="preserve">
+    <value>borg version</value>
+  </data>
+  <data name="EditorBrowse" xml:space="preserve">
+    <value>Browse…</value>
+  </data>
+  <data name="EditorBack" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="EditorNext" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="EditorConnect" xml:space="preserve">
+    <value>Connect</value>
+  </data>
+  <data name="EditorCreate" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="EditorSave" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="EditorNameRequired" xml:space="preserve">
+    <value>Please enter a name.</value>
+  </data>
+  <data name="EditorPassphraseRequired" xml:space="preserve">
+    <value>Please enter a passphrase.</value>
+  </data>
+  <data name="EditorPassphraseMismatch" xml:space="preserve">
+    <value>The passphrases do not match.</value>
+  </data>
+  <data name="EditorPassphraseRequiredToStore" xml:space="preserve">
+    <value>Please enter the passphrase to store it in the keychain.</value>
+  </data>
+  <!-- borg errors -->
+  <data name="BorgErrorPassphraseWrong" xml:space="preserve">
+    <value>The passphrase is wrong.</value>
+  </data>
+  <data name="BorgErrorRepositoryNotFound" xml:space="preserve">
+    <value>There is no repository at this location.</value>
+  </data>
+  <data name="BorgErrorNotARepository" xml:space="preserve">
+    <value>This folder is not a borg repository.</value>
+  </data>
+  <data name="BorgErrorRepositoryExists" xml:space="preserve">
+    <value>There already is a repository or other data at this location.</value>
+  </data>
+  <data name="BorgErrorLocked" xml:space="preserve">
+    <value>The repository is locked – another borg process is using it.</value>
+  </data>
+  <data name="BorgErrorConnectionFailed" xml:space="preserve">
+    <value>The connection to the repository failed.</value>
+  </data>
+  <data name="BorgErrorTimeout" xml:space="preserve">
+    <value>borg did not finish in time.</value>
+  </data>
+  <data name="BorgErrorNotStartable" xml:space="preserve">
+    <value>borg could not be started.</value>
+  </data>
+  <data name="BorgErrorUnsupportedPath" xml:space="preserve">
+    <value>This path cannot be used with borg in WSL (only drive letters, no network shares).</value>
+  </data>
+  <data name="BorgErrorOther" xml:space="preserve">
+    <value>borg reported an error.</value>
+  </data>
 </root>

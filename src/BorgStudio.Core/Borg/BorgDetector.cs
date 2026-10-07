@@ -50,7 +50,7 @@ public sealed class BorgDetector(IProcessRunner processRunner, BorgSearchEnviron
     {
         try
         {
-            var result = await processRunner.RunAsync(fileName, arguments, timeout, cancellationToken);
+            var result = await processRunner.RunAsync(fileName, arguments, timeout, cancellationToken: cancellationToken);
             return result is { ExitCode: 0 } ? result.StandardOutput : null;
         }
         catch (TimeoutException)

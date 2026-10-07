@@ -1,0 +1,135 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:BorgStudio.App.ViewModels"
+        xmlns:res="using:BorgStudio.App.Resources"
+        xmlns:sys="using:System"
+        x:Class="BorgStudio.App.Views.RepositoryEditorWindow"
+        x:DataType="vm:RepositoryEditorViewModel"
+        Title="{Binding Title}"
+        Width="600" Height="640" MinWidth="480" MinHeight="420"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+    <DockPanel Margin="20">
+
+        <!-- Buttons -->
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right"
+                    Spacing="8" Margin="0,16,0,0">
+            <Button Content="{x:Static res:Strings.EditorBack}" Command="{Binding BackCommand}"
+                    IsVisible="{Binding CanGoBack}" />
+            <Button Content="{x:Static res:Strings.Cancel}" Command="{Binding CancelCommand}" IsCancel="True" />
+            <Button Content="{x:Static res:Strings.EditorNext}" Command="{Binding NextCommand}" Classes="accent"
+                    IsVisible="{Binding IsProviderPage}" IsDefault="{Binding IsProviderPage}" />
+            <Button Content="{Binding ConfirmText}" Command="{Binding ConfirmCommand}" Classes="accent"
+                    IsVisible="{Binding IsDetailsPage}" IsDefault="{Binding IsDetailsPage}" />
+        </StackPanel>
+
+        <!-- Progress and errors -->
+        <StackPanel DockPanel.Dock="Bottom" Spacing="6" Margin="0,12,0,0">
+            <StackPanel Spacing="4" IsVisible="{Binding IsBusy}">
+                <ProgressBar IsIndeterminate="True" />
+                <TextBlock Text="{Binding BusyText}" FontSize="12" />
+            </StackPanel>
+            <ItemsControl ItemsSource="{Binding Errors}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="sys:String">
+                        <TextBlock Text="{Binding}" TextWrapping="Wrap" Foreground="{DynamicResource ErrorForeground}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+
+        <Panel>
+            <!-- Page 1: provider -->
+            <DockPanel IsVisible="{Binding IsProviderPage}">
+                <TextBlock DockPanel.Dock="Top" Text="{x:Static res:Strings.EditorChooseProvider}"
+                           FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12" />
+                <ListBox ItemsSource="{Binding Providers}" SelectedItem="{Binding SelectedProvider}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:ProviderOptionViewModel">
+                            <StackPanel Margin="4,6" Spacing="2">
+                                <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Opacity="0.75" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+
+            <!-- Page 2: details -->
+            <ScrollViewer IsVisible="{Binding IsDetailsPage}">
+                <StackPanel Spacing="14" Margin="0,0,12,0">
+                    <TextBlock Text="{Binding SelectedProvider.DisplayName}" FontSize="16" FontWeight="SemiBold" />
+
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="{x:Static res:Strings.EditorName}" />
+                        <TextBox Text="{Binding Name}" />
+                        <TextBlock Text="{x:Static res:Strings.EditorNameHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <ItemsControl ItemsSource="{Binding Fields}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="14" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:FieldViewModel">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="{Binding Label}" />
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBox Text="{Binding Value}" />
+                                        <Button Grid.Column="1" Margin="8,0,0,0" IsVisible="{Binding IsFolder}"
+                                                Content="{x:Static res:Strings.EditorBrowse}" Click="BrowseFolder_Click" />
+                                    </Grid>
+                                    <TextBlock Text="{Binding Hint}" IsVisible="{Binding HasHint}"
+                                               FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <StackPanel Spacing="4" IsVisible="{Binding ShowModeChoice}">
+                        <RadioButton GroupName="Mode" IsChecked="{Binding !CreateNew}"
+                                     Content="{x:Static res:Strings.EditorModeConnect}" />
+                        <RadioButton GroupName="Mode" IsChecked="{Binding CreateNew}"
+                                     Content="{x:Static res:Strings.EditorModeCreate}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="4" IsVisible="{Binding ShowEncryption}">
+                        <TextBlock Text="{x:Static res:Strings.EditorEncryption}" />
+                        <ComboBox ItemsSource="{Binding EncryptionOptions}" SelectedItem="{Binding SelectedEncryption}"
+                                  HorizontalAlignment="Stretch" />
+                        <TextBlock Text="{Binding EncryptionHint}" IsVisible="{Binding EncryptionHint, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                   TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ErrorForeground}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="4" IsVisible="{Binding UsesPassphrase}">
+                        <TextBlock Text="{x:Static res:Strings.EditorPassphrase}" />
+                        <TextBox Text="{Binding Passphrase}" PasswordChar="•" />
+                        <TextBlock Text="{x:Static res:Strings.EditorPassphraseConfirmation}"
+                                   IsVisible="{Binding ShowPassphraseConfirmation}" Margin="0,6,0,0" />
+                        <TextBox Text="{Binding PassphraseConfirmation}" PasswordChar="•"
+                                 IsVisible="{Binding ShowPassphraseConfirmation}" />
+                        <TextBlock Text="{Binding PassphraseHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                        <CheckBox IsChecked="{Binding StorePassphrase}" IsEnabled="{Binding CanStorePassphrase}"
+                                  Margin="0,4,0,0">
+                            <TextBlock Text="{x:Static res:Strings.EditorStorePassphrase}" TextWrapping="Wrap" />
+                        </CheckBox>
+                        <TextBlock Text="{x:Static res:Strings.EditorKeychainUnavailable}" IsVisible="{Binding KeychainUnavailable}"
+                                   FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <Expander Header="{x:Static res:Strings.EditorAdvanced}" HorizontalAlignment="Stretch">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="{x:Static res:Strings.EditorBorgVersion}" />
+                            <ComboBox ItemsSource="{Binding BorgVersionOptions}" SelectedItem="{Binding SelectedBorgVersion}"
+                                      HorizontalAlignment="Stretch" />
+                        </StackPanel>
+                    </Expander>
+                </StackPanel>
+            </ScrollViewer>
+        </Panel>
+    </DockPanel>
+
+</Window>

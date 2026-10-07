@@ -52,10 +52,102 @@
             </StackPanel>
         </Border>
 
-        <TextBlock Text="{x:Static res:Strings.Welcome}"
-                   FontSize="24"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Center" />
+        <!-- Shown when repositories.json could not be read -->
+        <Border DockPanel.Dock="Top" IsVisible="{Binding StoreWarning, Converter={x:Static ObjectConverters.IsNotNull}}"
+                Margin="16,16,16,0" Padding="16,12" CornerRadius="6" BorderThickness="1"
+                Background="{DynamicResource WarningBackground}" BorderBrush="{DynamicResource WarningBorder}">
+            <TextBlock Text="{Binding StoreWarning}" TextWrapping="Wrap" />
+        </Border>
+
+        <Grid ColumnDefinitions="280,*" Margin="0,12,0,0">
+
+            <!-- Repository list -->
+            <DockPanel Grid.Column="0" Margin="16,4,8,16">
+                <TextBlock DockPanel.Dock="Top" Text="{x:Static res:Strings.RepositoriesHeader}"
+                           FontSize="16" FontWeight="SemiBold" Margin="4,0,0,8" />
+                <Button DockPanel.Dock="Bottom" Content="{x:Static res:Strings.AddRepository}"
+                        Command="{Binding AddRepositoryCommand}" HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center" Margin="0,8,0,0" />
+                <ListBox ItemsSource="{Binding Repositories}" SelectedItem="{Binding SelectedRepository}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:RepositoryItemViewModel">
+                            <StackPanel Spacing="2" Margin="2,4">
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding ProviderName}" FontSize="12" Opacity="0.7" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+
+            <!-- No repositories yet -->
+            <StackPanel Grid.Column="1" IsVisible="{Binding !HasRepositories}"
+                        HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="460" Spacing="10">
+                <TextBlock Text="{x:Static res:Strings.Welcome}" FontSize="24" HorizontalAlignment="Center" />
+                <TextBlock Text="{x:Static res:Strings.NoRepositoriesText}" TextWrapping="Wrap" TextAlignment="Center" Opacity="0.8" />
+                <Button Content="{x:Static res:Strings.AddRepository}" Command="{Binding AddRepositoryCommand}"
+                        Classes="accent" HorizontalAlignment="Center" Margin="0,8,0,0" />
+            </StackPanel>
+
+            <!-- Details of the selected repository -->
+            <ScrollViewer Grid.Column="1" IsVisible="{Binding HasSelection}">
+                <StackPanel Margin="16,4,24,16" Spacing="14">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="{Binding SelectedRepository.Name}" FontSize="22" FontWeight="SemiBold"
+                                   TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding SelectedRepository.ProviderName}" Opacity="0.7" />
+                    </StackPanel>
+
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto">
+                        <Grid.Styles>
+                            <Style Selector="TextBlock.label">
+                                <Setter Property="Opacity" Value="0.7" />
+                                <Setter Property="Margin" Value="0,0,16,8" />
+                            </Style>
+                            <Style Selector="SelectableTextBlock">
+                                <Setter Property="Margin" Value="0,0,0,8" />
+                                <Setter Property="TextWrapping" Value="Wrap" />
+                            </Style>
+                        </Grid.Styles>
+                        <TextBlock Classes="label" Text="{x:Static res:Strings.LabelLocation}" />
+                        <SelectableTextBlock Grid.Column="1" Text="{Binding SelectedRepository.LocationText}" />
+                        <TextBlock Grid.Row="1" Classes="label" Text="{x:Static res:Strings.LabelEncryption}" />
+                        <SelectableTextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedRepository.EncryptionText}" />
+                        <TextBlock Grid.Row="2" Classes="label" Text="{x:Static res:Strings.LabelPassphrase}" />
+                        <SelectableTextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedRepository.PassphraseText}" />
+                        <TextBlock Grid.Row="3" Classes="label" Text="{x:Static res:Strings.LabelBorgVersion}" />
+                        <SelectableTextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedRepository.BorgVersionText}" />
+                    </Grid>
+
+                    <Border IsVisible="{Binding SelectedRepository.IsKeyfile}" Padding="12,10" CornerRadius="6" BorderThickness="1"
+                            Background="{DynamicResource WarningBackground}" BorderBrush="{DynamicResource WarningBorder}">
+                        <TextBlock Text="{x:Static res:Strings.KeyfileWarning}" TextWrapping="Wrap" />
+                    </Border>
+
+                    <WrapPanel>
+                        <WrapPanel.Styles>
+                            <Style Selector="Button">
+                                <Setter Property="Margin" Value="0,0,8,8" />
+                            </Style>
+                        </WrapPanel.Styles>
+                        <Button Content="{x:Static res:Strings.TestConnection}" Command="{Binding TestRepositoryCommand}" Classes="accent" />
+                        <Button Content="{x:Static res:Strings.ExportKey}" Command="{Binding ExportKeyCommand}" />
+                        <Button Content="{x:Static res:Strings.Edit}" Command="{Binding EditRepositoryCommand}" />
+                        <Button Content="{x:Static res:Strings.Remove}" Command="{Binding RemoveRepositoryCommand}" />
+                    </WrapPanel>
+
+                    <StackPanel Spacing="4" IsVisible="{Binding IsWorking}">
+                        <ProgressBar IsIndeterminate="True" />
+                        <TextBlock Text="{Binding WorkingText}" FontSize="12" />
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding SelectedRepository.ResultText}" TextWrapping="Wrap"
+                               IsVisible="{Binding SelectedRepository.HasSuccess}" Foreground="{DynamicResource SuccessForeground}" />
+                    <TextBlock Text="{Binding SelectedRepository.ResultText}" TextWrapping="Wrap"
+                               IsVisible="{Binding SelectedRepository.HasError}" Foreground="{DynamicResource ErrorForeground}" />
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
     </DockPanel>
 
 </Window>

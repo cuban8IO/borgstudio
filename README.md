@@ -14,6 +14,16 @@ unpack and start, no installation needed.
 BorgStudio finds it on `PATH` and in the usual install locations (e.g. Homebrew); on Windows it also
 looks for borg inside WSL. borg 2 is still in beta and not supported yet. The UI is available in English and German.
 
+## Your data
+
+- **Repository list:** `repositories.json` in the BorgStudio data folder (Windows `%LOCALAPPDATA%\BorgStudio`,
+  macOS `~/Library/Application Support/BorgStudio`, Linux `~/.local/share/BorgStudio`). It contains names and
+  locations, never passphrases.
+- **Passphrases:** per repository either stored in the system keychain (Windows Credential Manager, macOS keychain,
+  Linux Secret Service such as GNOME Keyring or KWallet) or asked for every time.
+- **Repository keys:** BorgStudio offers to export the key after creating a repository. Keep the key file and the
+  passphrase safe and separate – without them, backups cannot be restored.
+
 ## Project structure
 
 ```
