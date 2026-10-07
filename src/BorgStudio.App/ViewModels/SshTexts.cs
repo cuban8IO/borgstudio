@@ -15,9 +15,10 @@ internal static class SshTrustDialog
         try
         {
             var server = endpoint.Port == 22 ? endpoint.Host : $"{endpoint.Host}:{endpoint.Port}";
-            var (result, key) = await trust.EnsureTrustedAsync(endpoint.Host, endpoint.Port, presented =>
-                dialogs.ConfirmAsync(Strings.HostKeyTitle,
-                    BorgTexts.Format(Strings.HostKeyMessage, server, presented.Type, presented.Fingerprint),
+            var (result, key) = await trust.EnsureTrustedAsync(endpoint.Host, endpoint.Port, endpoint.PublishedHostKeyFingerprints,
+                (presented, notPublished) => dialogs.ConfirmAsync(Strings.HostKeyTitle,
+                    BorgTexts.Format(notPublished ? Strings.HostKeyNotPublished : Strings.HostKeyMessage,
+                        server, presented.Type, presented.Fingerprint),
                     Strings.HostKeyTrust));
 
             return result switch

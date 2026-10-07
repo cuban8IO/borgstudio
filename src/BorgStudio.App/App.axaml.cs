@@ -10,6 +10,7 @@ using BorgStudio.Core.Plugins;
 using BorgStudio.Core.Repositories;
 using BorgStudio.Core.Secrets;
 using BorgStudio.Core.Ssh;
+using BorgStudio.Providers.Hetzner;
 using BorgStudio.Providers.Local;
 using BorgStudio.Providers.Ssh;
 
@@ -27,7 +28,7 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             // Built-in providers use the same plugin API as external ones.
-            var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new SshProviderPlugin()], AppPaths.PluginsDirectory);
+            var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new SshProviderPlugin(), new HetznerProviderPlugin()], AppPaths.PluginsDirectory);
 
             var window = new MainWindow();
             var viewModel = new MainViewModel(new AppServices(

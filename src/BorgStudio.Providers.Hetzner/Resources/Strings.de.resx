@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Texts of the Hetzner Storage Box provider, German. Keep in sync with Strings.resx. -->
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="DisplayName" xml:space="preserve">
+    <value>Hetzner Storage Box</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>Storage Box von Hetzner, erreichbar über SSH auf Port 23. Vorher in der Hetzner Console für die Storage Box „SSH-Support“ aktivieren.</value>
+  </data>
+  <data name="UserLabel" xml:space="preserve">
+    <value>Benutzer</value>
+  </data>
+  <data name="UserHint" xml:space="preserve">
+    <value>z. B. u123456, oder u123456-sub1 für einen Sub-Account. Der Servername ergibt sich daraus.</value>
+  </data>
+  <data name="PathLabel" xml:space="preserve">
+    <value>Repository-Pfad</value>
+  </data>
+  <data name="PathHint" xml:space="preserve">
+    <value>Relativ zum Home-Verzeichnis der Storage Box, z. B. backups/laptop</value>
+  </data>
+  <data name="RemoteBorgLabel" xml:space="preserve">
+    <value>borg-Version auf der Storage Box</value>
+  </data>
+  <data name="RemoteBorgHint" xml:space="preserve">
+    <value>Das borg, das Hetzner für dieses Repository ausführt. borg 1.4 funktioniert mit borg 1.2 und 1.4 auf diesem Computer.</value>
+  </data>
+  <data name="Borg14" xml:space="preserve">
+    <value>borg 1.4 (empfohlen)</value>
+  </data>
+  <data name="Borg12" xml:space="preserve">
+    <value>borg 1.2</value>
+  </data>
+  <data name="UserRequired" xml:space="preserve">
+    <value>Bitte den Benutzer der Storage Box angeben.</value>
+  </data>
+  <data name="UserInvalid" xml:space="preserve">
+    <value>Der Benutzer sieht aus wie u123456, oder u123456-sub1 für einen Sub-Account.</value>
+  </data>
+  <data name="PathRequired" xml:space="preserve">
+    <value>Bitte den Repository-Pfad angeben.</value>
+  </data>
+  <data name="PathNotRelative" xml:space="preserve">
+    <value>Den Repository-Pfad relativ zum Home-Verzeichnis der Storage Box angeben, ohne führendes „/“, z. B. backups/laptop.</value>
+  </data>
+  <data name="PathInvalid" xml:space="preserve">
+    <value>Der Repository-Pfad darf nur Buchstaben (a–z), Ziffern, „.“, „_“, „-“, „+“ und „/“ enthalten und keine „..“-Ordner.</value>
+  </data>
+  <data name="RemoteBorgInvalid" xml:space="preserve">
+    <value>Bitte eine borg-Version auswählen.</value>
+  </data>
+</root>

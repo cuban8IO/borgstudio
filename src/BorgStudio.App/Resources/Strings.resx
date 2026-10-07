@@ -435,6 +435,14 @@ Only trust it if this fingerprint matches the server's. On the server, "ssh-keyg
   <data name="HostKeyTrust" xml:space="preserve">
     <value>Trust</value>
   </data>
+  <data name="HostKeyNotPublished" xml:space="preserve">
+    <value>First connection to {0}. The server identifies itself with this {1} key:
+
+{2}
+
+Warning: the provider publishes the fingerprints of its servers, and this key matches none of them. You might not be connected to the real server. Only trust it if you know why, e.g. because the provider announced new keys.</value>
+    <comment>{0} = server, {1} = key type, {2} = fingerprint</comment>
+  </data>
   <data name="HostKeyRejected" xml:space="preserve">
     <value>The server was not confirmed – no connection made.</value>
   </data>

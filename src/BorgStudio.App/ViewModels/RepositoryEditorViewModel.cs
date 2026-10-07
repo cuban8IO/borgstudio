@@ -39,7 +39,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
     private readonly Guid _id;
 
     /// <summary>A key created in this dialog: reused for retries, deleted if the dialog is cancelled.</summary>
-    private (SshEndpoint Endpoint, SshGeneratedKey Key, bool Restricted)? _newKey;
+    private InstalledKey? _newKey;
 
     /// <summary>Add a repository, or edit <paramref name="existing"/> (its provider must be available).</summary>
     public RepositoryEditorViewModel(AppServices services, BorgInstallation? borg, RepositoryConfig? existing = null)
@@ -456,7 +456,8 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         if (KeyChoice == SshKeyChoice.Existing)
             return new SshLogin(new SshAccess(ExistingKeyFile.Trim(), knownHosts), Managed: false, Restricted: false);
 
-        if (_newKey is { } created && created.Endpoint == endpoint && created.Restricted == RestrictKey)
+        var remoteBorg = SshTrustDialog.RemoteBorg(location);
+        if (_newKey is { } created && created.Fits(location, RestrictKey))
             return new SshLogin(new SshAccess(created.Key.PrivateKeyFile, knownHosts), Managed: true, created.Restricted);
 
         // A new key per attempt with different settings; the previous one was never used.
@@ -467,13 +468,12 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         }
 
         var key = _services.SshKeys.Create(KeyFileName(), KeyComment());
-        var line = AuthorizedKeys.Line(key.PublicKeyLine,
-            RestrictKey ? endpoint.RepositoryPath : null, SshTrustDialog.RemoteBorg(location));
 
         BusyText = Strings.InstallingKey;
         try
         {
-            await _services.Ssh.RunWithPasswordAsync(endpoint, ServerPassword, hostKey, AuthorizedKeys.AppendCommand(line));
+            await SshKeyInstaller.InstallAsync(_services.Ssh, endpoint, ServerPassword, hostKey, key.PublicKeyLine,
+                RestrictKey, remoteBorg);
         }
         catch (SshOperationException exception)
         {
@@ -482,12 +482,12 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             return null;
         }
 
-        _newKey = (endpoint, key, RestrictKey);
+        _newKey = new InstalledKey(endpoint, remoteBorg, key, RestrictKey);
         return new SshLogin(new SshAccess(key.PrivateKeyFile, knownHosts), Managed: true, RestrictKey);
     }
 
     private bool HasInstalledKeyFor(IRepositoryProvider provider, IReadOnlyDictionary<string, string> values) =>
-        _newKey is { } created && created.Restricted == RestrictKey && provider.GetLocation(values).Ssh == created.Endpoint;
+        _newKey is { } created && created.Fits(provider.GetLocation(values), RestrictKey);
 
     // Unique per key: editing may replace a repository's key while the old one is still in use.
     private string KeyFileName() => $"{_id:N}-{DateTime.UtcNow:yyyyMMddHHmmss}";
@@ -536,6 +536,17 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
     {
         public static SshLogin None { get; } = new(null, false, false);
     }
+
+    /// <summary>A key installed on a server, and what it was installed for.</summary>
+    private sealed record InstalledKey(SshEndpoint Endpoint, string RemoteBorg, SshGeneratedKey Key, bool Restricted)
+    {
+        /// <summary>Whether the key works for <paramref name="location"/> as is: same server, account and restriction.</summary>
+        public bool Fits(RepositoryLocation location, bool restricted) =>
+            location.Ssh is { } endpoint
+            && endpoint.Host == Endpoint.Host && endpoint.Port == Endpoint.Port && endpoint.User == Endpoint.User
+            && restricted == Restricted
+            && (!restricted || (endpoint.RepositoryPath == Endpoint.RepositoryPath && SshTrustDialog.RemoteBorg(location) == RemoteBorg));
+    }
 }
 
 public sealed class ProviderOptionViewModel(IRepositoryProvider provider)
@@ -560,6 +571,26 @@ public sealed partial class FieldViewModel(ProviderField providerField, string? 
 
     public bool IsFolder => providerField.Kind == ProviderFieldKind.FolderPath;
 
+    public bool IsChoice => providerField.Kind == ProviderFieldKind.Choice;
+
+    public bool IsTextInput => !IsChoice;
+
+    public IReadOnlyList<Option<string>> Options { get; } =
+        providerField.Options.Select(option => new Option<string>(option.Value, option.Label)).ToList();
+
     [ObservableProperty]
-    public partial string Value { get; set; } = value ?? providerField.DefaultValue ?? "";
+    [NotifyPropertyChangedFor(nameof(SelectedOption))]
+    public partial string Value { get; set; } = value ?? providerField.DefaultValue
+        ?? (providerField.Kind == ProviderFieldKind.Choice ? providerField.Options.FirstOrDefault()?.Value : null) ?? "";
+
+    /// <summary>The option matching <see cref="Value"/> (choice fields).</summary>
+    public Option<string>? SelectedOption
+    {
+        get => Options.FirstOrDefault(option => option.Value == Value);
+        set
+        {
+            if (value is not null)
+                Value = value.Value;
+        }
+    }
 }

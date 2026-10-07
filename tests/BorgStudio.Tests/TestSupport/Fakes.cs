@@ -7,6 +7,7 @@ using BorgStudio.Core.Repositories;
 using BorgStudio.Core.Secrets;
 using BorgStudio.Core.Ssh;
 using BorgStudio.Plugins;
+using BorgStudio.Providers.Hetzner;
 using BorgStudio.Providers.Local;
 using BorgStudio.Providers.Ssh;
 
@@ -76,7 +77,11 @@ public sealed class FakeSsh : ISshService
 
     public SshOperationException? LoginFailure { get; set; }
 
-    public List<(SshEndpoint Endpoint, string Password, string Command)> Logins { get; } = [];
+    /// <summary>Commands run after a password login.</summary>
+    public List<(SshEndpoint Endpoint, string Password, string Command, string? StandardInput)> Logins { get; } = [];
+
+    /// <summary>Lines appended to authorized_keys over SFTP after a password login.</summary>
+    public List<(SshEndpoint Endpoint, string Password, string Line)> SftpAppends { get; } = [];
 
     public int HostKeyRequests { get; private set; }
 
@@ -87,11 +92,20 @@ public sealed class FakeSsh : ISshService
     }
 
     public Task RunWithPasswordAsync(SshEndpoint endpoint, string password, SshHostKey trustedHostKey, string command,
+        string? standardInput = null, CancellationToken cancellationToken = default)
+    {
+        if (LoginFailure is not null)
+            throw LoginFailure;
+        Logins.Add((endpoint, password, command, standardInput));
+        return Task.CompletedTask;
+    }
+
+    public Task AppendAuthorizedKeyAsync(SshEndpoint endpoint, string password, SshHostKey trustedHostKey, string line,
         CancellationToken cancellationToken = default)
     {
         if (LoginFailure is not null)
             throw LoginFailure;
-        Logins.Add((endpoint, password, command));
+        SftpAppends.Add((endpoint, password, line));
         return Task.CompletedTask;
     }
 
@@ -121,7 +135,7 @@ public sealed class TestServices : IDisposable
             Secrets = new FakeSecretStore(available: false);
         Store = new RepositoryStore(Directory.Combine("repositories.json"));
         SshKeys = new SshKeyStore(Directory.Combine("ssh"));
-        var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new SshProviderPlugin()], "no-plugins-here");
+        var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new SshProviderPlugin(), new HetznerProviderPlugin()], "no-plugins-here");
         Services = new AppServices(Borg.Detector(), plugins, Store, Secrets, new BorgClient(Borg), Ssh, SshKeys, Dialogs);
     }
 
@@ -154,17 +168,23 @@ public sealed class FakeDialogs : IDialogService
 
     public string? SaveFile { get; set; }
 
+    /// <summary>Titles of the dialogs shown.</summary>
     public List<string> Shown { get; } = [];
+
+    /// <summary>Messages of the dialogs shown.</summary>
+    public List<string> Messages { get; } = [];
 
     public Task<bool> ConfirmAsync(string title, string message, string confirmText, string? cancelText = null)
     {
         Shown.Add(title);
+        Messages.Add(message);
         return Task.FromResult(ConfirmAnswers.Count > 0 && ConfirmAnswers.Dequeue());
     }
 
     public Task ShowMessageAsync(string title, string message)
     {
         Shown.Add(title);
+        Messages.Add(message);
         return Task.CompletedTask;
     }
 

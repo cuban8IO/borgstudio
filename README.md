@@ -26,6 +26,9 @@ looks for borg inside WSL. borg 2 is still in beta and not supported yet. The UI
 - **SSH:** login keys created by BorgStudio (one per repository) and the confirmed server host keys
   (`known_hosts`) are kept in the `ssh` sub folder of the data folder. Server passwords are only used once to
   install a key and are never stored.
+- **Hetzner Storage Box:** connects on port 23 with the borg version you choose (1.4 or 1.2). The server's host key
+  is checked against the fingerprints Hetzner publishes. Restricted login keys are written to
+  `.ssh/authorized_keys` on the box over SFTP; unrestricted ones are installed with Hetzner's `install-ssh-key`.
 
 ## Project structure
 
@@ -36,7 +39,8 @@ BorgStudio.slnx
 │   ├── BorgStudio.Core                 UI-independent logic: borg CLI, plugins, repositories
 │   ├── BorgStudio.Plugins.Abstractions Public plugin API (repository providers)
 │   ├── BorgStudio.Providers.Local      Built-in provider: local folder
-│   └── BorgStudio.Providers.Ssh        Built-in provider: SSH server with borg
+│   ├── BorgStudio.Providers.Ssh        Built-in provider: SSH server with borg
+│   └── BorgStudio.Providers.Hetzner    Built-in provider: Hetzner Storage Box
 ├── samples/
 │   └── BorgStudio.SamplePlugin         Example external plugin (not part of the release)
 ├── tests/
@@ -50,7 +54,7 @@ Shared build settings (target framework, nullable, version) live in `Directory.B
 
 ## Plugins
 
-Repository providers (local folder, SSH server, storage services, …) are plugins. Built-in providers use the same
+Repository providers (local folder, SSH server, Hetzner Storage Box, …) are plugins. Built-in providers use the same
 API as external ones; see [docs/plugins.md](docs/plugins.md) for writing and installing a plugin.
 
 ## Build, test, run

@@ -96,8 +96,19 @@ public sealed class SshKeysTests : IDisposable
 
         Assert.Equal(publicKey, AuthorizedKeys.Line(publicKey, restrictToRepository: null));
         Assert.Equal(
-            "command=\"borg-1.4 serve --restrict-to-repository \\\"backups/my repo\\\"\",restrict " + publicKey,
-            AuthorizedKeys.Line(publicKey, "backups/my repo", "borg-1.4"));
+            "command=\"borg-1.4 serve --restrict-to-repository backups/laptop\",restrict " + publicKey,
+            AuthorizedKeys.Line(publicKey, "backups/laptop", "borg-1.4"));
+    }
+
+    [Theory]
+    [InlineData("backups/my repo")]
+    [InlineData("~/backups")]
+    [InlineData("backups/*")]
+    public void Paths_a_shell_would_change_are_quoted(string path)
+    {
+        Assert.Equal(
+            $"command=\"borg serve --restrict-to-repository \\\"{path}\\\"\",restrict ssh-ed25519 AAAA c",
+            AuthorizedKeys.Line("ssh-ed25519 AAAA c", path));
     }
 
     [Fact]

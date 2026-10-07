@@ -54,4 +54,42 @@ public sealed class SshHostTrustTests : IDisposable
         Assert.Equal(HostTrust.Changed, trust);
         Assert.Single(_knownHosts.Find("nas", 22));
     }
+
+    [Fact]
+    public async Task A_key_the_provider_published_is_stored_without_asking()
+    {
+        var (trust, _) = await _trust.EnsureTrustedAsync("box", 23, ["SHA256:other", FakeSsh.ServerKey.Fingerprint],
+            (_, _) => throw new InvalidOperationException("must not ask"));
+
+        Assert.Equal(HostTrust.Trusted, trust);
+        Assert.True(FakeSsh.ServerKey.SameAs(Assert.Single(_knownHosts.Find("box", 23))));
+    }
+
+    [Fact]
+    public async Task A_published_key_replaces_trust_in_an_older_one()
+    {
+        _knownHosts.Add("box", 23, new SshHostKey(FakeSsh.HostKeyBlob("ssh-ed25519", 99)));
+
+        var (trust, _) = await _trust.EnsureTrustedAsync("box", 23, [FakeSsh.ServerKey.Fingerprint],
+            (_, _) => throw new InvalidOperationException("must not ask"));
+
+        Assert.Equal(HostTrust.Trusted, trust);
+        Assert.Contains(_knownHosts.Find("box", 23), key => key.SameAs(FakeSsh.ServerKey));
+    }
+
+    [Fact]
+    public async Task A_key_the_provider_did_not_publish_needs_confirmation_with_a_warning()
+    {
+        var warned = new List<bool>();
+
+        var (published, _) = await _trust.EnsureTrustedAsync("box", 23, ["SHA256:other"],
+            (_, notPublished) => { warned.Add(notPublished); return Task.FromResult(false); });
+        var (unpublished, _) = await _trust.EnsureTrustedAsync("nas", 22, [],
+            (_, notPublished) => { warned.Add(notPublished); return Task.FromResult(false); });
+
+        Assert.Equal([true, false], warned);
+        Assert.Equal(HostTrust.Rejected, published);
+        Assert.Equal(HostTrust.Rejected, unpublished);
+        Assert.False(_trust.IsKnown("box", 23));
+    }
 }
