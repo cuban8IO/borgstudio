@@ -106,9 +106,13 @@ public sealed class SshServerIntegrationTests : IDisposable
         var wrongKnownHosts = new KnownHostsFile(_directory.Combine("wrong_known_hosts"));
         wrongKnownHosts.Add(Host, Port, new SshHostKey(FakeSsh.HostKeyBlob(hostKey.Type, 4)));
 
-        var info = await BorgClient.CreateDefault().InfoAsync(Borg, location, Passphrase,
-            new SshAccess(key.PrivateKeyFile, wrongKnownHosts.Path));
+        // Several times: whether borg itself passes on ssh's message is a race, the result must not be.
+        for (var attempt = 0; attempt < 5; attempt++)
+        {
+            var info = await BorgClient.CreateDefault().InfoAsync(Borg, location, Passphrase,
+                new SshAccess(key.PrivateKeyFile, wrongKnownHosts.Path));
 
-        Assert.Equal(BorgErrorKind.SshHostKeyFailed, info.Error?.Kind);
+            Assert.Equal(BorgErrorKind.SshHostKeyFailed, info.Error?.Kind);
+        }
     }
 }

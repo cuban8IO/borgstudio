@@ -106,6 +106,58 @@ public class BorgClientTests
         Assert.Equal(expected, BorgClient.ParseError(standardError).Kind);
     }
 
+    /// <summary>Answers the calls in order.</summary>
+    private sealed class ScriptedRunner(params ProcessResult?[] results) : IProcessRunner
+    {
+        private readonly Queue<ProcessResult?> _results = new(results);
+
+        public List<(string FileName, IReadOnlyList<string> Arguments)> Calls { get; } = [];
+
+        public Task<ProcessResult?> RunAsync(string fileName, IReadOnlyList<string> arguments, TimeSpan timeout,
+            IReadOnlyDictionary<string, string?>? environment = null, string? standardInput = null,
+            CancellationToken cancellationToken = default)
+        {
+            Calls.Add((fileName, arguments));
+            return Task.FromResult(_results.Dequeue());
+        }
+    }
+
+    private static readonly ProcessResult ConnectionClosed =
+        new(2, "", ErrorLine("ConnectionClosed", "Connection closed by remote host"));
+
+    [Theory]
+    [InlineData("Host key verification failed.\r\n", BorgErrorKind.SshHostKeyFailed)]
+    [InlineData("backup@nas.local: Permission denied (publickey).\n", BorgErrorKind.SshAuthenticationFailed)]
+    [InlineData("ssh: connect to host nas.local port 2222: Connection refused\n", BorgErrorKind.ConnectionFailed)]
+    public async Task A_bare_connection_closed_is_diagnosed_with_a_plain_ssh_login(string sshError, BorgErrorKind expected)
+    {
+        var runner = new ScriptedRunner(ConnectionClosed, new ProcessResult(255, "", sshError));
+
+        var result = await new BorgClient(runner).InfoAsync(NativeBorg, SshLocation, "secret", new SshAccess("/key", "/known_hosts"));
+
+        Assert.Equal(expected, result.Error!.Kind);
+        var diagnosis = runner.Calls[1];
+        Assert.Equal("ssh", diagnosis.FileName);
+        Assert.Equal(
+            ["-o", "BatchMode=yes", "-o", "IdentitiesOnly=yes", "-o", "StrictHostKeyChecking=yes",
+             "-o", "UserKnownHostsFile=/known_hosts", "-i", "/key", "-o", "ConnectTimeout=15", "-p", "2222",
+             "backup@nas.local", "exit"],
+            diagnosis.Arguments);
+    }
+
+    [Fact]
+    public async Task No_diagnosis_for_other_errors_or_local_repositories()
+    {
+        var wrongPassphrase = new ScriptedRunner(new ProcessResult(2, "", ErrorLine("PassphraseWrong", "wrong")));
+        await new BorgClient(wrongPassphrase).InfoAsync(NativeBorg, SshLocation, "x", new SshAccess("/key", "/known_hosts"));
+        Assert.Single(wrongPassphrase.Calls);
+
+        var local = new ScriptedRunner(ConnectionClosed);
+        var result = await new BorgClient(local).InfoAsync(NativeBorg, new RepositoryLocation("/backups/repo"), "x");
+        Assert.Single(local.Calls);
+        Assert.Equal(BorgErrorKind.ConnectionFailed, result.Error!.Kind);
+    }
+
     [Theory]
     [InlineData("plain", "'plain'")]
     [InlineData(@"C:\Users\me\key", @"'C:\Users\me\key'")]

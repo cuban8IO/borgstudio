@@ -145,9 +145,10 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
             ["BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK"] = "yes",
         };
 
+        SshAccess? sshFiles = null;
         if (location.Ssh is not null && ssh is not null)
         {
-            var sshFiles = wsl ? await CopySshFilesIntoWslAsync(ssh, cancellationToken) : ssh;
+            sshFiles = wsl ? await CopySshFilesIntoWslAsync(ssh, cancellationToken) : ssh;
             if (sshFiles is null)
                 return BorgResult<string>.Failure(new BorgError(BorgErrorKind.NotStartable, "wsl.exe (copying the SSH key)"));
             environment["BORG_RSH"] = SshCommand(sshFiles.PrivateKeyFile, sshFiles.KnownHostsFile);
@@ -181,9 +182,50 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
             return BorgResult<string>.Failure(new BorgError(BorgErrorKind.NotStartable, fileName));
 
         // 0 = success, 1 = success with warnings, everything else is an error.
-        return result.ExitCode is 0 or 1
-            ? BorgResult<string>.Success(result.StandardOutput)
-            : BorgResult<string>.Failure(ParseError(result.StandardError));
+        if (result.ExitCode is 0 or 1)
+            return BorgResult<string>.Success(result.StandardOutput);
+
+        var error = ParseError(result.StandardError);
+        if (error.Kind == BorgErrorKind.ConnectionFailed && location.Ssh is { } endpoint && sshFiles is not null)
+            error = await DiagnoseSshAsync(endpoint, sshFiles, wsl, cancellationToken) ?? error;
+        return BorgResult<string>.Failure(error);
+    }
+
+    /// <summary>
+    /// borg forwards ssh's own error ("Host key verification failed", "Permission denied") only if it reads it
+    /// before noticing the closed connection – a race. When borg just says "connection closed", one plain ssh login
+    /// with the same settings tells reliably what's wrong; <c>null</c> if it doesn't tell more.
+    /// </summary>
+    private async Task<BorgError?> DiagnoseSshAsync(
+        SshEndpoint endpoint, SshAccess sshFiles, bool wsl, CancellationToken cancellationToken)
+    {
+        List<string> arguments =
+        [
+            "-o", "BatchMode=yes", "-o", "IdentitiesOnly=yes", "-o", "StrictHostKeyChecking=yes",
+            "-o", $"UserKnownHostsFile={sshFiles.KnownHostsFile}", "-i", sshFiles.PrivateKeyFile,
+            "-o", "ConnectTimeout=15", "-p", endpoint.Port.ToString(CultureInfo.InvariantCulture),
+            $"{endpoint.User}@{endpoint.Host}", "exit",
+        ];
+        if (wsl)
+            arguments.InsertRange(0, ["-e", "ssh"]);
+
+        ProcessResult? result;
+        try
+        {
+            result = await processRunner.RunAsync(wsl ? wslExecutable! : "ssh", arguments, CopyTimeout,
+                cancellationToken: cancellationToken);
+        }
+        catch (TimeoutException)
+        {
+            return null;
+        }
+
+        var output = result?.StandardError.Trim() ?? "";
+        if (output.Contains("Host key verification failed", StringComparison.Ordinal))
+            return new BorgError(BorgErrorKind.SshHostKeyFailed, output);
+        if (output.Contains("Permission denied", StringComparison.Ordinal))
+            return new BorgError(BorgErrorKind.SshAuthenticationFailed, output);
+        return null;
     }
 
     /// <summary>Copies key and known_hosts to ~/.borgstudio/ssh inside WSL (private permissions); returns those paths.</summary>
