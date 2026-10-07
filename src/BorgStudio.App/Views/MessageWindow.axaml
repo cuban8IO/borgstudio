@@ -6,7 +6,8 @@
         ShowInTaskbar="False">
 
     <StackPanel Margin="20" Spacing="16">
-        <TextBlock x:Name="MessageText" TextWrapping="Wrap" />
+        <!-- Selectable, e.g. to copy a host key fingerprint for comparison. -->
+        <SelectableTextBlock x:Name="MessageText" TextWrapping="Wrap" />
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
             <Button x:Name="ConfirmButton" Classes="accent" IsDefault="True" Click="Confirm_Click" />
             <Button x:Name="CancelButton" IsCancel="True" Click="Cancel_Click" />

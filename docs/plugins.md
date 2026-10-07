@@ -51,6 +51,26 @@ An `IRepositoryProvider` describes
 Return all texts in `CultureInfo.CurrentUICulture` (BorgStudio itself ships English and German),
 for example from `.resx` files.
 
+### Repositories on SSH servers
+
+If your provider's repositories are reached over SSH (most hosted borg services are), return `true` from
+`UsesSsh` and set `RepositoryLocation.Ssh`:
+
+```csharp
+public bool UsesSsh => true;
+
+public RepositoryLocation GetLocation(IReadOnlyDictionary<string, string> values) =>
+    new($"ssh://{user}@{host}:{port}/./{path}")
+    {
+        BorgArguments = ["--remote-path=borg-1.4"],
+        Ssh = new SshEndpoint(host, port, user, RepositoryPath: path), // path as the server sees it
+    };
+```
+
+BorgStudio then takes care of the rest: it shows the server's host key fingerprint for confirmation on first
+contact, creates a login key for the repository and installs it with the user's password (or uses an existing
+key), and runs borg with strict host key checking. Your provider never sees passwords or keys.
+
 BorgStudio creates every public, non-abstract class implementing `IBorgStudioPlugin` that has a public
 parameterless constructor, and calls `Register` once at startup. If anything throws, the plugin is skipped
 and the error is shown under *Tools → Plugins…*; other plugins are not affected.
