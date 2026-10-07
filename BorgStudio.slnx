@@ -1,7 +1,12 @@
 <Solution>
+  <Folder Name="/samples/">
+    <Project Path="samples/BorgStudio.SamplePlugin/BorgStudio.SamplePlugin.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/BorgStudio.App/BorgStudio.App.csproj" />
     <Project Path="src/BorgStudio.Core/BorgStudio.Core.csproj" />
+    <Project Path="src/BorgStudio.Plugins.Abstractions/BorgStudio.Plugins.Abstractions.csproj" />
+    <Project Path="src/BorgStudio.Providers.Local/BorgStudio.Providers.Local.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/BorgStudio.Tests/BorgStudio.Tests.csproj" />

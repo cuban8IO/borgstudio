@@ -18,24 +18,20 @@
         <vm:MainViewModel />
     </Design.DataContext>
 
-    <Window.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.ThemeDictionaries>
-                <ResourceDictionary x:Key="Light">
-                    <SolidColorBrush x:Key="StatusBarBackground" Color="#F0F0F0" />
-                    <SolidColorBrush x:Key="WarningBackground" Color="#FFF4CE" />
-                    <SolidColorBrush x:Key="WarningBorder" Color="#E8C15A" />
-                </ResourceDictionary>
-                <ResourceDictionary x:Key="Dark">
-                    <SolidColorBrush x:Key="StatusBarBackground" Color="#2B2B2B" />
-                    <SolidColorBrush x:Key="WarningBackground" Color="#433519" />
-                    <SolidColorBrush x:Key="WarningBorder" Color="#8A6D1E" />
-                </ResourceDictionary>
-            </ResourceDictionary.ThemeDictionaries>
-        </ResourceDictionary>
-    </Window.Resources>
+    <!-- macOS shows this in the global menu bar, Windows/Linux via the NativeMenuBar below. -->
+    <NativeMenu.Menu>
+        <NativeMenu>
+            <NativeMenuItem Header="{x:Static res:Strings.MenuTools}">
+                <NativeMenu>
+                    <NativeMenuItem Header="{x:Static res:Strings.MenuPlugins}" Click="OpenPlugins_Click" />
+                </NativeMenu>
+            </NativeMenuItem>
+        </NativeMenu>
+    </NativeMenu.Menu>
 
     <DockPanel>
+        <NativeMenuBar DockPanel.Dock="Top" />
+
         <!-- Status bar -->
         <Border DockPanel.Dock="Bottom" Padding="12,5" Background="{DynamicResource StatusBarBackground}">
             <TextBlock Text="{Binding BorgStatus}" FontSize="12" />

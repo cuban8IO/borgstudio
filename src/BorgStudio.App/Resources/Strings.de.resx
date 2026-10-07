@@ -58,4 +58,52 @@
   <data name="CheckAgain" xml:space="preserve">
     <value>Erneut prüfen</value>
   </data>
+  <data name="Close" xml:space="preserve">
+    <value>Schließen</value>
+  </data>
+  <data name="MenuTools" xml:space="preserve">
+    <value>Extras</value>
+  </data>
+  <data name="MenuPlugins" xml:space="preserve">
+    <value>Plugins …</value>
+  </data>
+  <data name="PluginsTitle" xml:space="preserve">
+    <value>Plugins</value>
+  </data>
+  <data name="PluginsIntro" xml:space="preserve">
+    <value>Repository-Provider stammen aus Plugins. Eingebaute Plugins sind Teil von BorgStudio. Ein weiteres Plugin in einen eigenen Unterordner des Plugin-Ordners legen und BorgStudio neu starten.</value>
+  </data>
+  <data name="PluginsTrustHint" xml:space="preserve">
+    <value>Plugins laufen mit denselben Rechten wie BorgStudio. Nur vertrauenswürdige Plugins installieren.</value>
+  </data>
+  <data name="PluginsFolderLabel" xml:space="preserve">
+    <value>Plugin-Ordner:</value>
+  </data>
+  <data name="OpenPluginsFolder" xml:space="preserve">
+    <value>Plugin-Ordner öffnen</value>
+  </data>
+  <data name="PluginBuiltIn" xml:space="preserve">
+    <value>Eingebaut</value>
+  </data>
+  <data name="PluginExternal" xml:space="preserve">
+    <value>Plugin</value>
+  </data>
+  <data name="PluginVersion" xml:space="preserve">
+    <value>Version {0}</value>
+  </data>
+  <data name="PluginErrorAssemblyMissing" xml:space="preserve">
+    <value>{0} fehlt im Plugin-Ordner.</value>
+  </data>
+  <data name="PluginErrorLoadFailed" xml:space="preserve">
+    <value>Konnte nicht geladen werden: {0}</value>
+  </data>
+  <data name="PluginErrorNoPluginClass" xml:space="preserve">
+    <value>Enthält keine Plugin-Klasse (IBorgStudioPlugin).</value>
+  </data>
+  <data name="PluginErrorRegistrationFailed" xml:space="preserve">
+    <value>Fehler beim Start: {0}</value>
+  </data>
+  <data name="PluginErrorDuplicateProvider" xml:space="preserve">
+    <value>Provider „{0}“ übersprungen: {1} verwendet diese ID bereits.</value>
+  </data>
 </root>

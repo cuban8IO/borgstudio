@@ -1,0 +1,60 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:BorgStudio.App.ViewModels"
+        xmlns:res="using:BorgStudio.App.Resources"
+        xmlns:sys="using:System"
+        x:Class="BorgStudio.App.Views.PluginsWindow"
+        x:DataType="vm:PluginsViewModel"
+        Title="{x:Static res:Strings.PluginsTitle}"
+        Width="700" Height="520"
+        WindowStartupLocation="CenterOwner">
+
+    <DockPanel Margin="16">
+        <StackPanel DockPanel.Dock="Top" Spacing="8">
+            <TextBlock Text="{x:Static res:Strings.PluginsIntro}" TextWrapping="Wrap" />
+            <TextBlock Text="{x:Static res:Strings.PluginsTrustHint}" TextWrapping="Wrap" Opacity="0.7" />
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBlock Text="{x:Static res:Strings.PluginsFolderLabel}" />
+                <SelectableTextBlock Text="{Binding PluginsDirectory}" />
+            </StackPanel>
+        </StackPanel>
+
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right"
+                    Spacing="8" Margin="0,12,0,0">
+            <Button Content="{x:Static res:Strings.OpenPluginsFolder}" Click="OpenPluginsFolder_Click" />
+            <Button Content="{x:Static res:Strings.Close}" Click="Close_Click" IsCancel="True" />
+        </StackPanel>
+
+        <ScrollViewer Margin="0,12,0,0">
+            <ItemsControl ItemsSource="{Binding Plugins}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:PluginItemViewModel">
+                        <Border Margin="0,0,0,8" Padding="12" CornerRadius="6" BorderThickness="1"
+                                BorderBrush="{DynamicResource CardBorder}">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding Details}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                                <ItemsControl ItemsSource="{Binding Providers}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="sys:String">
+                                            <TextBlock Text="{Binding}" TextWrapping="Wrap" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <ItemsControl ItemsSource="{Binding Errors}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="sys:String">
+                                            <TextBlock Text="{Binding}" TextWrapping="Wrap"
+                                                       Foreground="{DynamicResource ErrorForeground}" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </DockPanel>
+
+</Window>
