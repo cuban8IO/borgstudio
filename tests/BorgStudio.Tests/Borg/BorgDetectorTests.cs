@@ -15,7 +15,8 @@ public class BorgDetectorTests
         public List<string> Calls { get; } = [];
 
         public Task<ProcessResult?> RunAsync(
-            string fileName, IReadOnlyList<string> arguments, TimeSpan timeout, CancellationToken cancellationToken = default)
+            string fileName, IReadOnlyList<string> arguments, TimeSpan timeout,
+            IReadOnlyDictionary<string, string?>? environment = null, CancellationToken cancellationToken = default)
         {
             var call = string.Join(' ', [fileName, .. arguments]);
             Calls.Add(call);

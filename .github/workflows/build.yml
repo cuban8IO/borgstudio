@@ -29,8 +29,35 @@ jobs:
       - name: Build
         run: dotnet build BorgStudio.slnx --configuration Release --no-restore
 
+      # Real borg for the integration tests and a Secret Service for the keychain tests.
+      - name: Install borg and a keyring (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y borgbackup gnome-keyring dbus-x11 libsecret-1-0
+
+      # An unlocked keychain without auto-lock, so the keychain tests never wait for a password dialog.
+      - name: Prepare keychain (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          security create-keychain -p ci-only build.keychain
+          security list-keychains -d user -s build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p ci-only build.keychain
+          security set-keychain-settings build.keychain
+
       - name: Test
+        if: runner.os != 'Linux'
+        env:
+          BORGSTUDIO_KEYCHAIN_TESTS: "1"
         run: dotnet test BorgStudio.slnx --configuration Release --no-build
+
+      - name: Test (Linux, with Secret Service)
+        if: runner.os == 'Linux'
+        env:
+          BORGSTUDIO_KEYCHAIN_TESTS: "1"
+        run: |
+          dbus-run-session -- bash -c '
+            echo -n ci-only | gnome-keyring-daemon --unlock --components=secrets > /dev/null
+            dotnet test BorgStudio.slnx --configuration Release --no-build'
 
   package:
     needs: build

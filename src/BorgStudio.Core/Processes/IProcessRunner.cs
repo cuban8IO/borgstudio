@@ -9,10 +9,15 @@ public interface IProcessRunner
     /// Runs <paramref name="fileName"/> and waits for it to exit.
     /// Returns <c>null</c> if the program cannot be started at all (e.g. it does not exist).
     /// </summary>
+    /// <param name="environment">
+    /// Additional environment variables (e.g. secrets that must not appear on the command line);
+    /// a <c>null</c> value removes the variable.
+    /// </param>
     /// <exception cref="TimeoutException">The program did not exit within <paramref name="timeout"/>; it has been killed.</exception>
     Task<ProcessResult?> RunAsync(
         string fileName,
         IReadOnlyList<string> arguments,
         TimeSpan timeout,
+        IReadOnlyDictionary<string, string?>? environment = null,
         CancellationToken cancellationToken = default);
 }

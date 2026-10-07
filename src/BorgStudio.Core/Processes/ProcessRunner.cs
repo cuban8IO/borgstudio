@@ -10,6 +10,7 @@ public sealed class ProcessRunner : IProcessRunner
         string fileName,
         IReadOnlyList<string> arguments,
         TimeSpan timeout,
+        IReadOnlyDictionary<string, string?>? environment = null,
         CancellationToken cancellationToken = default)
     {
         var startInfo = new ProcessStartInfo(fileName)
@@ -26,6 +27,13 @@ public sealed class ProcessRunner : IProcessRunner
         };
         foreach (var argument in arguments)
             startInfo.ArgumentList.Add(argument);
+        foreach (var (name, value) in environment ?? new Dictionary<string, string?>())
+        {
+            if (value is null)
+                startInfo.Environment.Remove(name);
+            else
+                startInfo.Environment[name] = value;
+        }
 
         using var process = new Process { StartInfo = startInfo };
         try
