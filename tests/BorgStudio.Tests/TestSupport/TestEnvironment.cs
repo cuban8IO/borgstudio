@@ -60,6 +60,23 @@ public sealed class SshServerFactAttribute : FactAttribute
 }
 
 /// <summary>
+/// Runs against the SSH test server (see <see cref="SshServerFactAttribute"/>) when it also provides the commands of a
+/// Hetzner Storage Box – <c>install-ssh-key</c> and <c>borg-1.4</c> – as the Linux CI job sets up:
+/// BORGSTUDIO_SSH_TEST_STORAGE_BOX=1.
+/// </summary>
+public sealed class StorageBoxEmulationFactAttribute : FactAttribute
+{
+    public StorageBoxEmulationFactAttribute()
+    {
+        var server = new SshServerFactAttribute();
+        if (server.Skip is not null)
+            Skip = server.Skip;
+        else if (Environment.GetEnvironmentVariable("BORGSTUDIO_SSH_TEST_STORAGE_BOX") != "1")
+            Skip = "Set BORGSTUDIO_SSH_TEST_STORAGE_BOX=1 if the SSH test server provides install-ssh-key and borg-1.4.";
+    }
+}
+
+/// <summary>
 /// Runs against the real keychain: always on Windows (Credential Manager), on macOS and Linux only when
 /// BORGSTUDIO_KEYCHAIN_TESTS=1 (CI prepares an unlocked keychain there; locally it might pop up dialogs).
 /// </summary>

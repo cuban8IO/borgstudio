@@ -6,6 +6,7 @@
     <Project Path="src/BorgStudio.App/BorgStudio.App.csproj" />
     <Project Path="src/BorgStudio.Core/BorgStudio.Core.csproj" />
     <Project Path="src/BorgStudio.Plugins.Abstractions/BorgStudio.Plugins.Abstractions.csproj" />
+    <Project Path="src/BorgStudio.Providers.Hetzner/BorgStudio.Providers.Hetzner.csproj" />
     <Project Path="src/BorgStudio.Providers.Local/BorgStudio.Providers.Local.csproj" />
     <Project Path="src/BorgStudio.Providers.Ssh/BorgStudio.Providers.Ssh.csproj" />
   </Folder>

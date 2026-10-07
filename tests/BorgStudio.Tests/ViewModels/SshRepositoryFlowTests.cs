@@ -48,7 +48,7 @@ public sealed class SshRepositoryFlowTests : IDisposable
 
         var login = Assert.Single(_test.Ssh.Logins);
         Assert.Equal("server-password", login.Password);
-        Assert.Contains("command=\"borg serve --restrict-to-repository \\\"borg/laptop\\\"\",restrict ssh-ed25519 ", login.Command);
+        Assert.Contains("command=\"borg serve --restrict-to-repository borg/laptop\",restrict ssh-ed25519 ", login.Command);
 
         var repository = editor.Result!.Repository;
         Assert.True(repository.SshKeyManaged);

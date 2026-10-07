@@ -1,5 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
+using BorgStudio.Plugins;
 using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Crypto.Utilities;
@@ -155,7 +157,7 @@ public sealed class KnownHostsFile(string path)
 }
 
 /// <summary>Entries for ~/.ssh/authorized_keys on the backup server.</summary>
-public static class AuthorizedKeys
+public static partial class AuthorizedKeys
 {
     /// <summary>
     /// The line to add. With <paramref name="restrictToRepository"/>, the key can only run
@@ -166,7 +168,9 @@ public static class AuthorizedKeys
         if (restrictToRepository is null)
             return publicKeyLine;
 
-        return $"command=\"{remoteBorg} serve --restrict-to-repository \\\"{restrictToRepository}\\\"\",restrict {publicKeyLine}";
+        // Quoted only when needed: the restricted shells of storage services may not understand quotes.
+        var path = PlainPath().IsMatch(restrictToRepository) ? restrictToRepository : $"\\\"{restrictToRepository}\\\"";
+        return $"command=\"{remoteBorg} serve --restrict-to-repository {path}\",restrict {publicKeyLine}";
     }
 
     /// <summary>Shell command (POSIX sh on the server) appending <paramref name="line"/> to authorized_keys.</summary>
@@ -175,5 +179,34 @@ public static class AuthorizedKeys
         if (line.Contains('\'') || line.Contains('\n'))
             throw new ArgumentException("authorized_keys line must not contain single quotes or line breaks.", nameof(line));
         return $"umask 077 && mkdir -p ~/.ssh && printf '%s\\n' '{line}' >> ~/.ssh/authorized_keys";
+    }
+
+    /// <summary>Characters every shell takes literally in a path.</summary>
+    [GeneratedRegex("^[A-Za-z0-9._/+,:=@-]+$")]
+    private static partial Regex PlainPath();
+}
+
+/// <summary>Adds a login key to a server's authorized_keys the way that server supports it.</summary>
+public static class SshKeyInstaller
+{
+    /// <summary>
+    /// Installs <paramref name="publicKeyLine"/> with the user's password: restricted keys through
+    /// <see cref="SshEndpoint.KeyInstallation"/>, unrestricted ones through <see cref="SshEndpoint.InstallKeyCommand"/>
+    /// if the server has one.
+    /// </summary>
+    /// <param name="restrict">Restrict the key to <c>borg serve</c> for the endpoint's repository.</param>
+    /// <param name="remoteBorg">The borg command on the server, for the restriction.</param>
+    /// <exception cref="SshOperationException">Connecting, logging in or installing failed.</exception>
+    public static Task InstallAsync(ISshService ssh, SshEndpoint endpoint, string password, SshHostKey trustedHostKey,
+        string publicKeyLine, bool restrict, string remoteBorg, CancellationToken cancellationToken = default)
+    {
+        if (!restrict && endpoint.InstallKeyCommand is { Length: > 0 } installCommand)
+            return ssh.RunWithPasswordAsync(endpoint, password, trustedHostKey, installCommand, publicKeyLine + "\n", cancellationToken);
+
+        var line = AuthorizedKeys.Line(publicKeyLine, restrict ? endpoint.RepositoryPath : null, remoteBorg);
+        return endpoint.KeyInstallation == SshKeyInstallation.Sftp
+            ? ssh.AppendAuthorizedKeyAsync(endpoint, password, trustedHostKey, line, cancellationToken)
+            : ssh.RunWithPasswordAsync(endpoint, password, trustedHostKey, AuthorizedKeys.AppendCommand(line),
+                cancellationToken: cancellationToken);
     }
 }

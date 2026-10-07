@@ -44,6 +44,8 @@ An `IRepositoryProvider` describes
 - `Id` – stable and unique, stored with every repository that uses the provider. Never change it.
 - `DisplayName`, `Description` – shown when the user picks a provider.
 - `Fields` – the input it needs (`ProviderField`: key, label, kind, required, default value, hint).
+  Kinds are `Text`, `Number`, `FolderPath` (with a folder picker) and `Choice` – a list of `Options`
+  (`ProviderFieldOption`: the value your provider gets, and the label the user sees).
 - `Validate(values)` – error messages for the entered values; empty when everything is fine.
 - `GetLocation(values)` – the borg repository URL (`/path` or `ssh://user@host:port/path`)
   plus extra borg arguments such as `--remote-path=borg-1.4`.
@@ -70,6 +72,16 @@ public RepositoryLocation GetLocation(IReadOnlyDictionary<string, string> values
 BorgStudio then takes care of the rest: it shows the server's host key fingerprint for confirmation on first
 contact, creates a login key for the repository and installs it with the user's password (or uses an existing
 key), and runs borg with strict host key checking. Your provider never sees passwords or keys.
+
+Hosted services often differ from a plain server. `SshEndpoint` describes how:
+
+| Property | Use it when |
+|---|---|
+| `KeyInstallation = SshKeyInstallation.Sftp` | the service has no regular shell (no redirections), so the key line is appended to `~/.ssh/authorized_keys` over SFTP |
+| `InstallKeyCommand = "install-ssh-key"` | the service has its own command that reads a public key from standard input; BorgStudio uses it for keys not restricted to borg |
+| `PublishedHostKeyFingerprints = ["SHA256:…"]` | the service publishes its servers' host key fingerprints; a matching key is trusted without asking, any other one only after a warning |
+
+The built-in Hetzner Storage Box provider (`src/BorgStudio.Providers.Hetzner`) uses all three.
 
 BorgStudio creates every public, non-abstract class implementing `IBorgStudioPlugin` that has a public
 parameterless constructor, and calls `Register` once at startup. If anything throws, the plugin is skipped

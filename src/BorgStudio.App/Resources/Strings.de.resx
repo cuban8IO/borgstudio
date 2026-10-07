@@ -416,6 +416,13 @@ Nur vertrauen, wenn dieser Fingerabdruck mit dem des Servers übereinstimmt. Auf
   <data name="HostKeyTrust" xml:space="preserve">
     <value>Vertrauen</value>
   </data>
+  <data name="HostKeyNotPublished" xml:space="preserve">
+    <value>Erste Verbindung zu {0}. Der Server weist sich mit diesem {1}-Schlüssel aus:
+
+{2}
+
+Warnung: Der Anbieter veröffentlicht die Fingerabdrücke seiner Server, und dieser Schlüssel passt zu keinem davon. Möglicherweise besteht keine Verbindung zum echten Server. Nur vertrauen, wenn der Grund bekannt ist, z. B. weil der Anbieter neue Schlüssel angekündigt hat.</value>
+  </data>
   <data name="HostKeyRejected" xml:space="preserve">
     <value>Der Server wurde nicht bestätigt – keine Verbindung aufgebaut.</value>
   </data>

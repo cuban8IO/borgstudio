@@ -69,6 +69,62 @@ public sealed class SshServerIntegrationTests : IDisposable
         Assert.False(other.Succeeded);
     }
 
+    [StorageBoxEmulationFact]
+    public async Task Restricted_keys_written_over_SFTP_work_like_on_a_storage_box()
+    {
+        var hostKey = await TrustServerAsync();
+        var (endpoint, location) = Repository();
+        endpoint = endpoint with { KeyInstallation = SshKeyInstallation.Sftp };
+        location = location with { BorgArguments = ["--remote-path=borg-1.4"], Ssh = endpoint };
+        var key = _keys.Create("it-key", "borgstudio-integration-test");
+        var otherKey = _keys.Create("it-other-key", "borgstudio-integration-test");
+
+        await SshKeyInstaller.InstallAsync(_ssh, endpoint, SshServerFactAttribute.Password, hostKey, key.PublicKeyLine,
+            restrict: true, remoteBorg: "borg-1.4");
+        // Appending is idempotent and keeps what is already there.
+        await SshKeyInstaller.InstallAsync(_ssh, endpoint, SshServerFactAttribute.Password, hostKey, key.PublicKeyLine,
+            restrict: true, remoteBorg: "borg-1.4");
+        await SshKeyInstaller.InstallAsync(_ssh, endpoint, SshServerFactAttribute.Password, hostKey, otherKey.PublicKeyLine,
+            restrict: true, remoteBorg: "borg-1.4");
+
+        var authorizedKeys = ReadAuthorizedKeys(endpoint);
+        Assert.Single(authorizedKeys, line => line.EndsWith(key.PublicKeyLine, StringComparison.Ordinal));
+        Assert.Contains($"command=\"borg-1.4 serve --restrict-to-repository {endpoint.RepositoryPath}\",restrict {otherKey.PublicKeyLine}",
+            authorizedKeys);
+
+        var client = BorgClient.CreateDefault();
+        var created = await client.InitAsync(Borg, location, BorgEncryption.RepokeyBlake2, Passphrase,
+            new SshAccess(key.PrivateKeyFile, _knownHosts.Path));
+        Assert.True(created.Succeeded, created.Error?.ToString());
+        var info = await client.InfoAsync(Borg, location, Passphrase, new SshAccess(otherKey.PrivateKeyFile, _knownHosts.Path));
+        Assert.True(info.Succeeded, info.Error?.ToString());
+    }
+
+    [StorageBoxEmulationFact]
+    public async Task Unrestricted_keys_installed_through_the_install_command_work_for_borg()
+    {
+        var hostKey = await TrustServerAsync();
+        var (endpoint, location) = Repository();
+        endpoint = endpoint with { KeyInstallation = SshKeyInstallation.Sftp, InstallKeyCommand = "install-ssh-key" };
+        var key = _keys.Create("it-key", "borgstudio-integration-test");
+
+        await SshKeyInstaller.InstallAsync(_ssh, endpoint, SshServerFactAttribute.Password, hostKey, key.PublicKeyLine,
+            restrict: false, remoteBorg: "borg-1.4");
+
+        Assert.Contains(key.PublicKeyLine, ReadAuthorizedKeys(endpoint));
+        var created = await BorgClient.CreateDefault().InitAsync(Borg, location with { Ssh = endpoint }, BorgEncryption.None,
+            null, new SshAccess(key.PrivateKeyFile, _knownHosts.Path));
+        Assert.True(created.Succeeded, created.Error?.ToString());
+    }
+
+    /// <summary>The test account's authorized_keys, read with the password.</summary>
+    private static string[] ReadAuthorizedKeys(SshEndpoint endpoint)
+    {
+        using var sftp = new Renci.SshNet.SftpClient(endpoint.Host, endpoint.Port, endpoint.User, SshServerFactAttribute.Password);
+        sftp.Connect();
+        return sftp.ReadAllText(".ssh/authorized_keys").Split('\n', StringSplitOptions.RemoveEmptyEntries);
+    }
+
     [SshServerFact]
     public async Task Wrong_password_is_reported_as_failed_login()
     {

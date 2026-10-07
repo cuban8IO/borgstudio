@@ -77,11 +77,13 @@
                             <DataTemplate x:DataType="vm:FieldViewModel">
                                 <StackPanel Spacing="4">
                                     <TextBlock Text="{Binding Label}" />
-                                    <Grid ColumnDefinitions="*,Auto">
+                                    <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding IsTextInput}">
                                         <TextBox Text="{Binding Value}" />
                                         <Button Grid.Column="1" Margin="8,0,0,0" IsVisible="{Binding IsFolder}"
                                                 Content="{x:Static res:Strings.EditorBrowse}" Click="BrowseFolder_Click" />
                                     </Grid>
+                                    <ComboBox ItemsSource="{Binding Options}" SelectedItem="{Binding SelectedOption}"
+                                              IsVisible="{Binding IsChoice}" HorizontalAlignment="Stretch" />
                                     <TextBlock Text="{Binding Hint}" IsVisible="{Binding HasHint}"
                                                FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
                                 </StackPanel>
