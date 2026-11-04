@@ -289,6 +289,10 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             IsBusy = false;
             BusyText = null;
         }
+
+        // Only once idle: the window refuses to close while busy.
+        if (Result is not null)
+            CloseRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private bool IsIdle() => !IsBusy;
@@ -386,7 +390,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         if (repository.PassphraseMode == PassphraseMode.Stored && !TryStorePassphrase(repository, Passphrase))
             return;
 
-        Close(new RepositoryEditorResult(repository, CreateNew));
+        Result = new RepositoryEditorResult(repository, CreateNew);
     }
 
     private async Task SaveChangesAsync(RepositoryConfig existing, IRepositoryProvider provider, IReadOnlyDictionary<string, string> values)
@@ -433,7 +437,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         if (existing is { SshKeyManaged: true, SshKeyFile: { } oldKey } && repository.SshKeyFile != oldKey)
             _services.SshKeys.Delete(oldKey);
 
-        Close(new RepositoryEditorResult(repository, Created: false));
+        Result = new RepositoryEditorResult(repository, Created: false);
     }
 
     /// <summary>
@@ -520,12 +524,6 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
     {
         foreach (var problem in problems)
             Errors.Add(problem);
-    }
-
-    private void Close(RepositoryEditorResult result)
-    {
-        Result = result;
-        CloseRequested?.Invoke(this, EventArgs.Empty);
     }
 
     [GeneratedRegex("[^A-Za-z0-9._-]")]
