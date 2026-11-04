@@ -103,6 +103,10 @@ section gets the new version number.
   borg 1.4 or 1.2 on the box.
 - App icon and the app version in the window title.
 
+**Changed**
+- Dark design in the Beatport palette: dark ground, neon green for primary buttons, the selected list entry, progress
+  bars, check boxes and success messages.
+
 **Fixed**
 - The add/edit repository dialog now closes after a successful add or save.
 

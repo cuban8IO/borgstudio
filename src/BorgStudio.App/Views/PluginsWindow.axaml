@@ -29,8 +29,7 @@
             <ItemsControl ItemsSource="{Binding Plugins}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:PluginItemViewModel">
-                        <Border Margin="0,0,0,8" Padding="12" CornerRadius="6" BorderThickness="1"
-                                BorderBrush="{DynamicResource CardBorder}">
+                        <Border Classes="card" Margin="0,0,0,8">
                             <StackPanel Spacing="4">
                                 <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
                                 <TextBlock Text="{Binding Details}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />

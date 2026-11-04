@@ -32,8 +32,9 @@
         <NativeMenuBar DockPanel.Dock="Top" />
 
         <!-- Status bar -->
-        <Border DockPanel.Dock="Bottom" Padding="12,5" Background="{DynamicResource StatusBarBackground}">
-            <TextBlock Text="{Binding BorgStatus}" FontSize="12" />
+        <Border DockPanel.Dock="Bottom" Padding="12,5" Background="{DynamicResource StatusBarBackground}"
+                BorderBrush="{DynamicResource BpLineBrush}" BorderThickness="0,1,0,0">
+            <TextBlock Text="{Binding BorgStatus}" FontSize="12" Foreground="{DynamicResource BpTextSecondaryBrush}" />
         </Border>
 
         <!-- Shown when borg is missing, too old or not supported -->
