@@ -17,9 +17,9 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
 
@@ -87,3 +87,4 @@ jobs:
     uses: ./.github/workflows/package.yml
     with:
       version: 0.0.0-ci.${{ github.run_number }}
+      macos: false
