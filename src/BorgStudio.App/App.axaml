@@ -35,5 +35,9 @@
 
     <Application.Styles>
         <FluentTheme />
+        <!-- Every window (dialogs too) shows the app icon. -->
+        <Style Selector=":is(Window)">
+            <Setter Property="Icon" Value="/Assets/borgstudio.ico" />
+        </Style>
     </Application.Styles>
 </Application>

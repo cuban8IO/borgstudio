@@ -46,7 +46,7 @@ BorgStudio.slnx
 ├── tests/
 │   └── BorgStudio.Tests                xUnit tests
 ├── docs/                               Developer documentation
-├── build/                              Packaging assets (macOS Info.plist)
+├── build/                              Packaging assets (app icon source, macOS Info.plist and .icns)
 └── .github/                            CI, packaging and release workflows
 ```
 
@@ -85,3 +85,29 @@ dotnet publish src/BorgStudio.App -c Release -r linux-x64 -o publish
 
 Release versions are calculated automatically from the last `vX.Y.Z` tag: if any `feature/*` branch was merged
 since then, the minor version goes up (0.**x**.0), otherwise the patch version (0.0.**x**).
+Every pull request adds its change to the **Unreleased** section of the changelog below; when releasing, that
+section gets the new version number.
+
+## Changelog
+
+### Unreleased
+
+**Added**
+- Detects an installed borg on startup: on `PATH`, in the usual install locations and, on Windows, inside WSL.
+- Plugin system for repository providers, with a window listing the loaded plugins.
+- Local repositories: connect an existing one or create a new one, keep the passphrase in the system keychain or
+  ask for it every time, export the repository key.
+- SSH server provider: confirms the server's host key and creates and installs a login key per repository
+  (also when borg runs inside WSL).
+- Hetzner Storage Box provider: port 23, host key checked against Hetzner's published fingerprints, choice of
+  borg 1.4 or 1.2 on the box.
+- App icon and the app version in the window title.
+
+**Fixed**
+- The add/edit repository dialog now closes after a successful add or save.
+
+### 0.1.0 – 2026-10-06
+
+**Added**
+- Release pipeline: portable, self-contained packages for Windows (x64), macOS (Apple Silicon and Intel) and
+  Linux (x64), published on every push to `main`.

@@ -43,6 +43,9 @@ public partial class MainViewModel : ViewModelBase
 
     public PluginCatalog Plugins => _services.Plugins;
 
+    /// <summary>Window title with the app version, e.g. "BorgStudio 0.2.0".</summary>
+    public string Title { get; } = $"BorgStudio {AppVersion.Current}";
+
     /// <summary>The borg used for all repository operations; <c>null</c> until found.</summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(TestRepositoryCommand), nameof(ExportKeyCommand))]

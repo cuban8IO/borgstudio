@@ -65,6 +65,7 @@ jobs:
           cp -R publish/. "$app/Contents/MacOS/"
           chmod +x "$app/Contents/MacOS/BorgStudio"
           sed "s/@VERSION@/$VERSION/g" build/macos/Info.plist > "$app/Contents/Info.plist"
+          cp build/macos/BorgStudio.icns "$app/Contents/Resources/"
           plutil -lint "$app/Contents/Info.plist"
           # Ad-hoc signature (required on Apple Silicon). Not notarized: Gatekeeper still asks on first start.
           codesign --force --sign - "$app"
