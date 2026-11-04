@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="g0" gradientUnits="userSpaceOnUse" x1="0" y1="64" x2="0" y2="960">
+      <stop offset="0" stop-color="#262626"/>
+      <stop offset="1" stop-color="#0D0D0D"/>
+    </linearGradient>
+    <linearGradient id="g1" gradientUnits="userSpaceOnUse" x1="0" y1="64" x2="0" y2="960">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.04"/>
+    </linearGradient>
+  </defs>
+  <path d="M264,64 H760 A200,200 0 0 1 960,264 V760 A200,200 0 0 1 760,960 H264 A200,200 0 0 1 64,760 V264 A200,200 0 0 1 264,64 Z" fill="url(#g0)"/>
+  <path d="M264,70 H760 A194,194 0 0 1 954,264 V760 A194,194 0 0 1 760,954 H264 A194,194 0 0 1 70,760 V264 A194,194 0 0 1 264,70 Z" fill="none" stroke="url(#g1)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M212,642 L512,815.22 L812,642" fill="none" stroke="#01FF95" stroke-width="58" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.35"/>
+  <path d="M212,517 L512,690.22 L812,517" fill="none" stroke="#01FF95" stroke-width="58" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.65"/>
+  <path d="M512,241.88 L622,305.39 L512,368.9 L402,305.39 Z" fill="#01FF95" stroke="#01FF95" stroke-width="36" stroke-linejoin="round"/>
+  <path d="M362,328.49 L472,392 L362,455.51 L252,392 Z" fill="#01FF95" stroke="#01FF95" stroke-width="36" stroke-linejoin="round"/>
+  <path d="M662,328.49 L772,392 L662,455.51 L552,392 Z" fill="#FF53A0" stroke="#FF53A0" stroke-width="36" stroke-linejoin="round"/>
+  <path d="M512,415.1 L622,478.61 L512,542.12 L402,478.61 Z" fill="#01FF95" stroke="#01FF95" stroke-width="36" stroke-linejoin="round"/>
+</svg>

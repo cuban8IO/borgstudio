@@ -11,6 +11,8 @@
   <string>io.github.cuban8io.borgstudio</string>
   <key>CFBundleExecutable</key>
   <string>BorgStudio</string>
+  <key>CFBundleIconFile</key>
+  <string>BorgStudio.icns</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleInfoDictionaryVersion</key>

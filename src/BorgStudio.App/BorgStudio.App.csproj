@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon>Assets\avalonia-logo.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\borgstudio.ico</ApplicationIcon>
     <AssemblyTitle>BorgStudio</AssemblyTitle>
     <AssemblyName>BorgStudio</AssemblyName>
     <RootNamespace>BorgStudio.App</RootNamespace>
