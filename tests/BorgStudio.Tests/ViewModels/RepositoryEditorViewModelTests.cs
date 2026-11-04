@@ -74,7 +74,8 @@ public sealed class RepositoryEditorViewModelTests : IDisposable
         editor.Passphrase = editor.PassphraseConfirmation = "secret";
         editor.StorePassphrase = true;
         var closed = false;
-        editor.CloseRequested += (_, _) => closed = true;
+        // The window refuses to close while busy, so the request must come once idle.
+        editor.CloseRequested += (_, _) => closed = !editor.IsBusy;
 
         await editor.ConfirmCommand.ExecuteAsync(null);
 
