@@ -22,6 +22,7 @@ public sealed class HetznerRepositoryFlowTests : IDisposable
         Field(editor, "path").Value = "backups/laptop";
         editor.CreateNew = true;
         editor.Passphrase = editor.PassphraseConfirmation = "secret";
+        editor.StorageAsk = true;
         editor.ServerPassword = "box-password";
         return editor;
     }

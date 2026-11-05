@@ -4,6 +4,8 @@ using BorgStudio.Core.Borg;
 using BorgStudio.Core.Plugins;
 using BorgStudio.Core.Repositories;
 using BorgStudio.Core.Secrets;
+using BorgStudio.Core.Security;
+using BorgStudio.Core.Settings;
 using BorgStudio.Core.Ssh;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -19,6 +21,8 @@ public sealed record AppServices(
     BorgClient BorgClient,
     ISshService Ssh,
     SshKeyStore SshKeys,
+    Vault Vault,
+    SettingsStore Settings,
     IDialogService Dialogs)
 {
     public SshHostTrust SshTrust => new(Ssh, new KnownHostsFile(SshKeys.KnownHostsFile));
@@ -31,13 +35,14 @@ public partial class MainViewModel : ViewModelBase
     // Designer only.
     public MainViewModel() : this(new AppServices(BorgDetector.CreateDefault(), PluginCatalog.Empty,
         RepositoryStore.CreateDefault(), SecretStores.CreateDefault(), BorgClient.CreateDefault(),
-        new SshNetService(), SshKeyStore.CreateDefault(), new NoDialogs()))
+        new SshNetService(), SshKeyStore.CreateDefault(), Vault.CreateDefault(), SettingsStore.CreateDefault(), new NoDialogs()))
     {
     }
 
     public MainViewModel(AppServices services)
     {
         _services = services;
+        InitializeVault();
         LoadRepositories();
     }
 
@@ -125,6 +130,8 @@ public partial class MainViewModel : ViewModelBase
         public Task<bool> ConfirmAsync(string title, string message, string confirmText, string? cancelText = null) => Task.FromResult(false);
         public Task ShowMessageAsync(string title, string message) => Task.CompletedTask;
         public Task<string?> AskPassphraseAsync(string repositoryName) => Task.FromResult<string?>(null);
+        public Task<string?> AskPinAsync(string? error = null) => Task.FromResult<string?>(null);
+        public Task<string?> AskNewPinAsync() => Task.FromResult<string?>(null);
         public Task<string?> PickSaveFileAsync(string title, string suggestedFileName) => Task.FromResult<string?>(null);
         public Task ShowRepositoryEditorAsync(RepositoryEditorViewModel editor) => Task.CompletedTask;
     }

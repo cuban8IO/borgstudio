@@ -22,14 +22,26 @@ public partial class RepositoryEditorWindow : Window
             // Nested dialogs (host key confirmation) belong to this window, not to the main window.
             editor.Dialogs = new DialogService(this);
             editor.CloseRequested += (_, _) => Close();
+            editor.PropertyChanged += (_, args) =>
+            {
+                if (args.PropertyName == nameof(RepositoryEditorViewModel.IsBusy) && !editor.IsBusy && _closeWhenIdle)
+                    Close();
+            };
         }
     }
+
+    /// <summary>Closing was asked for (e.g. by locking the app) while borg was working: close once it is done.</summary>
+    private bool _closeWhenIdle;
 
     protected override void OnClosing(WindowClosingEventArgs e)
     {
         // borg is still working on the repository: don't leave it half-created.
         if (DataContext is RepositoryEditorViewModel { IsBusy: true })
+        {
             e.Cancel = true;
+            _closeWhenIdle = true;
+        }
+
         base.OnClosing(e);
     }
 

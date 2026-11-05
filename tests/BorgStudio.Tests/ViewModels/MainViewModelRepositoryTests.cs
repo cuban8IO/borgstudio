@@ -59,6 +59,7 @@ public sealed class MainViewModelRepositoryTests : IDisposable
             editor.Fields.Single().Value = _test.Directory.Combine("new");
             editor.CreateNew = true;
             editor.Passphrase = editor.PassphraseConfirmation = "secret";
+            editor.StorageAsk = true;
             await editor.ConfirmCommand.ExecuteAsync(null);
         };
         Dialogs.ConfirmAnswers.Enqueue(true);

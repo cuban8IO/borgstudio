@@ -3,7 +3,6 @@ using System.Globalization;
 using BorgStudio.App.Resources;
 using BorgStudio.Core.Borg;
 using BorgStudio.Core.Repositories;
-using BorgStudio.Core.Secrets;
 using BorgStudio.Plugins;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -105,18 +104,7 @@ public partial class MainViewModel
         if (item.Config is { SshKeyManaged: true, SshKeyFile: { } keyFile })
             _services.SshKeys.Delete(keyFile);
 
-        if (item.Config.PassphraseMode == PassphraseMode.Stored)
-        {
-            try
-            {
-                _services.SecretStore.Delete(item.Config.SecretKey);
-            }
-            catch (SecretStoreException exception)
-            {
-                await _services.Dialogs.ShowMessageAsync(Strings.RemoveTitle,
-                    BorgTexts.Format(Strings.KeychainError, exception.Message));
-            }
-        }
+        await RemovePassphraseAsync(item.Config);
 
         var index = Repositories.IndexOf(item);
         Repositories.Remove(item);
@@ -236,24 +224,22 @@ public partial class MainViewModel
     /// <summary>The passphrase to use (<c>Value</c> is <c>null</c> for unencrypted repositories); <c>null</c> if cancelled.</summary>
     private async Task<PassphraseHolder?> GetPassphraseAsync(RepositoryItemViewModel item)
     {
-        switch (item.Config.PassphraseMode)
+        var mode = item.Config.PassphraseMode;
+        if (mode == PassphraseMode.None)
+            return new PassphraseHolder(null);
+
+        if (mode is PassphraseMode.Vault or PassphraseMode.Stored)
         {
-            case PassphraseMode.None:
-                return new PassphraseHolder(null);
-            case PassphraseMode.Stored:
-                try
-                {
-                    if (_services.SecretStore.Get(item.Config.SecretKey) is { } stored)
-                        return new PassphraseHolder(stored);
-                }
-                catch (SecretStoreException exception)
-                {
-                    item.ShowResult(BorgTexts.Format(Strings.KeychainError, exception.Message), isError: true);
-                }
-                break;
+            var (stored, cancelled, error) = await new PassphraseStore(_services).GetAsync(item.Config, mode, _services.Dialogs);
+            if (cancelled)
+                return null;
+            if (stored is not null)
+                return new PassphraseHolder(stored);
+            if (error is not null)
+                item.ShowResult(error, isError: true);
         }
 
-        // Asked for every time – or stored but missing from the keychain.
+        // Asked for every time – or stored but missing (e.g. after resetting the vault).
         var entered = await _services.Dialogs.AskPassphraseAsync(item.Name);
         return entered is null ? null : new PassphraseHolder(entered);
     }

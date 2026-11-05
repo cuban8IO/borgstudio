@@ -28,6 +28,8 @@ public sealed class RepositoryEditorViewModelTests : IDisposable
     {
         editor.Name = name;
         editor.Fields.Single().Value = _test.Directory.Combine("repo");
+        // The vault has its own tests below.
+        editor.StorageAsk = true;
     }
 
     [Fact]
@@ -72,7 +74,7 @@ public sealed class RepositoryEditorViewModelTests : IDisposable
         Fill(editor);
         editor.CreateNew = true;
         editor.Passphrase = editor.PassphraseConfirmation = "secret";
-        editor.StorePassphrase = true;
+        editor.StorageKeychain = true;
         var closed = false;
         // The window refuses to close while busy, so the request must come once idle.
         editor.CloseRequested += (_, _) => closed = !editor.IsBusy;
@@ -137,8 +139,9 @@ public sealed class RepositoryEditorViewModelTests : IDisposable
         editor.Name = "Disk";
         editor.Fields.Single().Value = noKeychain.Directory.Combine("repo");
         editor.Passphrase = "secret";
+        editor.StorageKeychain = true;
 
-        Assert.False(editor.StorePassphrase);
+        Assert.False(editor.CanUseKeychain);
         Assert.True(editor.KeychainUnavailable);
         await editor.ConfirmCommand.ExecuteAsync(null);
 
@@ -178,10 +181,10 @@ public sealed class RepositoryEditorViewModelTests : IDisposable
 
         var toAsk = new RepositoryEditorViewModel(_test.Services, FakeBorg.Installation, existing);
         Assert.Equal("Old name", toAsk.Name);
-        Assert.True(toAsk.StorePassphrase);
+        Assert.True(toAsk.StorageKeychain);
         Assert.False(toAsk.IsSsh);
         toAsk.Name = "New name";
-        toAsk.StorePassphrase = false;
+        toAsk.StorageAsk = true;
         await toAsk.ConfirmCommand.ExecuteAsync(null);
 
         var asked = toAsk.Result!.Repository;
@@ -191,7 +194,7 @@ public sealed class RepositoryEditorViewModelTests : IDisposable
         Assert.Empty(Borg.Calls);
 
         var toStored = new RepositoryEditorViewModel(_test.Services, FakeBorg.Installation, asked);
-        toStored.StorePassphrase = true;
+        toStored.StorageKeychain = true;
         await toStored.ConfirmCommand.ExecuteAsync(null);
         Assert.Equal(Strings.EditorPassphraseRequiredToStore, Assert.Single(toStored.Errors));
 

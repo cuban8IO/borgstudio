@@ -22,19 +22,34 @@
         <NativeMenu>
             <NativeMenuItem Header="{x:Static res:Strings.MenuTools}">
                 <NativeMenu>
+                    <NativeMenuItem Header="{x:Static res:Strings.MenuSettings}" Click="OpenSettings_Click" />
                     <NativeMenuItem Header="{x:Static res:Strings.MenuPlugins}" Click="OpenPlugins_Click" />
                 </NativeMenu>
             </NativeMenuItem>
         </NativeMenu>
     </NativeMenu.Menu>
 
-    <DockPanel>
+    <Window.KeyBindings>
+        <KeyBinding Gesture="Ctrl+L" Command="{Binding LockVaultCommand}" />
+    </Window.KeyBindings>
+
+    <Panel>
+    <DockPanel IsVisible="{Binding IsAppVisible}">
         <NativeMenuBar DockPanel.Dock="Top" />
 
         <!-- Status bar -->
         <Border DockPanel.Dock="Bottom" Padding="12,5" Background="{DynamicResource StatusBarBackground}"
                 BorderBrush="{DynamicResource BpLineBrush}" BorderThickness="0,1,0,0">
-            <TextBlock Text="{Binding BorgStatus}" FontSize="12" Foreground="{DynamicResource BpTextSecondaryBrush}" />
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="{Binding BorgStatus}" FontSize="12" Foreground="{DynamicResource BpTextSecondaryBrush}"
+                           VerticalAlignment="Center" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsVaultSetUp}">
+                    <TextBlock Text="{Binding VaultStatus}" FontSize="12" Foreground="{DynamicResource BpTextSecondaryBrush}"
+                               VerticalAlignment="Center" />
+                    <Button Content="{x:Static res:Strings.VaultLock}" Command="{Binding LockVaultCommand}"
+                            IsVisible="{Binding IsVaultUnlocked}" FontSize="12" Padding="8,1" MinHeight="0" />
+                </StackPanel>
+            </Grid>
         </Border>
 
         <!-- Shown when borg is missing, too old or not supported -->
@@ -153,5 +168,31 @@
             </ScrollViewer>
         </Grid>
     </DockPanel>
+
+    <!-- Lock screen: with a PIN set up, nothing of the app is shown until it is unlocked. -->
+    <Border IsVisible="{Binding IsLocked}" Background="{DynamicResource BpBgBrush}">
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="340" Spacing="12">
+            <Image Source="/Assets/borgstudio.png" Width="96" Height="96" HorizontalAlignment="Center" Margin="0,0,0,8" />
+            <TextBlock Text="{x:Static res:Strings.LockScreenTitle}" FontSize="22" FontWeight="SemiBold"
+                       HorizontalAlignment="Center" />
+            <TextBlock Text="{x:Static res:Strings.LockScreenText}" TextWrapping="Wrap" TextAlignment="Center"
+                       Foreground="{DynamicResource BpTextSecondaryBrush}" />
+            <TextBox x:Name="LockScreenPinBox" Text="{Binding LockScreenPin}" PasswordChar="•"
+                     Watermark="{x:Static res:Strings.PinLabel}" Margin="0,8,0,0">
+                <TextBox.KeyBindings>
+                    <KeyBinding Gesture="Enter" Command="{Binding UnlockCommand}" />
+                </TextBox.KeyBindings>
+            </TextBox>
+            <Button Content="{x:Static res:Strings.Unlock}" Command="{Binding UnlockCommand}" Classes="accent"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+            <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsUnlocking}" />
+            <TextBlock Text="{Binding LockScreenError}" TextWrapping="Wrap" TextAlignment="Center"
+                       Foreground="{DynamicResource ErrorForeground}"
+                       IsVisible="{Binding LockScreenError, Converter={x:Static ObjectConverters.IsNotNull}}" />
+            <HyperlinkButton Content="{x:Static res:Strings.ForgotPin}" Command="{Binding ForgotPinCommand}"
+                             HorizontalAlignment="Center" Margin="0,8,0,0" />
+        </StackPanel>
+    </Border>
+    </Panel>
 
 </Window>

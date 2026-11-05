@@ -19,8 +19,14 @@ looks for borg inside WSL. borg 2 is still in beta and not supported yet. The UI
 - **Repository list:** `repositories.json` in the BorgStudio data folder (Windows `%LOCALAPPDATA%\BorgStudio`,
   macOS `~/Library/Application Support/BorgStudio`, Linux `~/.local/share/BorgStudio`). It contains names and
   locations, never passphrases.
-- **Passphrases:** per repository either stored in the system keychain (Windows Credential Manager, macOS keychain,
-  Linux Secret Service such as GNOME Keyring or KWallet) or asked for every time.
+- **Passphrases:** per repository either stored in BorgStudio's vault, in the system keychain (Windows Credential
+  Manager, macOS keychain, Linux Secret Service such as GNOME Keyring or KWallet) or asked for every time.
+- **Vault and app lock:** `vault.json` in the data folder, encrypted with AES-256-GCM under a key derived from your
+  PIN with Argon2id – without the PIN nothing in it can be read. With a PIN, BorgStudio starts locked and shows only
+  a lock screen; unlocking also opens the vault. By default it locks itself again after 15 minutes without use
+  (Tools → Settings), or at once with Ctrl+L. A forgotten PIN cannot be recovered:
+  the vault can only be reset, losing what is stored in it.
+- **Settings:** `settings.json` in the data folder.
 - **Repository keys:** BorgStudio offers to export the key after creating a repository. Keep the key file and the
   passphrase safe and separate – without them, backups cannot be restored.
 - **SSH:** login keys created by BorgStudio (one per repository) and the confirmed server host keys
@@ -102,6 +108,11 @@ section gets the new version number.
 - Hetzner Storage Box provider: port 23, host key checked against Hetzner's published fingerprints, choice of
   borg 1.4 or 1.2 on the box.
 - App icon and the app version in the window title.
+
+- App lock with a PIN: BorgStudio starts locked and shows a lock screen; unlocking also opens a PIN-protected vault
+  for repository passphrases (Argon2id + AES-256-GCM). Locks again after a configurable idle time (default
+  15 minutes) or with Ctrl+L. New Settings window (Tools → Settings) to set
+  up, change or reset the PIN. Each repository keeps its passphrase in the vault, in the system keychain or not at all.
 
 **Changed**
 - Dark design in the Beatport palette: dark ground, neon green for primary buttons, the selected list entry, progress
