@@ -1,6 +1,8 @@
 name: build
 
 # Build, test and package check for every branch except main (main is handled by release.yml).
+# Windows and Linux only: macOS runners are often unavailable for a long time and would fail the run.
+# release.yml tests and packages on macOS.
 on:
   push:
     branches-ignore: [main]
@@ -13,13 +15,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
 
@@ -53,16 +55,6 @@ jobs:
           sudo chmod 755 /usr/local/bin/install-ssh-key
           sudo ln -s "$(command -v borg)" /usr/local/bin/borg-1.4
 
-      # An unlocked keychain without auto-lock, so the keychain tests never wait for a password dialog.
-      - name: Prepare keychain (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          security create-keychain -p ci-only build.keychain
-          security list-keychains -d user -s build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p ci-only build.keychain
-          security set-keychain-settings build.keychain
-
       - name: Test
         if: runner.os != 'Linux'
         env:
@@ -87,3 +79,4 @@ jobs:
     uses: ./.github/workflows/package.yml
     with:
       version: 0.0.0-ci.${{ github.run_number }}
+      macos: false
