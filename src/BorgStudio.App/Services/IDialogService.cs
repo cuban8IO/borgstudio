@@ -14,6 +14,12 @@ public interface IDialogService
     /// <summary>Asks for a repository passphrase; <c>null</c> if cancelled.</summary>
     Task<string?> AskPassphraseAsync(string repositoryName);
 
+    /// <summary>Asks for the vault PIN; <c>null</c> if cancelled. <paramref name="error"/> explains a previous attempt.</summary>
+    Task<string?> AskPinAsync(string? error = null);
+
+    /// <summary>Asks for a new vault PIN (entered twice, at least <see cref="Core.Security.Vault.MinimumPinLength"/> characters); <c>null</c> if cancelled.</summary>
+    Task<string?> AskNewPinAsync();
+
     /// <summary>Asks where to save a file; <c>null</c> if cancelled.</summary>
     Task<string?> PickSaveFileAsync(string title, string suggestedFileName);
 

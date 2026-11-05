@@ -5,6 +5,7 @@ using BorgStudio.App.Services;
 using BorgStudio.Core.Borg;
 using BorgStudio.Core.Repositories;
 using BorgStudio.Core.Secrets;
+using BorgStudio.Core.Security;
 using BorgStudio.Core.Ssh;
 using BorgStudio.Plugins;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -37,6 +38,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
     private readonly BorgInstallation? _borg;
     private readonly RepositoryConfig? _existing;
     private readonly Guid _id;
+    private readonly PassphraseStore _passphrases;
 
     /// <summary>A key created in this dialog: reused for retries, deleted if the dialog is cancelled.</summary>
     private InstalledKey? _newKey;
@@ -48,6 +50,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         _borg = borg;
         _existing = existing;
         _id = existing?.Id ?? Guid.NewGuid();
+        _passphrases = new PassphraseStore(services);
         Dialogs = services.Dialogs;
         Providers = services.Plugins.RepositoryProviders.Select(provider => new ProviderOptionViewModel(provider)).ToList();
         SelectedEncryption = EncryptionOptions[0];
@@ -56,7 +59,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         if (existing is null)
         {
             SelectedProvider = Providers.FirstOrDefault();
-            StorePassphrase = services.SecretStore.IsAvailable;
+            PassphraseStorage = PassphraseMode.Vault;
             KeyChoice = SshKeyChoice.Generate;
             Page = Providers.Count == 1 ? EditorPage.Details : EditorPage.SelectProvider;
             if (Page == EditorPage.Details)
@@ -67,7 +70,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         SelectedProvider = Providers.FirstOrDefault(option => option.Provider.Id == existing.ProviderId)
             ?? throw new InvalidOperationException($"Provider '{existing.ProviderId}' is not available.");
         Name = existing.Name;
-        StorePassphrase = existing.PassphraseMode == PassphraseMode.Stored;
+        PassphraseStorage = existing.PassphraseMode == PassphraseMode.None ? PassphraseMode.Vault : existing.PassphraseMode;
         SelectedBorgVersion = BorgVersionOptions.First(option => option.Value == existing.BorgVersion);
         KeyChoice = existing.SshKeyFile is null ? SshKeyChoice.Generate : SshKeyChoice.Keep;
         RestrictKey = existing.SshKeyFile is null || existing.SshKeyRestricted;
@@ -163,12 +166,36 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         : CreateNew ? Strings.EditorPassphraseCreateHint
         : Strings.EditorPassphraseConnectHint;
 
+    /// <summary>Where the passphrase is kept: <see cref="PassphraseMode.Vault"/>, <see cref="PassphraseMode.Stored"/> (keychain) or asked for.</summary>
     [ObservableProperty]
-    public partial bool StorePassphrase { get; set; }
+    [NotifyPropertyChangedFor(nameof(StorageVault), nameof(StorageKeychain), nameof(StorageAsk))]
+    public partial PassphraseMode PassphraseStorage { get; set; }
 
-    public bool CanStorePassphrase => _services.SecretStore.IsAvailable;
+    public bool StorageVault
+    {
+        get => PassphraseStorage == PassphraseMode.Vault;
+        set { if (value) PassphraseStorage = PassphraseMode.Vault; }
+    }
+
+    public bool StorageKeychain
+    {
+        get => PassphraseStorage == PassphraseMode.Stored;
+        set { if (value) PassphraseStorage = PassphraseMode.Stored; }
+    }
+
+    public bool StorageAsk
+    {
+        get => PassphraseStorage == PassphraseMode.Ask;
+        set { if (value) PassphraseStorage = PassphraseMode.Ask; }
+    }
+
+    public bool CanUseKeychain => _services.SecretStore.IsAvailable;
 
     public bool KeychainUnavailable => !_services.SecretStore.IsAvailable;
+
+    /// <summary>The storage that will actually be used (the keychain only where there is one).</summary>
+    private PassphraseMode EffectiveStorage =>
+        PassphraseStorage == PassphraseMode.Stored && !CanUseKeychain ? PassphraseMode.Ask : PassphraseStorage;
 
     // --- SSH login ---
 
@@ -313,7 +340,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         }
 
         // Switching an existing repository to "stored" needs the passphrase to store.
-        if (_existing is { PassphraseMode: PassphraseMode.Ask } && StorePassphrase && Passphrase.Length == 0)
+        if (_existing is { PassphraseMode: PassphraseMode.Ask } && EffectiveStorage != PassphraseMode.Ask && Passphrase.Length == 0)
             problems.Add(Strings.EditorPassphraseRequiredToStore);
 
         if (IsSsh)
@@ -344,6 +371,10 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             Errors.Add(Strings.Borg2NotSupported);
             return;
         }
+
+        // Open (or set up) the vault before anything happens on the server, so cancelling changes nothing.
+        if (UsesPassphrase && EffectiveStorage == PassphraseMode.Vault && !await UnlockVaultAsync())
+            return;
 
         var login = IsSsh ? await PrepareSshLoginAsync(location) : SshLogin.None;
         if (login is null)
@@ -376,9 +407,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             Name = Name.Trim(),
             ProviderId = provider.Id,
             ProviderValues = values,
-            PassphraseMode = !encrypted ? PassphraseMode.None
-                : StorePassphrase && CanStorePassphrase ? PassphraseMode.Stored
-                : PassphraseMode.Ask,
+            PassphraseMode = encrypted ? EffectiveStorage : PassphraseMode.None,
             BorgVersion = borgVersion,
             EncryptionMode = info.Value.EncryptionMode,
             BorgRepositoryId = info.Value.Id,
@@ -387,8 +416,12 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             SshKeyRestricted = login.Restricted,
         };
 
-        if (repository.PassphraseMode == PassphraseMode.Stored && !TryStorePassphrase(repository, Passphrase))
+        if (repository.PassphraseMode is PassphraseMode.Vault or PassphraseMode.Stored
+            && await _passphrases.SetAsync(repository, repository.PassphraseMode, Passphrase, Dialogs) is { } error)
+        {
+            Errors.Add(error);
             return;
+        }
 
         Result = new RepositoryEditorResult(repository, CreateNew);
     }
@@ -415,23 +448,11 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             };
         }
 
-        var mode = existing.PassphraseMode == PassphraseMode.None ? PassphraseMode.None
-            : StorePassphrase && CanStorePassphrase ? PassphraseMode.Stored
-            : PassphraseMode.Ask;
+        var oldMode = existing.PassphraseMode;
+        var mode = oldMode == PassphraseMode.None ? PassphraseMode.None : EffectiveStorage;
         repository = repository with { PassphraseMode = mode };
-
-        try
-        {
-            if (mode == PassphraseMode.Stored && Passphrase.Length > 0)
-                _services.SecretStore.Set(repository.SecretKey, SecretLabel(repository), Passphrase);
-            else if (mode != PassphraseMode.Stored && existing.PassphraseMode == PassphraseMode.Stored)
-                _services.SecretStore.Delete(repository.SecretKey);
-        }
-        catch (SecretStoreException exception)
-        {
-            Errors.Add(BorgTexts.Format(Strings.KeychainError, exception.Message));
+        if (!await StorePassphraseAsync(existing, repository, oldMode, mode))
             return;
-        }
 
         // The old key is no longer used once a new one is in place.
         if (existing is { SshKeyManaged: true, SshKeyFile: { } oldKey } && repository.SshKeyFile != oldKey)
@@ -499,21 +520,60 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
     private string KeyComment() =>
         $"borgstudio-{UnsafeCommentCharacters().Replace(Environment.MachineName, "_")}-{_id.ToString("N")[..8]}";
 
-    private bool TryStorePassphrase(RepositoryConfig repository, string passphrase)
+    /// <summary>
+    /// Editing: stores a newly entered passphrase, or moves the stored one when only the storage changed (vault ↔ keychain),
+    /// and removes it from where it no longer belongs. <c>false</c> if that failed (the reason is in <see cref="Errors"/>).
+    /// </summary>
+    private async Task<bool> StorePassphraseAsync(RepositoryConfig existing, RepositoryConfig repository,
+        PassphraseMode oldMode, PassphraseMode mode)
+    {
+        if (mode is PassphraseMode.Vault or PassphraseMode.Stored)
+        {
+            string? secret = Passphrase.Length > 0 ? Passphrase : null;
+            if (secret is null && mode != oldMode && oldMode is PassphraseMode.Vault or PassphraseMode.Stored)
+            {
+                var (stored, cancelled, readError) = await _passphrases.GetAsync(existing, oldMode, Dialogs);
+                if (readError is not null || cancelled)
+                {
+                    Errors.Add(readError ?? Strings.VaultNotUnlocked);
+                    return false;
+                }
+
+                secret = stored;
+            }
+
+            if (secret is not null && await _passphrases.SetAsync(repository, mode, secret, Dialogs) is { } error)
+            {
+                Errors.Add(error);
+                return false;
+            }
+        }
+
+        if (mode != oldMode && _passphrases.Delete(existing, oldMode) is { } deleteError)
+        {
+            Errors.Add(deleteError);
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>Opens the vault (asking for the PIN or to set one up); <c>false</c> with the reason in <see cref="Errors"/>.</summary>
+    private async Task<bool> UnlockVaultAsync()
     {
         try
         {
-            _services.SecretStore.Set(repository.SecretKey, SecretLabel(repository), passphrase);
-            return true;
+            if (await VaultAccess.EnsureUnlockedAsync(_services.Vault, Dialogs))
+                return true;
+            Errors.Add(Strings.VaultNotUnlocked);
         }
-        catch (SecretStoreException exception)
+        catch (SecretBoxException exception)
         {
-            Errors.Add(BorgTexts.Format(Strings.KeychainError, exception.Message));
-            return false;
+            Errors.Add(BorgTexts.Format(Strings.VaultError, exception.Message));
         }
-    }
 
-    private static string SecretLabel(RepositoryConfig repository) => BorgTexts.Format(Strings.SecretLabel, repository.Name);
+        return false;
+    }
 
     private void CreateFields(IRepositoryProvider provider, IReadOnlyDictionary<string, string>? values) =>
         Fields = provider.Fields

@@ -209,7 +209,7 @@
     <value>Remove repository</value>
   </data>
   <data name="RemoveMessage" xml:space="preserve">
-    <value>Remove "{0}" from the list? The repository and its backups stay untouched; a stored passphrase is deleted from the keychain.</value>
+    <value>Remove "{0}" from the list? The repository and its backups stay untouched; a stored passphrase is deleted (from the vault or the keychain).</value>
     <comment>{0} = repository name</comment>
   </data>
   <data name="BackupKeyTitle" xml:space="preserve">
@@ -320,13 +320,10 @@
     <value>Without the passphrase the backups cannot be restored. Write it down and keep it safe.</value>
   </data>
   <data name="EditorPassphraseEditHint" xml:space="preserve">
-    <value>Only needed to store a (new) passphrase in the keychain.</value>
-  </data>
-  <data name="EditorStorePassphrase" xml:space="preserve">
-    <value>Store passphrase in the keychain (otherwise it is asked for every time)</value>
+    <value>Only needed to store a (new) passphrase.</value>
   </data>
   <data name="EditorKeychainUnavailable" xml:space="preserve">
-    <value>No keychain available on this system – the passphrase will be asked for every time.</value>
+    <value>No keychain available on this system.</value>
   </data>
   <data name="EditorAdvanced" xml:space="preserve">
     <value>Advanced</value>
@@ -362,7 +359,7 @@
     <value>The passphrases do not match.</value>
   </data>
   <data name="EditorPassphraseRequiredToStore" xml:space="preserve">
-    <value>Please enter the passphrase to store it in the keychain.</value>
+    <value>Please enter the passphrase to store it.</value>
   </data>
   <!-- borg errors -->
   <data name="BorgErrorPassphraseWrong" xml:space="preserve">
@@ -506,5 +503,122 @@ Warning: the provider publishes the fingerprints of its servers, and this key ma
   </data>
   <data name="EditorServerPasswordRequired" xml:space="preserve">
     <value>Please enter the server password.</value>
+  </data>
+  <data name="PassphraseModeVault" xml:space="preserve">
+    <value>Stored in the vault</value>
+  </data>
+  <data name="EditorPassphraseStorage" xml:space="preserve">
+    <value>Keep the passphrase:</value>
+  </data>
+  <data name="EditorStorageVault" xml:space="preserve">
+    <value>In the BorgStudio vault (protected by your PIN, included in exports)</value>
+  </data>
+  <data name="EditorStorageKeychain" xml:space="preserve">
+    <value>In the system keychain</value>
+  </data>
+  <data name="EditorStorageAsk" xml:space="preserve">
+    <value>Not at all – ask every time</value>
+  </data>
+  <data name="VaultNotUnlocked" xml:space="preserve">
+    <value>The vault was not unlocked, so the passphrase could not be stored.</value>
+  </data>
+  <data name="VaultError" xml:space="preserve">
+    <value>Vault error: {0}</value>
+  </data>
+  <data name="VaultStatusNotSetUp" xml:space="preserve">
+    <value>Vault not set up</value>
+  </data>
+  <data name="VaultStatusLocked" xml:space="preserve">
+    <value>Vault locked</value>
+  </data>
+  <data name="VaultStatusUnlocked" xml:space="preserve">
+    <value>Vault unlocked</value>
+  </data>
+  <data name="VaultLock" xml:space="preserve">
+    <value>Lock</value>
+  </data>
+  <data name="PinUnlockTitle" xml:space="preserve">
+    <value>Unlock vault</value>
+  </data>
+  <data name="PinUnlockText" xml:space="preserve">
+    <value>Enter your PIN to unlock the BorgStudio vault.</value>
+  </data>
+  <data name="PinCreateTitle" xml:space="preserve">
+    <value>Set up PIN</value>
+  </data>
+  <data name="PinCreateText" xml:space="preserve">
+    <value>The vault keeps passphrases encrypted with a key derived from this PIN. Without the PIN nobody can read it – not even BorgStudio. A forgotten PIN cannot be recovered: then only resetting the vault (everything in it is lost) or importing an export helps.</value>
+  </data>
+  <data name="PinLabel" xml:space="preserve">
+    <value>PIN</value>
+  </data>
+  <data name="PinNewLabel" xml:space="preserve">
+    <value>New PIN</value>
+  </data>
+  <data name="PinConfirmLabel" xml:space="preserve">
+    <value>Repeat PIN</value>
+  </data>
+  <data name="PinHint" xml:space="preserve">
+    <value>At least {0} characters; letters and digits are allowed. Longer is safer.</value>
+  </data>
+  <data name="PinTooShort" xml:space="preserve">
+    <value>The PIN needs at least {0} characters.</value>
+  </data>
+  <data name="PinMismatch" xml:space="preserve">
+    <value>The two PINs do not match.</value>
+  </data>
+  <data name="PinWrong" xml:space="preserve">
+    <value>Wrong PIN.</value>
+  </data>
+  <data name="PinChanged" xml:space="preserve">
+    <value>The PIN was changed.</value>
+  </data>
+  <data name="MenuSettings" xml:space="preserve">
+    <value>Settings…</value>
+  </data>
+  <data name="SettingsTitle" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="SettingsVaultHeader" xml:space="preserve">
+    <value>Vault</value>
+  </data>
+  <data name="SettingsVaultIntro" xml:space="preserve">
+    <value>The vault keeps repository passphrases encrypted with your PIN. You enter the PIN once per session.</value>
+  </data>
+  <data name="SettingsVaultStatus" xml:space="preserve">
+    <value>Status:</value>
+  </data>
+  <data name="SettingsSetUpPin" xml:space="preserve">
+    <value>Set up PIN…</value>
+  </data>
+  <data name="SettingsChangePin" xml:space="preserve">
+    <value>Change PIN…</value>
+  </data>
+  <data name="SettingsResetVault" xml:space="preserve">
+    <value>Reset vault…</value>
+  </data>
+  <data name="SettingsAutoLock" xml:space="preserve">
+    <value>Lock automatically after</value>
+  </data>
+  <data name="SettingsAutoLockHint" xml:space="preserve">
+    <value>…without using BorgStudio. Then the PIN is asked for again the next time a passphrase is needed.</value>
+  </data>
+  <data name="SettingsMinutes" xml:space="preserve">
+    <value>{0} minutes</value>
+  </data>
+  <data name="VaultSetUpDone" xml:space="preserve">
+    <value>The vault is set up and unlocked.</value>
+  </data>
+  <data name="VaultResetTitle" xml:space="preserve">
+    <value>Reset vault</value>
+  </data>
+  <data name="VaultResetWarning" xml:space="preserve">
+    <value>This deletes the vault with all passphrases stored in it. It cannot be undone. Repositories that kept their passphrase in the vault will ask for it again. Only do this if you forgot your PIN.</value>
+  </data>
+  <data name="VaultResetConfirm" xml:space="preserve">
+    <value>Delete vault</value>
+  </data>
+  <data name="VaultResetDone" xml:space="preserve">
+    <value>The vault was deleted. You can set up a new PIN.</value>
   </data>
 </root>

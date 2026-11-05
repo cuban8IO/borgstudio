@@ -18,6 +18,12 @@ public sealed class DialogService(Window owner) : IDialogService
     public Task<string?> AskPassphraseAsync(string repositoryName) =>
         new PassphraseWindow(repositoryName).ShowDialog<string?>(owner);
 
+    public Task<string?> AskPinAsync(string? error = null) =>
+        new PinWindow(PinWindow.Mode.Unlock, error).ShowDialog<string?>(owner);
+
+    public Task<string?> AskNewPinAsync() =>
+        new PinWindow(PinWindow.Mode.Create).ShowDialog<string?>(owner);
+
     public async Task<string?> PickSaveFileAsync(string title, string suggestedFileName)
     {
         var file = await owner.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions

@@ -25,6 +25,7 @@ public sealed class SshRepositoryFlowTests : IDisposable
         Field(editor, "path").Value = "borg/laptop";
         editor.CreateNew = true;
         editor.Passphrase = editor.PassphraseConfirmation = "secret";
+        editor.StorageAsk = true;
         editor.ServerPassword = "server-password";
         return editor;
     }

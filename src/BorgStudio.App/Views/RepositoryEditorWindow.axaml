@@ -114,10 +114,16 @@
                         <TextBox Text="{Binding PassphraseConfirmation}" PasswordChar="•"
                                  IsVisible="{Binding ShowPassphraseConfirmation}" />
                         <TextBlock Text="{Binding PassphraseHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
-                        <CheckBox IsChecked="{Binding StorePassphrase}" IsEnabled="{Binding CanStorePassphrase}"
-                                  Margin="0,4,0,0">
-                            <TextBlock Text="{x:Static res:Strings.EditorStorePassphrase}" TextWrapping="Wrap" />
-                        </CheckBox>
+                        <TextBlock Text="{x:Static res:Strings.EditorPassphraseStorage}" Margin="0,6,0,0" />
+                        <RadioButton GroupName="PassphraseStorage" IsChecked="{Binding StorageVault}">
+                            <TextBlock Text="{x:Static res:Strings.EditorStorageVault}" TextWrapping="Wrap" />
+                        </RadioButton>
+                        <RadioButton GroupName="PassphraseStorage" IsChecked="{Binding StorageKeychain}"
+                                     IsEnabled="{Binding CanUseKeychain}">
+                            <TextBlock Text="{x:Static res:Strings.EditorStorageKeychain}" TextWrapping="Wrap" />
+                        </RadioButton>
+                        <RadioButton GroupName="PassphraseStorage" IsChecked="{Binding StorageAsk}"
+                                     Content="{x:Static res:Strings.EditorStorageAsk}" />
                         <TextBlock Text="{x:Static res:Strings.EditorKeychainUnavailable}" IsVisible="{Binding KeychainUnavailable}"
                                    FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
                     </StackPanel>

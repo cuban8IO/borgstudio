@@ -196,7 +196,7 @@
     <value>Repository entfernen</value>
   </data>
   <data name="RemoveMessage" xml:space="preserve">
-    <value>„{0}“ aus der Liste entfernen? Das Repository und seine Backups bleiben unangetastet; eine gespeicherte Passphrase wird aus dem Schlüsselbund gelöscht.</value>
+    <value>„{0}“ aus der Liste entfernen? Das Repository und seine Backups bleiben unangetastet; eine gespeicherte Passphrase wird gelöscht (aus dem Tresor oder dem Schlüsselbund).</value>
   </data>
   <data name="BackupKeyTitle" xml:space="preserve">
     <value>Schlüssel sichern</value>
@@ -303,13 +303,10 @@
     <value>Ohne Passphrase lassen sich die Backups nicht wiederherstellen. Gut aufschreiben und sicher aufbewahren.</value>
   </data>
   <data name="EditorPassphraseEditHint" xml:space="preserve">
-    <value>Nur nötig, um eine (neue) Passphrase im Schlüsselbund zu speichern.</value>
-  </data>
-  <data name="EditorStorePassphrase" xml:space="preserve">
-    <value>Passphrase im Schlüsselbund speichern (sonst wird sie jedes Mal abgefragt)</value>
+    <value>Nur nötig, um eine (neue) Passphrase zu speichern.</value>
   </data>
   <data name="EditorKeychainUnavailable" xml:space="preserve">
-    <value>Auf diesem System ist kein Schlüsselbund verfügbar – die Passphrase wird jedes Mal abgefragt.</value>
+    <value>Auf diesem System ist kein Schlüsselbund verfügbar.</value>
   </data>
   <data name="EditorAdvanced" xml:space="preserve">
     <value>Erweitert</value>
@@ -345,7 +342,7 @@
     <value>Die Passphrasen stimmen nicht überein.</value>
   </data>
   <data name="EditorPassphraseRequiredToStore" xml:space="preserve">
-    <value>Bitte die Passphrase eingeben, um sie im Schlüsselbund zu speichern.</value>
+    <value>Bitte die Passphrase eingeben, um sie zu speichern.</value>
   </data>
   <!-- borg-Fehler -->
   <data name="BorgErrorPassphraseWrong" xml:space="preserve">
@@ -485,5 +482,122 @@ Warnung: Der Anbieter veröffentlicht die Fingerabdrücke seiner Server, und die
   </data>
   <data name="EditorServerPasswordRequired" xml:space="preserve">
     <value>Bitte das Server-Passwort eingeben.</value>
+  </data>
+  <data name="PassphraseModeVault" xml:space="preserve">
+    <value>Im Tresor gespeichert</value>
+  </data>
+  <data name="EditorPassphraseStorage" xml:space="preserve">
+    <value>Passphrase aufbewahren:</value>
+  </data>
+  <data name="EditorStorageVault" xml:space="preserve">
+    <value>Im BorgStudio-Tresor (durch deine PIN geschützt, wird mit exportiert)</value>
+  </data>
+  <data name="EditorStorageKeychain" xml:space="preserve">
+    <value>Im Schlüsselbund des Systems</value>
+  </data>
+  <data name="EditorStorageAsk" xml:space="preserve">
+    <value>Gar nicht – jedes Mal abfragen</value>
+  </data>
+  <data name="VaultNotUnlocked" xml:space="preserve">
+    <value>Der Tresor wurde nicht entsperrt, deshalb konnte die Passphrase nicht gespeichert werden.</value>
+  </data>
+  <data name="VaultError" xml:space="preserve">
+    <value>Fehler beim Tresor: {0}</value>
+  </data>
+  <data name="VaultStatusNotSetUp" xml:space="preserve">
+    <value>Tresor nicht eingerichtet</value>
+  </data>
+  <data name="VaultStatusLocked" xml:space="preserve">
+    <value>Tresor gesperrt</value>
+  </data>
+  <data name="VaultStatusUnlocked" xml:space="preserve">
+    <value>Tresor entsperrt</value>
+  </data>
+  <data name="VaultLock" xml:space="preserve">
+    <value>Sperren</value>
+  </data>
+  <data name="PinUnlockTitle" xml:space="preserve">
+    <value>Tresor entsperren</value>
+  </data>
+  <data name="PinUnlockText" xml:space="preserve">
+    <value>Gib deine PIN ein, um den BorgStudio-Tresor zu entsperren.</value>
+  </data>
+  <data name="PinCreateTitle" xml:space="preserve">
+    <value>PIN festlegen</value>
+  </data>
+  <data name="PinCreateText" xml:space="preserve">
+    <value>Der Tresor speichert Passphrasen verschlüsselt mit einem Schlüssel, der aus dieser PIN abgeleitet wird. Ohne die PIN kann niemand den Inhalt lesen – auch BorgStudio nicht. Eine vergessene PIN lässt sich nicht wiederherstellen: Dann hilft nur, den Tresor zurückzusetzen (sein Inhalt geht verloren) oder einen Export zu importieren.</value>
+  </data>
+  <data name="PinLabel" xml:space="preserve">
+    <value>PIN</value>
+  </data>
+  <data name="PinNewLabel" xml:space="preserve">
+    <value>Neue PIN</value>
+  </data>
+  <data name="PinConfirmLabel" xml:space="preserve">
+    <value>PIN wiederholen</value>
+  </data>
+  <data name="PinHint" xml:space="preserve">
+    <value>Mindestens {0} Zeichen; Buchstaben und Ziffern sind erlaubt. Länger ist sicherer.</value>
+  </data>
+  <data name="PinTooShort" xml:space="preserve">
+    <value>Die PIN braucht mindestens {0} Zeichen.</value>
+  </data>
+  <data name="PinMismatch" xml:space="preserve">
+    <value>Die beiden PINs stimmen nicht überein.</value>
+  </data>
+  <data name="PinWrong" xml:space="preserve">
+    <value>Falsche PIN.</value>
+  </data>
+  <data name="PinChanged" xml:space="preserve">
+    <value>Die PIN wurde geändert.</value>
+  </data>
+  <data name="MenuSettings" xml:space="preserve">
+    <value>Einstellungen …</value>
+  </data>
+  <data name="SettingsTitle" xml:space="preserve">
+    <value>Einstellungen</value>
+  </data>
+  <data name="SettingsVaultHeader" xml:space="preserve">
+    <value>Tresor</value>
+  </data>
+  <data name="SettingsVaultIntro" xml:space="preserve">
+    <value>Der Tresor speichert die Passphrasen der Repositories, verschlüsselt mit deiner PIN. Die PIN gibst du einmal pro Sitzung ein.</value>
+  </data>
+  <data name="SettingsVaultStatus" xml:space="preserve">
+    <value>Status:</value>
+  </data>
+  <data name="SettingsSetUpPin" xml:space="preserve">
+    <value>PIN einrichten …</value>
+  </data>
+  <data name="SettingsChangePin" xml:space="preserve">
+    <value>PIN ändern …</value>
+  </data>
+  <data name="SettingsResetVault" xml:space="preserve">
+    <value>Tresor zurücksetzen …</value>
+  </data>
+  <data name="SettingsAutoLock" xml:space="preserve">
+    <value>Automatisch sperren nach</value>
+  </data>
+  <data name="SettingsAutoLockHint" xml:space="preserve">
+    <value>… ohne Bedienung von BorgStudio. Danach wird die PIN beim nächsten Bedarf erneut abgefragt.</value>
+  </data>
+  <data name="SettingsMinutes" xml:space="preserve">
+    <value>{0} Minuten</value>
+  </data>
+  <data name="VaultSetUpDone" xml:space="preserve">
+    <value>Der Tresor ist eingerichtet und entsperrt.</value>
+  </data>
+  <data name="VaultResetTitle" xml:space="preserve">
+    <value>Tresor zurücksetzen</value>
+  </data>
+  <data name="VaultResetWarning" xml:space="preserve">
+    <value>Damit wird der Tresor mit allen darin gespeicherten Passphrasen gelöscht. Das lässt sich nicht rückgängig machen. Repositories, deren Passphrase im Tresor lag, fragen sie danach wieder ab. Mach das nur, wenn du deine PIN vergessen hast.</value>
+  </data>
+  <data name="VaultResetConfirm" xml:space="preserve">
+    <value>Tresor löschen</value>
+  </data>
+  <data name="VaultResetDone" xml:space="preserve">
+    <value>Der Tresor wurde gelöscht. Du kannst eine neue PIN einrichten.</value>
   </data>
 </root>

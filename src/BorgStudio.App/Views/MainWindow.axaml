@@ -22,6 +22,7 @@
         <NativeMenu>
             <NativeMenuItem Header="{x:Static res:Strings.MenuTools}">
                 <NativeMenu>
+                    <NativeMenuItem Header="{x:Static res:Strings.MenuSettings}" Click="OpenSettings_Click" />
                     <NativeMenuItem Header="{x:Static res:Strings.MenuPlugins}" Click="OpenPlugins_Click" />
                 </NativeMenu>
             </NativeMenuItem>
@@ -34,7 +35,16 @@
         <!-- Status bar -->
         <Border DockPanel.Dock="Bottom" Padding="12,5" Background="{DynamicResource StatusBarBackground}"
                 BorderBrush="{DynamicResource BpLineBrush}" BorderThickness="0,1,0,0">
-            <TextBlock Text="{Binding BorgStatus}" FontSize="12" Foreground="{DynamicResource BpTextSecondaryBrush}" />
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="{Binding BorgStatus}" FontSize="12" Foreground="{DynamicResource BpTextSecondaryBrush}"
+                           VerticalAlignment="Center" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsVaultSetUp}">
+                    <TextBlock Text="{Binding VaultStatus}" FontSize="12" Foreground="{DynamicResource BpTextSecondaryBrush}"
+                               VerticalAlignment="Center" />
+                    <Button Content="{x:Static res:Strings.VaultLock}" Command="{Binding LockVaultCommand}"
+                            IsVisible="{Binding IsVaultUnlocked}" FontSize="12" Padding="8,1" MinHeight="0" />
+                </StackPanel>
+            </Grid>
         </Border>
 
         <!-- Shown when borg is missing, too old or not supported -->

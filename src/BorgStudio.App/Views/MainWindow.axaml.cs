@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using BorgStudio.App.Services;
 using BorgStudio.App.ViewModels;
 using BorgStudio.Core;
 
@@ -17,6 +18,16 @@ public partial class MainWindow : Window
             return;
 
         var window = new PluginsWindow { DataContext = new PluginsViewModel(viewModel.Plugins, AppPaths.PluginsDirectory) };
+        await window.ShowDialog(this);
+    }
+
+    private async void OpenSettings_Click(object? sender, EventArgs e)
+    {
+        if (DataContext is not MainViewModel viewModel)
+            return;
+
+        var window = new SettingsWindow();
+        window.DataContext = new SettingsViewModel(viewModel, new DialogService(window));
         await window.ShowDialog(this);
     }
 }

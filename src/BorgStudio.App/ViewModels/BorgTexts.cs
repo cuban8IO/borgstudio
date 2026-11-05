@@ -36,7 +36,15 @@ internal static class BorgTexts
     {
         Core.Repositories.PassphraseMode.None => Strings.PassphraseModeNone,
         Core.Repositories.PassphraseMode.Stored => Strings.PassphraseModeStored,
+        Core.Repositories.PassphraseMode.Vault => Strings.PassphraseModeVault,
         _ => Strings.PassphraseModeAsk,
+    };
+
+    public static string VaultState(Core.Security.VaultState state) => state switch
+    {
+        Core.Security.VaultState.Unlocked => Strings.VaultStatusUnlocked,
+        Core.Security.VaultState.Locked => Strings.VaultStatusLocked,
+        _ => Strings.VaultStatusNotSetUp,
     };
 
     public static string BorgVersion(BorgVersionPreference preference) => preference switch

@@ -13,6 +13,9 @@ public enum PassphraseMode
 
     /// <summary>Asked for every time it is needed.</summary>
     Ask,
+
+    /// <summary>Kept in BorgStudio's PIN-protected vault (see <see cref="Security.Vault"/>).</summary>
+    Vault,
 }
 
 /// <summary>Which borg major version a repository is used with.</summary>

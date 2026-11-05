@@ -5,6 +5,8 @@ using BorgStudio.Core.Plugins;
 using BorgStudio.Core.Processes;
 using BorgStudio.Core.Repositories;
 using BorgStudio.Core.Secrets;
+using BorgStudio.Core.Security;
+using BorgStudio.Core.Settings;
 using BorgStudio.Core.Ssh;
 using BorgStudio.Plugins;
 using BorgStudio.Providers.Hetzner;
@@ -127,7 +129,13 @@ public sealed class TestServices : IDisposable
     public FakeDialogs Dialogs { get; } = new();
     public RepositoryStore Store { get; }
     public SshKeyStore SshKeys { get; }
+    public ManualTime Time { get; } = new();
+    public Vault Vault { get; }
+    public SettingsStore Settings { get; }
     public AppServices Services { get; }
+
+    /// <summary>Cheap key derivation: the tests check the logic, not the cost.</summary>
+    public static readonly KdfParameters FastKdf = new(64, 1, 1);
 
     public TestServices(bool keychainAvailable = true)
     {
@@ -135,8 +143,10 @@ public sealed class TestServices : IDisposable
             Secrets = new FakeSecretStore(available: false);
         Store = new RepositoryStore(Directory.Combine("repositories.json"));
         SshKeys = new SshKeyStore(Directory.Combine("ssh"));
+        Vault = new Vault(Directory.Combine("vault.json"), FastKdf, Time);
+        Settings = new SettingsStore(Directory.Combine("settings.json"));
         var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new SshProviderPlugin(), new HetznerProviderPlugin()], "no-plugins-here");
-        Services = new AppServices(Borg.Detector(), plugins, Store, Secrets, new BorgClient(Borg), Ssh, SshKeys, Dialogs);
+        Services = new AppServices(Borg.Detector(), plugins, Store, Secrets, new BorgClient(Borg), Ssh, SshKeys, Vault, Settings, Dialogs);
     }
 
     public KnownHostsFile KnownHosts => new(SshKeys.KnownHostsFile);
@@ -166,6 +176,15 @@ public sealed class FakeDialogs : IDialogService
 
     public Queue<string?> Passphrases { get; } = [];
 
+    /// <summary>Answers to "enter your PIN" (none left: cancelled).</summary>
+    public Queue<string?> Pins { get; } = [];
+
+    /// <summary>Answers to "set up a PIN" (none left: cancelled).</summary>
+    public Queue<string?> NewPins { get; } = [];
+
+    /// <summary>Error texts shown with the PIN prompts.</summary>
+    public List<string?> PinErrors { get; } = [];
+
     public string? SaveFile { get; set; }
 
     /// <summary>Titles of the dialogs shown.</summary>
@@ -191,7 +210,25 @@ public sealed class FakeDialogs : IDialogService
     public Task<string?> AskPassphraseAsync(string repositoryName) =>
         Task.FromResult(Passphrases.Count > 0 ? Passphrases.Dequeue() : null);
 
+    public Task<string?> AskPinAsync(string? error = null)
+    {
+        PinErrors.Add(error);
+        return Task.FromResult(Pins.Count > 0 ? Pins.Dequeue() : null);
+    }
+
+    public Task<string?> AskNewPinAsync() => Task.FromResult(NewPins.Count > 0 ? NewPins.Dequeue() : null);
+
     public Task<string?> PickSaveFileAsync(string title, string suggestedFileName) => Task.FromResult(SaveFile);
 
     public Task ShowRepositoryEditorAsync(RepositoryEditorViewModel editor) => Editor?.Invoke(editor) ?? Task.CompletedTask;
+}
+
+/// <summary>A clock that only moves when told to.</summary>
+public sealed class ManualTime : TimeProvider
+{
+    private DateTimeOffset _now = new(2026, 11, 5, 9, 0, 0, TimeSpan.Zero);
+
+    public override DateTimeOffset GetUtcNow() => _now;
+
+    public void Advance(TimeSpan time) => _now += time;
 }
