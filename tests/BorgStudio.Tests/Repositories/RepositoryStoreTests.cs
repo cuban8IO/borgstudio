@@ -49,6 +49,45 @@ public sealed class RepositoryStoreTests : IDisposable
     }
 
     [Fact]
+    public void Key_files_of_older_versions_are_read_and_dropped_once_migrated()
+    {
+        Directory.CreateDirectory(_directory.Combine("data"));
+        File.WriteAllText(Store().FilePath, """
+            {
+              "version": 1,
+              "repositories": [
+                {
+                  "id": "ab604488-586c-4704-8325-e8892117ab3b",
+                  "name": "Box",
+                  "providerId": "hetzner-storage-box",
+                  "providerValues": { "user": "u1", "path": "backups/dev" },
+                  "passphraseMode": "ask",
+                  "sshKeyFile": "C:\\ssh\\ab604488-20261104",
+                  "sshKeyManaged": true,
+                  "sshKeyRestricted": true
+                }
+              ]
+            }
+            """);
+
+        var old = Assert.Single(Store().Load().Repositories);
+        Assert.True(old.HasLegacySshKey);
+        Assert.Equal(@"C:\ssh\ab604488-20261104", old.LegacySshKeyFile);
+        Assert.True(old.LegacySshKeyManaged);
+
+        var keyId = Guid.NewGuid();
+        Store().Save([old with { SshKeyId = keyId, LegacySshKeyFile = null, LegacySshKeyManaged = false }]);
+
+        var json = File.ReadAllText(Store().FilePath);
+        Assert.DoesNotContain("sshKeyFile", json);
+        Assert.DoesNotContain("sshKeyManaged", json);
+        var migrated = Assert.Single(Store().Load().Repositories);
+        Assert.Equal(keyId, migrated.SshKeyId);
+        Assert.False(migrated.HasLegacySshKey);
+        Assert.True(migrated.SshKeyRestricted);
+    }
+
+    [Fact]
     public void File_is_readable_json_without_secrets()
     {
         Store().Save([Sample()]);

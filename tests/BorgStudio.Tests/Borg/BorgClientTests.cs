@@ -23,6 +23,9 @@ public class BorgClientTests
     private sealed class RecordingRunner(ProcessResult? result) : IProcessRunner
     {
         public List<(string FileName, IReadOnlyList<string> Arguments, string? Input)> Calls { get; } = [];
+
+        /// <summary>Content of the key file ssh would use, read while borg runs.</summary>
+        public string? KeyDuringCall { get; private set; }
         public string? FileName { get; private set; }
         public IReadOnlyList<string> Arguments { get; private set; } = [];
         public IReadOnlyDictionary<string, string?> Environment { get; private set; } = new Dictionary<string, string?>();
@@ -32,9 +35,14 @@ public class BorgClientTests
             CancellationToken cancellationToken = default)
         {
             Calls.Add((fileName, arguments, standardInput));
-            FileName = fileName;
-            Arguments = arguments;
-            Environment = environment ?? new Dictionary<string, string?>();
+            if (environment?.GetValueOrDefault("BORG_RSH") is { } rsh && KeyPath(rsh) is { } key && File.Exists(key))
+                KeyDuringCall = File.ReadAllText(key);
+            if (environment is not null)
+            {
+                FileName = fileName;
+                Arguments = arguments;
+                Environment = environment;
+            }
             return Task.FromResult(result);
         }
     }
@@ -44,19 +52,37 @@ public class BorgClientTests
         Ssh = new SshEndpoint("nas.local", 2222, "backup", "borg/laptop"),
     };
 
+    /// <summary>The key file in a BORG_RSH command line.</summary>
+    private static string? KeyPath(string rsh) =>
+        System.Text.RegularExpressions.Regex.Match(rsh, "-i '(?<path>[^']+)'") is { Success: true } match ? match.Groups["path"].Value : null;
+
     [Fact]
-    public async Task SSH_repositories_get_a_strict_batch_mode_ssh_command()
+    public void The_ssh_command_is_strict_and_batch_mode()
     {
-        var runner = new RecordingRunner(new ProcessResult(0, InfoJson, ""));
-        var ssh = new SshAccess("/home/me/.local/share/BorgStudio/ssh/key 1", "/home/me/.local/share/BorgStudio/ssh/known_hosts");
-
-        await new BorgClient(runner).InfoAsync(NativeBorg, SshLocation, "secret", ssh);
-
         Assert.Equal(
             "ssh -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
-            + " -o UserKnownHostsFile='/home/me/.local/share/BorgStudio/ssh/known_hosts'"
-            + " -i '/home/me/.local/share/BorgStudio/ssh/key 1'",
-            runner.Environment["BORG_RSH"]);
+            + " -o UserKnownHostsFile='/home/me/BorgStudio/ssh/known_hosts' -i '/home/me/BorgStudio/ssh/key 1'",
+            BorgClient.SshCommand("/home/me/BorgStudio/ssh/key 1", "/home/me/BorgStudio/ssh/known_hosts"));
+    }
+
+    [Fact]
+    public async Task The_key_exists_as_a_private_file_only_while_borg_runs()
+    {
+        using var directory = new TestSupport.TemporaryDirectory();
+        var knownHosts = directory.Combine("ssh", "known_hosts");
+        var runner = new RecordingRunner(new ProcessResult(0, InfoJson, ""));
+
+        await new BorgClient(runner).InfoAsync(NativeBorg, SshLocation, "secret", new SshAccess("PRIVATE KEY", knownHosts));
+
+        var rsh = runner.Environment["BORG_RSH"]!;
+        var key = KeyPath(rsh)!;
+        Assert.StartsWith(
+            "ssh -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" + $" -o UserKnownHostsFile='{knownHosts}' -i '",
+            rsh);
+        Assert.Equal(directory.Combine("ssh"), Path.GetDirectoryName(key));
+        Assert.StartsWith("key-", Path.GetFileName(key));
+        Assert.Equal("PRIVATE KEY\n", runner.KeyDuringCall);
+        Assert.False(File.Exists(key));
         Assert.Equal("ssh://backup@nas.local:2222/./borg/laptop", runner.Arguments[^1]);
     }
 
@@ -72,27 +98,28 @@ public class BorgClientTests
     }
 
     [Fact]
-    public async Task WSL_gets_private_copies_of_key_and_known_hosts()
+    public async Task WSL_gets_a_private_copy_of_the_key_only_for_the_call()
     {
         using var directory = new TestSupport.TemporaryDirectory();
-        var key = directory.Combine("0123-key");
         var knownHosts = directory.Combine("known_hosts");
-        File.WriteAllText(key, "PRIVATE KEY");
         File.WriteAllText(knownHosts, "[nas.local]:2222 ssh-ed25519 AAAA\n");
         var runner = new RecordingRunner(new ProcessResult(0, InfoJson, ""));
 
-        await new BorgClient(runner, Wsl).InfoAsync(WslBorg, SshLocation, "secret", new SshAccess(key, knownHosts));
+        await new BorgClient(runner, Wsl).InfoAsync(WslBorg, SshLocation, "secret", new SshAccess("PRIVATE KEY", knownHosts));
 
-        Assert.Equal(3, runner.Calls.Count);
-        Assert.Equal("PRIVATE KEY", runner.Calls[0].Input);
-        Assert.Contains("umask 077", runner.Calls[0].Arguments[^1]);
-        Assert.EndsWith("cat > ~/.borgstudio/ssh/key-0123-key", runner.Calls[0].Arguments[^1]);
+        Assert.Equal(4, runner.Calls.Count);
+        var copyKey = runner.Calls[0].Arguments[^1];
+        Assert.Equal("PRIVATE KEY\n", runner.Calls[0].Input);
+        Assert.StartsWith("umask 077 && mkdir -p ~/.borgstudio/ssh && (find ~/.borgstudio/ssh -name 'key-*' -mmin +60 -delete", copyKey);
+        var key = copyKey[(copyKey.LastIndexOf("cat > ", StringComparison.Ordinal) + 6)..];
+        Assert.Matches(@"^~/\.borgstudio/ssh/key-[0-9a-f]{32}$", key);
         Assert.Equal("[nas.local]:2222 ssh-ed25519 AAAA\n", runner.Calls[1].Input);
         Assert.Equal(
             "ssh -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
-            + " -o UserKnownHostsFile='~/.borgstudio/ssh/known_hosts' -i '~/.borgstudio/ssh/key-0123-key'",
+            + $" -o UserKnownHostsFile='~/.borgstudio/ssh/known_hosts' -i '{key}'",
             runner.Environment["BORG_RSH"]);
         Assert.Contains("BORG_RSH", runner.Environment["WSLENV"]!.Split(':'));
+        Assert.Equal(["-e", "sh", "-c", $"rm -f {key}"], runner.Calls[3].Arguments);
     }
 
     [Theory]
@@ -131,25 +158,31 @@ public class BorgClientTests
     [InlineData("ssh: connect to host nas.local port 2222: Connection refused\n", BorgErrorKind.ConnectionFailed)]
     public async Task A_bare_connection_closed_is_diagnosed_with_a_plain_ssh_login(string sshError, BorgErrorKind expected)
     {
+        using var directory = new TestSupport.TemporaryDirectory();
+        var knownHosts = directory.Combine("known_hosts");
         var runner = new ScriptedRunner(ConnectionClosed, new ProcessResult(255, "", sshError));
 
-        var result = await new BorgClient(runner).InfoAsync(NativeBorg, SshLocation, "secret", new SshAccess("/key", "/known_hosts"));
+        var result = await new BorgClient(runner).InfoAsync(NativeBorg, SshLocation, "secret", new SshAccess("KEY", knownHosts));
 
         Assert.Equal(expected, result.Error!.Kind);
         var diagnosis = runner.Calls[1];
         Assert.Equal("ssh", diagnosis.FileName);
+        var key = diagnosis.Arguments[9];
         Assert.Equal(
             ["-o", "BatchMode=yes", "-o", "IdentitiesOnly=yes", "-o", "StrictHostKeyChecking=yes",
-             "-o", "UserKnownHostsFile=/known_hosts", "-i", "/key", "-o", "ConnectTimeout=15", "-p", "2222",
+             "-o", $"UserKnownHostsFile={knownHosts}", "-i", key, "-o", "ConnectTimeout=15", "-p", "2222",
              "backup@nas.local", "exit"],
             diagnosis.Arguments);
+        Assert.StartsWith(directory.Combine("key-"), key);
+        Assert.False(File.Exists(key));
     }
 
     [Fact]
     public async Task No_diagnosis_for_other_errors_or_local_repositories()
     {
+        using var directory = new TestSupport.TemporaryDirectory();
         var wrongPassphrase = new ScriptedRunner(new ProcessResult(2, "", ErrorLine("PassphraseWrong", "wrong")));
-        await new BorgClient(wrongPassphrase).InfoAsync(NativeBorg, SshLocation, "x", new SshAccess("/key", "/known_hosts"));
+        await new BorgClient(wrongPassphrase).InfoAsync(NativeBorg, SshLocation, "x", new SshAccess("KEY", directory.Combine("known_hosts")));
         Assert.Single(wrongPassphrase.Calls);
 
         var local = new ScriptedRunner(ConnectionClosed);

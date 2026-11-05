@@ -385,20 +385,14 @@
   <data name="LabelSshKey" xml:space="preserve">
     <value>SSH-Schlüssel</value>
   </data>
-  <data name="SshKeyManagedText" xml:space="preserve">
-    <value>Von BorgStudio erzeugt</value>
-  </data>
   <data name="SshKeyRestrictedSuffix" xml:space="preserve">
     <value>(auf borg beschränkt)</value>
-  </data>
-  <data name="SshKeyOwnText" xml:space="preserve">
-    <value>Eigener Schlüssel: {0}</value>
   </data>
   <data name="SshKeyMissing" xml:space="preserve">
     <value>Kein SSH-Schlüssel eingerichtet – zum Einrichten das Repository bearbeiten.</value>
   </data>
   <data name="RemoveSshHint" xml:space="preserve">
-    <value>Ein von BorgStudio erzeugter Schlüssel wird gelöscht; sein Eintrag in ~/.ssh/authorized_keys auf dem Server bleibt bestehen und kann dort entfernt werden.</value>
+    <value>Sein SSH-Schlüssel bleibt in der Schlüsselverwaltung; sein Eintrag in ~/.ssh/authorized_keys auf dem Server bleibt ebenfalls bestehen und kann dort entfernt werden.</value>
   </data>
   <data name="HostKeyTitle" xml:space="preserve">
     <value>Server bestätigen</value>
@@ -451,10 +445,10 @@ Warnung: Der Anbieter veröffentlicht die Fingerabdrücke seiner Server, und die
     <value>Bisherigen Schlüssel behalten</value>
   </data>
   <data name="EditorKeyGenerate" xml:space="preserve">
-    <value>Neuen Schlüssel für dieses Repository erzeugen und mit dem Passwort auf dem Server hinterlegen</value>
+    <value>Neuen Schlüssel erzeugen und mit dem Passwort auf dem Server hinterlegen</value>
   </data>
   <data name="EditorKeyExisting" xml:space="preserve">
-    <value>Vorhandenen SSH-Schlüssel verwenden</value>
+    <value>Schlüssel aus der Schlüsselverwaltung verwenden</value>
   </data>
   <data name="EditorServerPassword" xml:space="preserve">
     <value>Server-Passwort</value>
@@ -467,18 +461,6 @@ Warnung: Der Anbieter veröffentlicht die Fingerabdrücke seiner Server, und die
   </data>
   <data name="EditorRestrictKeyHint" xml:space="preserve">
     <value>Der Schlüssel kann dann nur „borg serve“ für dieses Repository ausführen – keine Shell, keine anderen Ordner.</value>
-  </data>
-  <data name="EditorKeyFile" xml:space="preserve">
-    <value>Private Schlüsseldatei</value>
-  </data>
-  <data name="EditorKeyFileHint" xml:space="preserve">
-    <value>Der Schlüssel darf keine Passphrase haben (oder muss im ssh-agent geladen sein).</value>
-  </data>
-  <data name="EditorKeyFileRequired" xml:space="preserve">
-    <value>Bitte die Schlüsseldatei auswählen.</value>
-  </data>
-  <data name="EditorKeyFileMissing" xml:space="preserve">
-    <value>Die Schlüsseldatei existiert nicht.</value>
   </data>
   <data name="EditorServerPasswordRequired" xml:space="preserve">
     <value>Bitte das Server-Passwort eingeben.</value>
@@ -611,5 +593,149 @@ Warnung: Der Anbieter veröffentlicht die Fingerabdrücke seiner Server, und die
   </data>
   <data name="ForgotPin" xml:space="preserve">
     <value>PIN vergessen?</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Löschen</value>
+  </data>
+  <data name="MenuKeys" xml:space="preserve">
+    <value>SSH-Schlüssel …</value>
+  </data>
+  <data name="EditorKeyRequired" xml:space="preserve">
+    <value>Bitte einen Schlüssel wählen (oder importieren).</value>
+  </data>
+  <data name="EditorNoKeys" xml:space="preserve">
+    <value>Noch keine Schlüssel – importiere eine Schlüsseldatei.</value>
+  </data>
+  <data name="EditorInstallExistingKey" xml:space="preserve">
+    <value>Auch mit dem Passwort auf dem Server hinterlegen (sonst muss er dort schon eingetragen sein)</value>
+  </data>
+  <data name="EditorSharedRestrictedKey" xml:space="preserve">
+    <value>Dieser Schlüssel wird auf demselben Konto auch von „{0}“ verwendet, und einer davon ist auf sein Repository beschränkt. Der Server verwendet nur den ersten passenden Eintrag, deshalb würde eins der beiden scheitern. Nimm einen eigenen Schlüssel oder hinterlege diesen unbeschränkt.</value>
+  </data>
+  <data name="SshKeyLegacy" xml:space="preserve">
+    <value>Schlüsseldatei aus einer älteren Version – wird beim Entsperren in den Tresor übernommen</value>
+  </data>
+  <data name="SshKeyLegacyNeedsPin" xml:space="preserve">
+    <value>Dieses Repository verwendet noch eine Schlüsseldatei aus einer älteren Version. SSH-Schlüssel liegen jetzt im Tresor: Richte eine PIN ein (Extras → Einstellungen), dann wird der Schlüssel dorthin übernommen.</value>
+  </data>
+  <data name="RemoveKeyTitle" xml:space="preserve">
+    <value>Schlüssel löschen?</value>
+  </data>
+  <data name="RemoveKeyMessage" xml:space="preserve">
+    <value>Der SSH-Schlüssel „{0}“ wird von keinem Repository mehr verwendet. Auch aus der Schlüsselverwaltung löschen?</value>
+  </data>
+  <data name="KeepKey" xml:space="preserve">
+    <value>Behalten</value>
+  </data>
+  <data name="KeysMigrationTitle" xml:space="preserve">
+    <value>SSH-Schlüssel kommen in den Tresor</value>
+  </data>
+  <data name="KeysMigrationNeedsPin" xml:space="preserve">
+    <value>BorgStudio speichert SSH-Schlüssel jetzt verschlüsselt im Tresor statt in Dateien. Richte jetzt eine PIN ein: Die vorhandenen Schlüssel werden sofort in den Tresor übernommen, und die Dateien von BorgStudio werden danach gelöscht (Schlüssel von anderswo bleiben, wo sie sind).</value>
+  </data>
+  <data name="KeysMigrated" xml:space="preserve">
+    <value>{0} SSH-Schlüssel in den Tresor übernommen.</value>
+  </data>
+  <data name="KeysMigrationFailed" xml:space="preserve">
+    <value>SSH-Schlüssel konnte nicht in den Tresor übernommen werden: {0} – importiere ihn unter Extras → SSH-Schlüssel und wähle ihn im Repository.</value>
+  </data>
+  <data name="KeysTitle" xml:space="preserve">
+    <value>SSH-Schlüssel</value>
+  </data>
+  <data name="KeysNeedPin" xml:space="preserve">
+    <value>SSH-Schlüssel liegen verschlüsselt im Tresor. Richte zuerst eine PIN ein.</value>
+  </data>
+  <data name="KeysEmpty" xml:space="preserve">
+    <value>Noch keine Schlüssel. Erzeuge unten einen oder importiere eine Schlüsseldatei.</value>
+  </data>
+  <data name="KeysNewName" xml:space="preserve">
+    <value>Neuer Schlüssel:</value>
+  </data>
+  <data name="KeysGenerate" xml:space="preserve">
+    <value>Erzeugen</value>
+  </data>
+  <data name="KeysImport" xml:space="preserve">
+    <value>Importieren …</value>
+  </data>
+  <data name="KeysImportTitle" xml:space="preserve">
+    <value>Privaten Schlüssel importieren</value>
+  </data>
+  <data name="KeysRename" xml:space="preserve">
+    <value>Umbenennen</value>
+  </data>
+  <data name="KeysType" xml:space="preserve">
+    <value>Typ</value>
+  </data>
+  <data name="KeysFingerprint" xml:space="preserve">
+    <value>Fingerabdruck</value>
+  </data>
+  <data name="KeysOrigin" xml:space="preserve">
+    <value>Herkunft</value>
+  </data>
+  <data name="KeysUsedBy" xml:space="preserve">
+    <value>Verwendet von</value>
+  </data>
+  <data name="KeysUnused" xml:space="preserve">
+    <value>keinem Repository</value>
+  </data>
+  <data name="KeysPublicKey" xml:space="preserve">
+    <value>Öffentlicher Schlüssel (für ~/.ssh/authorized_keys auf dem Server)</value>
+  </data>
+  <data name="KeysCopyPublicKey" xml:space="preserve">
+    <value>Öffentlichen Schlüssel kopieren</value>
+  </data>
+  <data name="KeysPublicKeyCopied" xml:space="preserve">
+    <value>Öffentlicher Schlüssel kopiert.</value>
+  </data>
+  <data name="KeysSavePrivate" xml:space="preserve">
+    <value>Privaten Schlüssel speichern …</value>
+  </data>
+  <data name="KeysSavePrivateTitle" xml:space="preserve">
+    <value>Privaten Schlüssel speichern</value>
+  </data>
+  <data name="KeysSavePrivateWarning" xml:space="preserve">
+    <value>Die Datei enthält den privaten Schlüssel OHNE Schutz: Wer sie bekommt, kann sich überall anmelden, wo dieser Schlüssel hinterlegt ist. Speichere sie nur an einem sicheren Ort und lösche sie, wenn du sie nicht mehr brauchst.</value>
+  </data>
+  <data name="KeysSavePrivateConfirm" xml:space="preserve">
+    <value>Trotzdem speichern</value>
+  </data>
+  <data name="KeysPrivateKeySaved" xml:space="preserve">
+    <value>Privater Schlüssel gespeichert: {0}</value>
+  </data>
+  <data name="KeysDeleteTitle" xml:space="preserve">
+    <value>Schlüssel löschen</value>
+  </data>
+  <data name="KeysDeleteMessage" xml:space="preserve">
+    <value>Den Schlüssel „{0}“ aus dem Tresor löschen? Das lässt sich nicht rückgängig machen; seine Einträge auf Servern bleiben bestehen und können dort entfernt werden.</value>
+  </data>
+  <data name="KeysDeleteUsedHint" xml:space="preserve">
+    <value>Schlüssel, die ein Repository verwendet, lassen sich nicht löschen.</value>
+  </data>
+  <data name="KeysGenerated" xml:space="preserve">
+    <value>Schlüssel „{0}“ erzeugt. Kopiere seinen öffentlichen Schlüssel auf den Server, oder wähle ihn in einem Repository und lass BorgStudio ihn hinterlegen.</value>
+  </data>
+  <data name="KeysImported" xml:space="preserve">
+    <value>Schlüssel „{0}“ importiert. Die Originaldatei bleibt, wo sie ist.</value>
+  </data>
+  <data name="KeysAlreadyImported" xml:space="preserve">
+    <value>Dieser Schlüssel ist schon als „{0}“ in der Liste.</value>
+  </data>
+  <data name="KeysImportFailed" xml:space="preserve">
+    <value>Die Datei konnte nicht als privater Schlüssel gelesen werden: {0}</value>
+  </data>
+  <data name="KeysPasswordTitle" xml:space="preserve">
+    <value>Passwort des Schlüssels</value>
+  </data>
+  <data name="KeysPasswordPrompt" xml:space="preserve">
+    <value>„{0}“ ist mit einem Passwort geschützt. Gib es einmal ein – danach liegt der Schlüssel ohne Passwort im Tresor, durch den Tresor geschützt.</value>
+  </data>
+  <data name="KeysPasswordWrong" xml:space="preserve">
+    <value>Falsches Passwort.</value>
+  </data>
+  <data name="KeysOriginGenerated" xml:space="preserve">
+    <value>Von BorgStudio erzeugt am {0}</value>
+  </data>
+  <data name="KeysOriginImported" xml:space="preserve">
+    <value>Importiert am {0}</value>
   </data>
 </root>

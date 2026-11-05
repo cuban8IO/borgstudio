@@ -51,12 +51,18 @@ public sealed partial class RepositoryItemViewModel(RepositoryConfig config, Plu
 
     public bool IsSsh => Provider?.UsesSsh == true;
 
+    /// <summary>Name of the key in the vault; <c>null</c> while unknown (locked vault) or if the key is gone.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SshKeyText))]
+    public partial string? SshKeyName { get; set; }
+
     public string SshKeyText => Config switch
     {
-        { SshKeyFile: null } => Strings.SshKeyMissing,
-        { SshKeyManaged: true, SshKeyRestricted: true } => $"{Strings.SshKeyManagedText} {Strings.SshKeyRestrictedSuffix}",
-        { SshKeyManaged: true } => Strings.SshKeyManagedText,
-        _ => BorgTexts.Format(Strings.SshKeyOwnText, Config.SshKeyFile),
+        { HasLegacySshKey: true } => Strings.SshKeyLegacy,
+        { SshKeyId: null } => Strings.SshKeyMissing,
+        _ when SshKeyName is null => Strings.SshKeyMissing,
+        { SshKeyRestricted: true } => $"{SshKeyName} {Strings.SshKeyRestrictedSuffix}",
+        _ => SshKeyName,
     };
 
     /// <summary>Outcome of the last action on this repository (test, key export, ...).</summary>

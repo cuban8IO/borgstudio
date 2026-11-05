@@ -10,6 +10,7 @@
     <StackPanel Margin="20" Spacing="12">
         <TextBlock x:Name="PromptText" TextWrapping="Wrap" />
         <TextBox x:Name="PassphraseBox" PasswordChar="•" />
+        <TextBlock x:Name="ErrorText" TextWrapping="Wrap" Foreground="{DynamicResource ErrorForeground}" IsVisible="False" />
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
             <Button Content="{x:Static res:Strings.Ok}" Classes="accent" IsDefault="True" Click="Ok_Click" />
             <Button Content="{x:Static res:Strings.Cancel}" IsCancel="True" Click="Cancel_Click" />

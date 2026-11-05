@@ -33,12 +33,9 @@ public sealed record SshKeyPair(string PrivateKeyPem, string PublicKeyLine)
     }
 }
 
-/// <summary>A key created by <see cref="SshKeyStore"/>.</summary>
-public sealed record SshGeneratedKey(string PrivateKeyFile, string PublicKeyLine);
-
 /// <summary>
-/// The SSH keys BorgStudio creates (one per repository) and its own known_hosts file,
-/// kept in the user data folder with permissions OpenSSH accepts.
+/// BorgStudio's ssh folder in the user data folder: its own known_hosts file, temporary key files for borg calls
+/// (see <see cref="TemporaryKeyFile"/>) and – from older versions – key files that are moved into the vault.
 /// </summary>
 public sealed class SshKeyStore(string directory)
 {
@@ -48,23 +45,16 @@ public sealed class SshKeyStore(string directory)
 
     public string KnownHostsFile => Path.Combine(Directory, "known_hosts");
 
-    /// <summary>Creates a new key pair named <paramref name="name"/> (private key) and <c>name.pub</c>.</summary>
-    public SshGeneratedKey Create(string name, string comment)
-    {
-        EnsureDirectory();
-        var pair = SshKeyPair.GenerateEd25519(comment);
-        var path = Path.Combine(Directory, name);
-        WritePrivate(path, pair.PrivateKeyPem);
-        File.WriteAllText(path + ".pub", pair.PublicKeyLine + "\n");
-        return new SshGeneratedKey(path, pair.PublicKeyLine);
-    }
+    /// <summary>Whether <paramref name="privateKeyFile"/> is one BorgStudio created here (older versions).</summary>
+    public bool Contains(string privateKeyFile) =>
+        string.Equals(Path.GetDirectoryName(Path.GetFullPath(privateKeyFile)), Path.GetFullPath(Directory), StringComparison.Ordinal);
 
-    /// <summary>Deletes a key created here (and its .pub); keys elsewhere are never touched.</summary>
+    /// <summary>Deletes a key file created here (and its .pub); keys elsewhere are never touched.</summary>
     public void Delete(string privateKeyFile)
     {
-        var full = Path.GetFullPath(privateKeyFile);
-        if (!string.Equals(Path.GetDirectoryName(full), Path.GetFullPath(Directory), StringComparison.Ordinal))
+        if (!Contains(privateKeyFile))
             return;
+        var full = Path.GetFullPath(privateKeyFile);
         File.Delete(full);
         File.Delete(full + ".pub");
     }
@@ -77,17 +67,6 @@ public sealed class SshKeyStore(string directory)
             System.IO.Directory.CreateDirectory(Directory, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
     }
 
-    private static void WritePrivate(string path, string content)
-    {
-        // OpenSSH refuses private keys others can read. On Windows the user data folder is already private.
-        var options = new FileStreamOptions { Mode = FileMode.CreateNew, Access = FileAccess.Write };
-        if (!OperatingSystem.IsWindows())
-            options.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
-
-        using var stream = new FileStream(path, options);
-        using var writer = new StreamWriter(stream, new UTF8Encoding(false));
-        writer.Write(content);
-    }
 }
 
 /// <summary>A server's host key, as received during the SSH handshake.</summary>

@@ -62,6 +62,16 @@ public partial class MainWindow : Window
         await window.ShowDialog(this);
     }
 
+    private async void OpenKeys_Click(object? sender, EventArgs e)
+    {
+        if (DataContext is not MainViewModel { IsLocked: false } viewModel)
+            return;
+
+        var window = new KeysWindow();
+        window.DataContext = new KeysViewModel(viewModel, new DialogService(window));
+        await window.ShowDialog(this);
+    }
+
     private async void OpenSettings_Click(object? sender, EventArgs e)
     {
         if (DataContext is not MainViewModel { IsLocked: false } viewModel)

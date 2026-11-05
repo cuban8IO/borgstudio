@@ -88,3 +88,13 @@ public sealed class KeychainFactAttribute : FactAttribute
             Skip = "Set BORGSTUDIO_KEYCHAIN_TESTS=1 to test against the keychain.";
     }
 }
+
+/// <summary>Runs where OpenSSH's ssh-keygen is installed (Windows 10/11, macOS, Linux CI).</summary>
+public sealed class SshKeygenFactAttribute : FactAttribute
+{
+    public SshKeygenFactAttribute()
+    {
+        if (Core.Ssh.SshKeygen.Find() is null)
+            Skip = "ssh-keygen not found.";
+    }
+}

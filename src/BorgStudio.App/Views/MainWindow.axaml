@@ -23,6 +23,7 @@
             <NativeMenuItem Header="{x:Static res:Strings.MenuTools}">
                 <NativeMenu>
                     <NativeMenuItem Header="{x:Static res:Strings.MenuSettings}" Click="OpenSettings_Click" />
+                    <NativeMenuItem Header="{x:Static res:Strings.MenuKeys}" Click="OpenKeys_Click" />
                     <NativeMenuItem Header="{x:Static res:Strings.MenuPlugins}" Click="OpenPlugins_Click" />
                 </NativeMenu>
             </NativeMenuItem>
@@ -40,10 +41,13 @@
         <!-- Status bar -->
         <Border DockPanel.Dock="Bottom" Padding="12,5" Background="{DynamicResource StatusBarBackground}"
                 BorderBrush="{DynamicResource BpLineBrush}" BorderThickness="0,1,0,0">
-            <Grid ColumnDefinitions="*,Auto">
+            <Grid ColumnDefinitions="Auto,*,Auto">
                 <TextBlock Text="{Binding BorgStatus}" FontSize="12" Foreground="{DynamicResource BpTextSecondaryBrush}"
                            VerticalAlignment="Center" />
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsVaultSetUp}">
+                <TextBlock Grid.Column="1" Text="{Binding Notice}" IsVisible="{Binding HasNotice}" FontSize="12"
+                           Foreground="{DynamicResource SuccessForeground}" Margin="16,0" VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Notice}" />
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsVaultSetUp}">
                     <TextBlock Text="{Binding VaultStatus}" FontSize="12" Foreground="{DynamicResource BpTextSecondaryBrush}"
                                VerticalAlignment="Center" />
                     <Button Content="{x:Static res:Strings.VaultLock}" Command="{Binding LockVaultCommand}"
@@ -178,7 +182,7 @@
             <TextBlock Text="{x:Static res:Strings.LockScreenText}" TextWrapping="Wrap" TextAlignment="Center"
                        Foreground="{DynamicResource BpTextSecondaryBrush}" />
             <TextBox x:Name="LockScreenPinBox" Text="{Binding LockScreenPin}" PasswordChar="•"
-                     Watermark="{x:Static res:Strings.PinLabel}" Margin="0,8,0,0">
+                     PlaceholderText="{x:Static res:Strings.PinLabel}" Margin="0,8,0,0">
                 <TextBox.KeyBindings>
                     <KeyBinding Gesture="Enter" Command="{Binding UnlockCommand}" />
                 </TextBox.KeyBindings>

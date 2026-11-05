@@ -2,14 +2,23 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using BorgStudio.Core.Processes;
+using BorgStudio.Core.Ssh;
 using BorgStudio.Plugins;
 
 namespace BorgStudio.Core.Borg;
 
 /// <summary>How borg logs in to an SSH repository.</summary>
-/// <param name="PrivateKeyFile">The SSH key (on this computer).</param>
+/// <param name="PrivateKey">The private key itself (from the vault). It is written to a file only for the duration of
+/// one borg call, next to <paramref name="KnownHostsFile"/> or inside WSL, and deleted afterwards.</param>
 /// <param name="KnownHostsFile">BorgStudio's known_hosts with the confirmed host key.</param>
-public sealed record SshAccess(string PrivateKeyFile, string KnownHostsFile);
+public sealed record SshAccess(string PrivateKey, string KnownHostsFile)
+{
+    // Never print the key.
+    public override string ToString() => $"SshAccess {{ KnownHostsFile = {KnownHostsFile} }}";
+}
+
+/// <summary>The files ssh uses during one borg call (paths as ssh sees them: inside WSL when borg runs there).</summary>
+internal sealed record SshFiles(string PrivateKeyFile, string KnownHostsFile);
 
 /// <summary>
 /// Runs borg 1.x commands on a repository – natively or, on Windows, inside WSL – without ever
@@ -26,6 +35,8 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
 
     /// <summary>Where SSH files are copied to inside WSL (ssh there rejects keys with Windows permissions).</summary>
     private const string WslSshDirectory = "~/.borgstudio/ssh";
+
+    private const string KeyFilePrefix = "key-";
 
     private static readonly string[] ForwardedVariables =
     [
@@ -145,14 +156,31 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
             ["BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK"] = "yes",
         };
 
-        SshAccess? sshFiles = null;
+        SshFiles? sshFiles = null;
         if (location.Ssh is not null && ssh is not null)
         {
-            sshFiles = wsl ? await CopySshFilesIntoWslAsync(ssh, cancellationToken) : ssh;
+            sshFiles = wsl ? await CopySshFilesIntoWslAsync(ssh, cancellationToken) : WriteSshFiles(ssh);
             if (sshFiles is null)
                 return BorgResult<string>.Failure(new BorgError(BorgErrorKind.NotStartable, "wsl.exe (copying the SSH key)"));
             environment["BORG_RSH"] = SshCommand(sshFiles.PrivateKeyFile, sshFiles.KnownHostsFile);
         }
+
+        try
+        {
+            return await RunBorgAsync(borg, location, arguments, environment, sshFiles, timeout, cancellationToken);
+        }
+        finally
+        {
+            if (sshFiles is not null)
+                await DeleteKeyFileAsync(sshFiles, wsl);
+        }
+    }
+
+    private async Task<BorgResult<string>> RunBorgAsync(BorgInstallation borg, RepositoryLocation location,
+        List<string> arguments, Dictionary<string, string?> environment, SshFiles? sshFiles, TimeSpan timeout,
+        CancellationToken cancellationToken)
+    {
+        var wsl = borg.Runtime == BorgRuntime.Wsl;
 
         string fileName;
         if (wsl)
@@ -197,7 +225,7 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
     /// with the same settings tells reliably what's wrong; <c>null</c> if it doesn't tell more.
     /// </summary>
     private async Task<BorgError?> DiagnoseSshAsync(
-        SshEndpoint endpoint, SshAccess sshFiles, bool wsl, CancellationToken cancellationToken)
+        SshEndpoint endpoint, SshFiles sshFiles, bool wsl, CancellationToken cancellationToken)
     {
         List<string> arguments =
         [
@@ -228,18 +256,34 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         return null;
     }
 
-    /// <summary>Copies key and known_hosts to ~/.borgstudio/ssh inside WSL (private permissions); returns those paths.</summary>
-    private async Task<SshAccess?> CopySshFilesIntoWslAsync(SshAccess ssh, CancellationToken cancellationToken)
+    /// <summary>Writes the key to a temporary file next to known_hosts (private permissions).</summary>
+    private static SshFiles WriteSshFiles(SshAccess ssh) =>
+        new(TemporaryKeyFile.Write(Path.GetDirectoryName(Path.GetFullPath(ssh.KnownHostsFile))!, KeyFilePrefix, ssh.PrivateKey),
+            ssh.KnownHostsFile);
+
+    /// <summary>
+    /// Copies key and known_hosts to ~/.borgstudio/ssh inside WSL (private permissions; ssh there rejects keys with
+    /// Windows permissions); returns those paths. Key copies older than an hour (left by a crash or by older versions,
+    /// which kept them) are removed on the way.
+    /// </summary>
+    private async Task<SshFiles?> CopySshFilesIntoWslAsync(SshAccess ssh, CancellationToken cancellationToken)
     {
-        var keyName = "key-" + SafeName().Replace(Path.GetFileName(ssh.PrivateKeyFile), "_");
-        foreach (var (source, name) in new[] { (ssh.PrivateKeyFile, keyName), (ssh.KnownHostsFile, "known_hosts") })
+        var keyName = KeyFilePrefix + Guid.NewGuid().ToString("N");
+        var knownHosts = File.Exists(ssh.KnownHostsFile) ? await File.ReadAllTextAsync(ssh.KnownHostsFile, cancellationToken) : "";
+        var minutes = (int)TemporaryKeyFile.MaximumAge.TotalMinutes;
+        var copies = new[]
         {
-            var content = File.Exists(source) ? await File.ReadAllTextAsync(source, cancellationToken) : "";
+            (Content: ssh.PrivateKey.EndsWith('\n') ? ssh.PrivateKey : ssh.PrivateKey + "\n",
+             Command: $"umask 077 && mkdir -p {WslSshDirectory} && (find {WslSshDirectory} -name '{KeyFilePrefix}*' -mmin +{minutes} -delete 2>/dev/null; true) && cat > {WslSshDirectory}/{keyName}"),
+            (Content: knownHosts, Command: $"umask 077 && cat > {WslSshDirectory}/known_hosts"),
+        };
+
+        foreach (var (content, command) in copies)
+        {
             ProcessResult? copied;
             try
             {
-                copied = await processRunner.RunAsync(wslExecutable!,
-                    ["-e", "sh", "-c", $"umask 077 && mkdir -p {WslSshDirectory} && cat > {WslSshDirectory}/{name}"],
+                copied = await processRunner.RunAsync(wslExecutable!, ["-e", "sh", "-c", command],
                     CopyTimeout, standardInput: content, cancellationToken: cancellationToken);
             }
             catch (TimeoutException)
@@ -251,7 +295,31 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         }
 
         // ssh expands the "~" itself.
-        return new SshAccess($"{WslSshDirectory}/{keyName}", $"{WslSshDirectory}/known_hosts");
+        return new SshFiles($"{WslSshDirectory}/{keyName}", $"{WslSshDirectory}/known_hosts");
+    }
+
+    /// <summary>Removes the key file of one call again; a failure only leaves it for the next clean-up.</summary>
+    private async Task DeleteKeyFileAsync(SshFiles files, bool wsl)
+    {
+        if (!wsl)
+        {
+            try
+            {
+                File.Delete(files.PrivateKeyFile);
+            }
+            catch (IOException)
+            {
+            }
+            return;
+        }
+
+        try
+        {
+            await processRunner.RunAsync(wslExecutable!, ["-e", "sh", "-c", $"rm -f {files.PrivateKeyFile}"], CopyTimeout);
+        }
+        catch (TimeoutException)
+        {
+        }
     }
 
     /// <summary>The last error from borg's JSON log on standard error, classified by its message id.</summary>
@@ -329,7 +397,4 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
 
     [GeneratedRegex(@"^(?<drive>[A-Za-z]):[\\/]?(?<rest>.*)$", RegexOptions.CultureInvariant)]
     private static partial Regex DrivePath();
-
-    [GeneratedRegex(@"[^A-Za-z0-9._-]", RegexOptions.CultureInvariant)]
-    private static partial Regex SafeName();
 }

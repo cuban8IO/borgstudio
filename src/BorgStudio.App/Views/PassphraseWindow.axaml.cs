@@ -5,7 +5,7 @@ using BorgStudio.App.ViewModels;
 
 namespace BorgStudio.App.Views;
 
-/// <summary>Asks for a repository passphrase; the dialog result is the passphrase or <c>null</c>.</summary>
+/// <summary>Asks for a passphrase or another secret; the dialog result is the text or <c>null</c>.</summary>
 public partial class PassphraseWindow : Window
 {
     // Designer only.
@@ -13,10 +13,19 @@ public partial class PassphraseWindow : Window
     {
     }
 
+    /// <summary>Asks for the passphrase of a repository.</summary>
     public PassphraseWindow(string repositoryName)
+        : this(Strings.PassphrasePromptTitle, BorgTexts.Format(Strings.PassphrasePromptText, repositoryName))
+    {
+    }
+
+    public PassphraseWindow(string title, string prompt, string? error = null)
     {
         InitializeComponent();
-        PromptText.Text = BorgTexts.Format(Strings.PassphrasePromptText, repositoryName);
+        Title = title;
+        PromptText.Text = prompt;
+        ErrorText.Text = error;
+        ErrorText.IsVisible = error is not null;
         Opened += (_, _) => PassphraseBox.Focus();
     }
 

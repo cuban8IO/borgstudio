@@ -45,12 +45,6 @@ public partial class RepositoryEditorWindow : Window
         base.OnClosing(e);
     }
 
-    protected override void OnClosed(EventArgs e)
-    {
-        (DataContext as RepositoryEditorViewModel)?.OnClosed();
-        base.OnClosed(e);
-    }
-
     private async void BrowseFolder_Click(object? sender, RoutedEventArgs e)
     {
         if (sender is not Control { DataContext: FieldViewModel field })
@@ -63,19 +57,5 @@ public partial class RepositoryEditorWindow : Window
         });
         if (folders.Count > 0 && folders[0].TryGetLocalPath() is { } path)
             field.Value = path;
-    }
-
-    private async void BrowseKeyFile_Click(object? sender, RoutedEventArgs e)
-    {
-        if (DataContext is not RepositoryEditorViewModel editor)
-            return;
-
-        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            Title = Strings.EditorKeyFile,
-            AllowMultiple = false,
-        });
-        if (files.Count > 0 && files[0].TryGetLocalPath() is { } path)
-            editor.ExistingKeyFile = path;
     }
 }

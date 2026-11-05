@@ -49,13 +49,13 @@ public sealed class SshServerIntegrationTests : IDisposable
     {
         var hostKey = await TrustServerAsync();
         var (endpoint, location) = Repository();
-        var key = _keys.Create("it-key", "borgstudio-integration-test");
+        var key = SshKeyEntry.Generate("it-key", "borgstudio-integration-test", DateTimeOffset.Now);
 
         await _ssh.RunWithPasswordAsync(endpoint, SshServerFactAttribute.Password, hostKey,
-            AuthorizedKeys.AppendCommand(AuthorizedKeys.Line(key.PublicKeyLine, endpoint.RepositoryPath)));
+            AuthorizedKeys.AppendCommand(AuthorizedKeys.Line(key.PublicKey, endpoint.RepositoryPath)));
 
         var client = BorgClient.CreateDefault();
-        var access = new SshAccess(key.PrivateKeyFile, _knownHosts.Path);
+        var access = new SshAccess(key.PrivateKey, _knownHosts.Path);
         var created = await client.InitAsync(Borg, location, BorgEncryption.RepokeyBlake2, Passphrase, access);
         Assert.True(created.Succeeded, created.Error?.ToString());
 
@@ -76,27 +76,27 @@ public sealed class SshServerIntegrationTests : IDisposable
         var (endpoint, location) = Repository();
         endpoint = endpoint with { KeyInstallation = SshKeyInstallation.Sftp };
         location = location with { BorgArguments = ["--remote-path=borg-1.4"], Ssh = endpoint };
-        var key = _keys.Create("it-key", "borgstudio-integration-test");
-        var otherKey = _keys.Create("it-other-key", "borgstudio-integration-test");
+        var key = SshKeyEntry.Generate("it-key", "borgstudio-integration-test", DateTimeOffset.Now);
+        var otherKey = SshKeyEntry.Generate("it-other-key", "borgstudio-integration-test", DateTimeOffset.Now);
 
-        await SshKeyInstaller.InstallAsync(_ssh, endpoint, SshServerFactAttribute.Password, hostKey, key.PublicKeyLine,
+        await SshKeyInstaller.InstallAsync(_ssh, endpoint, SshServerFactAttribute.Password, hostKey, key.PublicKey,
             restrict: true, remoteBorg: "borg-1.4");
         // Appending is idempotent and keeps what is already there.
-        await SshKeyInstaller.InstallAsync(_ssh, endpoint, SshServerFactAttribute.Password, hostKey, key.PublicKeyLine,
+        await SshKeyInstaller.InstallAsync(_ssh, endpoint, SshServerFactAttribute.Password, hostKey, key.PublicKey,
             restrict: true, remoteBorg: "borg-1.4");
-        await SshKeyInstaller.InstallAsync(_ssh, endpoint, SshServerFactAttribute.Password, hostKey, otherKey.PublicKeyLine,
+        await SshKeyInstaller.InstallAsync(_ssh, endpoint, SshServerFactAttribute.Password, hostKey, otherKey.PublicKey,
             restrict: true, remoteBorg: "borg-1.4");
 
         var authorizedKeys = ReadAuthorizedKeys(endpoint);
-        Assert.Single(authorizedKeys, line => line.EndsWith(key.PublicKeyLine, StringComparison.Ordinal));
-        Assert.Contains($"command=\"borg-1.4 serve --restrict-to-repository {endpoint.RepositoryPath}\",restrict {otherKey.PublicKeyLine}",
+        Assert.Single(authorizedKeys, line => line.EndsWith(key.PublicKey, StringComparison.Ordinal));
+        Assert.Contains($"command=\"borg-1.4 serve --restrict-to-repository {endpoint.RepositoryPath}\",restrict {otherKey.PublicKey}",
             authorizedKeys);
 
         var client = BorgClient.CreateDefault();
         var created = await client.InitAsync(Borg, location, BorgEncryption.RepokeyBlake2, Passphrase,
-            new SshAccess(key.PrivateKeyFile, _knownHosts.Path));
+            new SshAccess(key.PrivateKey, _knownHosts.Path));
         Assert.True(created.Succeeded, created.Error?.ToString());
-        var info = await client.InfoAsync(Borg, location, Passphrase, new SshAccess(otherKey.PrivateKeyFile, _knownHosts.Path));
+        var info = await client.InfoAsync(Borg, location, Passphrase, new SshAccess(otherKey.PrivateKey, _knownHosts.Path));
         Assert.True(info.Succeeded, info.Error?.ToString());
     }
 
@@ -106,14 +106,14 @@ public sealed class SshServerIntegrationTests : IDisposable
         var hostKey = await TrustServerAsync();
         var (endpoint, location) = Repository();
         endpoint = endpoint with { KeyInstallation = SshKeyInstallation.Sftp, InstallKeyCommand = "install-ssh-key" };
-        var key = _keys.Create("it-key", "borgstudio-integration-test");
+        var key = SshKeyEntry.Generate("it-key", "borgstudio-integration-test", DateTimeOffset.Now);
 
-        await SshKeyInstaller.InstallAsync(_ssh, endpoint, SshServerFactAttribute.Password, hostKey, key.PublicKeyLine,
+        await SshKeyInstaller.InstallAsync(_ssh, endpoint, SshServerFactAttribute.Password, hostKey, key.PublicKey,
             restrict: false, remoteBorg: "borg-1.4");
 
-        Assert.Contains(key.PublicKeyLine, ReadAuthorizedKeys(endpoint));
+        Assert.Contains(key.PublicKey, ReadAuthorizedKeys(endpoint));
         var created = await BorgClient.CreateDefault().InitAsync(Borg, location with { Ssh = endpoint }, BorgEncryption.None,
-            null, new SshAccess(key.PrivateKeyFile, _knownHosts.Path));
+            null, new SshAccess(key.PrivateKey, _knownHosts.Path));
         Assert.True(created.Succeeded, created.Error?.ToString());
     }
 
@@ -154,9 +154,9 @@ public sealed class SshServerIntegrationTests : IDisposable
     {
         var hostKey = await TrustServerAsync();
         var (endpoint, location) = Repository();
-        var key = _keys.Create("it-key", "borgstudio-integration-test");
+        var key = SshKeyEntry.Generate("it-key", "borgstudio-integration-test", DateTimeOffset.Now);
         await _ssh.RunWithPasswordAsync(endpoint, SshServerFactAttribute.Password, hostKey,
-            AuthorizedKeys.AppendCommand(AuthorizedKeys.Line(key.PublicKeyLine, endpoint.RepositoryPath)));
+            AuthorizedKeys.AppendCommand(AuthorizedKeys.Line(key.PublicKey, endpoint.RepositoryPath)));
 
         // A known_hosts that only knows a different key for this server.
         var wrongKnownHosts = new KnownHostsFile(_directory.Combine("wrong_known_hosts"));
@@ -166,7 +166,7 @@ public sealed class SshServerIntegrationTests : IDisposable
         for (var attempt = 0; attempt < 5; attempt++)
         {
             var info = await BorgClient.CreateDefault().InfoAsync(Borg, location, Passphrase,
-                new SshAccess(key.PrivateKeyFile, wrongKnownHosts.Path));
+                new SshAccess(key.PrivateKey, wrongKnownHosts.Path));
 
             Assert.Equal(BorgErrorKind.SshHostKeyFailed, info.Error?.Kind);
         }

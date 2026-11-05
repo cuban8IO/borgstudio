@@ -2,6 +2,7 @@ using BorgStudio.App.Resources;
 using BorgStudio.Core.Repositories;
 using BorgStudio.Core.Security;
 using BorgStudio.Core.Settings;
+using BorgStudio.Core.Ssh;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -15,6 +16,16 @@ public partial class MainViewModel
 {
     /// <summary>Repositories removed while the vault was locked: their passphrases go once it is unlocked again.</summary>
     private readonly HashSet<Guid> _pendingVaultRemovals = [];
+
+    /// <summary>The key migration in progress (or the last one).</summary>
+    private Task? _keyMigration;
+
+    /// <summary>A hint in the status bar, e.g. that key files were moved into the vault.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasNotice))]
+    public partial string? Notice { get; private set; }
+
+    public bool HasNotice => Notice is not null;
 
     public AppSettings Settings { get; private set; } = new();
 
@@ -115,12 +126,75 @@ public partial class MainViewModel
     private void OnVaultStateChanged()
     {
         RefreshVaultStatus();
-        if (_services.Vault.State != VaultState.Unlocked || _pendingVaultRemovals.Count == 0)
+        RefreshKeyNames();
+        if (_services.Vault.State != VaultState.Unlocked)
             return;
 
         foreach (var id in _pendingVaultRemovals)
             _services.Vault.RemovePassphrase(id);
         _pendingVaultRemovals.Clear();
+        _ = MigrateLegacyKeysAsync();
+    }
+
+    /// <summary>Shows the names of the repositories' keys (known only while the vault is open).</summary>
+    public void RefreshKeyNames()
+    {
+        var unlocked = _services.Vault.State == VaultState.Unlocked;
+        foreach (var item in Repositories)
+            item.SshKeyName = unlocked && item.Config.SshKeyId is { } id ? _services.Vault.GetKey(id)?.Name : null;
+    }
+
+    /// <summary>
+    /// At startup: repositories still use key files from an older version, but there is no PIN yet. Keys belong in the
+    /// vault, so ask for one; setting it up moves the keys right away.
+    /// </summary>
+    public async Task OfferVaultForLegacyKeysAsync()
+    {
+        if (_services.Vault.State != VaultState.NotSetUp || !Repositories.Any(item => item.Config.HasLegacySshKey))
+            return;
+
+        await _services.Dialogs.ShowMessageAsync(Strings.KeysMigrationTitle, Strings.KeysMigrationNeedsPin);
+        try
+        {
+            await VaultAccess.EnsureUnlockedAsync(_services.Vault, _services.Dialogs);
+        }
+        catch (SecretBoxException exception)
+        {
+            Notice = BorgTexts.Format(Strings.VaultError, exception.Message);
+        }
+    }
+
+    /// <summary>
+    /// Moves key files of older versions into the (open) vault; runs by itself after unlocking. While a migration is
+    /// running, this waits for it instead of starting another.
+    /// </summary>
+    public Task MigrateLegacyKeysAsync() =>
+        _keyMigration is { IsCompleted: false } running ? running : _keyMigration = RunKeyMigrationAsync();
+
+    private async Task RunKeyMigrationAsync()
+    {
+        if (_services.Vault.State != VaultState.Unlocked || !Repositories.Any(item => item.Config.HasLegacySshKey))
+            return;
+
+        try
+        {
+            var result = await SshKeyMigration.MigrateAsync([.. Repositories.Select(item => item.Config)], _services.Vault,
+                _services.SshKeys, _services.SshKeygen, DateTimeOffset.Now);
+            for (var index = 0; index < Repositories.Count && index < result.Repositories.Count; index++)
+                Repositories[index].Config = result.Repositories[index];
+            SaveRepositories();
+            foreach (var file in result.FilesToDelete)
+                _services.SshKeys.Delete(file);
+
+            Notice = result.Failed.Count == 0
+                ? BorgTexts.Format(Strings.KeysMigrated, result.Moved)
+                : BorgTexts.Format(Strings.KeysMigrationFailed, string.Join(", ", result.Failed));
+            RefreshKeyNames();
+        }
+        catch (Exception exception) when (exception is VaultLockedException or IOException or UnauthorizedAccessException)
+        {
+            Notice = BorgTexts.Format(Strings.KeysMigrationFailed, exception.Message);
+        }
     }
 
     private void RefreshVaultStatus()
