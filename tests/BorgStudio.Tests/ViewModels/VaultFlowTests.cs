@@ -191,6 +191,66 @@ public sealed class VaultFlowTests : IDisposable
     }
 
     [Fact]
+    public async Task Without_a_pin_the_app_is_never_locked()
+    {
+        var viewModel = await StartAsync();
+
+        Assert.False(viewModel.IsLocked);
+        Assert.True(viewModel.IsAppVisible);
+        Assert.False(viewModel.LockVaultCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task With_a_pin_the_app_starts_locked_and_the_lock_screen_unlocks_it()
+    {
+        var repository = Saved(PassphraseMode.Vault);
+        Vault.SetUp(Pin);
+        Vault.SetPassphrase(repository.Id, "from vault");
+        Vault.Lock();
+
+        var viewModel = await StartAsync(repository);
+        Assert.True(viewModel.IsLocked);
+        Assert.False(viewModel.IsAppVisible);
+        Assert.False(viewModel.UnlockCommand.CanExecute(null));
+
+        viewModel.LockScreenPin = "000000";
+        await viewModel.UnlockCommand.ExecuteAsync(null);
+        Assert.True(viewModel.IsLocked);
+        Assert.Equal(Strings.PinWrong, viewModel.LockScreenError);
+
+        viewModel.LockScreenPin = Pin;
+        await viewModel.UnlockCommand.ExecuteAsync(null);
+        Assert.False(viewModel.IsLocked);
+        Assert.Null(viewModel.LockScreenError);
+        Assert.Equal("", viewModel.LockScreenPin);
+
+        // Unlocked app = unlocked vault: no PIN and no passphrase prompt.
+        await viewModel.TestRepositoryCommand.ExecuteAsync(null);
+        Assert.Equal("from vault", Assert.Single(Borg.Calls).Passphrase);
+        Assert.Empty(Dialogs.PinErrors);
+
+        viewModel.LockVaultCommand.Execute(null);
+        Assert.True(viewModel.IsLocked);
+    }
+
+    [Fact]
+    public async Task A_forgotten_pin_resets_the_vault_and_lifts_the_lock()
+    {
+        Vault.SetUp(Pin);
+        Vault.Lock();
+        var viewModel = await StartAsync();
+
+        await viewModel.ForgotPinCommand.ExecuteAsync(null);
+        Assert.True(viewModel.IsLocked);
+
+        Dialogs.ConfirmAnswers.Enqueue(true);
+        await viewModel.ForgotPinCommand.ExecuteAsync(null);
+        Assert.False(viewModel.IsLocked);
+        Assert.Equal(VaultState.NotSetUp, Vault.State);
+        Assert.Contains(Strings.VaultResetTitle, Dialogs.Shown);
+    }
+
+    [Fact]
     public async Task The_vault_locks_itself_after_the_configured_idle_time()
     {
         Vault.SetUp(Pin);

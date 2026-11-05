@@ -29,7 +29,12 @@
         </NativeMenu>
     </NativeMenu.Menu>
 
-    <DockPanel>
+    <Window.KeyBindings>
+        <KeyBinding Gesture="Ctrl+L" Command="{Binding LockVaultCommand}" />
+    </Window.KeyBindings>
+
+    <Panel>
+    <DockPanel IsVisible="{Binding IsAppVisible}">
         <NativeMenuBar DockPanel.Dock="Top" />
 
         <!-- Status bar -->
@@ -163,5 +168,31 @@
             </ScrollViewer>
         </Grid>
     </DockPanel>
+
+    <!-- Lock screen: with a PIN set up, nothing of the app is shown until it is unlocked. -->
+    <Border IsVisible="{Binding IsLocked}" Background="{DynamicResource BpBgBrush}">
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="340" Spacing="12">
+            <Image Source="/Assets/borgstudio.png" Width="96" Height="96" HorizontalAlignment="Center" Margin="0,0,0,8" />
+            <TextBlock Text="{x:Static res:Strings.LockScreenTitle}" FontSize="22" FontWeight="SemiBold"
+                       HorizontalAlignment="Center" />
+            <TextBlock Text="{x:Static res:Strings.LockScreenText}" TextWrapping="Wrap" TextAlignment="Center"
+                       Foreground="{DynamicResource BpTextSecondaryBrush}" />
+            <TextBox x:Name="LockScreenPinBox" Text="{Binding LockScreenPin}" PasswordChar="•"
+                     Watermark="{x:Static res:Strings.PinLabel}" Margin="0,8,0,0">
+                <TextBox.KeyBindings>
+                    <KeyBinding Gesture="Enter" Command="{Binding UnlockCommand}" />
+                </TextBox.KeyBindings>
+            </TextBox>
+            <Button Content="{x:Static res:Strings.Unlock}" Command="{Binding UnlockCommand}" Classes="accent"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+            <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsUnlocking}" />
+            <TextBlock Text="{Binding LockScreenError}" TextWrapping="Wrap" TextAlignment="Center"
+                       Foreground="{DynamicResource ErrorForeground}"
+                       IsVisible="{Binding LockScreenError, Converter={x:Static ObjectConverters.IsNotNull}}" />
+            <HyperlinkButton Content="{x:Static res:Strings.ForgotPin}" Command="{Binding ForgotPinCommand}"
+                             HorizontalAlignment="Center" Margin="0,8,0,0" />
+        </StackPanel>
+    </Border>
+    </Panel>
 
 </Window>

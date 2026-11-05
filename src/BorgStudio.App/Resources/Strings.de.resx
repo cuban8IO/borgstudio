@@ -505,13 +505,13 @@ Warnung: Der Anbieter veröffentlicht die Fingerabdrücke seiner Server, und die
     <value>Fehler beim Tresor: {0}</value>
   </data>
   <data name="VaultStatusNotSetUp" xml:space="preserve">
-    <value>Tresor nicht eingerichtet</value>
+    <value>Keine PIN eingerichtet</value>
   </data>
   <data name="VaultStatusLocked" xml:space="preserve">
-    <value>Tresor gesperrt</value>
+    <value>Gesperrt</value>
   </data>
   <data name="VaultStatusUnlocked" xml:space="preserve">
-    <value>Tresor entsperrt</value>
+    <value>Entsperrt</value>
   </data>
   <data name="VaultLock" xml:space="preserve">
     <value>Sperren</value>
@@ -526,7 +526,7 @@ Warnung: Der Anbieter veröffentlicht die Fingerabdrücke seiner Server, und die
     <value>PIN festlegen</value>
   </data>
   <data name="PinCreateText" xml:space="preserve">
-    <value>Der Tresor speichert Passphrasen verschlüsselt mit einem Schlüssel, der aus dieser PIN abgeleitet wird. Ohne die PIN kann niemand den Inhalt lesen – auch BorgStudio nicht. Eine vergessene PIN lässt sich nicht wiederherstellen: Dann hilft nur, den Tresor zurückzusetzen (sein Inhalt geht verloren) oder einen Export zu importieren.</value>
+    <value>Mit einer PIN ist BorgStudio beim Start und nach einer Weile ohne Bedienung gesperrt, und Passphrasen werden mit einem aus der PIN abgeleiteten Schlüssel verschlüsselt gespeichert. Ohne die PIN kann niemand sie lesen – auch BorgStudio nicht. Eine vergessene PIN lässt sich nicht wiederherstellen: Dann hilft nur, den Tresor zurückzusetzen (die Passphrasen darin gehen verloren) oder einen Export zu importieren.</value>
   </data>
   <data name="PinLabel" xml:space="preserve">
     <value>PIN</value>
@@ -559,10 +559,10 @@ Warnung: Der Anbieter veröffentlicht die Fingerabdrücke seiner Server, und die
     <value>Einstellungen</value>
   </data>
   <data name="SettingsVaultHeader" xml:space="preserve">
-    <value>Tresor</value>
+    <value>Sperre und Tresor</value>
   </data>
   <data name="SettingsVaultIntro" xml:space="preserve">
-    <value>Der Tresor speichert die Passphrasen der Repositories, verschlüsselt mit deiner PIN. Die PIN gibst du einmal pro Sitzung ein.</value>
+    <value>Mit einer PIN startet BorgStudio gesperrt und sperrt sich nach der unten eingestellten Zeit wieder. Beim Entsperren öffnet sich auch der Tresor, in dem die Passphrasen der Repositories verschlüsselt liegen – sie werden dann nicht mehr abgefragt. Sperren jederzeit mit Strg+L.</value>
   </data>
   <data name="SettingsVaultStatus" xml:space="preserve">
     <value>Status:</value>
@@ -580,7 +580,7 @@ Warnung: Der Anbieter veröffentlicht die Fingerabdrücke seiner Server, und die
     <value>Automatisch sperren nach</value>
   </data>
   <data name="SettingsAutoLockHint" xml:space="preserve">
-    <value>… ohne Bedienung von BorgStudio. Danach wird die PIN beim nächsten Bedarf erneut abgefragt.</value>
+    <value>… ohne Bedienung von BorgStudio. Danach muss die App wieder mit der PIN entsperrt werden.</value>
   </data>
   <data name="SettingsMinutes" xml:space="preserve">
     <value>{0} Minuten</value>
@@ -592,12 +592,24 @@ Warnung: Der Anbieter veröffentlicht die Fingerabdrücke seiner Server, und die
     <value>Tresor zurücksetzen</value>
   </data>
   <data name="VaultResetWarning" xml:space="preserve">
-    <value>Damit wird der Tresor mit allen darin gespeicherten Passphrasen gelöscht. Das lässt sich nicht rückgängig machen. Repositories, deren Passphrase im Tresor lag, fragen sie danach wieder ab. Mach das nur, wenn du deine PIN vergessen hast.</value>
+    <value>Damit werden der Tresor mit allen darin gespeicherten Passphrasen und die PIN gelöscht. Das lässt sich nicht rückgängig machen. Repositories, deren Passphrase im Tresor lag, fragen sie danach wieder ab. Mach das nur, wenn du deine PIN vergessen hast.</value>
   </data>
   <data name="VaultResetConfirm" xml:space="preserve">
     <value>Tresor löschen</value>
   </data>
   <data name="VaultResetDone" xml:space="preserve">
     <value>Der Tresor wurde gelöscht. Du kannst eine neue PIN einrichten.</value>
+  </data>
+  <data name="LockScreenTitle" xml:space="preserve">
+    <value>BorgStudio ist gesperrt</value>
+  </data>
+  <data name="LockScreenText" xml:space="preserve">
+    <value>Gib deine PIN ein, um BorgStudio zu entsperren. Damit öffnet sich auch der Tresor mit deinen Passphrasen.</value>
+  </data>
+  <data name="Unlock" xml:space="preserve">
+    <value>Entsperren</value>
+  </data>
+  <data name="ForgotPin" xml:space="preserve">
+    <value>PIN vergessen?</value>
   </data>
 </root>

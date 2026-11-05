@@ -7,7 +7,10 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace BorgStudio.App.ViewModels;
 
-/// <summary>The vault in the main window: status, locking, auto-lock and settings.</summary>
+/// <summary>
+/// The vault in the main window. With a PIN set up, the vault doubles as the app lock: BorgStudio starts locked, shows
+/// only the lock screen while locked, and unlocking the app unlocks the vault – so passphrases are not asked for again.
+/// </summary>
 public partial class MainViewModel
 {
     /// <summary>Repositories removed while the vault was locked: their passphrases go once it is unlocked again.</summary>
@@ -21,14 +24,73 @@ public partial class MainViewModel
     public partial string VaultStatus { get; private set; } = "";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsLocked), nameof(IsAppVisible))]
     [NotifyCanExecuteChangedFor(nameof(LockVaultCommand))]
     public partial bool IsVaultUnlocked { get; private set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsLocked), nameof(IsAppVisible))]
     public partial bool IsVaultSetUp { get; private set; }
+
+    /// <summary>The app is locked: only the lock screen is shown.</summary>
+    public bool IsLocked => IsVaultSetUp && !IsVaultUnlocked;
+
+    public bool IsAppVisible => !IsLocked;
+
+    /// <summary>The PIN typed on the lock screen.</summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(UnlockCommand))]
+    public partial string LockScreenPin { get; set; } = "";
+
+    [ObservableProperty]
+    public partial string? LockScreenError { get; private set; }
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(UnlockCommand), nameof(ForgotPinCommand))]
+    public partial bool IsUnlocking { get; private set; }
+
+    [RelayCommand(CanExecute = nameof(CanUnlock))]
+    private async Task UnlockAsync()
+    {
+        IsUnlocking = true;
+        LockScreenError = null;
+        try
+        {
+            var pin = LockScreenPin;
+            // Key derivation takes a moment: keep the UI responsive.
+            if (await Task.Run(() => _services.Vault.Unlock(pin)))
+                LockScreenPin = "";
+            else
+                LockScreenError = Strings.PinWrong;
+        }
+        catch (SecretBoxException exception)
+        {
+            LockScreenError = BorgTexts.Format(Strings.VaultError, exception.Message);
+        }
+        finally
+        {
+            IsUnlocking = false;
+        }
+    }
+
+    private bool CanUnlock() => !IsUnlocking && LockScreenPin.Length > 0;
+
+    /// <summary>Forgotten PIN: delete the vault (after a warning) – that also lifts the lock.</summary>
+    [RelayCommand(CanExecute = nameof(IsNotUnlocking))]
+    private async Task ForgotPinAsync()
+    {
+        if (!await _services.Dialogs.ConfirmAsync(Strings.VaultResetTitle, Strings.VaultResetWarning, Strings.VaultResetConfirm))
+            return;
+        _services.Vault.Reset();
+        LockScreenPin = "";
+        LockScreenError = null;
+    }
+
+    private bool IsNotUnlocking() => !IsUnlocking;
 
     private void InitializeVault()
     {
+        // Nothing to do for the lock itself: a vault with a PIN starts locked, so the app does too.
         Settings = _services.Settings.Load();
         _services.Vault.StateChanged += (_, _) => OnViewModelThread(OnVaultStateChanged);
         RefreshVaultStatus();

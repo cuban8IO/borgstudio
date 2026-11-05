@@ -21,9 +21,10 @@ looks for borg inside WSL. borg 2 is still in beta and not supported yet. The UI
   locations, never passphrases.
 - **Passphrases:** per repository either stored in BorgStudio's vault, in the system keychain (Windows Credential
   Manager, macOS keychain, Linux Secret Service such as GNOME Keyring or KWallet) or asked for every time.
-- **Vault:** `vault.json` in the data folder, encrypted with AES-256-GCM under a key derived from your PIN with
-  Argon2id – without the PIN nothing in it can be read. The PIN is asked for once per session; by default the vault
-  locks itself again after 15 minutes without using the app (Tools → Settings). A forgotten PIN cannot be recovered:
+- **Vault and app lock:** `vault.json` in the data folder, encrypted with AES-256-GCM under a key derived from your
+  PIN with Argon2id – without the PIN nothing in it can be read. With a PIN, BorgStudio starts locked and shows only
+  a lock screen; unlocking also opens the vault. By default it locks itself again after 15 minutes without use
+  (Tools → Settings), or at once with Ctrl+L. A forgotten PIN cannot be recovered:
   the vault can only be reset, losing what is stored in it.
 - **Settings:** `settings.json` in the data folder.
 - **Repository keys:** BorgStudio offers to export the key after creating a repository. Keep the key file and the
@@ -108,8 +109,9 @@ section gets the new version number.
   borg 1.4 or 1.2 on the box.
 - App icon and the app version in the window title.
 
-- PIN-protected vault for repository passphrases (Argon2id + AES-256-GCM), unlocked once per session, with an
-  automatic lock after a configurable idle time (default 15 minutes). New Settings window (Tools → Settings) to set
+- App lock with a PIN: BorgStudio starts locked and shows a lock screen; unlocking also opens a PIN-protected vault
+  for repository passphrases (Argon2id + AES-256-GCM). Locks again after a configurable idle time (default
+  15 minutes) or with Ctrl+L. New Settings window (Tools → Settings) to set
   up, change or reset the PIN. Each repository keeps its passphrase in the vault, in the system keychain or not at all.
 
 **Changed**

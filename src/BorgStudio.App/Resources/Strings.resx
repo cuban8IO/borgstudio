@@ -526,13 +526,13 @@ Warning: the provider publishes the fingerprints of its servers, and this key ma
     <value>Vault error: {0}</value>
   </data>
   <data name="VaultStatusNotSetUp" xml:space="preserve">
-    <value>Vault not set up</value>
+    <value>No PIN set up</value>
   </data>
   <data name="VaultStatusLocked" xml:space="preserve">
-    <value>Vault locked</value>
+    <value>Locked</value>
   </data>
   <data name="VaultStatusUnlocked" xml:space="preserve">
-    <value>Vault unlocked</value>
+    <value>Unlocked</value>
   </data>
   <data name="VaultLock" xml:space="preserve">
     <value>Lock</value>
@@ -547,7 +547,7 @@ Warning: the provider publishes the fingerprints of its servers, and this key ma
     <value>Set up PIN</value>
   </data>
   <data name="PinCreateText" xml:space="preserve">
-    <value>The vault keeps passphrases encrypted with a key derived from this PIN. Without the PIN nobody can read it – not even BorgStudio. A forgotten PIN cannot be recovered: then only resetting the vault (everything in it is lost) or importing an export helps.</value>
+    <value>With a PIN, BorgStudio is locked at start and after a while without use, and passphrases are kept encrypted with a key derived from the PIN. Without the PIN nobody can read them – not even BorgStudio. A forgotten PIN cannot be recovered: then only resetting the vault (the passphrases in it are lost) or importing an export helps.</value>
   </data>
   <data name="PinLabel" xml:space="preserve">
     <value>PIN</value>
@@ -580,10 +580,10 @@ Warning: the provider publishes the fingerprints of its servers, and this key ma
     <value>Settings</value>
   </data>
   <data name="SettingsVaultHeader" xml:space="preserve">
-    <value>Vault</value>
+    <value>Lock and vault</value>
   </data>
   <data name="SettingsVaultIntro" xml:space="preserve">
-    <value>The vault keeps repository passphrases encrypted with your PIN. You enter the PIN once per session.</value>
+    <value>With a PIN, BorgStudio starts locked and locks itself again after the time set below. Unlocking also opens the vault, which keeps the repository passphrases encrypted – so they are not asked for again. Lock at any time with Ctrl+L.</value>
   </data>
   <data name="SettingsVaultStatus" xml:space="preserve">
     <value>Status:</value>
@@ -601,7 +601,7 @@ Warning: the provider publishes the fingerprints of its servers, and this key ma
     <value>Lock automatically after</value>
   </data>
   <data name="SettingsAutoLockHint" xml:space="preserve">
-    <value>…without using BorgStudio. Then the PIN is asked for again the next time a passphrase is needed.</value>
+    <value>…without using BorgStudio. Then the app has to be unlocked with the PIN again.</value>
   </data>
   <data name="SettingsMinutes" xml:space="preserve">
     <value>{0} minutes</value>
@@ -613,12 +613,24 @@ Warning: the provider publishes the fingerprints of its servers, and this key ma
     <value>Reset vault</value>
   </data>
   <data name="VaultResetWarning" xml:space="preserve">
-    <value>This deletes the vault with all passphrases stored in it. It cannot be undone. Repositories that kept their passphrase in the vault will ask for it again. Only do this if you forgot your PIN.</value>
+    <value>This deletes the vault with all passphrases stored in it and removes the PIN. It cannot be undone. Repositories that kept their passphrase in the vault will ask for it again. Only do this if you forgot your PIN.</value>
   </data>
   <data name="VaultResetConfirm" xml:space="preserve">
     <value>Delete vault</value>
   </data>
   <data name="VaultResetDone" xml:space="preserve">
     <value>The vault was deleted. You can set up a new PIN.</value>
+  </data>
+  <data name="LockScreenTitle" xml:space="preserve">
+    <value>BorgStudio is locked</value>
+  </data>
+  <data name="LockScreenText" xml:space="preserve">
+    <value>Enter your PIN to unlock BorgStudio. This also opens the vault with your passphrases.</value>
+  </data>
+  <data name="Unlock" xml:space="preserve">
+    <value>Unlock</value>
+  </data>
+  <data name="ForgotPin" xml:space="preserve">
+    <value>Forgot PIN?</value>
   </data>
 </root>
