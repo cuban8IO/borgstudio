@@ -1,0 +1,61 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:BorgStudio.App.ViewModels"
+        xmlns:res="using:BorgStudio.App.Resources"
+        xmlns:sys="using:System"
+        x:Class="BorgStudio.App.Views.ExportWindow"
+        x:DataType="vm:ExportViewModel"
+        Title="{x:Static res:Strings.ExportTitle}"
+        Width="560" SizeToContent="Height" CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+    <StackPanel Margin="20" Spacing="12">
+        <TextBlock Text="{x:Static res:Strings.ExportIntro}" TextWrapping="Wrap" />
+
+        <StackPanel Spacing="10" IsVisible="{Binding IsNotDone}">
+            <StackPanel Spacing="4">
+                <TextBlock Text="{x:Static res:Strings.ExportPassword}" />
+                <TextBox Text="{Binding Password}" PasswordChar="•" />
+            </StackPanel>
+            <StackPanel Spacing="4">
+                <TextBlock Text="{x:Static res:Strings.ExportPasswordConfirmation}" />
+                <TextBox Text="{Binding PasswordConfirmation}" PasswordChar="•" />
+                <TextBlock Text="{Binding PasswordHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+            </StackPanel>
+            <CheckBox IsChecked="{Binding IncludeBorgKeys}">
+                <TextBlock Text="{x:Static res:Strings.ExportIncludeBorgKeys}" TextWrapping="Wrap" />
+            </CheckBox>
+        </StackPanel>
+
+        <StackPanel Spacing="4" IsVisible="{Binding IsBusy}">
+            <ProgressBar IsIndeterminate="True" />
+            <TextBlock Text="{Binding Progress}" FontSize="12" />
+        </StackPanel>
+
+        <ItemsControl ItemsSource="{Binding Errors}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="sys:String">
+                    <TextBlock Text="{Binding}" TextWrapping="Wrap" Foreground="{DynamicResource ErrorForeground}" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <SelectableTextBlock Text="{Binding Result}" IsVisible="{Binding HasResult}" TextWrapping="Wrap"
+                             Foreground="{DynamicResource SuccessForeground}" />
+        <ItemsControl ItemsSource="{Binding Problems}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="sys:String">
+                    <SelectableTextBlock Text="{Binding}" TextWrapping="Wrap" Foreground="{DynamicResource WarningBorder}" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,6,0,0">
+            <Button Content="{x:Static res:Strings.ExportStart}" Command="{Binding ExportCommand}" Classes="accent"
+                    IsDefault="True" IsVisible="{Binding IsNotDone}" />
+            <Button Content="{x:Static res:Strings.Close}" IsCancel="True" Click="Close_Click" />
+        </StackPanel>
+    </StackPanel>
+
+</Window>

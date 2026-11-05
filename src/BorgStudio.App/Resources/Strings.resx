@@ -758,4 +758,118 @@ Warning: the provider publishes the fingerprints of its servers, and this key ma
   <data name="KeysOriginImported" xml:space="preserve">
     <value>Imported on {0}</value>
   </data>
+  <data name="MenuExport" xml:space="preserve">
+    <value>Export settings…</value>
+  </data>
+  <data name="MenuImport" xml:space="preserve">
+    <value>Import settings…</value>
+  </data>
+  <data name="ExportTitle" xml:space="preserve">
+    <value>Export settings</value>
+  </data>
+  <data name="ExportIntro" xml:space="preserve">
+    <value>Saves everything in one file to set BorgStudio up again on another computer: repositories, stored passphrases, SSH keys, known servers and settings. The file is encrypted with a password of its own – without it nobody can read the file, and you cannot either.</value>
+  </data>
+  <data name="ExportPassword" xml:space="preserve">
+    <value>Export password</value>
+  </data>
+  <data name="ExportPasswordConfirmation" xml:space="preserve">
+    <value>Repeat export password</value>
+  </data>
+  <data name="ExportPasswordHint" xml:space="preserve">
+    <value>At least {0} characters. Not your PIN: the file may travel, so a long password protects it.</value>
+  </data>
+  <data name="ExportPasswordTooShort" xml:space="preserve">
+    <value>The export password needs at least {0} characters.</value>
+  </data>
+  <data name="ExportPasswordMismatch" xml:space="preserve">
+    <value>The two passwords do not match.</value>
+  </data>
+  <data name="ExportIncludeBorgKeys" xml:space="preserve">
+    <value>Include the borg keys of the repositories (one borg call per repository; needed for repositories with a keyfile)</value>
+  </data>
+  <data name="ExportFetchingKey" xml:space="preserve">
+    <value>Fetching the borg key of "{0}"…</value>
+  </data>
+  <data name="ExportEncrypting" xml:space="preserve">
+    <value>Encrypting…</value>
+  </data>
+  <data name="ExportDone" xml:space="preserve">
+    <value>Exported {0} repositories, {1} SSH keys, {2} passphrases and {3} borg keys to {4}.</value>
+  </data>
+  <data name="ExportStart" xml:space="preserve">
+    <value>Export…</value>
+  </data>
+  <data name="TransferBorgKeyMissing" xml:space="preserve">
+    <value>borg did not write a key.</value>
+  </data>
+  <data name="TransferBorgKeyFailed" xml:space="preserve">
+    <value>borg key of "{0}" not included: {1}</value>
+  </data>
+  <data name="TransferProviderMissing" xml:space="preserve">
+    <value>"{0}" needs the plugin "{1}", which is not installed here.</value>
+  </data>
+  <data name="TransferKeyfileFailed" xml:space="preserve">
+    <value>borg key of "{0}" could not be put in place: {1}</value>
+  </data>
+  <data name="ImportTitle" xml:space="preserve">
+    <value>Import settings</value>
+  </data>
+  <data name="ImportPasswordTitle" xml:space="preserve">
+    <value>Export password</value>
+  </data>
+  <data name="ImportPasswordPrompt" xml:space="preserve">
+    <value>Password of the export "{0}":</value>
+  </data>
+  <data name="ImportPasswordWrong" xml:space="preserve">
+    <value>Wrong password (or the file was changed).</value>
+  </data>
+  <data name="ImportUnreadable" xml:space="preserve">
+    <value>The file cannot be imported: {0}</value>
+  </data>
+  <data name="ImportSource" xml:space="preserve">
+    <value>Export from {0} on {1} (BorgStudio {2})</value>
+  </data>
+  <data name="ImportModeMerge" xml:space="preserve">
+    <value>Merge: add what is new, keep what is here</value>
+  </data>
+  <data name="ImportModeReplace" xml:space="preserve">
+    <value>Replace: the export replaces all repositories, keys, known servers and settings</value>
+  </data>
+  <data name="ImportConflictHint" xml:space="preserve">
+    <value>Some entries exist here already. When merging, tick "replace" where the export should win.</value>
+  </data>
+  <data name="ImportKindRepository" xml:space="preserve">
+    <value>Repository</value>
+  </data>
+  <data name="ImportKindKey" xml:space="preserve">
+    <value>SSH key</value>
+  </data>
+  <data name="ImportStatusNew" xml:space="preserve">
+    <value>new</value>
+  </data>
+  <data name="ImportStatusExists" xml:space="preserve">
+    <value>exists</value>
+  </data>
+  <data name="ImportReplaceItem" xml:space="preserve">
+    <value>replace</value>
+  </data>
+  <data name="ImportProviderMissing" xml:space="preserve">
+    <value>Needs the plugin "{0}", which is not installed here.</value>
+  </data>
+  <data name="ImportReplaceTitle" xml:space="preserve">
+    <value>Replace everything?</value>
+  </data>
+  <data name="ImportReplaceWarning" xml:space="preserve">
+    <value>All repositories and SSH keys here, their stored passphrases, the known servers and the settings are replaced by the export. What is not in the export is gone afterwards.</value>
+  </data>
+  <data name="ImportReplaceConfirm" xml:space="preserve">
+    <value>Replace</value>
+  </data>
+  <data name="ImportDone" xml:space="preserve">
+    <value>Imported {0} repositories, {1} SSH keys and {2} passphrases.</value>
+  </data>
+  <data name="ImportStart" xml:space="preserve">
+    <value>Import</value>
+  </data>
 </root>

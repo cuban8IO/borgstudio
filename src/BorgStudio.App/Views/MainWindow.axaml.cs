@@ -72,6 +72,27 @@ public partial class MainWindow : Window
         await window.ShowDialog(this);
     }
 
+    private async void OpenExport_Click(object? sender, EventArgs e)
+    {
+        if (DataContext is not MainViewModel { IsLocked: false } viewModel)
+            return;
+
+        var window = new ExportWindow();
+        window.DataContext = new ExportViewModel(viewModel, new DialogService(window));
+        await window.ShowDialog(this);
+    }
+
+    private async void OpenImport_Click(object? sender, EventArgs e)
+    {
+        if (DataContext is not MainViewModel { IsLocked: false } viewModel)
+            return;
+
+        // File and password first; the preview window only opens for a readable export.
+        if (await ImportViewModel.OpenAsync(viewModel, new DialogService(this)) is not { } import)
+            return;
+        await new ImportWindow { DataContext = import }.ShowDialog(this);
+    }
+
     private async void OpenSettings_Click(object? sender, EventArgs e)
     {
         if (DataContext is not MainViewModel { IsLocked: false } viewModel)

@@ -27,7 +27,11 @@ looks for borg inside WSL. borg 2 is still in beta and not supported yet. The UI
   (Tools → Settings), or at once with Ctrl+L. A forgotten PIN cannot be recovered:
   the vault can only be reset, losing what is stored in it.
 - **Settings:** `settings.json` in the data folder.
-- **Repository keys:** BorgStudio offers to export the key after creating a repository. Keep the key file and the
+- **Moving to another computer:** Tools → Export settings writes everything – repositories, stored passphrases
+  (vault and keychain), SSH keys, known servers, settings and, if wanted, the borg keys of the repositories – into one
+  `.borgstudio` file, encrypted with a password of its own (at least 12 characters; Argon2id + AES-256-GCM). Tools →
+  Import settings shows what the file contains and merges it (asking per existing entry) or replaces everything;
+  keyfile keys are put back into borg's key folder. External plugins are not part of an export.- **Repository keys:** BorgStudio offers to export the key after creating a repository. Keep the key file and the
   passphrase safe and separate – without them, backups cannot be restored.
 - **SSH keys:** kept encrypted in the vault (Tools → SSH keys), so SSH repositories need a PIN. One key can serve
   several repositories. Imported key files are copied (the original stays; a password on it is removed once, the
@@ -120,6 +124,9 @@ section gets the new version number.
   repositories; create, import (password-protected keys too), rename, copy the public key, save the private key,
   delete unused keys. In a repository, pick a key from the list and optionally install it on the server. Key files of
   older versions move into the vault automatically; borg only gets a key as a temporary file for the duration of a call.
+- Export and import of all settings (Tools → Export/Import settings): one file encrypted with its own password, with
+  repositories, passphrases, SSH keys, known servers, settings and the borg keys; importing merges (with a choice per
+  existing entry) or replaces, sets up a PIN on a new computer and restores keyfile keys for borg.
 
 **Changed**
 - Dark design in the Beatport palette: dark ground, neon green for primary buttons, the selected list entry, progress

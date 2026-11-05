@@ -12,7 +12,8 @@ public sealed record RepositoryStoreLoadResult(IReadOnlyList<RepositoryConfig> R
 /// <summary>Keeps the list of repositories in a JSON file (atomically replaced on every save).</summary>
 public sealed class RepositoryStore(string filePath)
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
+    /// <summary>Also used for exports, so repositories look the same everywhere.</summary>
+    internal static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
