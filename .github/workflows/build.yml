@@ -1,6 +1,8 @@
 name: build
 
 # Build, test and package check for every branch except main (main is handled by release.yml).
+# Windows and Linux only: macOS runners are often unavailable for a long time and would fail the run.
+# release.yml tests and packages on macOS.
 on:
   push:
     branches-ignore: [main]
@@ -71,37 +73,6 @@ jobs:
           dbus-run-session -- bash -c '
             echo -n ci-only | gnome-keyring-daemon --unlock --components=secrets > /dev/null
             dotnet test BorgStudio.slnx --configuration Release --no-build'
-
-  # macOS runners are often unavailable for a long time: this job runs on its own, nothing waits for it, and a
-  # missing runner doesn't fail the build. The fixed image macos-15 uses a different runner pool than macos-latest.
-  build-macos:
-    runs-on: macos-15
-    continue-on-error: true
-    timeout-minutes: 20
-
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: actions/setup-dotnet@v6
-        with:
-          global-json-file: global.json
-
-      - name: Build
-        run: dotnet build BorgStudio.slnx --configuration Release
-
-      # An unlocked keychain without auto-lock, so the keychain tests never wait for a password dialog.
-      - name: Prepare keychain
-        run: |
-          security create-keychain -p ci-only build.keychain
-          security list-keychains -d user -s build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p ci-only build.keychain
-          security set-keychain-settings build.keychain
-
-      - name: Test
-        env:
-          BORGSTUDIO_KEYCHAIN_TESTS: "1"
-        run: dotnet test BorgStudio.slnx --configuration Release --no-build
 
   package:
     needs: build
