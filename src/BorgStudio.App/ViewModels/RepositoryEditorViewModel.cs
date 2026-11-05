@@ -24,7 +24,7 @@ public enum SshKeyChoice
     /// <summary>Create a key for this repository and install it with the server password.</summary>
     Generate,
 
-    /// <summary>Use a key file the user already has.</summary>
+    /// <summary>Use a key from BorgStudio's key list (the vault).</summary>
     Existing,
 }
 
@@ -39,16 +39,20 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
     private readonly RepositoryConfig? _existing;
     private readonly Guid _id;
     private readonly PassphraseStore _passphrases;
+    private readonly IReadOnlyList<RepositoryConfig> _otherRepositories;
 
-    /// <summary>A key created in this dialog: reused for retries, deleted if the dialog is cancelled.</summary>
+    /// <summary>A key created and installed in this dialog: reused for retries, saved with the repository.</summary>
     private InstalledKey? _newKey;
 
     /// <summary>Add a repository, or edit <paramref name="existing"/> (its provider must be available).</summary>
-    public RepositoryEditorViewModel(AppServices services, BorgInstallation? borg, RepositoryConfig? existing = null)
+    /// <param name="otherRepositories">The other repositories, to warn about keys shared in a way that cannot work.</param>
+    public RepositoryEditorViewModel(AppServices services, BorgInstallation? borg, RepositoryConfig? existing = null,
+        IReadOnlyList<RepositoryConfig>? otherRepositories = null)
     {
         _services = services;
         _borg = borg;
         _existing = existing;
+        _otherRepositories = otherRepositories ?? [];
         _id = existing?.Id ?? Guid.NewGuid();
         _passphrases = new PassphraseStore(services);
         Dialogs = services.Dialogs;
@@ -64,6 +68,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             Page = Providers.Count == 1 ? EditorPage.Details : EditorPage.SelectProvider;
             if (Page == EditorPage.Details)
                 CreateFields(SelectedProvider!.Provider, values: null);
+            RefreshKeys();
             return;
         }
 
@@ -72,10 +77,11 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         Name = existing.Name;
         PassphraseStorage = existing.PassphraseMode == PassphraseMode.None ? PassphraseMode.Vault : existing.PassphraseMode;
         SelectedBorgVersion = BorgVersionOptions.First(option => option.Value == existing.BorgVersion);
-        KeyChoice = existing.SshKeyFile is null ? SshKeyChoice.Generate : SshKeyChoice.Keep;
-        RestrictKey = existing.SshKeyFile is null || existing.SshKeyRestricted;
+        KeyChoice = existing.SshKeyId is null ? SshKeyChoice.Generate : SshKeyChoice.Keep;
+        RestrictKey = existing.SshKeyId is null || existing.SshKeyRestricted;
         CreateFields(SelectedProvider.Provider, existing.ProviderValues);
         Page = EditorPage.Details;
+        RefreshKeys();
     }
 
     public enum EditorPage
@@ -202,10 +208,10 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
     public bool IsSsh => SelectedProvider?.Provider.UsesSsh == true;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(KeyChoiceKeep), nameof(KeyChoiceGenerate), nameof(KeyChoiceExisting))]
+    [NotifyPropertyChangedFor(nameof(KeyChoiceKeep), nameof(KeyChoiceGenerate), nameof(KeyChoiceExisting), nameof(ShowInstallOptions))]
     public partial SshKeyChoice KeyChoice { get; set; }
 
-    public bool ShowKeepKeyOption => _existing?.SshKeyFile is not null;
+    public bool ShowKeepKeyOption => _existing?.SshKeyId is not null;
 
     public bool KeyChoiceKeep
     {
@@ -225,15 +231,112 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         set { if (value) KeyChoice = SshKeyChoice.Existing; }
     }
 
-    /// <summary>Used once to install the generated key; never stored.</summary>
+    /// <summary>Used once to install a key; never stored.</summary>
     [ObservableProperty]
     public partial string ServerPassword { get; set; } = "";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SharedKeyWarning), nameof(HasSharedKeyWarning))]
     public partial bool RestrictKey { get; set; } = true;
 
+    /// <summary>The keys in the vault to choose from (empty while it is not set up).</summary>
+    public ObservableCollection<SshKeyOption> AvailableKeys { get; } = [];
+
+    public bool HasNoKeys => AvailableKeys.Count == 0;
+
     [ObservableProperty]
-    public partial string ExistingKeyFile { get; set; } = "";
+    [NotifyPropertyChangedFor(nameof(SharedKeyWarning), nameof(HasSharedKeyWarning))]
+    public partial SshKeyOption? SelectedKey { get; set; }
+
+    /// <summary>A key from the list: also add it to the server's authorized_keys (with the server password).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SharedKeyWarning), nameof(HasSharedKeyWarning), nameof(ShowInstallOptions))]
+    public partial bool InstallExistingKey { get; set; }
+
+    /// <summary>Server password and restriction: for a generated key, or a key from the list that is to be installed.</summary>
+    public bool ShowInstallOptions => KeyChoice == SshKeyChoice.Generate || (KeyChoice == SshKeyChoice.Existing && InstallExistingKey);
+
+    /// <summary>
+    /// The chosen key is already used by another repository on the same account and one of them is restricted to its
+    /// repository: the server only uses the first matching line of authorized_keys, so one of them would fail.
+    /// </summary>
+    public string? SharedKeyWarning
+    {
+        get
+        {
+            if (KeyChoice != SshKeyChoice.Existing || SelectedKey is null || CurrentEndpoint() is not { } endpoint)
+                return null;
+            var restrictedHere = InstallExistingKey && RestrictKey;
+            var shared = _otherRepositories.Where(other => other.Id != _id && other.SshKeyId == SelectedKey.Key.Id)
+                .Select(other => (Repository: other, Endpoint: EndpointOf(other)))
+                .Where(other => other.Endpoint is { } e && e.Host == endpoint.Host && e.Port == endpoint.Port && e.User == endpoint.User)
+                .ToList();
+            return shared.Count > 0 && (restrictedHere || shared.Any(other => other.Repository.SshKeyRestricted))
+                ? BorgTexts.Format(Strings.EditorSharedRestrictedKey, shared[0].Repository.Name)
+                : null;
+        }
+    }
+
+    public bool HasSharedKeyWarning => SharedKeyWarning is not null;
+
+    partial void OnKeyChoiceChanged(SshKeyChoice value) => OnPropertyChanged(nameof(SharedKeyWarning));
+
+    /// <summary>Imports a private key file into the key list and selects it.</summary>
+    [RelayCommand(CanExecute = nameof(IsIdle))]
+    private async Task ImportKeyAsync()
+    {
+        Errors.Clear();
+        if (!await UnlockVaultAsync())
+            return;
+        if (await Dialogs.PickOpenFileAsync(Strings.KeysImportTitle) is not { } file)
+            return;
+
+        var (key, error) = await SshKeyImport.ImportAsync(_services, Dialogs, file);
+        if (error is not null)
+            Errors.Add(error);
+        if (key is null)
+            return;
+
+        RefreshKeys();
+        SelectedKey = AvailableKeys.FirstOrDefault(option => option.Key.Id == key.Id);
+        KeyChoice = SshKeyChoice.Existing;
+    }
+
+    /// <summary>Fills <see cref="AvailableKeys"/> from the vault (if it is open).</summary>
+    private void RefreshKeys()
+    {
+        var selected = SelectedKey?.Key.Id;
+        AvailableKeys.Clear();
+        if (_services.Vault.State == VaultState.Unlocked)
+            foreach (var key in _services.Vault.Keys)
+                AvailableKeys.Add(new SshKeyOption(key));
+        SelectedKey = AvailableKeys.FirstOrDefault(option => option.Key.Id == selected) ?? AvailableKeys.FirstOrDefault();
+        OnPropertyChanged(nameof(HasNoKeys));
+    }
+
+    private SshEndpoint? CurrentEndpoint()
+    {
+        try
+        {
+            return SelectedProvider?.Provider.GetLocation(Fields.ToDictionary(field => field.Key, field => field.Value.Trim())).Ssh;
+        }
+        catch (Exception exception) when (exception is KeyNotFoundException or ArgumentException or FormatException)
+        {
+            return null;
+        }
+    }
+
+    private SshEndpoint? EndpointOf(RepositoryConfig repository)
+    {
+        try
+        {
+            return _services.Plugins.FindRepositoryProvider(repository.ProviderId)?.GetLocation(repository.ProviderValues).Ssh;
+        }
+        catch (Exception exception) when (exception is KeyNotFoundException or ArgumentException or FormatException)
+        {
+            return null;
+        }
+    }
 
     // --- Advanced ---
 
@@ -282,12 +385,6 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(IsIdle))]
     private void Cancel() => CloseRequested?.Invoke(this, EventArgs.Empty);
 
-    /// <summary>Called when the dialog is gone: a key created for a repository that was never saved is deleted.</summary>
-    public void OnClosed()
-    {
-        if (Result is null && _newKey is { } created)
-            _services.SshKeys.Delete(created.Key.PrivateKeyFile);
-    }
 
     [RelayCommand(CanExecute = nameof(IsIdle))]
     private async Task ConfirmAsync()
@@ -347,10 +444,10 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         {
             if (KeyChoice == SshKeyChoice.Generate && ServerPassword.Length == 0 && !HasInstalledKeyFor(provider, values))
                 problems.Add(Strings.EditorServerPasswordRequired);
-            if (KeyChoice == SshKeyChoice.Existing && string.IsNullOrWhiteSpace(ExistingKeyFile))
-                problems.Add(Strings.EditorKeyFileRequired);
-            else if (KeyChoice == SshKeyChoice.Existing && !File.Exists(ExistingKeyFile.Trim()))
-                problems.Add(Strings.EditorKeyFileMissing);
+            if (KeyChoice == SshKeyChoice.Existing && SelectedKey is null)
+                problems.Add(Strings.EditorKeyRequired);
+            else if (KeyChoice == SshKeyChoice.Existing && InstallExistingKey && ServerPassword.Length == 0)
+                problems.Add(Strings.EditorServerPasswordRequired);
         }
 
         return problems;
@@ -373,7 +470,8 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         }
 
         // Open (or set up) the vault before anything happens on the server, so cancelling changes nothing.
-        if (UsesPassphrase && EffectiveStorage == PassphraseMode.Vault && !await UnlockVaultAsync())
+        // SSH keys live in the vault, so SSH repositories always need it.
+        if ((IsSsh || (UsesPassphrase && EffectiveStorage == PassphraseMode.Vault)) && !await UnlockVaultAsync())
             return;
 
         var login = IsSsh ? await PrepareSshLoginAsync(location) : SshLogin.None;
@@ -411,8 +509,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             BorgVersion = borgVersion,
             EncryptionMode = info.Value.EncryptionMode,
             BorgRepositoryId = info.Value.Id,
-            SshKeyFile = login.Access?.PrivateKeyFile,
-            SshKeyManaged = login.Managed,
+            SshKeyId = login.KeyId,
             SshKeyRestricted = login.Restricted,
         };
 
@@ -423,6 +520,8 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             return;
         }
 
+        if (!SaveNewKey(login))
+            return;
         Result = new RepositoryEditorResult(repository, CreateNew);
     }
 
@@ -435,17 +534,15 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             BorgVersion = SelectedBorgVersion.Value,
         };
 
+        SshLogin? login = null;
         if (IsSsh && KeyChoice != SshKeyChoice.Keep)
         {
-            var login = await PrepareSshLoginAsync(provider.GetLocation(values));
+            if (!await UnlockVaultAsync())
+                return;
+            login = await PrepareSshLoginAsync(provider.GetLocation(values));
             if (login is null)
                 return;
-            repository = repository with
-            {
-                SshKeyFile = login.Access!.PrivateKeyFile,
-                SshKeyManaged = login.Managed,
-                SshKeyRestricted = login.Restricted,
-            };
+            repository = repository with { SshKeyId = login.KeyId, SshKeyRestricted = login.Restricted };
         }
 
         var oldMode = existing.PassphraseMode;
@@ -454,9 +551,9 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         if (!await StorePassphraseAsync(existing, repository, oldMode, mode))
             return;
 
-        // The old key is no longer used once a new one is in place.
-        if (existing is { SshKeyManaged: true, SshKeyFile: { } oldKey } && repository.SshKeyFile != oldKey)
-            _services.SshKeys.Delete(oldKey);
+        // A replaced key stays in the key list (other repositories may use it); it can be deleted there.
+        if (login is not null && !SaveNewKey(login))
+            return;
 
         Result = new RepositoryEditorResult(repository, Created: false);
     }
@@ -478,44 +575,66 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             return null;
         }
 
-        if (KeyChoice == SshKeyChoice.Existing)
-            return new SshLogin(new SshAccess(ExistingKeyFile.Trim(), knownHosts), Managed: false, Restricted: false);
-
         var remoteBorg = SshTrustDialog.RemoteBorg(location);
-        if (_newKey is { } created && created.Fits(location, RestrictKey))
-            return new SshLogin(new SshAccess(created.Key.PrivateKeyFile, knownHosts), Managed: true, created.Restricted);
-
-        // A new key per attempt with different settings; the previous one was never used.
-        if (_newKey is { } previous)
+        if (KeyChoice == SshKeyChoice.Existing)
         {
-            _services.SshKeys.Delete(previous.Key.PrivateKeyFile);
-            _newKey = null;
+            var chosen = SelectedKey!.Key;
+            if (InstallExistingKey && !await InstallAsync(endpoint, hostKey, chosen.PublicKey, remoteBorg))
+                return null;
+            // Restricted only if installed that way here; otherwise it is unknown how the key was set up.
+            var restricted = InstallExistingKey ? RestrictKey : _existing?.SshKeyId == chosen.Id && _existing.SshKeyRestricted;
+            return new SshLogin(new SshAccess(chosen.PrivateKey, knownHosts), chosen.Id, restricted, NewKey: null);
         }
 
-        var key = _services.SshKeys.Create(KeyFileName(), KeyComment());
+        if (_newKey is { } created && created.Fits(location, RestrictKey))
+            return new SshLogin(new SshAccess(created.Key.PrivateKey, knownHosts), created.Key.Id, created.Restricted, created.Key);
 
+        // A new key per attempt with different settings; the previous one was never saved.
+        _newKey = null;
+        var key = SshKeyEntry.Generate(Name.Trim(), KeyComment(), DateTimeOffset.Now);
+        if (!await InstallAsync(endpoint, hostKey, key.PublicKey, remoteBorg))
+            return null;
+
+        _newKey = new InstalledKey(endpoint, remoteBorg, key, RestrictKey);
+        return new SshLogin(new SshAccess(key.PrivateKey, knownHosts), key.Id, RestrictKey, key);
+    }
+
+    /// <summary>Adds <paramref name="publicKey"/> to the server with the server password; <c>false</c> with the reason in <see cref="Errors"/>.</summary>
+    private async Task<bool> InstallAsync(SshEndpoint endpoint, SshHostKey hostKey, string publicKey, string remoteBorg)
+    {
         BusyText = Strings.InstallingKey;
         try
         {
-            await SshKeyInstaller.InstallAsync(_services.Ssh, endpoint, ServerPassword, hostKey, key.PublicKeyLine,
-                RestrictKey, remoteBorg);
+            await SshKeyInstaller.InstallAsync(_services.Ssh, endpoint, ServerPassword, hostKey, publicKey, RestrictKey, remoteBorg);
+            return true;
         }
         catch (SshOperationException exception)
         {
-            _services.SshKeys.Delete(key.PrivateKeyFile);
             Errors.Add(SshTrustDialog.Describe(exception));
-            return null;
+            return false;
         }
+    }
 
-        _newKey = new InstalledKey(endpoint, remoteBorg, key, RestrictKey);
-        return new SshLogin(new SshAccess(key.PrivateKeyFile, knownHosts), Managed: true, RestrictKey);
+    /// <summary>Puts a key created in this dialog into the vault; <c>false</c> with the reason in <see cref="Errors"/>.</summary>
+    private bool SaveNewKey(SshLogin login)
+    {
+        if (login.NewKey is not { } key)
+            return true;
+        try
+        {
+            _services.Vault.SetKey(key);
+            return true;
+        }
+        catch (VaultLockedException)
+        {
+            Errors.Add(Strings.VaultNotUnlocked);
+            return false;
+        }
     }
 
     private bool HasInstalledKeyFor(IRepositoryProvider provider, IReadOnlyDictionary<string, string> values) =>
         _newKey is { } created && created.Fits(provider.GetLocation(values), RestrictKey);
 
-    // Unique per key: editing may replace a repository's key while the old one is still in use.
-    private string KeyFileName() => $"{_id:N}-{DateTime.UtcNow:yyyyMMddHHmmss}";
 
     private string KeyComment() =>
         $"borgstudio-{UnsafeCommentCharacters().Replace(Environment.MachineName, "_")}-{_id.ToString("N")[..8]}";
@@ -590,13 +709,14 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
     private static partial Regex UnsafeCommentCharacters();
 
     /// <summary>How borg will log in: nothing for local repositories, a key for SSH ones.</summary>
-    private sealed record SshLogin(SshAccess? Access, bool Managed, bool Restricted)
+    /// <param name="NewKey">A key created in this dialog, to be saved with the repository.</param>
+    private sealed record SshLogin(SshAccess? Access, Guid? KeyId, bool Restricted, SshKeyEntry? NewKey)
     {
-        public static SshLogin None { get; } = new(null, false, false);
+        public static SshLogin None { get; } = new(null, null, false, null);
     }
 
     /// <summary>A key installed on a server, and what it was installed for.</summary>
-    private sealed record InstalledKey(SshEndpoint Endpoint, string RemoteBorg, SshGeneratedKey Key, bool Restricted)
+    private sealed record InstalledKey(SshEndpoint Endpoint, string RemoteBorg, SshKeyEntry Key, bool Restricted)
     {
         /// <summary>Whether the key works for <paramref name="location"/> as is: same server, account and restriction.</summary>
         public bool Fits(RepositoryLocation location, bool restricted) =>
@@ -605,6 +725,12 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             && restricted == Restricted
             && (!restricted || (endpoint.RepositoryPath == Endpoint.RepositoryPath && SshTrustDialog.RemoteBorg(location) == RemoteBorg));
     }
+}
+
+/// <summary>A key in the editor's key list.</summary>
+public sealed record SshKeyOption(SshKeyEntry Key)
+{
+    public override string ToString() => $"{Key.Name}  ·  {Key.Type}  ·  {Key.Fingerprint}";
 }
 
 public sealed class ProviderOptionViewModel(IRepositoryProvider provider)

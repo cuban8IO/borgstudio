@@ -136,7 +136,25 @@
                         <RadioButton GroupName="SshKey" IsChecked="{Binding KeyChoiceGenerate}">
                             <TextBlock Text="{x:Static res:Strings.EditorKeyGenerate}" TextWrapping="Wrap" />
                         </RadioButton>
-                        <StackPanel Spacing="4" Margin="28,0,0,4" IsVisible="{Binding KeyChoiceGenerate}">
+                        <RadioButton GroupName="SshKey" IsChecked="{Binding KeyChoiceExisting}">
+                            <TextBlock Text="{x:Static res:Strings.EditorKeyExisting}" TextWrapping="Wrap" />
+                        </RadioButton>
+                        <StackPanel Spacing="4" Margin="28,0,0,4" IsVisible="{Binding KeyChoiceExisting}">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <ComboBox ItemsSource="{Binding AvailableKeys}" SelectedItem="{Binding SelectedKey}"
+                                          HorizontalAlignment="Stretch" IsVisible="{Binding !HasNoKeys}" />
+                                <TextBlock Text="{x:Static res:Strings.EditorNoKeys}" TextWrapping="Wrap" Opacity="0.7"
+                                           VerticalAlignment="Center" IsVisible="{Binding HasNoKeys}" />
+                                <Button Grid.Column="1" Margin="8,0,0,0" Content="{x:Static res:Strings.KeysImport}"
+                                        Command="{Binding ImportKeyCommand}" />
+                            </Grid>
+                            <CheckBox IsChecked="{Binding InstallExistingKey}" Margin="0,4,0,0">
+                                <TextBlock Text="{x:Static res:Strings.EditorInstallExistingKey}" TextWrapping="Wrap" />
+                            </CheckBox>
+                        </StackPanel>
+
+                        <!-- Installing a key on the server: a generated one always, one from the list on request. -->
+                        <StackPanel Spacing="4" Margin="28,0,0,4" IsVisible="{Binding ShowInstallOptions}">
                             <TextBlock Text="{x:Static res:Strings.EditorServerPassword}" />
                             <TextBox Text="{Binding ServerPassword}" PasswordChar="•" />
                             <TextBlock Text="{x:Static res:Strings.EditorServerPasswordHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
@@ -145,17 +163,8 @@
                             </CheckBox>
                             <TextBlock Text="{x:Static res:Strings.EditorRestrictKeyHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
                         </StackPanel>
-                        <RadioButton GroupName="SshKey" IsChecked="{Binding KeyChoiceExisting}"
-                                     Content="{x:Static res:Strings.EditorKeyExisting}" />
-                        <StackPanel Spacing="4" Margin="28,0,0,4" IsVisible="{Binding KeyChoiceExisting}">
-                            <TextBlock Text="{x:Static res:Strings.EditorKeyFile}" />
-                            <Grid ColumnDefinitions="*,Auto">
-                                <TextBox Text="{Binding ExistingKeyFile}" />
-                                <Button Grid.Column="1" Margin="8,0,0,0" Content="{x:Static res:Strings.EditorBrowse}"
-                                        Click="BrowseKeyFile_Click" />
-                            </Grid>
-                            <TextBlock Text="{x:Static res:Strings.EditorKeyFileHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
-                        </StackPanel>
+                        <TextBlock Text="{Binding SharedKeyWarning}" IsVisible="{Binding HasSharedKeyWarning}" TextWrapping="Wrap"
+                                   FontSize="12" Foreground="{DynamicResource WarningBorder}" />
                     </StackPanel>
 
                     <Expander Header="{x:Static res:Strings.EditorAdvanced}" HorizontalAlignment="Stretch">

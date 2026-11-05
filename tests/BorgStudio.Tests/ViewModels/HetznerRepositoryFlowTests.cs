@@ -10,6 +10,9 @@ public sealed class HetznerRepositoryFlowTests : IDisposable
 {
     private readonly TestServices _test = new();
 
+    // SSH keys live in the vault.
+    public HetznerRepositoryFlowTests() => _test.Vault.SetUp("123456");
+
     public void Dispose() => _test.Dispose();
 
     private RepositoryEditorViewModel NewStorageBoxEditor()
@@ -113,6 +116,7 @@ public sealed class HetznerRepositoryFlowTests : IDisposable
 
         Assert.Equal(2, _test.Ssh.SftpAppends.Count);
         Assert.StartsWith("command=\"borg-1.2 serve ", _test.Ssh.SftpAppends[1].Line);
-        Assert.Single(Directory.GetFiles(_test.SshKeys.Directory, "*.pub"));
+        // Two keys were installed, but nothing is kept until the repository is saved.
+        Assert.Empty(_test.Vault.Keys);
     }
 }

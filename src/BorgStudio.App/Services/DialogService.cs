@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Input.Platform;
 using Avalonia.Platform.Storage;
 using BorgStudio.App.Resources;
 using BorgStudio.App.ViewModels;
@@ -24,16 +25,31 @@ public sealed class DialogService(Window owner) : IDialogService
     public Task<string?> AskNewPinAsync() =>
         new PinWindow(PinWindow.Mode.Create).ShowDialog<string?>(owner);
 
-    public async Task<string?> PickSaveFileAsync(string title, string suggestedFileName)
+    public Task<string?> AskSecretAsync(string title, string prompt, string? error = null) =>
+        new PassphraseWindow(title, prompt, error).ShowDialog<string?>(owner);
+
+    public async Task<string?> PickSaveFileAsync(string title, string suggestedFileName, string? defaultExtension = "txt")
     {
         var file = await owner.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
             Title = title,
             SuggestedFileName = suggestedFileName,
-            DefaultExtension = "txt",
+            DefaultExtension = defaultExtension,
             ShowOverwritePrompt = true,
         });
         return file?.TryGetLocalPath();
+    }
+
+    public async Task<string?> PickOpenFileAsync(string title)
+    {
+        var files = await owner.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions { Title = title, AllowMultiple = false });
+        return files.Count > 0 ? files[0].TryGetLocalPath() : null;
+    }
+
+    public async Task CopyToClipboardAsync(string text)
+    {
+        if (owner.Clipboard is { } clipboard)
+            await clipboard.SetTextAsync(text);
     }
 
     public Task ShowRepositoryEditorAsync(RepositoryEditorViewModel editor) =>

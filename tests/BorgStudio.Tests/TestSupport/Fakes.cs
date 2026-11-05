@@ -26,6 +26,12 @@ public sealed class FakeBorg : IProcessRunner
 
     public List<IReadOnlyDictionary<string, string?>> Environments { get; } = [];
 
+    /// <summary>Content of the private key file ssh would have used, read during each SSH call.</summary>
+    public List<string> KeysDuringCalls { get; } = [];
+
+    /// <summary>The key files ssh was given (to check they are gone afterwards).</summary>
+    public List<string> KeyFiles { get; } = [];
+
     /// <summary>Encryption mode reported by "info"; null makes "info" fail with <see cref="InfoError"/>.</summary>
     public string? EncryptionMode { get; set; } = "repokey-blake2";
 
@@ -43,6 +49,13 @@ public sealed class FakeBorg : IProcessRunner
         var passphrase = environment?.GetValueOrDefault("BORG_PASSPHRASE");
         Environments.Add(environment ?? new Dictionary<string, string?>());
         Calls.Add((arguments, passphrase));
+        if (environment?.GetValueOrDefault("BORG_RSH") is { } rsh
+            && System.Text.RegularExpressions.Regex.Match(rsh, "-i '(?<path>[^']+)'") is { Success: true } match)
+        {
+            var keyFile = match.Groups["path"].Value;
+            KeyFiles.Add(keyFile);
+            KeysDuringCalls.Add(File.Exists(keyFile) ? File.ReadAllText(keyFile) : "");
+        }
 
         if (fileName == BorgPath && arguments is ["--version"])
             return Result(0, "borg 1.4.1\n");
@@ -129,6 +142,7 @@ public sealed class TestServices : IDisposable
     public FakeDialogs Dialogs { get; } = new();
     public RepositoryStore Store { get; }
     public SshKeyStore SshKeys { get; }
+    public SshKeygen SshKeygen { get; } = SshKeygen.CreateDefault();
     public ManualTime Time { get; } = new();
     public Vault Vault { get; }
     public SettingsStore Settings { get; }
@@ -146,7 +160,7 @@ public sealed class TestServices : IDisposable
         Vault = new Vault(Directory.Combine("vault.json"), FastKdf, Time);
         Settings = new SettingsStore(Directory.Combine("settings.json"));
         var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new SshProviderPlugin(), new HetznerProviderPlugin()], "no-plugins-here");
-        Services = new AppServices(Borg.Detector(), plugins, Store, Secrets, new BorgClient(Borg), Ssh, SshKeys, Vault, Settings, Dialogs);
+        Services = new AppServices(Borg.Detector(), plugins, Store, Secrets, new BorgClient(Borg), Ssh, SshKeys, SshKeygen, Vault, Settings, Dialogs);
     }
 
     public KnownHostsFile KnownHosts => new(SshKeys.KnownHostsFile);
@@ -185,6 +199,17 @@ public sealed class FakeDialogs : IDialogService
     /// <summary>Error texts shown with the PIN prompts.</summary>
     public List<string?> PinErrors { get; } = [];
 
+    /// <summary>Answers to other secret prompts (key passwords); none left: cancelled.</summary>
+    public Queue<string?> Secrets { get; } = [];
+
+    /// <summary>Error texts shown with the secret prompts.</summary>
+    public List<string?> SecretErrors { get; } = [];
+
+    /// <summary>The file "chosen" in the open dialog.</summary>
+    public string? OpenFile { get; set; }
+
+    public string? Clipboard { get; private set; }
+
     public string? SaveFile { get; set; }
 
     /// <summary>Titles of the dialogs shown.</summary>
@@ -218,7 +243,22 @@ public sealed class FakeDialogs : IDialogService
 
     public Task<string?> AskNewPinAsync() => Task.FromResult(NewPins.Count > 0 ? NewPins.Dequeue() : null);
 
-    public Task<string?> PickSaveFileAsync(string title, string suggestedFileName) => Task.FromResult(SaveFile);
+    public Task<string?> AskSecretAsync(string title, string prompt, string? error = null)
+    {
+        SecretErrors.Add(error);
+        return Task.FromResult(Secrets.Count > 0 ? Secrets.Dequeue() : null);
+    }
+
+    public Task<string?> PickSaveFileAsync(string title, string suggestedFileName, string? defaultExtension = "txt") =>
+        Task.FromResult(SaveFile);
+
+    public Task<string?> PickOpenFileAsync(string title) => Task.FromResult(OpenFile);
+
+    public Task CopyToClipboardAsync(string text)
+    {
+        Clipboard = text;
+        return Task.CompletedTask;
+    }
 
     public Task ShowRepositoryEditorAsync(RepositoryEditorViewModel editor) => Editor?.Invoke(editor) ?? Task.CompletedTask;
 }

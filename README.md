@@ -29,9 +29,12 @@ looks for borg inside WSL. borg 2 is still in beta and not supported yet. The UI
 - **Settings:** `settings.json` in the data folder.
 - **Repository keys:** BorgStudio offers to export the key after creating a repository. Keep the key file and the
   passphrase safe and separate – without them, backups cannot be restored.
-- **SSH:** login keys created by BorgStudio (one per repository) and the confirmed server host keys
-  (`known_hosts`) are kept in the `ssh` sub folder of the data folder. Server passwords are only used once to
-  install a key and are never stored.
+- **SSH keys:** kept encrypted in the vault (Tools → SSH keys), so SSH repositories need a PIN. One key can serve
+  several repositories. Imported key files are copied (the original stays; a password on it is removed once, the
+  vault protects the key). For a borg call the key is written to a private temporary file – in the `ssh` sub folder
+  of the data folder, or in `~/.borgstudio/ssh` inside WSL – and deleted right after. The confirmed server host keys
+  (`known_hosts`) are kept in the `ssh` sub folder. Server passwords are only used once to install a key and are
+  never stored. Key files of older versions are moved into the vault after unlocking.
 - **Hetzner Storage Box:** connects on port 23 with the borg version you choose (1.4 or 1.2). The server's host key
   is checked against the fingerprints Hetzner publishes. Restricted login keys are written to
   `.ssh/authorized_keys` on the box over SFTP; unrestricted ones are installed with Hetzner's `install-ssh-key`.
@@ -113,6 +116,10 @@ section gets the new version number.
   for repository passphrases (Argon2id + AES-256-GCM). Locks again after a configurable idle time (default
   15 minutes) or with Ctrl+L. New Settings window (Tools → Settings) to set
   up, change or reset the PIN. Each repository keeps its passphrase in the vault, in the system keychain or not at all.
+- Central SSH key management (Tools → SSH keys): keys are kept encrypted in the vault and can be shared by several
+  repositories; create, import (password-protected keys too), rename, copy the public key, save the private key,
+  delete unused keys. In a repository, pick a key from the list and optionally install it on the server. Key files of
+  older versions move into the vault automatically; borg only gets a key as a temporary file for the duration of a call.
 
 **Changed**
 - Dark design in the Beatport palette: dark ground, neon green for primary buttons, the selected list entry, progress

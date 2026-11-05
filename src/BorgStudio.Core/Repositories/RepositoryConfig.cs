@@ -52,14 +52,25 @@ public sealed record RepositoryConfig
     /// <summary>borg's repository id, to notice when a location suddenly holds a different repository.</summary>
     public string? BorgRepositoryId { get; init; }
 
-    /// <summary>SSH repositories: the private key borg logs in with.</summary>
-    public string? SshKeyFile { get; init; }
-
-    /// <summary>The SSH key was created by BorgStudio for this repository (and is deleted with it).</summary>
-    public bool SshKeyManaged { get; init; }
+    /// <summary>SSH repositories: the key in the vault (<see cref="Ssh.SshKeyEntry.Id"/>) borg logs in with.</summary>
+    public Guid? SshKeyId { get; init; }
 
     /// <summary>The key was installed restricted to <c>borg serve</c> for this repository only.</summary>
     public bool SshKeyRestricted { get; init; }
+
+    /// <summary>Older versions: the key file borg logged in with. Moved into the vault, then cleared.</summary>
+    [JsonPropertyName("sshKeyFile")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? LegacySshKeyFile { get; init; }
+
+    /// <summary>Older versions: the key file was created by BorgStudio (and can be deleted once moved).</summary>
+    [JsonPropertyName("sshKeyManaged")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool LegacySshKeyManaged { get; init; }
+
+    /// <summary>The repository still uses a key file from an older version.</summary>
+    [JsonIgnore]
+    public bool HasLegacySshKey => LegacySshKeyFile is not null && SshKeyId is null;
 
     /// <summary>Key of the stored passphrase in the keychain.</summary>
     [JsonIgnore]

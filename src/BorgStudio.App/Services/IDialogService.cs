@@ -20,8 +20,17 @@ public interface IDialogService
     /// <summary>Asks for a new vault PIN (entered twice, at least <see cref="Core.Security.Vault.MinimumPinLength"/> characters); <c>null</c> if cancelled.</summary>
     Task<string?> AskNewPinAsync();
 
+    /// <summary>Asks for some other secret (e.g. the password of a key file); <c>null</c> if cancelled.</summary>
+    Task<string?> AskSecretAsync(string title, string prompt, string? error = null);
+
     /// <summary>Asks where to save a file; <c>null</c> if cancelled.</summary>
-    Task<string?> PickSaveFileAsync(string title, string suggestedFileName);
+    /// <param name="defaultExtension">Added if the name has none; <c>null</c> for files without extension.</param>
+    Task<string?> PickSaveFileAsync(string title, string suggestedFileName, string? defaultExtension = "txt");
+
+    /// <summary>Asks for a file to open; <c>null</c> if cancelled.</summary>
+    Task<string?> PickOpenFileAsync(string title);
+
+    Task CopyToClipboardAsync(string text);
 
     /// <summary>Shows the add/edit dialog; the outcome is in <see cref="RepositoryEditorViewModel.Result"/>.</summary>
     Task ShowRepositoryEditorAsync(RepositoryEditorViewModel editor);

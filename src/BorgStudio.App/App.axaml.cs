@@ -46,6 +46,7 @@ public partial class App : Application
                 BorgClient.CreateDefault(),
                 new SshNetService(),
                 SshKeyStore.CreateDefault(),
+                SshKeygen.CreateDefault(),
                 vault,
                 SettingsStore.CreateDefault(),
                 new DialogService(window)));
@@ -53,6 +54,7 @@ public partial class App : Application
             desktop.MainWindow = window;
             viewModel.CheckBorgCommand.Execute(null);
             StartVaultAutoLock(vault, viewModel);
+            window.Opened += async (_, _) => await viewModel.OfferVaultForLegacyKeysAsync();
         }
 
         base.OnFrameworkInitializationCompleted();

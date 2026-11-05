@@ -402,21 +402,14 @@
   <data name="LabelSshKey" xml:space="preserve">
     <value>SSH key</value>
   </data>
-  <data name="SshKeyManagedText" xml:space="preserve">
-    <value>Created by BorgStudio</value>
-  </data>
   <data name="SshKeyRestrictedSuffix" xml:space="preserve">
     <value>(restricted to borg)</value>
-  </data>
-  <data name="SshKeyOwnText" xml:space="preserve">
-    <value>Own key: {0}</value>
-    <comment>{0} = key file path</comment>
   </data>
   <data name="SshKeyMissing" xml:space="preserve">
     <value>No SSH key set up – edit the repository to set one up.</value>
   </data>
   <data name="RemoveSshHint" xml:space="preserve">
-    <value>A key created by BorgStudio is deleted; its entry in ~/.ssh/authorized_keys on the server stays and can be removed there.</value>
+    <value>Its SSH key stays in the key list; its entry in ~/.ssh/authorized_keys on the server stays too and can be removed there.</value>
   </data>
   <data name="HostKeyTitle" xml:space="preserve">
     <value>Confirm server</value>
@@ -472,10 +465,10 @@ Warning: the provider publishes the fingerprints of its servers, and this key ma
     <value>Keep the current key</value>
   </data>
   <data name="EditorKeyGenerate" xml:space="preserve">
-    <value>Create a new key for this repository and install it on the server with the password</value>
+    <value>Create a new key and install it on the server with the password</value>
   </data>
   <data name="EditorKeyExisting" xml:space="preserve">
-    <value>Use an existing SSH key</value>
+    <value>Use a key from the key list</value>
   </data>
   <data name="EditorServerPassword" xml:space="preserve">
     <value>Server password</value>
@@ -488,18 +481,6 @@ Warning: the provider publishes the fingerprints of its servers, and this key ma
   </data>
   <data name="EditorRestrictKeyHint" xml:space="preserve">
     <value>The key can then only run "borg serve" for this repository – no shell, no other folders.</value>
-  </data>
-  <data name="EditorKeyFile" xml:space="preserve">
-    <value>Private key file</value>
-  </data>
-  <data name="EditorKeyFileHint" xml:space="preserve">
-    <value>The key must not have a passphrase (or must be loaded in ssh-agent).</value>
-  </data>
-  <data name="EditorKeyFileRequired" xml:space="preserve">
-    <value>Please choose the key file.</value>
-  </data>
-  <data name="EditorKeyFileMissing" xml:space="preserve">
-    <value>The key file does not exist.</value>
   </data>
   <data name="EditorServerPasswordRequired" xml:space="preserve">
     <value>Please enter the server password.</value>
@@ -632,5 +613,149 @@ Warning: the provider publishes the fingerprints of its servers, and this key ma
   </data>
   <data name="ForgotPin" xml:space="preserve">
     <value>Forgot PIN?</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="MenuKeys" xml:space="preserve">
+    <value>SSH keys…</value>
+  </data>
+  <data name="EditorKeyRequired" xml:space="preserve">
+    <value>Please choose a key (or import one).</value>
+  </data>
+  <data name="EditorNoKeys" xml:space="preserve">
+    <value>No keys yet – import a key file.</value>
+  </data>
+  <data name="EditorInstallExistingKey" xml:space="preserve">
+    <value>Also install it on the server with the password (otherwise it must already be there)</value>
+  </data>
+  <data name="EditorSharedRestrictedKey" xml:space="preserve">
+    <value>This key is also used by "{0}" on the same account, and one of them is restricted to its repository. The server only uses the first matching entry, so one of the two would fail. Use a separate key or install this one without restriction.</value>
+  </data>
+  <data name="SshKeyLegacy" xml:space="preserve">
+    <value>Key file from an older version – moved into the vault once it is unlocked</value>
+  </data>
+  <data name="SshKeyLegacyNeedsPin" xml:space="preserve">
+    <value>This repository still uses a key file from an older version. SSH keys are kept in the vault now: set up a PIN (Tools → Settings) and the key is moved there.</value>
+  </data>
+  <data name="RemoveKeyTitle" xml:space="preserve">
+    <value>Delete key?</value>
+  </data>
+  <data name="RemoveKeyMessage" xml:space="preserve">
+    <value>The SSH key "{0}" is no longer used by any repository. Delete it from the key list too?</value>
+  </data>
+  <data name="KeepKey" xml:space="preserve">
+    <value>Keep</value>
+  </data>
+  <data name="KeysMigrationTitle" xml:space="preserve">
+    <value>SSH keys move into the vault</value>
+  </data>
+  <data name="KeysMigrationNeedsPin" xml:space="preserve">
+    <value>BorgStudio now keeps SSH keys encrypted in its vault instead of in files. Set up a PIN now: the existing keys are moved into the vault right away, and BorgStudio files are deleted afterwards (keys from elsewhere stay where they are).</value>
+  </data>
+  <data name="KeysMigrated" xml:space="preserve">
+    <value>{0} SSH key(s) moved into the vault.</value>
+  </data>
+  <data name="KeysMigrationFailed" xml:space="preserve">
+    <value>Could not move the SSH key into the vault: {0} – import it in Tools → SSH keys and choose it in the repository.</value>
+  </data>
+  <data name="KeysTitle" xml:space="preserve">
+    <value>SSH keys</value>
+  </data>
+  <data name="KeysNeedPin" xml:space="preserve">
+    <value>SSH keys are kept encrypted in the vault. Set up a PIN first.</value>
+  </data>
+  <data name="KeysEmpty" xml:space="preserve">
+    <value>No keys yet. Create one below or import a key file.</value>
+  </data>
+  <data name="KeysNewName" xml:space="preserve">
+    <value>New key:</value>
+  </data>
+  <data name="KeysGenerate" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="KeysImport" xml:space="preserve">
+    <value>Import…</value>
+  </data>
+  <data name="KeysImportTitle" xml:space="preserve">
+    <value>Import private key</value>
+  </data>
+  <data name="KeysRename" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="KeysType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="KeysFingerprint" xml:space="preserve">
+    <value>Fingerprint</value>
+  </data>
+  <data name="KeysOrigin" xml:space="preserve">
+    <value>Origin</value>
+  </data>
+  <data name="KeysUsedBy" xml:space="preserve">
+    <value>Used by</value>
+  </data>
+  <data name="KeysUnused" xml:space="preserve">
+    <value>no repository</value>
+  </data>
+  <data name="KeysPublicKey" xml:space="preserve">
+    <value>Public key (for ~/.ssh/authorized_keys on the server)</value>
+  </data>
+  <data name="KeysCopyPublicKey" xml:space="preserve">
+    <value>Copy public key</value>
+  </data>
+  <data name="KeysPublicKeyCopied" xml:space="preserve">
+    <value>Public key copied.</value>
+  </data>
+  <data name="KeysSavePrivate" xml:space="preserve">
+    <value>Save private key…</value>
+  </data>
+  <data name="KeysSavePrivateTitle" xml:space="preserve">
+    <value>Save private key</value>
+  </data>
+  <data name="KeysSavePrivateWarning" xml:space="preserve">
+    <value>The file will contain the private key WITHOUT protection: whoever gets it can log in wherever this key is installed. Only save it to a safe place and delete it when you no longer need it.</value>
+  </data>
+  <data name="KeysSavePrivateConfirm" xml:space="preserve">
+    <value>Save anyway</value>
+  </data>
+  <data name="KeysPrivateKeySaved" xml:space="preserve">
+    <value>Private key saved: {0}</value>
+  </data>
+  <data name="KeysDeleteTitle" xml:space="preserve">
+    <value>Delete key</value>
+  </data>
+  <data name="KeysDeleteMessage" xml:space="preserve">
+    <value>Delete the key "{0}" from the vault? This cannot be undone; its entries on servers stay and can be removed there.</value>
+  </data>
+  <data name="KeysDeleteUsedHint" xml:space="preserve">
+    <value>Keys used by a repository cannot be deleted.</value>
+  </data>
+  <data name="KeysGenerated" xml:space="preserve">
+    <value>Key "{0}" created. Copy its public key to the server, or choose it in a repository and let BorgStudio install it.</value>
+  </data>
+  <data name="KeysImported" xml:space="preserve">
+    <value>Key "{0}" imported. The original file stays where it is.</value>
+  </data>
+  <data name="KeysAlreadyImported" xml:space="preserve">
+    <value>This key is already in the list as "{0}".</value>
+  </data>
+  <data name="KeysImportFailed" xml:space="preserve">
+    <value>The file could not be read as a private key: {0}</value>
+  </data>
+  <data name="KeysPasswordTitle" xml:space="preserve">
+    <value>Key password</value>
+  </data>
+  <data name="KeysPasswordPrompt" xml:space="preserve">
+    <value>"{0}" is protected by a password. Enter it once – the key is then kept in the vault without it, protected by the vault.</value>
+  </data>
+  <data name="KeysPasswordWrong" xml:space="preserve">
+    <value>Wrong password.</value>
+  </data>
+  <data name="KeysOriginGenerated" xml:space="preserve">
+    <value>Created by BorgStudio on {0}</value>
+  </data>
+  <data name="KeysOriginImported" xml:space="preserve">
+    <value>Imported on {0}</value>
   </data>
 </root>

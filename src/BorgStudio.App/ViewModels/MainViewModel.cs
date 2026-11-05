@@ -21,6 +21,7 @@ public sealed record AppServices(
     BorgClient BorgClient,
     ISshService Ssh,
     SshKeyStore SshKeys,
+    SshKeygen SshKeygen,
     Vault Vault,
     SettingsStore Settings,
     IDialogService Dialogs)
@@ -35,7 +36,7 @@ public partial class MainViewModel : ViewModelBase
     // Designer only.
     public MainViewModel() : this(new AppServices(BorgDetector.CreateDefault(), PluginCatalog.Empty,
         RepositoryStore.CreateDefault(), SecretStores.CreateDefault(), BorgClient.CreateDefault(),
-        new SshNetService(), SshKeyStore.CreateDefault(), Vault.CreateDefault(), SettingsStore.CreateDefault(), new NoDialogs()))
+        new SshNetService(), SshKeyStore.CreateDefault(), SshKeygen.CreateDefault(), Vault.CreateDefault(), SettingsStore.CreateDefault(), new NoDialogs()))
     {
     }
 
@@ -44,9 +45,13 @@ public partial class MainViewModel : ViewModelBase
         _services = services;
         InitializeVault();
         LoadRepositories();
+        RefreshKeyNames();
     }
 
     public PluginCatalog Plugins => _services.Plugins;
+
+    /// <summary>For the windows opened from the main window (settings, keys).</summary>
+    public AppServices Services => _services;
 
     /// <summary>Window title with the app version, e.g. "BorgStudio 0.2.0".</summary>
     public string Title { get; } = $"BorgStudio {AppVersion.Current}";
@@ -132,7 +137,10 @@ public partial class MainViewModel : ViewModelBase
         public Task<string?> AskPassphraseAsync(string repositoryName) => Task.FromResult<string?>(null);
         public Task<string?> AskPinAsync(string? error = null) => Task.FromResult<string?>(null);
         public Task<string?> AskNewPinAsync() => Task.FromResult<string?>(null);
-        public Task<string?> PickSaveFileAsync(string title, string suggestedFileName) => Task.FromResult<string?>(null);
+        public Task<string?> AskSecretAsync(string title, string prompt, string? error = null) => Task.FromResult<string?>(null);
+        public Task<string?> PickSaveFileAsync(string title, string suggestedFileName, string? defaultExtension = "txt") => Task.FromResult<string?>(null);
+        public Task<string?> PickOpenFileAsync(string title) => Task.FromResult<string?>(null);
+        public Task CopyToClipboardAsync(string text) => Task.CompletedTask;
         public Task ShowRepositoryEditorAsync(RepositoryEditorViewModel editor) => Task.CompletedTask;
     }
 }

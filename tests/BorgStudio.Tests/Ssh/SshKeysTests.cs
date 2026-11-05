@@ -34,29 +34,57 @@ public sealed class SshKeysTests : IDisposable
     }
 
     [Fact]
-    public void Key_store_creates_private_files_and_deletes_only_its_own()
+    public void Key_store_deletes_only_its_own_old_key_files()
     {
         var store = new SshKeyStore(_directory.Combine("ssh"));
-
-        var key = store.Create("repo-1", "comment");
-
-        Assert.True(File.Exists(key.PrivateKeyFile));
-        Assert.Equal(key.PublicKeyLine + "\n", File.ReadAllText(key.PrivateKeyFile + ".pub"));
-        if (!OperatingSystem.IsWindows())
-        {
-            Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite, File.GetUnixFileMode(key.PrivateKeyFile));
-            Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute,
-                File.GetUnixFileMode(store.Directory));
-        }
-
+        Directory.CreateDirectory(store.Directory);
+        var own = Path.Combine(store.Directory, "repo-1");
+        File.WriteAllText(own, "key");
+        File.WriteAllText(own + ".pub", "ssh-ed25519 AAAA");
         var foreign = _directory.Combine("my-own-key");
         File.WriteAllText(foreign, "not BorgStudio's");
+
+        Assert.True(store.Contains(own));
+        Assert.False(store.Contains(foreign));
         store.Delete(foreign);
         Assert.True(File.Exists(foreign));
 
-        store.Delete(key.PrivateKeyFile);
-        Assert.False(File.Exists(key.PrivateKeyFile));
-        Assert.False(File.Exists(key.PrivateKeyFile + ".pub"));
+        store.Delete(own);
+        Assert.False(File.Exists(own));
+        Assert.False(File.Exists(own + ".pub"));
+    }
+
+    [Fact]
+    public void Temporary_key_files_are_private_and_old_leftovers_go()
+    {
+        var directory = _directory.Combine("ssh");
+        var leftover = TemporaryKeyFile.Write(directory, "key-", "old");
+        File.SetLastWriteTimeUtc(leftover, DateTime.UtcNow - TimeSpan.FromHours(2));
+        var recent = TemporaryKeyFile.Write(directory, "key-", "recent");
+
+        var path = TemporaryKeyFile.Write(directory, "key-", "PRIVATE KEY");
+
+        Assert.Equal("PRIVATE KEY\n", File.ReadAllText(path));
+        Assert.False(File.Exists(leftover));
+        Assert.True(File.Exists(recent));
+        if (!OperatingSystem.IsWindows())
+        {
+            Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite, File.GetUnixFileMode(path));
+            Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute, File.GetUnixFileMode(directory));
+        }
+    }
+
+    [Fact]
+    public void Generated_key_entries_carry_type_and_fingerprint()
+    {
+        var key = SshKeyEntry.Generate("NAS", "borgstudio-test", DateTimeOffset.Now);
+
+        Assert.Equal("NAS", key.Name);
+        Assert.True(key.Generated);
+        Assert.Equal("ssh-ed25519", key.Type);
+        Assert.Matches(@"^SHA256:[A-Za-z0-9+/]{43}$", key.Fingerprint);
+        Assert.Equal(SshPublicKey.WithoutComment(key.PublicKey), SshPublicKey.WithoutComment(key.PublicKey + " other comment"));
+        Assert.DoesNotContain(key.PrivateKey, new Core.Borg.SshAccess(key.PrivateKey, "/known_hosts").ToString());
     }
 
     [Fact]

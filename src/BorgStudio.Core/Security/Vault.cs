@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text.Json;
+using BorgStudio.Core.Ssh;
 
 namespace BorgStudio.Core.Security;
 
@@ -17,7 +18,7 @@ public enum VaultState
 public sealed class VaultLockedException() : InvalidOperationException("The vault is locked.");
 
 /// <summary>
-/// BorgStudio's own encrypted store for secrets (repository passphrases), protected by a PIN: the key is derived from
+/// BorgStudio's own encrypted store for secrets (repository passphrases, SSH keys), protected by a PIN: the key is derived from
 /// the PIN with Argon2id, the contents are encrypted with AES-256-GCM (see <see cref="SecretBox"/>). Without the PIN
 /// nothing in the file can be read. While unlocked, the key and the contents are kept in memory; every change rewrites
 /// the file with a fresh nonce.
@@ -265,6 +266,52 @@ public sealed class Vault
         }
     }
 
+    // --- SSH keys ---
+
+    /// <summary>All keys, sorted by name.</summary>
+    /// <exception cref="VaultLockedException" />
+    public IReadOnlyList<SshKeyEntry> Keys
+    {
+        get
+        {
+            lock (_gate)
+                return [.. Unlocked().Keys.OrderBy(key => key.Name, StringComparer.CurrentCultureIgnoreCase)];
+        }
+    }
+
+    /// <exception cref="VaultLockedException" />
+    public SshKeyEntry? GetKey(Guid id)
+    {
+        lock (_gate)
+            return Unlocked().Keys.FirstOrDefault(key => key.Id == id);
+    }
+
+    /// <summary>Adds a key, or replaces the one with the same id.</summary>
+    /// <exception cref="VaultLockedException" />
+    public void SetKey(SshKeyEntry key)
+    {
+        lock (_gate)
+        {
+            var keys = Unlocked().Keys;
+            var index = keys.FindIndex(existing => existing.Id == key.Id);
+            if (index >= 0)
+                keys[index] = key;
+            else
+                keys.Add(key);
+            Save();
+        }
+    }
+
+    /// <exception cref="VaultLockedException" />
+    public void RemoveKey(Guid id)
+    {
+        lock (_gate)
+        {
+            if (Unlocked().Keys.RemoveAll(key => key.Id == id) > 0)
+                Save();
+        }
+    }
+
     private static string Id(Guid repositoryId) => repositoryId.ToString("N");
 
     private Contents Unlocked() => _contents ?? throw new VaultLockedException();
@@ -291,5 +338,7 @@ public sealed class Vault
     {
         /// <summary>Repository id ("N" format) → passphrase.</summary>
         public Dictionary<string, string> Passphrases { get; init; } = [];
+
+        public List<SshKeyEntry> Keys { get; init; } = [];
     }
 }

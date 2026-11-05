@@ -94,7 +94,7 @@ public sealed class RepositoryEditorViewModelTests : IDisposable
         Assert.Equal(PassphraseMode.Stored, result.Repository.PassphraseMode);
         Assert.Equal("repokey-blake2", result.Repository.EncryptionMode);
         Assert.Equal("repo-id-1", result.Repository.BorgRepositoryId);
-        Assert.Null(result.Repository.SshKeyFile);
+        Assert.Null(result.Repository.SshKeyId);
         Assert.Equal("secret", _test.Secrets.Secrets[result.Repository.SecretKey]);
     }
 

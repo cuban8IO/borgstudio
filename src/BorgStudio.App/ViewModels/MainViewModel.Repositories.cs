@@ -3,6 +3,7 @@ using System.Globalization;
 using BorgStudio.App.Resources;
 using BorgStudio.Core.Borg;
 using BorgStudio.Core.Repositories;
+using BorgStudio.Core.Security;
 using BorgStudio.Plugins;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -56,13 +57,14 @@ public partial class MainViewModel
     [RelayCommand(CanExecute = nameof(CanAdd))]
     private async Task AddRepositoryAsync()
     {
-        var editor = new RepositoryEditorViewModel(_services, Borg);
+        var editor = new RepositoryEditorViewModel(_services, Borg, otherRepositories: [.. Repositories.Select(other => other.Config)]);
         await _services.Dialogs.ShowRepositoryEditorAsync(editor);
         if (editor.Result is not { } result)
             return;
 
         var item = new RepositoryItemViewModel(result.Repository, Plugins);
         Repositories.Add(item);
+        RefreshKeyNames();
         SaveRepositories();
         SelectedRepository = item;
         item.ShowResult(result.Created ? Strings.RepositoryCreated : Strings.RepositoryConnected, isError: false);
@@ -80,13 +82,14 @@ public partial class MainViewModel
     private async Task EditRepositoryAsync()
     {
         var item = SelectedRepository!;
-        var editor = new RepositoryEditorViewModel(_services, Borg, item.Config);
+        var editor = new RepositoryEditorViewModel(_services, Borg, item.Config, [.. Repositories.Select(other => other.Config)]);
         await _services.Dialogs.ShowRepositoryEditorAsync(editor);
         if (editor.Result is not { } result)
             return;
 
         item.Config = result.Repository;
         SaveRepositories();
+        RefreshKeyNames();
     }
 
     private bool CanEdit() => !IsWorking && SelectedRepository?.Provider is not null;
@@ -96,13 +99,10 @@ public partial class MainViewModel
     {
         var item = SelectedRepository!;
         var message = BorgTexts.Format(Strings.RemoveMessage, item.Name);
-        if (item.Config.SshKeyFile is not null)
+        if (item.Config.SshKeyId is not null)
             message += " " + Strings.RemoveSshHint;
         if (!await _services.Dialogs.ConfirmAsync(Strings.RemoveTitle, message, Strings.Remove))
             return;
-
-        if (item.Config is { SshKeyManaged: true, SshKeyFile: { } keyFile })
-            _services.SshKeys.Delete(keyFile);
 
         await RemovePassphraseAsync(item.Config);
 
@@ -110,6 +110,20 @@ public partial class MainViewModel
         Repositories.Remove(item);
         SaveRepositories();
         SelectedRepository = Repositories.Count == 0 ? null : Repositories[Math.Min(index, Repositories.Count - 1)];
+
+        await OfferToDeleteUnusedKeyAsync(item.Config.SshKeyId);
+    }
+
+    /// <summary>The key of a removed repository is used nowhere else: offer to delete it from the key list.</summary>
+    private async Task OfferToDeleteUnusedKeyAsync(Guid? keyId)
+    {
+        if (keyId is not { } id || Repositories.Any(other => other.Config.SshKeyId == id)
+            || _services.Vault.State != VaultState.Unlocked || _services.Vault.GetKey(id) is not { } key)
+            return;
+
+        if (await _services.Dialogs.ConfirmAsync(Strings.RemoveKeyTitle, BorgTexts.Format(Strings.RemoveKeyMessage, key.Name),
+                Strings.Delete, Strings.KeepKey))
+            _services.Vault.RemoveKey(id);
     }
 
     private bool CanRemove() => !IsWorking && SelectedRepository is not null;
@@ -199,7 +213,30 @@ public partial class MainViewModel
         if (location.Ssh is not { } endpoint)
             return new SshAccessHolder(null);
 
-        if (item.Config.SshKeyFile is not { } keyFile)
+        if (item.Config.HasLegacySshKey)
+        {
+            item.ShowResult(Strings.SshKeyLegacyNeedsPin, isError: true);
+            return null;
+        }
+
+        if (item.Config.SshKeyId is not { } keyId)
+        {
+            item.ShowResult(Strings.SshKeyMissing, isError: true);
+            return null;
+        }
+
+        try
+        {
+            if (!await VaultAccess.EnsureUnlockedAsync(_services.Vault, _services.Dialogs))
+                return null;
+        }
+        catch (SecretBoxException exception)
+        {
+            item.ShowResult(BorgTexts.Format(Strings.VaultError, exception.Message), isError: true);
+            return null;
+        }
+
+        if (_services.Vault.GetKey(keyId) is not { } key)
         {
             item.ShowResult(Strings.SshKeyMissing, isError: true);
             return null;
@@ -216,7 +253,7 @@ public partial class MainViewModel
             }
         }
 
-        return new SshAccessHolder(new SshAccess(keyFile, _services.SshKeys.KnownHostsFile));
+        return new SshAccessHolder(new SshAccess(key.PrivateKey, _services.SshKeys.KnownHostsFile));
     }
 
     private sealed record SshAccessHolder(SshAccess? Access);
