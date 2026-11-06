@@ -1,3 +1,4 @@
+using System.Globalization;
 using BorgStudio.App.Services;
 using BorgStudio.App.ViewModels;
 using BorgStudio.Core.Backups;
@@ -55,6 +56,12 @@ public sealed class FakeBorg : IProcessRunner
     /// <summary>What `borg key export` writes.</summary>
     public string ExportedKey { get; set; } = "BORG_KEY repo-id-1\nKEYDATA\n";
 
+    /// <summary>The archives in the (single) repository, oldest first; "create" adds one.</summary>
+    public List<(string Name, DateTime Start)> Archives { get; } = [];
+
+    /// <summary>When set, "info --last" fails with this message id.</summary>
+    public string? ArchiveDetailsError { get; set; }
+
     public Task<ProcessResult?> RunAsync(string fileName, IReadOnlyList<string> arguments, TimeSpan timeout,
         IReadOnlyDictionary<string, string?>? environment = null, string? standardInput = null,
         CancellationToken cancellationToken = default, Action<string>? standardErrorLine = null)
@@ -90,6 +97,16 @@ public sealed class FakeBorg : IProcessRunner
         if (arguments[0] == "create")
             return CreateAsync(arguments, standardErrorLine, cancellationToken);
 
+        if (arguments is ["list", ..])
+            return Result(0, "{\"archives\": [" + string.Join(", ", Archives.Select(archive => ArchiveJson(archive, details: false))) + "]}");
+        if (arguments is ["info", ..] && arguments.Contains("--last"))
+        {
+            if (ArchiveDetailsError is not null)
+                return Error(ArchiveDetailsError);
+            var last = int.Parse(arguments[arguments.ToList().IndexOf("--last") + 1], CultureInfo.InvariantCulture);
+            return Result(0, "{\"archives\": [" + string.Join(", ", Archives.TakeLast(last).Select(archive => ArchiveJson(archive, details: true))) + "]}");
+        }
+
         return arguments[0] switch
         {
             "init" => Result(0, ""),
@@ -100,6 +117,17 @@ public sealed class FakeBorg : IProcessRunner
             "info" => Result(0, $$$"""{"encryption": {"mode": "{{{EncryptionMode}}}"}, "repository": {"id": "repo-id-1"}}"""),
             _ => Result(2, ""),
         };
+    }
+
+    /// <summary>An archive as borg 1.4 reports it; the sizes are derived from the position so tests can tell them apart.</summary>
+    private string ArchiveJson((string Name, DateTime Start) archive, bool details)
+    {
+        var index = Archives.IndexOf(archive) + 1;
+        var id = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(archive.Name)));
+        var start = archive.Start.ToString("yyyy-MM-ddTHH:mm:ss.ffffff", CultureInfo.InvariantCulture);
+        return details
+            ? $$$"""{"name": "{{{archive.Name}}}", "id": "{{{id}}}", "start": "{{{start}}}", "duration": {{{index * 10}}}.5, "hostname": "host", "stats": {"original_size": {{{index * 1_000_000}}}, "compressed_size": {{{index * 500_000}}}, "deduplicated_size": {{{index * 1000}}}, "nfiles": {{{index * 100}}}}}"""
+            : $$"""{"archive": "{{archive.Name}}", "barchive": "{{archive.Name}}", "name": "{{archive.Name}}", "id": "{{id}}", "start": "{{start}}", "time": "{{start}}"}""";
     }
 
     /// <summary>Three progress lines, the warnings, then the final statistics.</summary>
@@ -118,6 +146,7 @@ public sealed class FakeBorg : IProcessRunner
 
         var target = arguments.First(argument => argument.Contains("::", StringComparison.Ordinal));
         var name = target[(target.IndexOf("::", StringComparison.Ordinal) + 2)..].Replace("{hostname}", "host").Replace("{now:%Y-%m-%dT%H:%M:%S}", "2026-11-06T10:00:00");
+        Archives.Add((name, new DateTime(2026, 11, 6, 10, 0, 0)));
         return Result(CreateWarnings.Count > 0 ? 1 : 0,
             "{\"archive\": {\"name\": \"" + name + "\", \"duration\": 2.5, \"stats\": {\"original_size\": 3000, \"compressed_size\": 1500, \"deduplicated_size\": 300, \"nfiles\": 30}}}");
     }
@@ -197,6 +226,7 @@ public sealed class TestServices : IDisposable
     public Vault Vault { get; }
     public SettingsStore Settings { get; }
     public BackupJobStore Jobs { get; }
+    public ArchiveCache Archives { get; }
     public AppServices Services { get; }
 
     /// <summary>Cheap key derivation: the tests check the logic, not the cost.</summary>
@@ -212,7 +242,8 @@ public sealed class TestServices : IDisposable
         Settings = new SettingsStore(Directory.Combine("settings.json"));
         Jobs = new BackupJobStore(Directory.Combine("jobs.json"));
         var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new SshProviderPlugin(), new HetznerProviderPlugin()], "no-plugins-here");
-        Services = new AppServices(Borg.Detector(), plugins, Store, Secrets, new BorgClient(Borg), Ssh, SshKeys, SshKeygen, Vault, Settings, Jobs, Dialogs);
+        Archives = new ArchiveCache(Directory.Combine("archives"), Vault);
+        Services = new AppServices(Borg.Detector(), plugins, Store, Secrets, new BorgClient(Borg), Ssh, SshKeys, SshKeygen, Vault, Settings, Jobs, Archives, Dialogs);
     }
 
     public KnownHostsFile KnownHosts => new(SshKeys.KnownHostsFile);

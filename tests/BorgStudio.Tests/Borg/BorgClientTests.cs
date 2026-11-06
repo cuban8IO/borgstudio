@@ -141,6 +141,39 @@ public class BorgClientTests
     }
 
     [Fact]
+    public void Archives_of_borg_list_and_borg_info_are_read_newest_first()
+    {
+        // Trimmed output of borg 1.4: "list --json" has no statistics, "info --json --last" has them.
+        var listed = BorgClient.ParseArchives(
+            """
+            {"archives": [
+              {"archive": "Docs-nb-2026-11-05", "barchive": "Docs-nb-2026-11-05", "id": "aa11", "name": "Docs-nb-2026-11-05", "start": "2026-11-05T08:00:00.000000", "time": "2026-11-05T08:00:00.000000"},
+              {"archive": "Docs-nb-2026-11-06", "barchive": "Docs-nb-2026-11-06", "id": "bb22", "name": "Docs-nb-2026-11-06", "start": "2026-11-06T09:30:15.123456", "time": "2026-11-06T09:30:15.123456"}
+            ], "encryption": {"mode": "repokey-blake2"}, "repository": {"id": "r1", "last_modified": "2026-11-06T09:31:00.000000", "location": "/repo"}}
+            """);
+        Assert.Equal(["Docs-nb-2026-11-06", "Docs-nb-2026-11-05"], listed.Select(archive => archive.Name));
+        Assert.Equal("bb22", listed[0].Id);
+        Assert.Equal(new DateTimeOffset(new DateTime(2026, 11, 6, 9, 30, 15, 123).AddTicks(4560)), listed[0].Start); // local time
+        Assert.Null(listed[0].Stats);
+        Assert.Null(listed[0].Duration);
+
+        var details = BorgClient.ParseArchives(
+            """
+            {"archives": [{"name": "Docs-nb-2026-11-06", "id": "bb22", "start": "2026-11-06T09:30:15.123456", "end": "2026-11-06T09:31:00.000000",
+              "duration": 44.9, "hostname": "nb", "stats": {"original_size": 5000, "compressed_size": 3000, "deduplicated_size": 120, "nfiles": 42}}]}
+            """);
+        var archive = Assert.Single(details);
+        Assert.Equal(TimeSpan.FromSeconds(44.9), archive.Duration);
+        Assert.Equal(new BorgArchiveStats(5000, 3000, 120, 42), archive.Stats);
+
+        // borg 1.2 lists whole seconds: archives of the same second keep borg's order (oldest first), reversed.
+        var sameSecond = BorgClient.ParseArchives(
+            """{"archives": [{"name": "a", "id": "1", "start": "2026-11-06T09:30:15"}, {"name": "b", "id": "2", "start": "2026-11-06T09:30:15"}, {"name": "c", "id": "3", "start": "2026-11-06T09:30:15"}]}""");
+        Assert.Equal(["c", "b", "a"], sameSecond.Select(archive => archive.Name));
+
+        Assert.Empty(BorgClient.ParseArchives("""{"archives": []}"""));
+    }
+    [Fact]
     public async Task Create_inside_WSL_runs_borg_through_the_pid_wrapper_with_translated_paths()
     {
         var runner = new RecordingRunner(new ProcessResult(0,

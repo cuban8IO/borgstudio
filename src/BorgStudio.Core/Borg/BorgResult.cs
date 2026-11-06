@@ -72,3 +72,11 @@ public sealed record BorgCreateProgress(long OriginalSize, long CompressedSize, 
 /// <param name="Warnings">What borg warned about, e.g. files it could not read.</param>
 public sealed record BorgCreateResult(string ArchiveName, long OriginalSize, long CompressedSize, long DeduplicatedSize, long Files,
     TimeSpan Duration, IReadOnlyList<string> Warnings);
+
+/// <summary>An archive in a repository.</summary>
+/// <param name="Duration">How long creating it took; <c>null</c> until details are loaded.</param>
+/// <param name="Stats">Its sizes; <c>null</c> until details are loaded.</param>
+public sealed record BorgArchive(string Name, string Id, DateTimeOffset Start, TimeSpan? Duration = null, BorgArchiveStats? Stats = null);
+
+/// <param name="DeduplicatedSize">What only this archive needs in the repository (its share of the repository).</param>
+public sealed record BorgArchiveStats(long OriginalSize, long CompressedSize, long DeduplicatedSize, long Files);

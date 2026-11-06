@@ -56,6 +56,9 @@ public partial class MainViewModel
         foreach (var repository in repositories)
             Repositories.Add(new RepositoryItemViewModel(repository, Plugins));
         SaveRepositories();
+        _services.Archives.RemoveAllExcept(Repositories.Select(item => item.Config.Id));
+        // The same id may now point somewhere else: the archives tab checks with borg again.
+        _archivesOf = null;
         SelectedRepository = Repositories.FirstOrDefault(item => item.Config.Id == selected) ?? Repositories.FirstOrDefault();
         RefreshKeyNames();
     }

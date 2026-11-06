@@ -49,7 +49,11 @@ public partial class MainViewModel
 
     private void SaveJobs() => _services.Jobs.Save(_jobs);
 
-    partial void OnSelectedRepositoryChanged(RepositoryItemViewModel? value) => RefreshRepositoryJobs();
+    partial void OnSelectedRepositoryChanged(RepositoryItemViewModel? value)
+    {
+        RefreshRepositoryJobs();
+        ResetArchives();
+    }
 
     private void RefreshRepositoryJobs()
     {
@@ -78,6 +82,7 @@ public partial class MainViewModel
         if (_jobs.RemoveAll(job => job.RepositoryId == repositoryId) > 0)
             SaveJobs();
         RefreshRepositoryJobs();
+        _services.Archives.Remove(repositoryId);
     }
 
     // --- New / edit / delete ---
@@ -197,6 +202,7 @@ public partial class MainViewModel
             RefreshRepositoryJobs();
         }
         IsBackupRunning = false;
+        ArchivesChanged(job.RepositoryId);
     }
 
     private static BackupRunSummary Summarize(BackupRunViewModel run, BorgResult<BorgCreateResult> result)
