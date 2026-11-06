@@ -21,7 +21,7 @@ public partial class MainViewModel
     public bool HasRepositoryJobs => RepositoryJobs.Count > 0;
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(EditJobCommand), nameof(DeleteJobCommand), nameof(RunJobCommand))]
+    [NotifyCanExecuteChangedFor(nameof(EditJobCommand), nameof(DeleteJobCommand), nameof(RunJobCommand), nameof(CleanUpJobCommand))]
     public partial BackupJobItemViewModel? SelectedJob { get; set; }
 
     /// <summary>The running backup, or the last one (with its outcome) until the next starts.</summary>
@@ -33,7 +33,8 @@ public partial class MainViewModel
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(RunJobCommand), nameof(CancelBackupCommand), nameof(DeleteJobCommand), nameof(EditJobCommand),
-        nameof(TestRepositoryCommand), nameof(ExportKeyCommand), nameof(RemoveRepositoryCommand), nameof(EditRepositoryCommand))]
+        nameof(TestRepositoryCommand), nameof(ExportKeyCommand), nameof(RemoveRepositoryCommand), nameof(EditRepositoryCommand),
+        nameof(CleanUpJobCommand), nameof(FreeSpaceCommand))]
     public partial bool IsBackupRunning { get; private set; }
 
     /// <summary>Completes when the running backup (if any) has ended.</summary>
@@ -181,10 +182,21 @@ public partial class MainViewModel
         var progress = new ViewModelProgress<BorgCreateProgress>(this, run.Report);
 
         BorgResult<BorgCreateResult> result;
+        BackupRunSummary summary;
         try
         {
             result = await _services.BorgClient.CreateAsync(borg, location, archive, job.Sources, options, passphrase.Value,
                 ssh.Access, progress, cancellation.Token);
+            summary = Summarize(run, result);
+
+            // A new archive: the job's old ones may go now.
+            if (summary.Outcome is BackupOutcome.Succeeded or BackupOutcome.Warnings && job.Retention is { HasRules: true } retention)
+            {
+                summary = summary with
+                {
+                    Cleanup = await PruneAndCompactAsync(run, job, retention, borg, location, ssh.Access, passphrase.Value, cancellation.Token),
+                };
+            }
         }
         finally
         {
@@ -192,7 +204,6 @@ public partial class MainViewModel
             _backupCancellation = null;
         }
 
-        var summary = Summarize(run, result);
         run.Finish(summary, result.Value?.Warnings ?? []);
         var index = _jobs.FindIndex(existing => existing.Id == job.Id);
         if (index >= 0)
@@ -245,6 +256,12 @@ public partial class MainViewModel
         safe = safe.Trim('-');
         return safe.Length > 0 ? safe : "backup";
     }
+
+    /// <summary>
+    /// The archives this computer created for the job – "Documents-{hostname}-*" – which is what its clean-up looks at.
+    /// With the host name a job "Documents-Old" (or another computer backing up into the same repository) stays out.
+    /// </summary>
+    public static string ArchiveGlob(string jobName) => $"{ArchivePrefix(jobName)}-{{hostname}}-*";
 
     private async Task TickAsync(BackupRunViewModel run, CancellationToken cancellationToken)
     {
@@ -303,4 +320,11 @@ public sealed class BackupJobItemViewModel(BackupJob job)
     public bool LastRunFailed => Job.LastRun?.Outcome is BackupOutcome.Failed;
 
     public bool LastRunWarned => Job.LastRun?.Outcome is BackupOutcome.Warnings or BackupOutcome.Cancelled;
+
+    /// <summary>"Behält: 7 täglich, 4 wöchentlich, 6 monatlich".</summary>
+    public string RetentionText => BorgTexts.Retention(Job.Retention) is { } rules
+        ? BorgTexts.Format(Strings.JobRetention, rules)
+        : Strings.JobRetentionNone;
+
+    public bool HasRetention => Job.Retention is { HasRules: true };
 }

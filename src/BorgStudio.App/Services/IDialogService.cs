@@ -40,4 +40,7 @@ public interface IDialogService
 
     /// <summary>Shows the backup job editor; the outcome is in <see cref="BackupJobEditorViewModel.Result"/>.</summary>
     Task ShowBackupJobEditorAsync(BackupJobEditorViewModel editor);
+
+    /// <summary>Shows which archives a clean-up would delete; <c>true</c> if the user confirms deleting them.</summary>
+    Task<bool> ConfirmPruneAsync(PrunePreviewViewModel preview);
 }

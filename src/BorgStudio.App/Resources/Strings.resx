@@ -1109,4 +1109,178 @@ Warning: the provider publishes the fingerprints of its servers, and this key ma
   <data name="ArchivesRefreshTip" xml:space="preserve">
     <value>Ask borg again, including the details of the newest archives</value>
   </data>
+  <data name="JobEditorCleanup" xml:space="preserve">
+    <value>Clean-up</value>
+  </data>
+  <data name="JobEditorCleanupEnabled" xml:space="preserve">
+    <value>Delete old archives of this job after each backup (borg prune)</value>
+  </data>
+  <data name="JobEditorCleanupHint" xml:space="preserve">
+    <value>For each period the newest archive is kept, everything else is deleted. Afterwards BorgStudio frees the space in the repository (borg compact). Only archives this computer created for this job are affected. 0 = rule not used.</value>
+  </data>
+  <data name="JobEditorKeepDaily" xml:space="preserve">
+    <value>Daily (days)</value>
+  </data>
+  <data name="JobEditorKeepWeekly" xml:space="preserve">
+    <value>Weekly (weeks)</value>
+  </data>
+  <data name="JobEditorKeepMonthly" xml:space="preserve">
+    <value>Monthly (months)</value>
+  </data>
+  <data name="JobEditorKeepYearly" xml:space="preserve">
+    <value>Yearly (years)</value>
+  </data>
+  <data name="JobEditorKeepHourly" xml:space="preserve">
+    <value>Hourly (hours)</value>
+  </data>
+  <data name="JobEditorKeepLast" xml:space="preserve">
+    <value>Newest archives</value>
+  </data>
+  <data name="JobEditorKeepWithin" xml:space="preserve">
+    <value>Everything from the last (days)</value>
+  </data>
+  <data name="JobEditorRetentionRequired" xml:space="preserve">
+    <value>Choose at least one rule for the clean-up (or switch it off).</value>
+  </data>
+  <data name="JobRetention" xml:space="preserve">
+    <value>Keeps: {0}</value>
+  </data>
+  <data name="JobRetentionNone" xml:space="preserve">
+    <value>Keeps all archives</value>
+  </data>
+  <data name="RetentionWithin" xml:space="preserve">
+    <value>everything from {0} days</value>
+  </data>
+  <data name="RetentionLast" xml:space="preserve">
+    <value>newest {0}</value>
+  </data>
+  <data name="RetentionHourly" xml:space="preserve">
+    <value>{0} hourly</value>
+  </data>
+  <data name="RetentionDaily" xml:space="preserve">
+    <value>{0} daily</value>
+  </data>
+  <data name="RetentionWeekly" xml:space="preserve">
+    <value>{0} weekly</value>
+  </data>
+  <data name="RetentionMonthly" xml:space="preserve">
+    <value>{0} monthly</value>
+  </data>
+  <data name="RetentionYearly" xml:space="preserve">
+    <value>{0} yearly</value>
+  </data>
+  <data name="JobCleanUp" xml:space="preserve">
+    <value>Clean up…</value>
+  </data>
+  <data name="JobCleanUpTip" xml:space="preserve">
+    <value>Deletes old archives of this job according to its rules (with a preview), then frees the space</value>
+  </data>
+  <data name="CleanupTitle" xml:space="preserve">
+    <value>Clean-up: {0}</value>
+  </data>
+  <data name="CleanupPreviewing" xml:space="preserve">
+    <value>Checking which archives to delete…</value>
+  </data>
+  <data name="CleanupPruning" xml:space="preserve">
+    <value>Deleting old archives…</value>
+  </data>
+  <data name="CleanupCompacting" xml:space="preserve">
+    <value>Freeing space…</value>
+  </data>
+  <data name="CleanupCompactingPercent" xml:space="preserve">
+    <value>Freeing space… {0} %</value>
+  </data>
+  <data name="CleanupDone" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="CleanupResult" xml:space="preserve">
+    <value>Clean-up: {0} old archives deleted, {1} freed.</value>
+  </data>
+  <data name="CleanupResultNoSize" xml:space="preserve">
+    <value>Clean-up: {0} old archives deleted, space freed.</value>
+  </data>
+  <data name="CleanupNothing" xml:space="preserve">
+    <value>Clean-up: nothing to delete.</value>
+  </data>
+  <data name="CleanupCancelled" xml:space="preserve">
+    <value>Clean-up cancelled.</value>
+  </data>
+  <data name="CleanupFailed" xml:space="preserve">
+    <value>Clean-up failed: {0}</value>
+  </data>
+  <data name="CleanupCompactFailed" xml:space="preserve">
+    <value>Clean-up: {0} old archives deleted, but freeing the space failed: {1}</value>
+  </data>
+  <data name="CleanupCompactCancelled" xml:space="preserve">
+    <value>Clean-up: {0} old archives deleted; freeing the space was cancelled.</value>
+  </data>
+  <data name="PruneTitle" xml:space="preserve">
+    <value>Clean up old archives</value>
+  </data>
+  <data name="PruneSummary" xml:space="preserve">
+    <value>Of {1} archives of “{0}”, {2} will be deleted and {3} kept.</value>
+  </data>
+  <data name="PruneRules" xml:space="preserve">
+    <value>Rules: {0}</value>
+  </data>
+  <data name="PruneHint" xml:space="preserve">
+    <value>Deleted archives cannot be restored. Afterwards the space is freed (borg compact).</value>
+  </data>
+  <data name="PruneConfirm" xml:space="preserve">
+    <value>Delete {0} archives</value>
+  </data>
+  <data name="PruneDeleted" xml:space="preserve">
+    <value>Deleted</value>
+  </data>
+  <data name="PruneKept" xml:space="preserve">
+    <value>Kept ({0})</value>
+  </data>
+  <data name="PruneKeptCheckpoint" xml:space="preserve">
+    <value>Kept (checkpoint)</value>
+  </data>
+  <data name="PruneRuleFormat" xml:space="preserve">
+    <value>{0} #{1}</value>
+  </data>
+  <data name="ArchiveColumnStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="RuleSecondly" xml:space="preserve">
+    <value>newest</value>
+  </data>
+  <data name="RuleMinutely" xml:space="preserve">
+    <value>minutely</value>
+  </data>
+  <data name="RuleHourly" xml:space="preserve">
+    <value>hourly</value>
+  </data>
+  <data name="RuleDaily" xml:space="preserve">
+    <value>daily</value>
+  </data>
+  <data name="RuleWeekly" xml:space="preserve">
+    <value>weekly</value>
+  </data>
+  <data name="RuleMonthly" xml:space="preserve">
+    <value>monthly</value>
+  </data>
+  <data name="RuleYearly" xml:space="preserve">
+    <value>yearly</value>
+  </data>
+  <data name="RuleWithin" xml:space="preserve">
+    <value>period</value>
+  </data>
+  <data name="FreeSpace" xml:space="preserve">
+    <value>Free space</value>
+  </data>
+  <data name="FreeSpaceTip" xml:space="preserve">
+    <value>borg compact: frees the space of deleted archives in the repository</value>
+  </data>
+  <data name="SpaceFreed" xml:space="preserve">
+    <value>Space freed: {0}.</value>
+  </data>
+  <data name="SpaceFreedNoSize" xml:space="preserve">
+    <value>Space freed.</value>
+  </data>
+  <data name="SpaceFreeCancelled" xml:space="preserve">
+    <value>Freeing space cancelled.</value>
+  </data>
 </root>

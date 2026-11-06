@@ -80,3 +80,21 @@ public sealed record BorgArchive(string Name, string Id, DateTimeOffset Start, T
 
 /// <param name="DeduplicatedSize">What only this archive needs in the repository (its share of the repository).</param>
 public sealed record BorgArchiveStats(long OriginalSize, long CompressedSize, long DeduplicatedSize, long Files);
+/// <summary>An archive as <c>borg prune --list</c> reports it: kept (and by which rule) or deleted.</summary>
+/// <param name="Rule">borg's rule name ("daily", "weekly", "within", "secondly" for --keep-last, …); <c>null</c> for
+/// deleted archives and kept checkpoints.</param>
+/// <param name="RuleNumber">Which archive of the rule it is (1 = newest).</param>
+public sealed record BorgPruneEntry(string Name, string Id, DateTimeOffset Start, bool Kept, string? Rule = null, int RuleNumber = 0)
+{
+    public bool IsCheckpoint => Kept && Rule is null;
+}
+
+/// <summary>The outcome of <c>borg prune</c> (or what it would do, with <c>--dry-run</c>), newest archive first.</summary>
+public sealed record BorgPruneResult(IReadOnlyList<BorgPruneEntry> Archives)
+{
+    public IReadOnlyList<BorgPruneEntry> Pruned => [.. Archives.Where(archive => !archive.Kept)];
+}
+
+/// <summary>The outcome of <c>borg compact</c>.</summary>
+/// <param name="FreedBytes">What it freed, as far as borg says (rounded); <c>null</c> if it didn't say.</param>
+public sealed record BorgCompactResult(long? FreedBytes);

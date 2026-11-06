@@ -63,4 +63,7 @@ public sealed class DialogService(Window owner) : IDialogService
 
     public Task ShowBackupJobEditorAsync(BackupJobEditorViewModel editor) =>
         new BackupJobEditorWindow { DataContext = editor }.ShowDialog(owner);
+
+    public Task<bool> ConfirmPruneAsync(PrunePreviewViewModel preview) =>
+        new PrunePreviewWindow { DataContext = preview }.ShowDialog<bool>(owner);
 }

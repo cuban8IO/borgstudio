@@ -55,6 +55,55 @@ internal static class BorgTexts
         _ => Strings.OutcomeFailed,
     };
 
+    /// <summary>"7 täglich, 4 wöchentlich, 6 monatlich"; <c>null</c> without rules.</summary>
+    public static string? Retention(Core.Backups.RetentionPolicy? policy)
+    {
+        if (policy is not { HasRules: true })
+            return null;
+
+        var parts = new List<string>();
+        void Add(int value, string format)
+        {
+            if (value > 0)
+                parts.Add(Format(format, value));
+        }
+
+        Add(policy.WithinDays, Strings.RetentionWithin);
+        Add(policy.Last, Strings.RetentionLast);
+        Add(policy.Hourly, Strings.RetentionHourly);
+        Add(policy.Daily, Strings.RetentionDaily);
+        Add(policy.Weekly, Strings.RetentionWeekly);
+        Add(policy.Monthly, Strings.RetentionMonthly);
+        Add(policy.Yearly, Strings.RetentionYearly);
+        return string.Join(", ", parts);
+    }
+
+    /// <summary>borg's prune rule ("daily", "secondly" for --keep-last, …) with its number: "täglich #1".</summary>
+    public static string PruneRule(string rule, int number) => Format(Strings.PruneRuleFormat, rule switch
+    {
+        "secondly" => Strings.RuleSecondly,
+        "minutely" => Strings.RuleMinutely,
+        "hourly" => Strings.RuleHourly,
+        "daily" => Strings.RuleDaily,
+        "weekly" => Strings.RuleWeekly,
+        "monthly" => Strings.RuleMonthly,
+        "yearly" => Strings.RuleYearly,
+        "within" => Strings.RuleWithin,
+        _ => rule,
+    }, number);
+
+    /// <summary>The clean-up after a backup (or on its own) in one sentence.</summary>
+    public static string Cleanup(Core.Backups.CleanupSummary cleanup) => cleanup switch
+    {
+        { PrunedArchives: 0, Cancelled: true } => Strings.CleanupCancelled,
+        { PrunedArchives: 0, Error: { } error } => Format(Strings.CleanupFailed, error),
+        { PrunedArchives: 0 } => Strings.CleanupNothing,
+        { Cancelled: true } => Format(Strings.CleanupCompactCancelled, cleanup.PrunedArchives),
+        { Error: { } error } => Format(Strings.CleanupCompactFailed, cleanup.PrunedArchives, error),
+        { FreedBytes: { } freed } => Format(Strings.CleanupResult, cleanup.PrunedArchives, Size(freed)),
+        _ => Format(Strings.CleanupResultNoSize, cleanup.PrunedArchives),
+    };
+
     /// <summary>"512 B", "3,4 MB", "1,25 GB" (binary units, current culture).</summary>
     public static string Size(long bytes)
     {

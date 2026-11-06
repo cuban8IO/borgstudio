@@ -227,6 +227,52 @@ public sealed class BorgClientIntegrationTests : IDisposable
         Assert.Contains("big.checkpoint", archives);
     }
 
+    [BorgFact]
+    public async Task Prunes_the_archives_of_one_job_and_frees_the_space()
+    {
+        await _client.InitAsync(Borg, Location(), BorgEncryption.RepokeyBlake2, Passphrase);
+        var source = _directory.Combine("source");
+        Directory.CreateDirectory(source);
+        foreach (var name in new[] { "Docs-{hostname}-1", "Docs-{hostname}-2", "Docs-Old-{hostname}-1", "Docs-{hostname}-3" })
+        {
+            // Different content each time, so deleting an archive leaves something to free.
+            var random = new Random(name.GetHashCode(StringComparison.Ordinal));
+            var data = new byte[200_000];
+            random.NextBytes(data);
+            File.WriteAllBytes(Path.Combine(source, "data.bin"), data);
+            Assert.True((await _client.CreateAsync(Borg, Location(), name, [source], ["--compression", "none"], Passphrase)).Succeeded);
+        }
+        var keepLast = new Core.Backups.RetentionPolicy { Last = 1 }.Arguments();
+
+        var preview = await _client.PruneAsync(Borg, Location(), "Docs-{hostname}-*", keepLast, dryRun: true, Passphrase);
+
+        Assert.True(preview.Succeeded, preview.Error?.ToString());
+        Assert.Equal(3, preview.Value!.Archives.Count); // "Docs-Old-…" is another job
+        var kept = preview.Value.Archives[0];
+        Assert.True(kept.Kept);
+        Assert.EndsWith("-3", kept.Name, StringComparison.Ordinal);
+        Assert.Equal(("secondly", 1), (kept.Rule, kept.RuleNumber)); // borg's name for --keep-last
+        Assert.Equal(64, kept.Id.Length);
+        Assert.Equal(2, preview.Value.Pruned.Count);
+        Assert.Equal(4, (await _client.ListArchivesAsync(Borg, Location(), Passphrase)).Value!.Count); // nothing deleted yet
+
+        var pruned = await _client.PruneAsync(Borg, Location(), "Docs-{hostname}-*", keepLast, dryRun: false, Passphrase);
+
+        Assert.True(pruned.Succeeded, pruned.Error?.ToString());
+        Assert.Equal(2, pruned.Value!.Pruned.Count);
+        var left = (await _client.ListArchivesAsync(Borg, Location(), Passphrase)).Value!.Select(archive => archive.Name).ToList();
+        Assert.Equal(2, left.Count);
+        Assert.Contains(left, name => name.StartsWith("Docs-Old-", StringComparison.Ordinal));
+        Assert.Contains(left, name => name.EndsWith("-3", StringComparison.Ordinal));
+
+        var progress = new List<double>();
+        var compacted = await _client.CompactAsync(Borg, Location(), progress: new SynchronousProgress<double>(progress.Add));
+
+        Assert.True(compacted.Succeeded, compacted.Error?.ToString());
+        Assert.True(compacted.Value!.FreedBytes > 100_000, $"freed {compacted.Value.FreedBytes}");
+        Assert.NotEmpty(progress);
+    }
+
     /// <summary>Calls the progress callback right away (Progress&lt;T&gt; would post it to a thread pool).</summary>
     private sealed class SynchronousProgress<T>(Action<T> report) : IProgress<T>
     {
