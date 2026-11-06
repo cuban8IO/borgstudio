@@ -33,10 +33,55 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
     private static readonly TimeSpan KeyExportTimeout = TimeSpan.FromMinutes(2);
     private static readonly TimeSpan CopyTimeout = TimeSpan.FromSeconds(30);
 
+    // Large first backups take hours; the user can always cancel.
+    private static readonly TimeSpan CreateTimeout = TimeSpan.FromDays(3);
+
     /// <summary>Where SSH files are copied to inside WSL (ssh there rejects keys with Windows permissions).</summary>
     private const string WslSshDirectory = "~/.borgstudio/ssh";
 
     private const string KeyFilePrefix = "key-";
+
+    /// <summary>Runs borg ("$0") with its arguments after telling its process id (exec keeps the id).</summary>
+    private const string PidWrapper = "echo \"" + PidMarker + "$$\" >&2; exec \"$0\" \"$@\"";
+
+    private const string PidMarker = "BORGSTUDIO_PID ";
+
+    /// <summary>How long an interrupted borg gets to stop cleanly (e.g. to write a checkpoint) before it is killed.</summary>
+    public static TimeSpan InterruptGrace { get; set; } = TimeSpan.FromSeconds(60);
+
+    /// <summary>Sends SIGINT to borg (inside WSL if it runs there); kills it if that is not possible or not enough.</summary>
+    private async Task InterruptAsync(string? pid, bool wsl, CancellationTokenSource hardStop)
+    {
+        try
+        {
+            if (pid is null || !int.TryParse(pid, out _))
+            {
+                hardStop.Cancel();
+                return;
+            }
+
+            ProcessResult? sent;
+            try
+            {
+                sent = wsl
+                    ? await processRunner.RunAsync(wslExecutable!, ["-e", "kill", "-INT", pid], CopyTimeout)
+                    : await processRunner.RunAsync("kill", ["-INT", pid], CopyTimeout);
+            }
+            catch (TimeoutException)
+            {
+                sent = null;
+            }
+
+            if (sent is { ExitCode: 0 })
+                hardStop.CancelAfter(InterruptGrace);
+            else
+                hardStop.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // borg has exited in the meantime.
+        }
+    }
 
     private static readonly string[] ForwardedVariables =
     [
@@ -86,6 +131,114 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
 
         var result = await RunAsync(borg, location, ssh, ["key", "export"], [], [target], null, KeyExportTimeout, cancellationToken);
         return result.Succeeded ? BorgResult<bool>.Success(true) : BorgResult<bool>.Failure(result.Error!);
+    }
+
+    /// <summary>
+    /// <c>borg create</c>: backs up <paramref name="sources"/> (paths on this computer) into a new archive, reporting
+    /// progress as it goes. Cancelling interrupts borg cleanly (SIGINT), so it leaves a checkpoint archive the next run
+    /// builds on. Files borg could not read make the result succeed with <see cref="BorgCreateResult.Warnings"/>.
+    /// </summary>
+    /// <param name="archive">Archive name; borg placeholders such as {hostname} and {now} are allowed.</param>
+    /// <param name="options">E.g. compression and the exclusions (<see cref="Backups.BackupPatterns"/>).</param>
+    public async Task<BorgResult<BorgCreateResult>> CreateAsync(
+        BorgInstallation borg, RepositoryLocation location, string archive, IReadOnlyList<string> sources,
+        IReadOnlyList<string> options, string? passphrase, SshAccess? ssh = null,
+        IProgress<BorgCreateProgress>? progress = null, CancellationToken cancellationToken = default)
+    {
+        var paths = new List<string>();
+        foreach (var source in sources)
+        {
+            if (BorgPath(borg, source) is not { } path)
+                return BorgResult<BorgCreateResult>.Failure(new BorgError(BorgErrorKind.UnsupportedPath, source));
+            paths.Add(path);
+        }
+
+        var warnings = new List<string>();
+        void OnLine(string line)
+        {
+            if (ParseProgress(line) is { } update)
+                progress?.Report(update);
+            else if (ParseWarning(line) is { } warning)
+                warnings.Add(warning);
+        }
+
+        var result = await RunAsync(borg, location, ssh, ["create"], ["--progress", "--json", .. options], paths,
+            passphrase, CreateTimeout, cancellationToken, archive, OnLine, interruptible: true);
+        if (!result.Succeeded)
+            return BorgResult<BorgCreateResult>.Failure(result.Error!);
+
+        try
+        {
+            return BorgResult<BorgCreateResult>.Success(ParseCreate(result.Value!) with { Warnings = warnings });
+        }
+        catch (Exception exception) when (exception is JsonException or KeyNotFoundException or InvalidOperationException)
+        {
+            return BorgResult<BorgCreateResult>.Failure(new BorgError(BorgErrorKind.Other, exception.Message));
+        }
+    }
+
+    /// <summary>A path on this computer as borg sees it: unchanged, or "/mnt/c/…" inside WSL (<c>null</c> if WSL cannot reach it).</summary>
+    public static string? BorgPath(BorgInstallation borg, string path) =>
+        borg.Runtime == BorgRuntime.Wsl ? ToWslPath(path) : path;
+
+    /// <summary>A progress line of <c>borg create --progress --log-json</c>; <c>null</c> for any other line.</summary>
+    internal static BorgCreateProgress? ParseProgress(string line)
+    {
+        if (!line.Contains("\"archive_progress\"", StringComparison.Ordinal))
+            return null;
+        try
+        {
+            using var document = JsonDocument.Parse(line);
+            var root = document.RootElement;
+            if (root.GetProperty("type").GetString() != "archive_progress")
+                return null;
+            long Number(string name) => root.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.Number ? value.GetInt64() : 0;
+            var finished = root.TryGetProperty("finished", out var done) && done.ValueKind == JsonValueKind.True;
+            var path = root.TryGetProperty("path", out var current) && current.ValueKind == JsonValueKind.String ? current.GetString() : null;
+            return new BorgCreateProgress(Number("original_size"), Number("compressed_size"), Number("deduplicated_size"),
+                Number("nfiles"), path, finished);
+        }
+        catch (Exception exception) when (exception is JsonException or KeyNotFoundException or InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>A warning borg logged (e.g. a file it could not read); <c>null</c> for any other line.</summary>
+    internal static string? ParseWarning(string line)
+    {
+        if (!line.Contains("\"WARNING\"", StringComparison.Ordinal))
+            return null;
+        try
+        {
+            using var document = JsonDocument.Parse(line);
+            var root = document.RootElement;
+            return root.TryGetProperty("type", out var type) && type.GetString() == "log_message"
+                && root.TryGetProperty("levelname", out var level) && level.GetString() == "WARNING"
+                && root.TryGetProperty("message", out var message)
+                ? message.GetString()
+                : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>The JSON <c>borg create --json</c> prints at the end.</summary>
+    internal static BorgCreateResult ParseCreate(string json)
+    {
+        using var document = JsonDocument.Parse(json);
+        var archive = document.RootElement.GetProperty("archive");
+        var stats = archive.GetProperty("stats");
+        return new BorgCreateResult(
+            archive.GetProperty("name").GetString()!,
+            stats.GetProperty("original_size").GetInt64(),
+            stats.GetProperty("compressed_size").GetInt64(),
+            stats.GetProperty("deduplicated_size").GetInt64(),
+            stats.GetProperty("nfiles").GetInt64(),
+            TimeSpan.FromSeconds(archive.TryGetProperty("duration", out var duration) ? duration.GetDouble() : 0),
+            []);
     }
 
     /// <summary>
@@ -159,13 +312,19 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
     public static string ShellQuote(string value) => "'" + value.Replace("'", "'\"'\"'") + "'";
 
     /// <summary>
-    /// <c>borg &lt;command&gt; --log-json &lt;provider arguments&gt; &lt;options&gt; &lt;repository&gt; &lt;trailing&gt;</c>;
+    /// <c>borg &lt;command&gt; --log-json &lt;provider arguments&gt; &lt;options&gt; &lt;repository&gt;[::&lt;archive&gt;] &lt;trailing&gt;</c>;
     /// returns standard output on success.
     /// </summary>
+    /// <param name="standardErrorLine">borg's JSON log lines as they arrive (progress).</param>
+    /// <param name="interruptible">
+    /// Cancelling interrupts borg like Ctrl+C (SIGINT), so it can stop cleanly, instead of killing it; it is killed only
+    /// if it doesn't stop within <see cref="InterruptGrace"/>.
+    /// </param>
     private async Task<BorgResult<string>> RunAsync(
         BorgInstallation borg, RepositoryLocation location, SshAccess? ssh,
         IReadOnlyList<string> command, IReadOnlyList<string> options, IReadOnlyList<string> trailing,
-        string? passphrase, TimeSpan timeout, CancellationToken cancellationToken)
+        string? passphrase, TimeSpan timeout, CancellationToken cancellationToken,
+        string? archive = null, Action<string>? standardErrorLine = null, bool interruptible = false)
     {
         var wsl = borg.Runtime == BorgRuntime.Wsl;
         if (wsl && wslExecutable is null)
@@ -178,6 +337,8 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
                 return BorgResult<string>.Failure(new BorgError(BorgErrorKind.UnsupportedPath, location.Url));
             repository = translated;
         }
+        if (archive is not null)
+            repository += "::" + archive;
 
         List<string> arguments = [.. command, "--log-json", .. location.BorgArguments, .. options, repository, .. trailing];
 
@@ -203,7 +364,8 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
 
         try
         {
-            return await RunBorgAsync(borg, location, arguments, environment, sshFiles, timeout, cancellationToken);
+            return await RunBorgAsync(borg, location, arguments, environment, sshFiles, timeout, cancellationToken,
+                standardErrorLine, interruptible);
         }
         finally
         {
@@ -214,33 +376,68 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
 
     private async Task<BorgResult<string>> RunBorgAsync(BorgInstallation borg, RepositoryLocation location,
         List<string> arguments, Dictionary<string, string?> environment, SshFiles? sshFiles, TimeSpan timeout,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, Action<string>? standardErrorLine, bool interruptible)
     {
         var wsl = borg.Runtime == BorgRuntime.Wsl;
+        // Signals need a POSIX system: natively on Linux/macOS, or inside WSL.
+        interruptible &= wsl || !OperatingSystem.IsWindows();
 
         string fileName;
         if (wsl)
         {
             fileName = wslExecutable!;
-            arguments.InsertRange(0, ["-e", borg.Path]);
+            arguments.InsertRange(0, interruptible ? ["-e", "sh", "-c", PidWrapper, borg.Path] : ["-e", borg.Path]);
             // WSL only passes on the Windows environment variables listed in WSLENV.
             var existing = Environment.GetEnvironmentVariable("WSLENV");
             environment["WSLENV"] = string.Join(':', new[] { existing }.Where(value => !string.IsNullOrEmpty(value)).Concat(ForwardedVariables));
+        }
+        else if (interruptible)
+        {
+            fileName = "sh";
+            arguments.InsertRange(0, ["-c", PidWrapper, borg.Path]);
         }
         else
         {
             fileName = borg.Path;
         }
 
+        // Cancelling an interruptible call: SIGINT first, a hard stop only after the grace period.
+        using var hardStop = interruptible
+            ? new CancellationTokenSource()
+            : CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        string? pid = null;
+        using var onCancel = interruptible
+            ? cancellationToken.Register(() => _ = InterruptAsync(pid, wsl, hardStop))
+            : default;
+
+        void OnLine(string line)
+        {
+            if (interruptible && pid is null && line.StartsWith(PidMarker, StringComparison.Ordinal))
+            {
+                pid = line[PidMarker.Length..].Trim();
+                return;
+            }
+            standardErrorLine?.Invoke(line);
+        }
+
         ProcessResult? result;
         try
         {
-            result = await processRunner.RunAsync(fileName, arguments, timeout, environment, cancellationToken: cancellationToken);
+            result = await processRunner.RunAsync(fileName, arguments, timeout, environment,
+                cancellationToken: hardStop.Token,
+                standardErrorLine: interruptible || standardErrorLine is not null ? OnLine : null);
         }
         catch (TimeoutException)
         {
             return BorgResult<string>.Failure(new BorgError(BorgErrorKind.Timeout));
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            return BorgResult<string>.Failure(new BorgError(BorgErrorKind.Cancelled));
+        }
+
+        if (result is not null && cancellationToken.IsCancellationRequested)
+            return BorgResult<string>.Failure(new BorgError(BorgErrorKind.Cancelled, result.StandardOutput));
 
         if (result is null)
             return BorgResult<string>.Failure(new BorgError(BorgErrorKind.NotStartable, fileName));

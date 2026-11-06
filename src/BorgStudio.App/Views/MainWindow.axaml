@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:BorgStudio.App.ViewModels"
         xmlns:res="using:BorgStudio.App.Resources"
+        xmlns:sys="using:System"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
@@ -112,68 +113,165 @@
                         Classes="accent" HorizontalAlignment="Center" Margin="0,8,0,0" />
             </StackPanel>
 
-            <!-- Details of the selected repository -->
-            <ScrollViewer Grid.Column="1" IsVisible="{Binding HasSelection}">
-                <StackPanel Margin="16,4,24,16" Spacing="14">
-                    <StackPanel Spacing="2">
-                        <TextBlock Text="{Binding SelectedRepository.Name}" FontSize="22" FontWeight="SemiBold"
-                                   TextWrapping="Wrap" />
-                        <TextBlock Text="{Binding SelectedRepository.ProviderName}" Opacity="0.7" />
-                    </StackPanel>
-
-                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
-                        <Grid.Styles>
-                            <Style Selector="TextBlock.label">
-                                <Setter Property="Opacity" Value="0.7" />
-                                <Setter Property="Margin" Value="0,0,16,8" />
-                            </Style>
-                            <Style Selector="SelectableTextBlock">
-                                <Setter Property="Margin" Value="0,0,0,8" />
-                                <Setter Property="TextWrapping" Value="Wrap" />
-                            </Style>
-                        </Grid.Styles>
-                        <TextBlock Classes="label" Text="{x:Static res:Strings.LabelLocation}" />
-                        <SelectableTextBlock Grid.Column="1" Text="{Binding SelectedRepository.LocationText}" />
-                        <TextBlock Grid.Row="1" Classes="label" Text="{x:Static res:Strings.LabelEncryption}" />
-                        <SelectableTextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedRepository.EncryptionText}" />
-                        <TextBlock Grid.Row="2" Classes="label" Text="{x:Static res:Strings.LabelPassphrase}" />
-                        <SelectableTextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedRepository.PassphraseText}" />
-                        <TextBlock Grid.Row="3" Classes="label" Text="{x:Static res:Strings.LabelBorgVersion}" />
-                        <SelectableTextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedRepository.BorgVersionText}" />
-                        <TextBlock Grid.Row="4" Classes="label" Text="{x:Static res:Strings.LabelSshKey}"
-                                   IsVisible="{Binding SelectedRepository.IsSsh}" />
-                        <SelectableTextBlock Grid.Row="4" Grid.Column="1" Text="{Binding SelectedRepository.SshKeyText}"
-                                             IsVisible="{Binding SelectedRepository.IsSsh}" />
-                    </Grid>
-
-                    <Border IsVisible="{Binding SelectedRepository.IsKeyfile}" Padding="12,10" CornerRadius="6" BorderThickness="1"
-                            Background="{DynamicResource WarningBackground}" BorderBrush="{DynamicResource WarningBorder}">
-                        <TextBlock Text="{x:Static res:Strings.KeyfileWarning}" TextWrapping="Wrap" />
-                    </Border>
-
-                    <WrapPanel>
-                        <WrapPanel.Styles>
-                            <Style Selector="Button">
-                                <Setter Property="Margin" Value="0,0,8,8" />
-                            </Style>
-                        </WrapPanel.Styles>
-                        <Button Content="{x:Static res:Strings.TestConnection}" Command="{Binding TestRepositoryCommand}" Classes="accent" />
-                        <Button Content="{x:Static res:Strings.ExportKey}" Command="{Binding ExportKeyCommand}" />
-                        <Button Content="{x:Static res:Strings.Edit}" Command="{Binding EditRepositoryCommand}" />
-                        <Button Content="{x:Static res:Strings.Remove}" Command="{Binding RemoveRepositoryCommand}" />
-                    </WrapPanel>
-
-                    <StackPanel Spacing="4" IsVisible="{Binding IsWorking}">
-                        <ProgressBar IsIndeterminate="True" />
-                        <TextBlock Text="{Binding WorkingText}" FontSize="12" />
-                    </StackPanel>
-
-                    <TextBlock Text="{Binding SelectedRepository.ResultText}" TextWrapping="Wrap"
-                               IsVisible="{Binding SelectedRepository.HasSuccess}" Foreground="{DynamicResource SuccessForeground}" />
-                    <TextBlock Text="{Binding SelectedRepository.ResultText}" TextWrapping="Wrap"
-                               IsVisible="{Binding SelectedRepository.HasError}" Foreground="{DynamicResource ErrorForeground}" />
+            <!-- Details of the selected repository, in tabs -->
+            <DockPanel Grid.Column="1" IsVisible="{Binding HasSelection}" Margin="16,4,24,16">
+                <StackPanel DockPanel.Dock="Top" Spacing="2" Margin="0,0,0,6">
+                    <TextBlock Text="{Binding SelectedRepository.Name}" FontSize="22" FontWeight="SemiBold" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding SelectedRepository.ProviderName}" Opacity="0.7" />
                 </StackPanel>
-            </ScrollViewer>
+
+                <TabControl Padding="0">
+                    <TabItem Header="{x:Static res:Strings.TabOverview}">
+                        <ScrollViewer>
+                            <StackPanel Spacing="14" Margin="0,12,0,0">
+                                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+                                    <Grid.Styles>
+                                        <Style Selector="TextBlock.label">
+                                            <Setter Property="Opacity" Value="0.7" />
+                                            <Setter Property="Margin" Value="0,0,16,8" />
+                                        </Style>
+                                        <Style Selector="SelectableTextBlock">
+                                            <Setter Property="Margin" Value="0,0,0,8" />
+                                            <Setter Property="TextWrapping" Value="Wrap" />
+                                        </Style>
+                                    </Grid.Styles>
+                                    <TextBlock Classes="label" Text="{x:Static res:Strings.LabelLocation}" />
+                                    <SelectableTextBlock Grid.Column="1" Text="{Binding SelectedRepository.LocationText}" />
+                                    <TextBlock Grid.Row="1" Classes="label" Text="{x:Static res:Strings.LabelEncryption}" />
+                                    <SelectableTextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedRepository.EncryptionText}" />
+                                    <TextBlock Grid.Row="2" Classes="label" Text="{x:Static res:Strings.LabelPassphrase}" />
+                                    <SelectableTextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedRepository.PassphraseText}" />
+                                    <TextBlock Grid.Row="3" Classes="label" Text="{x:Static res:Strings.LabelBorgVersion}" />
+                                    <SelectableTextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedRepository.BorgVersionText}" />
+                                    <TextBlock Grid.Row="4" Classes="label" Text="{x:Static res:Strings.LabelSshKey}"
+                                               IsVisible="{Binding SelectedRepository.IsSsh}" />
+                                    <SelectableTextBlock Grid.Row="4" Grid.Column="1" Text="{Binding SelectedRepository.SshKeyText}"
+                                                         IsVisible="{Binding SelectedRepository.IsSsh}" />
+                                </Grid>
+
+                                <Border IsVisible="{Binding SelectedRepository.IsKeyfile}" Padding="12,10" CornerRadius="6" BorderThickness="1"
+                                        Background="{DynamicResource WarningBackground}" BorderBrush="{DynamicResource WarningBorder}">
+                                    <TextBlock Text="{x:Static res:Strings.KeyfileWarning}" TextWrapping="Wrap" />
+                                </Border>
+
+                                <WrapPanel>
+                                    <WrapPanel.Styles>
+                                        <Style Selector="Button">
+                                            <Setter Property="Margin" Value="0,0,8,8" />
+                                        </Style>
+                                    </WrapPanel.Styles>
+                                    <Button Content="{x:Static res:Strings.TestConnection}" Command="{Binding TestRepositoryCommand}" Classes="accent" />
+                                    <Button Content="{x:Static res:Strings.ExportKey}" Command="{Binding ExportKeyCommand}" />
+                                    <Button Content="{x:Static res:Strings.Edit}" Command="{Binding EditRepositoryCommand}" />
+                                    <Button Content="{x:Static res:Strings.Remove}" Command="{Binding RemoveRepositoryCommand}" />
+                                </WrapPanel>
+
+                                <StackPanel Spacing="4" IsVisible="{Binding IsWorking}">
+                                    <ProgressBar IsIndeterminate="True" />
+                                    <TextBlock Text="{Binding WorkingText}" FontSize="12" />
+                                </StackPanel>
+
+                                <TextBlock Text="{Binding SelectedRepository.ResultText}" TextWrapping="Wrap"
+                                           IsVisible="{Binding SelectedRepository.HasSuccess}" Foreground="{DynamicResource SuccessForeground}" />
+                                <TextBlock Text="{Binding SelectedRepository.ResultText}" TextWrapping="Wrap"
+                                           IsVisible="{Binding SelectedRepository.HasError}" Foreground="{DynamicResource ErrorForeground}" />
+                            </StackPanel>
+                        </ScrollViewer>
+                    </TabItem>
+
+                    <TabItem Header="{x:Static res:Strings.TabJobs}">
+                        <DockPanel Margin="0,12,0,0">
+                            <WrapPanel DockPanel.Dock="Top">
+                                <WrapPanel.Styles>
+                                    <Style Selector="Button">
+                                        <Setter Property="Margin" Value="0,0,8,8" />
+                                    </Style>
+                                </WrapPanel.Styles>
+                                <Button Content="{x:Static res:Strings.JobRun}" Command="{Binding RunJobCommand}" Classes="accent" />
+                                <Button Content="{x:Static res:Strings.JobNew}" Command="{Binding NewJobCommand}" />
+                                <Button Content="{x:Static res:Strings.Edit}" Command="{Binding EditJobCommand}" />
+                                <Button Content="{x:Static res:Strings.Delete}" Command="{Binding DeleteJobCommand}" />
+                            </WrapPanel>
+
+                            <!-- The running (or last) backup -->
+                            <Border DockPanel.Dock="Bottom" Classes="card" Margin="0,12,0,0" IsVisible="{Binding HasBackupRun}">
+                                <StackPanel Spacing="8">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Text="{Binding CurrentBackup.JobName}" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding CurrentBackup.StatusText}" FontSize="12" Opacity="0.8" />
+                                        </StackPanel>
+                                        <Button Grid.Column="1" Content="{x:Static res:Strings.Cancel}" Command="{Binding CancelBackupCommand}"
+                                                IsVisible="{Binding IsBackupRunning}" VerticalAlignment="Center" />
+                                    </Grid>
+                                    <ProgressBar Minimum="0" Maximum="1" Value="{Binding CurrentBackup.Fraction}"
+                                                 IsIndeterminate="{Binding CurrentBackup.IsIndeterminate}"
+                                                 IsVisible="{Binding CurrentBackup.IsRunning}" />
+                                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" IsVisible="{Binding CurrentBackup.IsRunning}">
+                                        <Grid.Styles>
+                                            <Style Selector="TextBlock">
+                                                <Setter Property="FontSize" Value="12" />
+                                                <Setter Property="Margin" Value="0,0,16,4" />
+                                            </Style>
+                                            <Style Selector="TextBlock.label">
+                                                <Setter Property="Opacity" Value="0.7" />
+                                            </Style>
+                                        </Grid.Styles>
+                                        <TextBlock Classes="label" Text="{x:Static res:Strings.BackupLabelProcessed}" />
+                                        <TextBlock Grid.Column="1" Text="{Binding CurrentBackup.ProcessedText}" />
+                                        <TextBlock Grid.Row="1" Classes="label" Text="{x:Static res:Strings.BackupLabelUpload}" />
+                                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding CurrentBackup.UploadText}" />
+                                        <TextBlock Grid.Row="2" Classes="label" Text="{x:Static res:Strings.BackupLabelElapsed}" />
+                                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding CurrentBackup.ElapsedText}" />
+                                        <TextBlock Grid.Row="3" Classes="label" Text="{x:Static res:Strings.BackupLabelRemaining}" />
+                                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding CurrentBackup.RemainingText}" />
+                                        <TextBlock Grid.Row="4" Classes="label" Text="{x:Static res:Strings.BackupLabelCurrent}" />
+                                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding CurrentBackup.CurrentPath}"
+                                                   TextTrimming="LeadingCharacterEllipsis" />
+                                    </Grid>
+                                    <SelectableTextBlock Text="{Binding CurrentBackup.ResultText}" TextWrapping="Wrap"
+                                                         IsVisible="{Binding CurrentBackup.HasResult}" />
+                                    <ItemsControl ItemsSource="{Binding CurrentBackup.WarningsShown}" IsVisible="{Binding CurrentBackup.HasWarnings}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="sys:String">
+                                                <SelectableTextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="12"
+                                                                     Foreground="{DynamicResource WarningBorder}" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+
+                            <Panel>
+                                <ListBox ItemsSource="{Binding RepositoryJobs}" SelectedItem="{Binding SelectedJob}">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:BackupJobItemViewModel">
+                                            <StackPanel Spacing="2" Margin="2,4">
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding SourcesText}" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding LastRunText}" FontSize="12" Opacity="0.85" TextWrapping="Wrap"
+                                                           Classes.failed="{Binding LastRunFailed}" Classes.warned="{Binding LastRunWarned}">
+                                                    <TextBlock.Styles>
+                                                        <Style Selector="TextBlock.failed">
+                                                            <Setter Property="Foreground" Value="{DynamicResource ErrorForeground}" />
+                                                        </Style>
+                                                        <Style Selector="TextBlock.warned">
+                                                            <Setter Property="Foreground" Value="{DynamicResource WarningBorder}" />
+                                                        </Style>
+                                                    </TextBlock.Styles>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                                <TextBlock Text="{x:Static res:Strings.JobsEmpty}" IsVisible="{Binding !HasRepositoryJobs}"
+                                           TextWrapping="Wrap" Opacity="0.7" Margin="16" HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" TextAlignment="Center" MaxWidth="360" />
+                            </Panel>
+                        </DockPanel>
+                    </TabItem>
+                </TabControl>
+            </DockPanel>
         </Grid>
     </DockPanel>
 

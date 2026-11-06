@@ -1,5 +1,6 @@
 using BorgStudio.App.Services;
 using BorgStudio.App.ViewModels;
+using BorgStudio.Core.Backups;
 using BorgStudio.Core.Borg;
 using BorgStudio.Core.Plugins;
 using BorgStudio.Core.Processes;
@@ -45,13 +46,26 @@ public sealed class FakeBorg : IProcessRunner
     /// <summary>Keys put into borg's key folder (through `sh -c`).</summary>
     public List<string> InstalledKeyfiles { get; } = [];
 
+    /// <summary>Warnings `borg create` logs (it then exits with 1).</summary>
+    public List<string> CreateWarnings { get; } = [];
+
+    /// <summary>Called after each progress line of `borg create` (e.g. to cancel in the middle).</summary>
+    public Action<int>? AfterCreateProgress { get; set; }
+
     /// <summary>What `borg key export` writes.</summary>
     public string ExportedKey { get; set; } = "BORG_KEY repo-id-1\nKEYDATA\n";
 
     public Task<ProcessResult?> RunAsync(string fileName, IReadOnlyList<string> arguments, TimeSpan timeout,
         IReadOnlyDictionary<string, string?>? environment = null, string? standardInput = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default, Action<string>? standardErrorLine = null)
     {
+        // Interruptible calls run borg through a small sh wrapper (on Linux/macOS).
+        if (fileName == "sh" && arguments is ["-c", _, BorgPath, ..])
+        {
+            fileName = BorgPath;
+            arguments = arguments.Skip(3).ToList();
+        }
+
         var passphrase = environment?.GetValueOrDefault("BORG_PASSPHRASE");
         Environments.Add(environment ?? new Dictionary<string, string?>());
         Calls.Add((arguments, passphrase));
@@ -73,6 +87,9 @@ public sealed class FakeBorg : IProcessRunner
         if (arguments is ["key", "export", .., var target])
             File.WriteAllText(target, ExportedKey);
 
+        if (arguments[0] == "create")
+            return CreateAsync(arguments, standardErrorLine, cancellationToken);
+
         return arguments[0] switch
         {
             "init" => Result(0, ""),
@@ -83,6 +100,26 @@ public sealed class FakeBorg : IProcessRunner
             "info" => Result(0, $$$"""{"encryption": {"mode": "{{{EncryptionMode}}}"}, "repository": {"id": "repo-id-1"}}"""),
             _ => Result(2, ""),
         };
+    }
+
+    /// <summary>Three progress lines, the warnings, then the final statistics.</summary>
+    private Task<ProcessResult?> CreateAsync(IReadOnlyList<string> arguments, Action<string>? standardErrorLine, CancellationToken cancellationToken)
+    {
+        for (var step = 1; step <= 3; step++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            standardErrorLine?.Invoke(
+                $$"""{"type": "archive_progress", "original_size": {{step * 1000}}, "compressed_size": {{step * 500}}, "deduplicated_size": {{step * 100}}, "nfiles": {{step * 10}}, "path": "home/me/file{{step}}", "time": 0, "finished": false}""");
+            AfterCreateProgress?.Invoke(step);
+        }
+        cancellationToken.ThrowIfCancellationRequested();
+        foreach (var warning in CreateWarnings)
+            standardErrorLine?.Invoke($$"""{"type": "log_message", "levelname": "WARNING", "message": "{{warning}}", "msgid": null}""");
+
+        var target = arguments.First(argument => argument.Contains("::", StringComparison.Ordinal));
+        var name = target[(target.IndexOf("::", StringComparison.Ordinal) + 2)..].Replace("{hostname}", "host").Replace("{now:%Y-%m-%dT%H:%M:%S}", "2026-11-06T10:00:00");
+        return Result(CreateWarnings.Count > 0 ? 1 : 0,
+            "{\"archive\": {\"name\": \"" + name + "\", \"duration\": 2.5, \"stats\": {\"original_size\": 3000, \"compressed_size\": 1500, \"deduplicated_size\": 300, \"nfiles\": 30}}}");
     }
 
     public BorgDetector Detector() =>
@@ -159,6 +196,7 @@ public sealed class TestServices : IDisposable
     public ManualTime Time { get; } = new();
     public Vault Vault { get; }
     public SettingsStore Settings { get; }
+    public BackupJobStore Jobs { get; }
     public AppServices Services { get; }
 
     /// <summary>Cheap key derivation: the tests check the logic, not the cost.</summary>
@@ -172,8 +210,9 @@ public sealed class TestServices : IDisposable
         SshKeys = new SshKeyStore(Directory.Combine("ssh"));
         Vault = new Vault(Directory.Combine("vault.json"), FastKdf, Time);
         Settings = new SettingsStore(Directory.Combine("settings.json"));
+        Jobs = new BackupJobStore(Directory.Combine("jobs.json"));
         var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new SshProviderPlugin(), new HetznerProviderPlugin()], "no-plugins-here");
-        Services = new AppServices(Borg.Detector(), plugins, Store, Secrets, new BorgClient(Borg), Ssh, SshKeys, SshKeygen, Vault, Settings, Dialogs);
+        Services = new AppServices(Borg.Detector(), plugins, Store, Secrets, new BorgClient(Borg), Ssh, SshKeys, SshKeygen, Vault, Settings, Jobs, Dialogs);
     }
 
     public KnownHostsFile KnownHosts => new(SshKeys.KnownHostsFile);
@@ -266,6 +305,16 @@ public sealed class FakeDialogs : IDialogService
         Task.FromResult(SaveFile);
 
     public Task<string?> PickOpenFileAsync(string title) => Task.FromResult(OpenFile);
+
+    /// <summary>Folders "chosen" in the folder dialog, in order (none left: cancelled).</summary>
+    public Queue<string?> Folders { get; } = [];
+
+    public Task<string?> PickFolderAsync(string title) => Task.FromResult(Folders.Count > 0 ? Folders.Dequeue() : null);
+
+    /// <summary>Fills in the backup job editor.</summary>
+    public Func<BackupJobEditorViewModel, Task>? JobEditor { get; set; }
+
+    public Task ShowBackupJobEditorAsync(BackupJobEditorViewModel editor) => JobEditor?.Invoke(editor) ?? Task.CompletedTask;
 
     public Task CopyToClipboardAsync(string text)
     {

@@ -47,6 +47,37 @@ internal static class BorgTexts
         _ => Strings.VaultStatusNotSetUp,
     };
 
+    public static string BackupOutcome(Core.Backups.BackupOutcome outcome) => outcome switch
+    {
+        Core.Backups.BackupOutcome.Succeeded => Strings.OutcomeSucceeded,
+        Core.Backups.BackupOutcome.Warnings => Strings.OutcomeWarnings,
+        Core.Backups.BackupOutcome.Cancelled => Strings.OutcomeCancelled,
+        _ => Strings.OutcomeFailed,
+    };
+
+    /// <summary>"512 B", "3,4 MB", "1,25 GB" (binary units, current culture).</summary>
+    public static string Size(long bytes)
+    {
+        string[] units = ["B", "KB", "MB", "GB", "TB", "PB"];
+        double value = Math.Max(0, bytes);
+        var unit = 0;
+        while (value >= 1024 && unit < units.Length - 1)
+        {
+            value /= 1024;
+            unit++;
+        }
+        var format = unit == 0 ? "0" : value >= 100 ? "0" : value >= 10 ? "0.0" : "0.00";
+        return value.ToString(format, CultureInfo.CurrentCulture) + " " + units[unit];
+    }
+
+    /// <summary>"3,4 MB/s".</summary>
+    public static string Rate(double bytesPerSecond) => Size((long)bytesPerSecond) + "/s";
+
+    /// <summary>"0:42", "12:05", "1:02:03".</summary>
+    public static string Duration(TimeSpan duration) =>
+        duration.TotalHours >= 1
+            ? $"{(int)duration.TotalHours}:{duration.Minutes:00}:{duration.Seconds:00}"
+            : $"{duration.Minutes}:{duration.Seconds:00}";
     public static string BorgVersion(BorgVersionPreference preference) => preference switch
     {
         BorgVersionPreference.Borg1 => Strings.BorgVersionBorg1,

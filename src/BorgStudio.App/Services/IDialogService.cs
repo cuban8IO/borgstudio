@@ -27,6 +27,9 @@ public interface IDialogService
     /// <param name="defaultExtension">Added if the name has none; <c>null</c> for files without extension.</param>
     Task<string?> PickSaveFileAsync(string title, string suggestedFileName, string? defaultExtension = "txt");
 
+    /// <summary>Asks for a folder; <c>null</c> if cancelled.</summary>
+    Task<string?> PickFolderAsync(string title);
+
     /// <summary>Asks for a file to open; <c>null</c> if cancelled.</summary>
     Task<string?> PickOpenFileAsync(string title);
 
@@ -34,4 +37,7 @@ public interface IDialogService
 
     /// <summary>Shows the add/edit dialog; the outcome is in <see cref="RepositoryEditorViewModel.Result"/>.</summary>
     Task ShowRepositoryEditorAsync(RepositoryEditorViewModel editor);
+
+    /// <summary>Shows the backup job editor; the outcome is in <see cref="BackupJobEditorViewModel.Result"/>.</summary>
+    Task ShowBackupJobEditorAsync(BackupJobEditorViewModel editor);
 }

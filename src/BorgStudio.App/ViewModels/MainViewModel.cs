@@ -1,5 +1,6 @@
 using BorgStudio.App.Resources;
 using BorgStudio.App.Services;
+using BorgStudio.Core.Backups;
 using BorgStudio.Core.Borg;
 using BorgStudio.Core.Plugins;
 using BorgStudio.Core.Repositories;
@@ -24,6 +25,7 @@ public sealed record AppServices(
     SshKeygen SshKeygen,
     Vault Vault,
     SettingsStore Settings,
+    BackupJobStore Jobs,
     IDialogService Dialogs)
 {
     public SshHostTrust SshTrust => new(Ssh, new KnownHostsFile(SshKeys.KnownHostsFile));
@@ -36,7 +38,7 @@ public partial class MainViewModel : ViewModelBase
     // Designer only.
     public MainViewModel() : this(new AppServices(BorgDetector.CreateDefault(), PluginCatalog.Empty,
         RepositoryStore.CreateDefault(), SecretStores.CreateDefault(), BorgClient.CreateDefault(),
-        new SshNetService(), SshKeyStore.CreateDefault(), SshKeygen.CreateDefault(), Vault.CreateDefault(), SettingsStore.CreateDefault(), new NoDialogs()))
+        new SshNetService(), SshKeyStore.CreateDefault(), SshKeygen.CreateDefault(), Vault.CreateDefault(), SettingsStore.CreateDefault(), BackupJobStore.CreateDefault(), new NoDialogs()))
     {
     }
 
@@ -45,6 +47,7 @@ public partial class MainViewModel : ViewModelBase
         _services = services;
         InitializeVault();
         LoadRepositories();
+        LoadJobs();
         RefreshKeyNames();
     }
 
@@ -58,7 +61,7 @@ public partial class MainViewModel : ViewModelBase
 
     /// <summary>The borg used for all repository operations; <c>null</c> until found.</summary>
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(TestRepositoryCommand), nameof(ExportKeyCommand))]
+    [NotifyCanExecuteChangedFor(nameof(TestRepositoryCommand), nameof(ExportKeyCommand), nameof(RunJobCommand))]
     public partial BorgInstallation? Borg { get; private set; }
 
     /// <summary>Status bar text, e.g. "borg 1.4.5 · /usr/bin/borg".</summary>
@@ -140,6 +143,8 @@ public partial class MainViewModel : ViewModelBase
         public Task<string?> AskSecretAsync(string title, string prompt, string? error = null) => Task.FromResult<string?>(null);
         public Task<string?> PickSaveFileAsync(string title, string suggestedFileName, string? defaultExtension = "txt") => Task.FromResult<string?>(null);
         public Task<string?> PickOpenFileAsync(string title) => Task.FromResult<string?>(null);
+        public Task<string?> PickFolderAsync(string title) => Task.FromResult<string?>(null);
+        public Task ShowBackupJobEditorAsync(BackupJobEditorViewModel editor) => Task.CompletedTask;
         public Task CopyToClipboardAsync(string text) => Task.CompletedTask;
         public Task ShowRepositoryEditorAsync(RepositoryEditorViewModel editor) => Task.CompletedTask;
     }

@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Avalonia.Controls;
 using Avalonia.Threading;
+using BorgStudio.App.Resources;
 using BorgStudio.App.Services;
 using BorgStudio.App.ViewModels;
 using BorgStudio.Core;
@@ -25,6 +26,32 @@ public partial class MainWindow : Window
         _viewModel = DataContext as MainViewModel;
         if (_viewModel is not null)
             _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+    }
+
+    /// <summary>Set once the user agreed to stop a running backup; the window then closes when borg has stopped.</summary>
+    private bool _closeAfterBackup;
+
+    protected override void OnClosing(WindowClosingEventArgs e)
+    {
+        if (_viewModel is { IsBackupRunning: true } viewModel && !_closeAfterBackup)
+        {
+            e.Cancel = true;
+            _ = StopBackupAndCloseAsync(viewModel);
+        }
+
+        base.OnClosing(e);
+    }
+
+    private async Task StopBackupAndCloseAsync(MainViewModel viewModel)
+    {
+        if (!await new DialogService(this).ConfirmAsync(Strings.BackupRunningCloseTitle, Strings.BackupRunningCloseMessage,
+                Strings.BackupRunningCloseConfirm))
+            return;
+
+        _closeAfterBackup = true;
+        viewModel.CancelBackupCommand.Execute(null);
+        await viewModel.BackupFinished;
+        Close();
     }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)

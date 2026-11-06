@@ -56,6 +56,7 @@ public sealed class TransferFlowTests : IDisposable
         _source.Secrets.Secrets[_nas.SecretKey] = "nas passphrase";
         _source.KnownHosts.Add("nas.local", 22, FakeSsh.ServerKey);
         _source.Settings.Save(new AppSettings { VaultAutoLockMinutes = 30 });
+        _source.Jobs.Save([new Core.Backups.BackupJob { Id = Guid.NewGuid(), Name = "Documents", RepositoryId = _nas.Id, Sources = [@"C:\Users\me\Documents"] }]);
     }
 
     public void Dispose()
@@ -122,6 +123,7 @@ public sealed class TransferFlowTests : IDisposable
         Assert.True(contents.BorgKeyFor(_nas.Id)!.Keyfile);
         Assert.False(contents.BorgKeyFor(_local.Id)!.Keyfile);
         Assert.Equal(30, contents.Settings.VaultAutoLockMinutes);
+        Assert.Equal("Documents", Assert.Single(contents.Jobs).Name);
 
         // Wrong password first, then the right one.
         var main = await StartAsync(_target);
@@ -130,7 +132,8 @@ public sealed class TransferFlowTests : IDisposable
         _target.Dialogs.Secrets.Enqueue(ExportPassword);
         var import = (await ImportViewModel.OpenAsync(main, _target.Dialogs))!;
         Assert.Equal([null, Strings.ImportPasswordWrong], _target.Dialogs.SecretErrors);
-        Assert.Equal(3, import.Items.Count);
+        Assert.Equal(4, import.Items.Count);
+        Assert.Contains(import.Items, item => item.Kind == Strings.ImportKindJob && item.Name == "Documents");
         Assert.False(import.HasConflicts);
 
         // A new computer has no PIN yet: importing sets one up.
@@ -146,6 +149,7 @@ public sealed class TransferFlowTests : IDisposable
         Assert.Equal($"NAS key {Strings.SshKeyRestrictedSuffix}", main.Repositories[1].SshKeyText);
         Assert.Single(_target.KnownHosts.Find("nas.local", 22));
         Assert.Equal(15, main.Settings.VaultAutoLockMinutes); // merging keeps the settings here
+        Assert.Equal(_nas.Id, Assert.Single(_target.Jobs.Load()).RepositoryId);
 
         if (OperatingSystem.IsWindows())
             Assert.Contains(import.Problems, problem => problem.Contains("NAS", StringComparison.Ordinal));

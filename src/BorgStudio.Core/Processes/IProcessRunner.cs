@@ -14,12 +14,18 @@ public interface IProcessRunner
     /// a <c>null</c> value removes the variable.
     /// </param>
     /// <param name="standardInput">Written to the program's standard input (UTF-8), which is then closed.</param>
+    /// <param name="standardErrorLine">
+    /// Called with every line on standard error as soon as it arrives (e.g. borg's progress); the lines are still part
+    /// of <see cref="ProcessResult.StandardError"/>.
+    /// </param>
     /// <exception cref="TimeoutException">The program did not exit within <paramref name="timeout"/>; it has been killed.</exception>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled; the program has been killed.</exception>
     Task<ProcessResult?> RunAsync(
         string fileName,
         IReadOnlyList<string> arguments,
         TimeSpan timeout,
         IReadOnlyDictionary<string, string?>? environment = null,
         string? standardInput = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Action<string>? standardErrorLine = null);
 }

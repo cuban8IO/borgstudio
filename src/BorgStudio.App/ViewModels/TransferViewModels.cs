@@ -120,6 +120,9 @@ public sealed partial class ImportViewModel : ViewModelBase
         }
         foreach (var key in contents.SshKeys)
             Items.Add(new ImportItemViewModel(this, key.Id, Strings.ImportKindKey, $"{key.Name} ({key.Type})", keys.Contains(key.Id), null));
+        var jobs = main.AllJobs.Select(job => job.Id).ToHashSet();
+        foreach (var job in contents.Jobs)
+            Items.Add(new ImportItemViewModel(this, job.Id, Strings.ImportKindJob, job.Name, jobs.Contains(job.Id), null));
 
         Source = BorgTexts.Format(Strings.ImportSource, contents.Machine ?? "?",
             contents.Created.ToLocalTime().ToString("g", CultureInfo.CurrentCulture), contents.AppVersion ?? "?");

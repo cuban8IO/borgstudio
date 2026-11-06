@@ -27,7 +27,8 @@ looks for borg inside WSL. borg 2 is still in beta and not supported yet. The UI
   (Tools → Settings), or at once with Ctrl+L. A forgotten PIN cannot be recovered:
   the vault can only be reset, losing what is stored in it.
 - **Settings:** `settings.json` in the data folder.
-- **Moving to another computer:** Tools → Export settings writes everything – repositories, stored passphrases
+- **Backup jobs:** `jobs.json` in the data folder – per job the repository, the source folders, what to leave out,
+  the compression and the outcome of the last run. Archives are named `<job>-<computer>-<date and time>`.- **Moving to another computer:** Tools → Export settings writes everything – repositories, stored passphrases
   (vault and keychain), SSH keys, known servers, settings and, if wanted, the borg keys of the repositories – into one
   `.borgstudio` file, encrypted with a password of its own (at least 12 characters; Argon2id + AES-256-GCM). Tools →
   Import settings shows what the file contains and merges it (asking per existing entry) or replaces everything;
@@ -127,6 +128,11 @@ section gets the new version number.
 - Export and import of all settings (Tools → Export/Import settings): one file encrypted with its own password, with
   repositories, passphrases, SSH keys, known servers, settings and the borg keys; importing merges (with a choice per
   existing entry) or replaces, sets up a PIN on a new computer and restores keyfile keys for borg.
+- Backup jobs (repository → tab "Backup jobs"): source folders, what to leave out (caches/temp, build folders,
+  recycle bins, CACHEDIR.TAG, file extensions, folders, own borg patterns) and compression per job; several jobs per
+  repository. "Back up now" shows live progress with upload speed, elapsed and estimated remaining time; cancelling
+  stops borg cleanly and keeps a checkpoint the next run builds on. Files borg could not read are listed as warnings.
+  The repository details are now organized in tabs. Jobs are part of exports.
 
 **Changed**
 - Dark design in the Beatport palette: dark ground, neon green for primary buttons, the selected list entry, progress
