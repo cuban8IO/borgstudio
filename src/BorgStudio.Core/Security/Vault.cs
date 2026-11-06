@@ -312,6 +312,40 @@ public sealed class Vault
         }
     }
 
+    // --- Other files under the vault's key ---
+
+    /// <summary>
+    /// Encrypts data kept outside the vault file (e.g. the archive cache) with the vault's key, so it has the same
+    /// protection without rewriting the vault on every change. A new PIN or a reset makes it unreadable.
+    /// </summary>
+    /// <exception cref="VaultLockedException" />
+    public SecretEnvelope Seal(string format, byte[] plaintext)
+    {
+        lock (_gate)
+        {
+            Unlocked();
+            return SecretBox.Seal(format, plaintext, _key!, _salt!, _keyParameters!);
+        }
+    }
+
+    /// <summary>Decrypts what <see cref="Seal"/> encrypted; <c>null</c> if it was sealed under another key or changed.</summary>
+    /// <exception cref="VaultLockedException" />
+    public byte[]? Open(SecretEnvelope envelope)
+    {
+        lock (_gate)
+        {
+            Unlocked();
+            try
+            {
+                return SecretBox.Open(envelope, _key!);
+            }
+            catch (SecretBoxException)
+            {
+                return null;
+            }
+        }
+    }
+
     private static string Id(Guid repositoryId) => repositoryId.ToString("N");
 
     private Contents Unlocked() => _contents ?? throw new VaultLockedException();

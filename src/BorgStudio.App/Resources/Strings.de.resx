@@ -1083,4 +1083,10 @@ Warnung: Der Anbieter veröffentlicht die Fingerabdrücke seiner Server, und die
   <data name="ArchiveColumnFiles" xml:space="preserve">
     <value>Dateien</value>
   </data>
+  <data name="ArchivesChecking" xml:space="preserve">
+    <value>{0} Archive – prüfe auf Änderungen …</value>
+  </data>
+  <data name="ArchivesRefreshTip" xml:space="preserve">
+    <value>borg erneut fragen, auch nach den Details der neuesten Archive</value>
+  </data>
 </root>

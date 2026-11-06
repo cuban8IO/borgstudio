@@ -279,7 +279,8 @@
                                         <Setter Property="Margin" Value="0,0,8,8" />
                                     </Style>
                                 </WrapPanel.Styles>
-                                <Button Content="{x:Static res:Strings.ArchivesRefresh}" Command="{Binding RefreshArchivesCommand}" />
+                                <Button Content="{x:Static res:Strings.ArchivesRefresh}" Command="{Binding RefreshArchivesCommand}"
+                                        ToolTip.Tip="{x:Static res:Strings.ArchivesRefreshTip}" />
                                 <Button Content="{x:Static res:Strings.ArchivesLoadMore}" Command="{Binding LoadMoreArchiveDetailsCommand}" />
                             </WrapPanel>
 

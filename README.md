@@ -27,6 +27,9 @@ looks for borg inside WSL. borg 2 is still in beta and not supported yet. The UI
   (Tools → Settings), or at once with Ctrl+L. A forgotten PIN cannot be recovered:
   the vault can only be reset, losing what is stored in it.
 - **Settings:** `settings.json` in the data folder.
+- **Archive cache:** `archives/` in the data folder – per repository the archives last seen with their sizes, so the
+  archives tab opens at once. Encrypted with the vault's key (`<id>.vault`) when a PIN is set up, plain JSON
+  (`<id>.json`) otherwise; safe to delete.
 - **Backup jobs:** `jobs.json` in the data folder – per job the repository, the source folders, what to leave out,
   the compression and the outcome of the last run. Archives are named `<job>-<computer>-<date and time>`.- **Moving to another computer:** Tools → Export settings writes everything – repositories, stored passphrases
   (vault and keychain), SSH keys, known servers, settings and, if wanted, the borg keys of the repositories – into one
@@ -135,7 +138,9 @@ section gets the new version number.
   The repository details are now organized in tabs. Jobs are part of exports.
 - Archive list (repository → tab "Archives"): all archives newest first with creation time and the job they come
   from; duration, size, own share (what only this archive takes up in the repository) and file count for the newest
-  20, more on request. A finished backup shows up right away.
+  20, more on request. A finished backup shows up right away. The archives are cached per repository (encrypted with
+  the vault's key when a PIN is set up): the tab shows them at once and borg is only asked for archives it has not
+  described yet, since `borg info` reads all metadata of an archive.
 
 **Changed**
 - Dark design in the Beatport palette: dark ground, neon green for primary buttons, the selected list entry, progress

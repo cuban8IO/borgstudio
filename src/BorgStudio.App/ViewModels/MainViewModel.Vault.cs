@@ -127,6 +127,7 @@ public partial class MainViewModel
     {
         RefreshVaultStatus();
         RefreshKeyNames();
+        _services.Archives.Secure();
         if (_services.Vault.State != VaultState.Unlocked)
             return;
 

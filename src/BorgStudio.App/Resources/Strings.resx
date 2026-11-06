@@ -1103,4 +1103,10 @@ Warning: the provider publishes the fingerprints of its servers, and this key ma
   <data name="ArchiveColumnFiles" xml:space="preserve">
     <value>Files</value>
   </data>
+  <data name="ArchivesChecking" xml:space="preserve">
+    <value>{0} archives – checking for changes…</value>
+  </data>
+  <data name="ArchivesRefreshTip" xml:space="preserve">
+    <value>Ask borg again, including the details of the newest archives</value>
+  </data>
 </root>

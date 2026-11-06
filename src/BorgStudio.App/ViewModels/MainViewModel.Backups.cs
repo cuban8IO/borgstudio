@@ -82,6 +82,7 @@ public partial class MainViewModel
         if (_jobs.RemoveAll(job => job.RepositoryId == repositoryId) > 0)
             SaveJobs();
         RefreshRepositoryJobs();
+        _services.Archives.Remove(repositoryId);
     }
 
     // --- New / edit / delete ---

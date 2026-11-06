@@ -159,6 +159,88 @@ public sealed class ArchiveListFlowTests : IDisposable
         Assert.Equal("Documents", main.Archives[0].JobText);
         Assert.NotEqual("…", main.Archives[0].OriginalText);
         Assert.Empty(_test.Dialogs.Passphrases); // the backup asked once, the reload reused the tab's passphrase
+        Assert.Equal(["list", "info"], _test.Borg.Commands.TakeLast(2));
+        Assert.Equal("1", Last(^1)); // only the new archive: the others' details are known
+    }
+
+    [Fact]
+    public async Task Known_archives_appear_at_once_and_only_new_ones_are_asked_for()
+    {
+        AddArchives(3);
+        _test.Dialogs.Passphrases.Enqueue("secret");
+        await OpenTabAsync(await StartAsync());
+        Assert.Single(Directory.GetFiles(_test.Archives.Directory, "*.json")); // no PIN: a plain cache file
+
+        // Next app start, a new archive meanwhile (e.g. made elsewhere).
+        _test.Borg.Archives.Add(("Documents-host-new", new DateTime(2026, 11, 6, 12, 0, 0)));
+        var main = new MainViewModel(_test.Services);
+        main.SelectedRepository = main.Repositories.Single(item => item.Name == "Disk");
+        main.SelectedDetailsTab = MainViewModel.ArchivesTab; // borg is not even detected yet
+
+        Assert.Equal(3, main.Archives.Count);
+        Assert.Equal(BorgTexts.Size(3_000_000), main.Archives[0].OriginalText);
+        Assert.Equal(BorgTexts.Format(Strings.ArchivesCount, 3), main.ArchivesStatus);
+
+        _test.Borg.Calls.Clear();
+        _test.Dialogs.Passphrases.Enqueue("secret");
+        await main.CheckBorgCommand.ExecuteAsync(null);
+        main.SelectedDetailsTab = MainViewModel.OverviewTab;
+        await OpenTabAsync(main);
+
+        Assert.Equal(["list", "info"], _test.Borg.Commands.Where(command => command != "--version"));
+        Assert.Equal("1", Last(^1));
+        Assert.Equal(4, main.Archives.Count);
+        Assert.Equal("Documents-host-new", main.Archives[0].Name);
+        Assert.All(main.Archives, archive => Assert.True(archive.HasDetails));
+    }
+
+    [Fact]
+    public async Task Deleted_archives_make_the_details_be_fetched_again()
+    {
+        AddArchives(3);
+        _test.Dialogs.Passphrases.Enqueue("secret");
+        await OpenTabAsync(await StartAsync());
+
+        // The oldest archive went (e.g. pruned elsewhere): the others' own share may have grown.
+        _test.Borg.Archives.RemoveAt(0);
+        _test.Dialogs.Passphrases.Enqueue("secret");
+        var main = await StartAsync();
+        await OpenTabAsync(main);
+
+        Assert.Equal(["list", "info"], _test.Borg.Commands);
+        Assert.Equal("2", Last(^1));
+        Assert.Equal(["Documents-host-02", "Documents-host-01"], main.Archives.Select(archive => archive.Name));
+        Assert.Equal(2, _test.Archives.Load(_repository.Id)!.Count);
+    }
+    [Fact]
+    public async Task With_a_PIN_the_cache_is_encrypted()
+    {
+        _test.Vault.SetUp("123456");
+        AddArchives(2, prefix: "Holiday-photos-");
+        _test.Dialogs.Passphrases.Enqueue("secret");
+        var main = await StartAsync();
+
+        await OpenTabAsync(main);
+
+        var file = Assert.Single(Directory.GetFiles(_test.Archives.Directory));
+        Assert.EndsWith(".vault", file);
+        Assert.DoesNotContain("Holiday", File.ReadAllText(file));
+        Assert.Equal(2, _test.Archives.Load(_repository.Id)!.Count);
+    }
+
+    [Fact]
+    public async Task Removing_the_repository_removes_its_cache()
+    {
+        AddArchives(1);
+        _test.Dialogs.Passphrases.Enqueue("secret");
+        var main = await StartAsync();
+        await OpenTabAsync(main);
+        Assert.NotNull(_test.Archives.Load(_repository.Id));
+        _test.Dialogs.ConfirmAnswers.Enqueue(true);
+
+        await main.RemoveRepositoryCommand.ExecuteAsync(null);
+
+        Assert.Null(_test.Archives.Load(_repository.Id));
     }
 
     [Fact]

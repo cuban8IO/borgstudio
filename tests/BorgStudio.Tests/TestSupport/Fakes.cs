@@ -123,7 +123,7 @@ public sealed class FakeBorg : IProcessRunner
     private string ArchiveJson((string Name, DateTime Start) archive, bool details)
     {
         var index = Archives.IndexOf(archive) + 1;
-        var id = $"{index:x2}".PadLeft(64, '0');
+        var id = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(archive.Name)));
         var start = archive.Start.ToString("yyyy-MM-ddTHH:mm:ss.ffffff", CultureInfo.InvariantCulture);
         return details
             ? $$$"""{"name": "{{{archive.Name}}}", "id": "{{{id}}}", "start": "{{{start}}}", "duration": {{{index * 10}}}.5, "hostname": "host", "stats": {"original_size": {{{index * 1_000_000}}}, "compressed_size": {{{index * 500_000}}}, "deduplicated_size": {{{index * 1000}}}, "nfiles": {{{index * 100}}}}}"""
@@ -226,6 +226,7 @@ public sealed class TestServices : IDisposable
     public Vault Vault { get; }
     public SettingsStore Settings { get; }
     public BackupJobStore Jobs { get; }
+    public ArchiveCache Archives { get; }
     public AppServices Services { get; }
 
     /// <summary>Cheap key derivation: the tests check the logic, not the cost.</summary>
@@ -241,7 +242,8 @@ public sealed class TestServices : IDisposable
         Settings = new SettingsStore(Directory.Combine("settings.json"));
         Jobs = new BackupJobStore(Directory.Combine("jobs.json"));
         var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new SshProviderPlugin(), new HetznerProviderPlugin()], "no-plugins-here");
-        Services = new AppServices(Borg.Detector(), plugins, Store, Secrets, new BorgClient(Borg), Ssh, SshKeys, SshKeygen, Vault, Settings, Jobs, Dialogs);
+        Archives = new ArchiveCache(Directory.Combine("archives"), Vault);
+        Services = new AppServices(Borg.Detector(), plugins, Store, Secrets, new BorgClient(Borg), Ssh, SshKeys, SshKeygen, Vault, Settings, Jobs, Archives, Dialogs);
     }
 
     public KnownHostsFile KnownHosts => new(SshKeys.KnownHostsFile);

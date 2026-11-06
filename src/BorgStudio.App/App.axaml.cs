@@ -51,6 +51,7 @@ public partial class App : Application
                 vault,
                 SettingsStore.CreateDefault(),
                 BackupJobStore.CreateDefault(),
+                ArchiveCache.CreateDefault(vault),
                 new DialogService(window)));
             window.DataContext = viewModel;
             desktop.MainWindow = window;

@@ -26,6 +26,7 @@ public sealed record AppServices(
     Vault Vault,
     SettingsStore Settings,
     BackupJobStore Jobs,
+    ArchiveCache Archives,
     IDialogService Dialogs)
 {
     public SshHostTrust SshTrust => new(Ssh, new KnownHostsFile(SshKeys.KnownHostsFile));
@@ -38,7 +39,8 @@ public partial class MainViewModel : ViewModelBase
     // Designer only.
     public MainViewModel() : this(new AppServices(BorgDetector.CreateDefault(), PluginCatalog.Empty,
         RepositoryStore.CreateDefault(), SecretStores.CreateDefault(), BorgClient.CreateDefault(),
-        new SshNetService(), SshKeyStore.CreateDefault(), SshKeygen.CreateDefault(), Vault.CreateDefault(), SettingsStore.CreateDefault(), BackupJobStore.CreateDefault(), new NoDialogs()))
+        new SshNetService(), SshKeyStore.CreateDefault(), SshKeygen.CreateDefault(), Vault.CreateDefault(), SettingsStore.CreateDefault(), BackupJobStore.CreateDefault(),
+        ArchiveCache.CreateDefault(Vault.CreateDefault()), new NoDialogs()))
     {
     }
 
