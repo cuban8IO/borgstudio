@@ -133,6 +133,31 @@ public sealed class KnownHostsFile(string path)
         System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(Path)!);
         File.AppendAllText(Path, $"{HostPattern(host, port)} {key.Type} {key.Base64}\n");
     }
+
+    /// <summary>The whole file ("" if there is none), e.g. for an export.</summary>
+    public string Read() => File.Exists(Path) ? File.ReadAllText(Path) : "";
+
+    /// <summary>Adds the lines of <paramref name="content"/> that are not there yet (imports).</summary>
+    public void Merge(string content)
+    {
+        var existing = Read().Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToHashSet();
+        var added = content.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(line => existing.Add(line))
+            .ToList();
+        if (added.Count == 0)
+            return;
+        System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(Path)!);
+        var current = Read();
+        var separator = current.Length > 0 && !current.EndsWith('\n') ? "\n" : "";
+        File.AppendAllText(Path, separator + string.Join("\n", added) + "\n");
+    }
+
+    /// <summary>Replaces the file with <paramref name="content"/> (imports that replace everything).</summary>
+    public void Replace(string content)
+    {
+        System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(Path)!);
+        File.WriteAllText(Path, content);
+    }
 }
 
 /// <summary>Entries for ~/.ssh/authorized_keys on the backup server.</summary>

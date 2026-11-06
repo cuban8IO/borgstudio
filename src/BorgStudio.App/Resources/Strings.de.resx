@@ -738,4 +738,118 @@ Warnung: Der Anbieter veröffentlicht die Fingerabdrücke seiner Server, und die
   <data name="KeysOriginImported" xml:space="preserve">
     <value>Importiert am {0}</value>
   </data>
+  <data name="MenuExport" xml:space="preserve">
+    <value>Einstellungen exportieren …</value>
+  </data>
+  <data name="MenuImport" xml:space="preserve">
+    <value>Einstellungen importieren …</value>
+  </data>
+  <data name="ExportTitle" xml:space="preserve">
+    <value>Einstellungen exportieren</value>
+  </data>
+  <data name="ExportIntro" xml:space="preserve">
+    <value>Speichert alles in einer Datei, um BorgStudio auf einem anderen Rechner wieder einzurichten: Repositories, gespeicherte Passphrasen, SSH-Schlüssel, bekannte Server und Einstellungen. Die Datei wird mit einem eigenen Passwort verschlüsselt – ohne es kann niemand sie lesen, auch du nicht.</value>
+  </data>
+  <data name="ExportPassword" xml:space="preserve">
+    <value>Export-Passwort</value>
+  </data>
+  <data name="ExportPasswordConfirmation" xml:space="preserve">
+    <value>Export-Passwort wiederholen</value>
+  </data>
+  <data name="ExportPasswordHint" xml:space="preserve">
+    <value>Mindestens {0} Zeichen. Nicht deine PIN: Die Datei kann weitergegeben werden, deshalb schützt sie ein langes Passwort.</value>
+  </data>
+  <data name="ExportPasswordTooShort" xml:space="preserve">
+    <value>Das Export-Passwort braucht mindestens {0} Zeichen.</value>
+  </data>
+  <data name="ExportPasswordMismatch" xml:space="preserve">
+    <value>Die beiden Passwörter stimmen nicht überein.</value>
+  </data>
+  <data name="ExportIncludeBorgKeys" xml:space="preserve">
+    <value>Die borg-Schlüssel der Repositories mitnehmen (ein borg-Aufruf pro Repository; nötig für Repositories mit keyfile)</value>
+  </data>
+  <data name="ExportFetchingKey" xml:space="preserve">
+    <value>Hole den borg-Schlüssel von „{0}“ …</value>
+  </data>
+  <data name="ExportEncrypting" xml:space="preserve">
+    <value>Verschlüssele …</value>
+  </data>
+  <data name="ExportDone" xml:space="preserve">
+    <value>{0} Repositories, {1} SSH-Schlüssel, {2} Passphrasen und {3} borg-Schlüssel exportiert nach {4}.</value>
+  </data>
+  <data name="ExportStart" xml:space="preserve">
+    <value>Exportieren …</value>
+  </data>
+  <data name="TransferBorgKeyMissing" xml:space="preserve">
+    <value>borg hat keinen Schlüssel geschrieben.</value>
+  </data>
+  <data name="TransferBorgKeyFailed" xml:space="preserve">
+    <value>borg-Schlüssel von „{0}“ nicht enthalten: {1}</value>
+  </data>
+  <data name="TransferProviderMissing" xml:space="preserve">
+    <value>„{0}“ braucht das Plugin „{1}“, das hier nicht installiert ist.</value>
+  </data>
+  <data name="TransferKeyfileFailed" xml:space="preserve">
+    <value>borg-Schlüssel von „{0}“ konnte nicht abgelegt werden: {1}</value>
+  </data>
+  <data name="ImportTitle" xml:space="preserve">
+    <value>Einstellungen importieren</value>
+  </data>
+  <data name="ImportPasswordTitle" xml:space="preserve">
+    <value>Export-Passwort</value>
+  </data>
+  <data name="ImportPasswordPrompt" xml:space="preserve">
+    <value>Passwort des Exports „{0}“:</value>
+  </data>
+  <data name="ImportPasswordWrong" xml:space="preserve">
+    <value>Falsches Passwort (oder die Datei wurde verändert).</value>
+  </data>
+  <data name="ImportUnreadable" xml:space="preserve">
+    <value>Die Datei lässt sich nicht importieren: {0}</value>
+  </data>
+  <data name="ImportSource" xml:space="preserve">
+    <value>Export von {0} vom {1} (BorgStudio {2})</value>
+  </data>
+  <data name="ImportModeMerge" xml:space="preserve">
+    <value>Zusammenführen: Neues ergänzen, Vorhandenes behalten</value>
+  </data>
+  <data name="ImportModeReplace" xml:space="preserve">
+    <value>Ersetzen: Der Export ersetzt alle Repositories, Schlüssel, bekannten Server und Einstellungen</value>
+  </data>
+  <data name="ImportConflictHint" xml:space="preserve">
+    <value>Einige Einträge gibt es hier schon. Beim Zusammenführen bei „ersetzen“ ein Häkchen setzen, wo der Export gewinnen soll.</value>
+  </data>
+  <data name="ImportKindRepository" xml:space="preserve">
+    <value>Repository</value>
+  </data>
+  <data name="ImportKindKey" xml:space="preserve">
+    <value>SSH-Schlüssel</value>
+  </data>
+  <data name="ImportStatusNew" xml:space="preserve">
+    <value>neu</value>
+  </data>
+  <data name="ImportStatusExists" xml:space="preserve">
+    <value>vorhanden</value>
+  </data>
+  <data name="ImportReplaceItem" xml:space="preserve">
+    <value>ersetzen</value>
+  </data>
+  <data name="ImportProviderMissing" xml:space="preserve">
+    <value>Braucht das Plugin „{0}“, das hier nicht installiert ist.</value>
+  </data>
+  <data name="ImportReplaceTitle" xml:space="preserve">
+    <value>Alles ersetzen?</value>
+  </data>
+  <data name="ImportReplaceWarning" xml:space="preserve">
+    <value>Alle Repositories und SSH-Schlüssel hier, ihre gespeicherten Passphrasen, die bekannten Server und die Einstellungen werden durch den Export ersetzt. Was nicht im Export ist, ist danach weg.</value>
+  </data>
+  <data name="ImportReplaceConfirm" xml:space="preserve">
+    <value>Ersetzen</value>
+  </data>
+  <data name="ImportDone" xml:space="preserve">
+    <value>{0} Repositories, {1} SSH-Schlüssel und {2} Passphrasen importiert.</value>
+  </data>
+  <data name="ImportStart" xml:space="preserve">
+    <value>Importieren</value>
+  </data>
 </root>

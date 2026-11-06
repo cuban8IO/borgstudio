@@ -122,6 +122,36 @@ public class BorgClientTests
         Assert.Equal(["-e", "sh", "-c", $"rm -f {key}"], runner.Calls[3].Arguments);
     }
 
+    [Fact]
+    public async Task Keyfile_keys_go_into_borgs_key_folder_inside_WSL()
+    {
+        var runner = new RecordingRunner(new ProcessResult(0, "", ""));
+
+        var result = await new BorgClient(runner, Wsl).InstallKeyfileAsync(WslBorg, "0123abcd0123abcd0123", "BORG_KEY 0123\nKEY");
+
+        Assert.True(result.Succeeded);
+        var (fileName, arguments, input) = Assert.Single(runner.Calls);
+        Assert.Equal(Wsl, fileName);
+        Assert.Equal(["-e", "sh", "-c"], arguments.Take(3));
+        Assert.Contains("${BORG_KEYS_DIR:-${BORG_CONFIG_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/borg}/keys}", arguments[3]);
+        Assert.EndsWith("cat > \"$d/borgstudio-0123abcd0123abcd\"", arguments[3]);
+        Assert.Equal("BORG_KEY 0123\nKEY\n", input);
+    }
+
+    [Fact]
+    public async Task Keyfile_keys_need_a_valid_repository_id_and_a_shell()
+    {
+        var runner = new RecordingRunner(new ProcessResult(0, "", ""));
+
+        var invalid = await new BorgClient(runner, Wsl).InstallKeyfileAsync(WslBorg, "x\"; rm -rf ~", "KEY");
+        Assert.False(invalid.Succeeded);
+
+        var failing = await new BorgClient(new RecordingRunner(new ProcessResult(1, "", "no space")), Wsl)
+            .InstallKeyfileAsync(WslBorg, "0123abcd0123abcd", "KEY");
+        Assert.Equal("no space", failing.Error!.Message);
+        Assert.Empty(runner.Calls);
+    }
+
     [Theory]
     [InlineData("Remote: Host key verification failed.", BorgErrorKind.SshHostKeyFailed)]
     [InlineData("Remote: backup@nas.local: Permission denied (publickey).", BorgErrorKind.SshAuthenticationFailed)]

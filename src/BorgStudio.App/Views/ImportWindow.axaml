@@ -1,0 +1,72 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:BorgStudio.App.ViewModels"
+        xmlns:res="using:BorgStudio.App.Resources"
+        xmlns:sys="using:System"
+        x:Class="BorgStudio.App.Views.ImportWindow"
+        x:DataType="vm:ImportViewModel"
+        Title="{x:Static res:Strings.ImportTitle}"
+        Width="680" Height="600" MinWidth="520" MinHeight="420"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+    <DockPanel Margin="20">
+        <StackPanel DockPanel.Dock="Top" Spacing="10">
+            <TextBlock Text="{Binding Source}" FontWeight="SemiBold" TextWrapping="Wrap" />
+            <StackPanel Spacing="4" IsVisible="{Binding IsNotDone}">
+                <RadioButton GroupName="Mode" IsChecked="{Binding IsMerge}">
+                    <TextBlock Text="{x:Static res:Strings.ImportModeMerge}" TextWrapping="Wrap" />
+                </RadioButton>
+                <RadioButton GroupName="Mode" IsChecked="{Binding IsReplace}">
+                    <TextBlock Text="{x:Static res:Strings.ImportModeReplace}" TextWrapping="Wrap" />
+                </RadioButton>
+                <TextBlock Text="{x:Static res:Strings.ImportConflictHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap"
+                           IsVisible="{Binding HasConflicts}" Margin="0,4,0,0" />
+            </StackPanel>
+        </StackPanel>
+
+        <StackPanel DockPanel.Dock="Bottom" Spacing="8" Margin="0,12,0,0">
+            <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
+            <SelectableTextBlock Text="{Binding Result}" IsVisible="{Binding HasResult}" TextWrapping="Wrap"
+                                 Foreground="{DynamicResource SuccessForeground}" />
+            <ItemsControl ItemsSource="{Binding Problems}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="sys:String">
+                        <SelectableTextBlock Text="{Binding}" TextWrapping="Wrap" Foreground="{DynamicResource WarningBorder}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                <Button Content="{x:Static res:Strings.ImportStart}" Command="{Binding ImportCommand}" Classes="accent"
+                        IsVisible="{Binding IsNotDone}" />
+                <Button Content="{x:Static res:Strings.Close}" IsCancel="True" Click="Close_Click" />
+            </StackPanel>
+        </StackPanel>
+
+        <!-- What the export contains -->
+        <Border Classes="card" Margin="0,12,0,0" Padding="4">
+            <ScrollViewer>
+                <ItemsControl ItemsSource="{Binding Items}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:ImportItemViewModel">
+                            <Grid ColumnDefinitions="110,*,Auto" Margin="8,6">
+                                <TextBlock Text="{Binding Kind}" Opacity="0.7" VerticalAlignment="Center" />
+                                <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Warning}" IsVisible="{Binding HasWarning}" FontSize="12"
+                                               TextWrapping="Wrap" Foreground="{DynamicResource WarningBorder}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Status}" FontSize="12" Opacity="0.7" VerticalAlignment="Center" />
+                                    <CheckBox IsChecked="{Binding Replace}" IsVisible="{Binding ShowReplaceChoice}"
+                                              Content="{x:Static res:Strings.ImportReplaceItem}" />
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+    </DockPanel>
+
+</Window>

@@ -88,6 +88,42 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         return result.Succeeded ? BorgResult<bool>.Success(true) : BorgResult<bool>.Failure(result.Error!);
     }
 
+    /// <summary>
+    /// Puts a keyfile key (as <c>borg key export</c> wrote it: "BORG_KEY &lt;repository id&gt;" plus the key) into the
+    /// key folder of this borg – inside WSL if borg runs there – where borg finds it by the repository id. Needs no
+    /// access to the repository.
+    /// </summary>
+    public async Task<BorgResult<bool>> InstallKeyfileAsync(BorgInstallation borg, string repositoryId, string key,
+        CancellationToken cancellationToken = default)
+    {
+        var wsl = borg.Runtime == BorgRuntime.Wsl;
+        if ((wsl && wslExecutable is null) || (!wsl && OperatingSystem.IsWindows()))
+            return BorgResult<bool>.Failure(new BorgError(BorgErrorKind.NotStartable, "sh"));
+        if (!SafeRepositoryId().IsMatch(repositoryId))
+            return BorgResult<bool>.Failure(new BorgError(BorgErrorKind.Other, "invalid repository id"));
+
+        // borg's own lookup order for the key folder.
+        var script = "umask 077 && d=\"${BORG_KEYS_DIR:-${BORG_CONFIG_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/borg}/keys}\""
+            + $" && mkdir -p \"$d\" && cat > \"$d/borgstudio-{repositoryId[..Math.Min(16, repositoryId.Length)]}\"";
+        ProcessResult? result;
+        try
+        {
+            result = wsl
+                ? await processRunner.RunAsync(wslExecutable!, ["-e", "sh", "-c", script], CopyTimeout,
+                    standardInput: key.EndsWith('\n') ? key : key + "\n", cancellationToken: cancellationToken)
+                : await processRunner.RunAsync("sh", ["-c", script], CopyTimeout,
+                    standardInput: key.EndsWith('\n') ? key : key + "\n", cancellationToken: cancellationToken);
+        }
+        catch (TimeoutException)
+        {
+            return BorgResult<bool>.Failure(new BorgError(BorgErrorKind.Timeout));
+        }
+
+        return result is { ExitCode: 0 }
+            ? BorgResult<bool>.Success(true)
+            : BorgResult<bool>.Failure(new BorgError(BorgErrorKind.Other, result?.StandardError.Trim() ?? "sh"));
+    }
+
     public static string EncryptionName(BorgEncryption encryption) => encryption switch
     {
         BorgEncryption.RepokeyBlake2 => "repokey-blake2",
@@ -397,4 +433,7 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
 
     [GeneratedRegex(@"^(?<drive>[A-Za-z]):[\\/]?(?<rest>.*)$", RegexOptions.CultureInvariant)]
     private static partial Regex DrivePath();
+
+    [GeneratedRegex("^[0-9a-fA-F]{8,}$", RegexOptions.CultureInvariant)]
+    private static partial Regex SafeRepositoryId();
 }

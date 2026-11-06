@@ -24,6 +24,10 @@
                 <NativeMenu>
                     <NativeMenuItem Header="{x:Static res:Strings.MenuSettings}" Click="OpenSettings_Click" />
                     <NativeMenuItem Header="{x:Static res:Strings.MenuKeys}" Click="OpenKeys_Click" />
+                    <NativeMenuItemSeparator />
+                    <NativeMenuItem Header="{x:Static res:Strings.MenuExport}" Click="OpenExport_Click" />
+                    <NativeMenuItem Header="{x:Static res:Strings.MenuImport}" Click="OpenImport_Click" />
+                    <NativeMenuItemSeparator />
                     <NativeMenuItem Header="{x:Static res:Strings.MenuPlugins}" Click="OpenPlugins_Click" />
                 </NativeMenu>
             </NativeMenuItem>

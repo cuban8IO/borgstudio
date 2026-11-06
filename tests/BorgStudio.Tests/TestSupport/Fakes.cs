@@ -42,6 +42,12 @@ public sealed class FakeBorg : IProcessRunner
 
     public IEnumerable<string> Commands => Calls.Select(call => call.Arguments[0]);
 
+    /// <summary>Keys put into borg's key folder (through `sh -c`).</summary>
+    public List<string> InstalledKeyfiles { get; } = [];
+
+    /// <summary>What `borg key export` writes.</summary>
+    public string ExportedKey { get; set; } = "BORG_KEY repo-id-1\nKEYDATA\n";
+
     public Task<ProcessResult?> RunAsync(string fileName, IReadOnlyList<string> arguments, TimeSpan timeout,
         IReadOnlyDictionary<string, string?>? environment = null, string? standardInput = null,
         CancellationToken cancellationToken = default)
@@ -59,6 +65,13 @@ public sealed class FakeBorg : IProcessRunner
 
         if (fileName == BorgPath && arguments is ["--version"])
             return Result(0, "borg 1.4.1\n");
+        if (fileName == "sh" && arguments is ["-c", ..])
+        {
+            InstalledKeyfiles.Add(standardInput ?? "");
+            return Result(0, "");
+        }
+        if (arguments is ["key", "export", .., var target])
+            File.WriteAllText(target, ExportedKey);
 
         return arguments[0] switch
         {
