@@ -190,7 +190,7 @@ public sealed class BorgClientIntegrationTests : IDisposable
         Assert.Equal(30_000, second.Stats.OriginalSize);
         Assert.True(second.Stats.DeduplicatedSize < second.Stats.OriginalSize); // a.txt is already stored
         Assert.NotNull(second.Duration);
-        Assert.Equal(listed.Value![0].Start, second.Start);
+        Assert.Equal(listed.Value![0].Start.ToUnixTimeSeconds(), second.Start.ToUnixTimeSeconds()); // borg 1.2 lists whole seconds
 
         var wrong = await _client.ListArchivesAsync(Borg, Location(), "wrong");
         Assert.Equal(BorgErrorKind.PassphraseWrong, wrong.Error!.Kind);

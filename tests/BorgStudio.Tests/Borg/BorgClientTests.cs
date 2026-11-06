@@ -166,6 +166,11 @@ public class BorgClientTests
         Assert.Equal(TimeSpan.FromSeconds(44.9), archive.Duration);
         Assert.Equal(new BorgArchiveStats(5000, 3000, 120, 42), archive.Stats);
 
+        // borg 1.2 lists whole seconds: archives of the same second keep borg's order (oldest first), reversed.
+        var sameSecond = BorgClient.ParseArchives(
+            """{"archives": [{"name": "a", "id": "1", "start": "2026-11-06T09:30:15"}, {"name": "b", "id": "2", "start": "2026-11-06T09:30:15"}, {"name": "c", "id": "3", "start": "2026-11-06T09:30:15"}]}""");
+        Assert.Equal(["c", "b", "a"], sameSecond.Select(archive => archive.Name));
+
         Assert.Empty(BorgClient.ParseArchives("""{"archives": []}"""));
     }
     [Fact]

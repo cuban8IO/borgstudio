@@ -234,7 +234,9 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
                 : null;
             archives.Add(new BorgArchive(archive.GetProperty("name").GetString()!, archive.GetProperty("id").GetString()!, start, duration, stats));
         }
-        return [.. archives.OrderByDescending(archive => archive.Start)];
+        // borg lists oldest first; borg 1.2 gives "list" times to the second only, so equal times keep borg's order.
+        return [.. archives.Select((archive, index) => (archive, index))
+            .OrderByDescending(entry => entry.archive.Start).ThenByDescending(entry => entry.index).Select(entry => entry.archive)];
     }
 
     /// <summary>A path on this computer as borg sees it: unchanged, or "/mnt/c/…" inside WSL (<c>null</c> if WSL cannot reach it).</summary>
