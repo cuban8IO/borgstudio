@@ -133,6 +133,9 @@ section gets the new version number.
   repository. "Back up now" shows live progress with upload speed, elapsed and estimated remaining time; cancelling
   stops borg cleanly and keeps a checkpoint the next run builds on. Files borg could not read are listed as warnings.
   The repository details are now organized in tabs. Jobs are part of exports.
+- Archive list (repository → tab "Archives"): all archives newest first with creation time and the job they come
+  from; duration, size, own share (what only this archive takes up in the repository) and file count for the newest
+  20, more on request. A finished backup shows up right away.
 
 **Changed**
 - Dark design in the Beatport palette: dark ground, neon green for primary buttons, the selected list entry, progress

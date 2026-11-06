@@ -177,6 +177,66 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         }
     }
 
+    /// <summary>All archives of the repository with name and start time (<c>borg list --json</c>, fast), newest first.</summary>
+    public async Task<BorgResult<IReadOnlyList<BorgArchive>>> ListArchivesAsync(
+        BorgInstallation borg, RepositoryLocation location, string? passphrase, SshAccess? ssh = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await RunAsync(borg, location, ssh, ["list"], ["--json"], [], passphrase, InfoTimeout, cancellationToken);
+        return ParseArchives(result);
+    }
+
+    /// <summary>
+    /// The newest <paramref name="last"/> archives with duration and sizes (<c>borg info --json --last N</c>). borg
+    /// works through every one of them, so this takes a while for large archives.
+    /// </summary>
+    public async Task<BorgResult<IReadOnlyList<BorgArchive>>> ArchiveDetailsAsync(
+        BorgInstallation borg, RepositoryLocation location, int last, string? passphrase, SshAccess? ssh = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await RunAsync(borg, location, ssh, ["info"],
+            ["--json", "--last", last.ToString(CultureInfo.InvariantCulture)], [], passphrase, InfoTimeout, cancellationToken);
+        return ParseArchives(result);
+    }
+
+    private static BorgResult<IReadOnlyList<BorgArchive>> ParseArchives(BorgResult<string> result)
+    {
+        if (!result.Succeeded)
+            return BorgResult<IReadOnlyList<BorgArchive>>.Failure(result.Error!);
+        try
+        {
+            return BorgResult<IReadOnlyList<BorgArchive>>.Success(ParseArchives(result.Value!));
+        }
+        catch (Exception exception) when (exception is JsonException or KeyNotFoundException or InvalidOperationException)
+        {
+            return BorgResult<IReadOnlyList<BorgArchive>>.Failure(new BorgError(BorgErrorKind.Other, exception.Message));
+        }
+    }
+
+    /// <summary>The "archives" of <c>borg list --json</c> or <c>borg info --json</c>, newest first.</summary>
+    internal static IReadOnlyList<BorgArchive> ParseArchives(string json)
+    {
+        using var document = JsonDocument.Parse(json);
+        var archives = new List<BorgArchive>();
+        foreach (var archive in document.RootElement.GetProperty("archives").EnumerateArray())
+        {
+            // borg 1.x writes local time without offset.
+            var start = archive.TryGetProperty("start", out var started)
+                && DateTimeOffset.TryParse(started.GetString(), CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var parsed)
+                ? parsed
+                : DateTimeOffset.MinValue;
+            TimeSpan? duration = archive.TryGetProperty("duration", out var seconds) && seconds.ValueKind == JsonValueKind.Number
+                ? TimeSpan.FromSeconds(seconds.GetDouble())
+                : null;
+            BorgArchiveStats? stats = archive.TryGetProperty("stats", out var values)
+                ? new BorgArchiveStats(values.GetProperty("original_size").GetInt64(), values.GetProperty("compressed_size").GetInt64(),
+                    values.GetProperty("deduplicated_size").GetInt64(), values.GetProperty("nfiles").GetInt64())
+                : null;
+            archives.Add(new BorgArchive(archive.GetProperty("name").GetString()!, archive.GetProperty("id").GetString()!, start, duration, stats));
+        }
+        return [.. archives.OrderByDescending(archive => archive.Start)];
+    }
+
     /// <summary>A path on this computer as borg sees it: unchanged, or "/mnt/c/…" inside WSL (<c>null</c> if WSL cannot reach it).</summary>
     public static string? BorgPath(BorgInstallation borg, string path) =>
         borg.Runtime == BorgRuntime.Wsl ? ToWslPath(path) : path;

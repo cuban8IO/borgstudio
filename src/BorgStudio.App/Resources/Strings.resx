@@ -1055,4 +1055,52 @@ Warning: the provider publishes the fingerprints of its servers, and this key ma
   <data name="JobLastRunShort" xml:space="preserve">
     <value>Last: {0} · {1}</value>
   </data>
+  <data name="TabArchives" xml:space="preserve">
+    <value>Archives</value>
+  </data>
+  <data name="ArchivesRefresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="ArchivesLoadMore" xml:space="preserve">
+    <value>Load more details</value>
+  </data>
+  <data name="ArchivesLoading" xml:space="preserve">
+    <value>Loading the archives…</value>
+  </data>
+  <data name="ArchivesLoadingDetails" xml:space="preserve">
+    <value>Loading duration and sizes of the newest {0} archives…</value>
+  </data>
+  <data name="ArchivesNone" xml:space="preserve">
+    <value>No archives yet. Run a backup job to create the first one.</value>
+  </data>
+  <data name="ArchivesCount" xml:space="preserve">
+    <value>{0} archives</value>
+  </data>
+  <data name="ArchivesCountWithDetails" xml:space="preserve">
+    <value>{0} archives, details for the newest {1}</value>
+  </data>
+  <data name="ArchiveColumnName" xml:space="preserve">
+    <value>Archive</value>
+  </data>
+  <data name="ArchiveColumnTime" xml:space="preserve">
+    <value>Created</value>
+  </data>
+  <data name="ArchiveColumnDuration" xml:space="preserve">
+    <value>Duration</value>
+  </data>
+  <data name="ArchiveColumnSize" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="ArchiveColumnSizeTip" xml:space="preserve">
+    <value>Size of the backed-up files</value>
+  </data>
+  <data name="ArchiveColumnNew" xml:space="preserve">
+    <value>Own share</value>
+  </data>
+  <data name="ArchiveColumnNewTip" xml:space="preserve">
+    <value>Space only this archive takes up in the repository (compressed and deduplicated): what deleting it would free</value>
+  </data>
+  <data name="ArchiveColumnFiles" xml:space="preserve">
+    <value>Files</value>
+  </data>
 </root>

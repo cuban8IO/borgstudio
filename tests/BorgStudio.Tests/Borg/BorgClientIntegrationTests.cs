@@ -166,6 +166,36 @@ public sealed class BorgClientIntegrationTests : IDisposable
     }
 
     [BorgFact]
+    public async Task Lists_archives_and_their_details()
+    {
+        await _client.InitAsync(Borg, Location(), BorgEncryption.RepokeyBlake2, Passphrase);
+        var source = _directory.Combine("source");
+        Directory.CreateDirectory(source);
+        File.WriteAllText(Path.Combine(source, "a.txt"), new string('a', 10_000));
+        Assert.True((await _client.CreateAsync(Borg, Location(), "first", [source], [], Passphrase)).Succeeded);
+        File.WriteAllText(Path.Combine(source, "b.txt"), new string('b', 20_000));
+        Assert.True((await _client.CreateAsync(Borg, Location(), "second", [source], [], Passphrase)).Succeeded);
+
+        var listed = await _client.ListArchivesAsync(Borg, Location(), Passphrase);
+        Assert.True(listed.Succeeded, listed.Error?.ToString());
+        Assert.Equal(["second", "first"], listed.Value!.Select(archive => archive.Name)); // newest first
+        Assert.All(listed.Value!, archive => Assert.Null(archive.Stats));
+        Assert.Equal(64, listed.Value![0].Id.Length);
+
+        var details = await _client.ArchiveDetailsAsync(Borg, Location(), 1, Passphrase);
+        Assert.True(details.Succeeded, details.Error?.ToString());
+        var second = Assert.Single(details.Value!);
+        Assert.Equal(listed.Value![0].Id, second.Id);
+        Assert.Equal(2, second.Stats!.Files);
+        Assert.Equal(30_000, second.Stats.OriginalSize);
+        Assert.True(second.Stats.DeduplicatedSize < second.Stats.OriginalSize); // a.txt is already stored
+        Assert.NotNull(second.Duration);
+        Assert.Equal(listed.Value![0].Start, second.Start);
+
+        var wrong = await _client.ListArchivesAsync(Borg, Location(), "wrong");
+        Assert.Equal(BorgErrorKind.PassphraseWrong, wrong.Error!.Kind);
+    }
+    [BorgFact]
     public async Task Cancelling_interrupts_borg_and_leaves_a_checkpoint()
     {
         if (OperatingSystem.IsWindows() && Borg.Runtime != BorgRuntime.Wsl)

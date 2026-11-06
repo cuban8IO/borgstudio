@@ -1035,4 +1035,52 @@ Warnung: Der Anbieter veröffentlicht die Fingerabdrücke seiner Server, und die
   <data name="JobLastRunShort" xml:space="preserve">
     <value>Zuletzt: {0} · {1}</value>
   </data>
+  <data name="TabArchives" xml:space="preserve">
+    <value>Archive</value>
+  </data>
+  <data name="ArchivesRefresh" xml:space="preserve">
+    <value>Aktualisieren</value>
+  </data>
+  <data name="ArchivesLoadMore" xml:space="preserve">
+    <value>Weitere Details laden</value>
+  </data>
+  <data name="ArchivesLoading" xml:space="preserve">
+    <value>Lade die Archive …</value>
+  </data>
+  <data name="ArchivesLoadingDetails" xml:space="preserve">
+    <value>Lade Dauer und Größen der neuesten {0} Archive …</value>
+  </data>
+  <data name="ArchivesNone" xml:space="preserve">
+    <value>Noch keine Archive. Starte einen Backup-Job, um das erste anzulegen.</value>
+  </data>
+  <data name="ArchivesCount" xml:space="preserve">
+    <value>{0} Archive</value>
+  </data>
+  <data name="ArchivesCountWithDetails" xml:space="preserve">
+    <value>{0} Archive, Details für die neuesten {1}</value>
+  </data>
+  <data name="ArchiveColumnName" xml:space="preserve">
+    <value>Archiv</value>
+  </data>
+  <data name="ArchiveColumnTime" xml:space="preserve">
+    <value>Erstellt</value>
+  </data>
+  <data name="ArchiveColumnDuration" xml:space="preserve">
+    <value>Dauer</value>
+  </data>
+  <data name="ArchiveColumnSize" xml:space="preserve">
+    <value>Größe</value>
+  </data>
+  <data name="ArchiveColumnSizeTip" xml:space="preserve">
+    <value>Größe der gesicherten Dateien</value>
+  </data>
+  <data name="ArchiveColumnNew" xml:space="preserve">
+    <value>Eigenanteil</value>
+  </data>
+  <data name="ArchiveColumnNewTip" xml:space="preserve">
+    <value>Platz, den nur dieses Archiv im Repository belegt (komprimiert und dedupliziert): so viel würde Löschen freigeben</value>
+  </data>
+  <data name="ArchiveColumnFiles" xml:space="preserve">
+    <value>Dateien</value>
+  </data>
 </root>
