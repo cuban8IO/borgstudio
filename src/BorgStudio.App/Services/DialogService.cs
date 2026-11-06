@@ -69,4 +69,7 @@ public sealed class DialogService(Window owner) : IDialogService
 
     public Task ShowArchiveBrowserAsync(ArchiveBrowserViewModel browser) =>
         new ArchiveBrowserWindow { DataContext = browser }.ShowDialog(owner);
+
+    public Task ShowRestoreAsync(RestoreViewModel restore) =>
+        new RestoreWindow { DataContext = restore }.ShowDialog(owner);
 }

@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using BorgStudio.App.Resources;
+using BorgStudio.App.Services;
 using BorgStudio.Core.Borg;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -29,6 +30,12 @@ public sealed partial class ArchiveBrowserViewModel : ViewModelBase
 
     public BorgArchive Archive { get; }
 
+    /// <summary>Where the restore dialog appears; set by the window.</summary>
+    public IDialogService? Dialogs { get; set; }
+
+    /// <summary>Creates the restore dialog for some entries (or the whole archive); <c>null</c> if restoring isn't possible.</summary>
+    public Func<IReadOnlyList<ArchiveNode>, bool, RestoreViewModel>? RestoreFactory { get; set; }
+
     public string? JobName { get; }
 
     public string Title => BorgTexts.Format(Strings.BrowserTitle, Archive.Name);
@@ -53,7 +60,7 @@ public sealed partial class ArchiveBrowserViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsReady))]
-    [NotifyCanExecuteChangedFor(nameof(SearchCommand))]
+    [NotifyCanExecuteChangedFor(nameof(SearchCommand), nameof(RestoreAllCommand), nameof(RestoreSelectionCommand))]
     public partial ArchiveTree? Tree { get; private set; }
 
     public bool IsReady => Tree is not null && !IsLoading;
@@ -105,7 +112,7 @@ public sealed partial class ArchiveBrowserViewModel : ViewModelBase
     /// <summary>"3 ausgewählt · 12 MB" or "Nichts ausgewählt".</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelection))]
-    [NotifyCanExecuteChangedFor(nameof(ClearSelectionCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ClearSelectionCommand), nameof(RestoreSelectionCommand))]
     public partial string SelectionText { get; private set; } = Strings.BrowserSelectionNone;
 
     public bool HasSelection => _selected.Count > 0;
@@ -285,6 +292,28 @@ public sealed partial class ArchiveBrowserViewModel : ViewModelBase
         var pattern = new Regex("^" + Regex.Escape(text).Replace(@"\*", ".*", StringComparison.Ordinal).Replace(@"\?", ".", StringComparison.Ordinal) + "$",
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
         return pattern.IsMatch;
+    }
+
+    // --- Restoring ---
+
+    [RelayCommand(CanExecute = nameof(CanRestoreSelection))]
+    private Task RestoreSelectionAsync() => RestoreAsync(Selection, wholeArchive: false);
+
+    private bool CanRestoreSelection() => RestoreFactory is not null && IsReady && HasSelection;
+
+    [RelayCommand(CanExecute = nameof(CanRestoreAll))]
+    private Task RestoreAllAsync() => RestoreAsync(RestorePlan.Sources(Tree!), wholeArchive: true);
+
+    private bool CanRestoreAll() => RestoreFactory is not null && IsReady && Tree!.Root.Children.Count > 0;
+
+    private async Task RestoreAsync(IReadOnlyList<ArchiveNode> items, bool wholeArchive)
+    {
+        var restore = RestoreFactory!(items, wholeArchive);
+        if (Dialogs is { } dialogs)
+        {
+            restore.Dialogs = dialogs;
+            await dialogs.ShowRestoreAsync(restore);
+        }
     }
 
     // --- Selection ---

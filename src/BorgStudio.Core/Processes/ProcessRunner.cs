@@ -14,7 +14,8 @@ public sealed class ProcessRunner : IProcessRunner
         string? standardInput = null,
         CancellationToken cancellationToken = default,
         Action<string>? standardErrorLine = null,
-        Action<string>? standardOutputLine = null)
+        Action<string>? standardOutputLine = null,
+        string? workingDirectory = null)
     {
         var startInfo = new ProcessStartInfo(fileName)
         {
@@ -29,6 +30,8 @@ public sealed class ProcessRunner : IProcessRunner
             StandardOutputEncoding = Encoding.UTF8,
             StandardErrorEncoding = Encoding.UTF8,
         };
+        if (workingDirectory is not null)
+            startInfo.WorkingDirectory = workingDirectory;
         foreach (var argument in arguments)
             startInfo.ArgumentList.Add(argument);
         foreach (var (name, value) in environment ?? new Dictionary<string, string?>())

@@ -16,6 +16,7 @@ public sealed partial class ProgressViewModel : ViewModelBase
     private ProgressEstimator _estimator;
     private CancellationTokenSource? _ticking;
     private Action? _cancel;
+    private Func<double, string>? _rate;
 
     public ProgressViewModel(TimeProvider? time = null)
     {
@@ -62,8 +63,10 @@ public sealed partial class ProgressViewModel : ViewModelBase
     /// <summary>Starts anew.</summary>
     /// <param name="expected">How long the same operation took last time (used until real progress arrives).</param>
     /// <param name="cancel">Offers "Cancel", which calls this.</param>
-    public void Start(string? text, TimeSpan? expected = null, Action? cancel = null)
+    /// <param name="rate">Shows the pace, e.g. <see cref="BorgTexts.Rate"/> for bytes ("12,3 MB/s").</param>
+    public void Start(string? text, TimeSpan? expected = null, Action? cancel = null, Func<double, string>? rate = null)
     {
+        _rate = rate;
         _estimator = new ProgressEstimator(_time);
         _estimator.Expect(expected);
         _cancel = cancel;
@@ -125,14 +128,16 @@ public sealed partial class ProgressViewModel : ViewModelBase
     {
         Fraction = _estimator.Fraction ?? 0;
         IsIndeterminate = _estimator.Fraction is null;
-        SummaryText = Summary(_estimator);
+        SummaryText = Summary(_estimator, _rate);
     }
 
-    internal static string Summary(ProgressEstimator estimator)
+    internal static string Summary(ProgressEstimator estimator, Func<double, string>? rate = null)
     {
         var parts = new List<string>();
         if (estimator is { Fraction: { } fraction, IsFromHistory: false })
             parts.Add(BorgTexts.Format(Strings.ProgressPercent, (int)Math.Floor(fraction * 100)));
+        if (rate is not null && estimator.Rate is { } pace)
+            parts.Add(rate(pace));
         parts.Add(BorgTexts.Format(Strings.ProgressElapsed, BorgTexts.Duration(estimator.Elapsed)));
         if (estimator.IsOverdue)
             parts.Add(Strings.ProgressOverdue);

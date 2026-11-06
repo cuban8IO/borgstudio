@@ -65,7 +65,7 @@ public sealed class FakeBorg : IProcessRunner
 
     public Task<ProcessResult?> RunAsync(string fileName, IReadOnlyList<string> arguments, TimeSpan timeout,
         IReadOnlyDictionary<string, string?>? environment = null, string? standardInput = null,
-        CancellationToken cancellationToken = default, Action<string>? standardErrorLine = null, Action<string>? standardOutputLine = null)
+        CancellationToken cancellationToken = default, Action<string>? standardErrorLine = null, Action<string>? standardOutputLine = null, string? workingDirectory = null)
     {
         // Interruptible calls run borg through a small sh wrapper (on Linux/macOS).
         if (fileName == "sh" && arguments is ["-c", _, BorgPath, ..])
@@ -97,6 +97,8 @@ public sealed class FakeBorg : IProcessRunner
 
         if (arguments[0] == "create")
             return CreateAsync(arguments, standardErrorLine, cancellationToken);
+        if (arguments[0] == "extract")
+            return ExtractAsync(arguments, workingDirectory, standardErrorLine, cancellationToken);
         if (arguments[0] == "prune")
             return PruneAsync(arguments, standardErrorLine);
         if (arguments[0] == "compact")
@@ -177,6 +179,57 @@ public sealed class FakeBorg : IProcessRunner
     ];
 
     /// <summary>The entries of the archive (after "::") as borg 1.4 prints them, one JSON line each.</summary>
+    /// <summary>When set, "extract" fails with this message id.</summary>
+    public string? ExtractError { get; set; }
+
+    /// <summary>Awaited before extracting (e.g. to keep borg busy until cancelled).</summary>
+    public Func<CancellationToken, Task>? BeforeExtract { get; set; }
+
+    /// <summary>The working folders "extract" ran in.</summary>
+    public List<string?> ExtractFolders { get; } = [];
+
+    /// <summary>
+    /// Writes the archive's files below the "pp:" paths into the working folder (dropping --strip-components segments),
+    /// each with the text "restored"; reports "Calculating …" first, then bytes.
+    /// </summary>
+    private async Task<ProcessResult?> ExtractAsync(IReadOnlyList<string> arguments, string? workingDirectory,
+        Action<string>? standardErrorLine, CancellationToken cancellationToken)
+    {
+        ExtractFolders.Add(workingDirectory);
+        if (BeforeExtract is not null)
+            await BeforeExtract(cancellationToken);
+        if (ExtractError is not null)
+            return await Error(ExtractError);
+
+        var list = arguments.ToList();
+        var strip = list.IndexOf("--strip-components") is var at and >= 0 ? int.Parse(list[at + 1], CultureInfo.InvariantCulture) : 0;
+        var target = list.First(argument => argument.Contains("::", StringComparison.Ordinal));
+        var name = target[(target.IndexOf("::", StringComparison.Ordinal) + 2)..];
+        var prefixes = list.Where(argument => argument.StartsWith("pp:", StringComparison.Ordinal)).Select(argument => argument[3..]).ToList();
+        var files = (Contents.GetValueOrDefault(name) ?? DefaultContents)
+            .Where(entry => entry.Type == "-")
+            .Where(entry => prefixes.Count == 0 || prefixes.Any(prefix => entry.Path == prefix || entry.Path.StartsWith(prefix + "/", StringComparison.Ordinal)))
+            .ToList();
+        var total = files.Sum(file => file.Size);
+        standardErrorLine?.Invoke("""{"message": "Calculating total archive size for the progress indicator (might take long for large archives)", "current": 0, "total": 0, "info": null, "operation": 1, "msgid": "extract", "type": "progress_percent", "finished": false, "time": 0}""");
+        long done = 0;
+        foreach (var file in files)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var segments = file.Path.Split('/').Skip(strip).ToArray();
+            var destination = Path.Combine([workingDirectory ?? ".", .. segments]);
+            Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+            File.WriteAllText(destination, "restored");
+            done += file.Size;
+            standardErrorLine?.Invoke(System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object>
+            {
+                ["message"] = $"{done * 100.0 / Math.Max(1, total):0.0}% Extracting: {file.Path}", ["current"] = done, ["total"] = total,
+                ["info"] = new[] { file.Path }, ["operation"] = 1, ["msgid"] = "extract", ["type"] = "progress_percent", ["finished"] = false,
+            }));
+        }
+        return await Result(0, "");
+    }
+
     /// <summary>When set, "list --json-lines" fails with this message id.</summary>
     public string? ContentsError { get; set; }
 
@@ -478,6 +531,17 @@ public sealed class FakeDialogs : IDialogService
     public Func<ArchiveBrowserViewModel, Task>? Browser { get; set; }
 
     public List<ArchiveBrowserViewModel> Browsers { get; } = [];
+
+    /// <summary>What to do while the restore dialog is "open" (it closes when this completes).</summary>
+    public Func<RestoreViewModel, Task>? Restore { get; set; }
+
+    public List<RestoreViewModel> Restores { get; } = [];
+
+    public Task ShowRestoreAsync(RestoreViewModel restore)
+    {
+        Restores.Add(restore);
+        return Restore?.Invoke(restore) ?? Task.CompletedTask;
+    }
 
     public Task ShowArchiveBrowserAsync(ArchiveBrowserViewModel browser)
     {

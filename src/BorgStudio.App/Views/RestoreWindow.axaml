@@ -1,0 +1,89 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:BorgStudio.App.ViewModels"
+        xmlns:views="using:BorgStudio.App.Views"
+        xmlns:res="using:BorgStudio.App.Resources"
+        xmlns:sys="using:System"
+        x:Class="BorgStudio.App.Views.RestoreWindow"
+        x:DataType="vm:RestoreViewModel"
+        Title="{x:Static res:Strings.RestoreTitle}"
+        Width="640" SizeToContent="Height" MinHeight="300" CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+    <DockPanel Margin="20">
+        <TextBlock DockPanel.Dock="Top" Text="{Binding WhatText}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,16" />
+
+        <!-- Buttons per stage -->
+        <Panel DockPanel.Dock="Bottom" Margin="0,16,0,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" IsVisible="{Binding IsOptions}">
+                <Button Content="{x:Static res:Strings.Cancel}" Command="{Binding CancelCommand}" IsCancel="True" />
+                <Button Content="{x:Static res:Strings.RestoreStart}" Command="{Binding StartCommand}" Classes="accent" IsDefault="True" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" IsVisible="{Binding IsDone}">
+                <Button Content="{x:Static res:Strings.RestoreOpenFolder}" Click="OpenFolder_Click" IsVisible="{Binding CanOpenFolder}" />
+                <Button Content="{x:Static res:Strings.Close}" Command="{Binding CloseCommand}" Classes="accent" IsDefault="True" />
+            </StackPanel>
+        </Panel>
+
+        <StackPanel Spacing="14">
+            <!-- Options -->
+            <StackPanel Spacing="8" IsVisible="{Binding IsOptions}">
+                <TextBlock Text="{x:Static res:Strings.RestoreTarget}" FontWeight="SemiBold" />
+
+                <RadioButton GroupName="target" IsChecked="{Binding ToFolder}" Content="{x:Static res:Strings.RestoreToFolder}" />
+                <StackPanel Spacing="8" Margin="28,0,0,0" IsEnabled="{Binding ToFolder}">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Border Classes="card" Padding="8,6" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding TargetFolderText}" TextTrimming="LeadingCharacterEllipsis"
+                                       ToolTip.Tip="{Binding TargetFolder}" />
+                        </Border>
+                        <Button Grid.Column="1" Content="{x:Static res:Strings.RestorePickFolder}" Command="{Binding PickFolderCommand}"
+                                Margin="8,0,0,0" />
+                    </Grid>
+                    <TextBlock Text="{x:Static res:Strings.RestoreStructure}" Opacity="0.8" Margin="0,4,0,0" />
+                    <RadioButton GroupName="structure" IsChecked="{Binding Direct}" Content="{x:Static res:Strings.RestoreDirect}" />
+                    <RadioButton GroupName="structure" IsChecked="{Binding KeepFullPath}" Content="{x:Static res:Strings.RestoreFullPath}" />
+                </StackPanel>
+
+                <RadioButton GroupName="target" IsChecked="{Binding ToOriginal}" IsEnabled="{Binding CanRestoreToOriginal}" Margin="0,6,0,0">
+                    <TextBlock Text="{x:Static res:Strings.RestoreToOriginal}" TextWrapping="Wrap" />
+                </RadioButton>
+                <TextBlock Text="{Binding OriginalUnavailableText}" IsVisible="{Binding HasOriginalUnavailableText}" TextWrapping="Wrap"
+                           FontSize="12" Opacity="0.7" Margin="28,0,0,0" />
+
+                <TextBlock Text="{Binding ExampleText}" TextWrapping="Wrap" FontSize="12" Opacity="0.7" Margin="0,6,0,0" />
+                <TextBlock Text="{Binding Error}" IsVisible="{Binding HasError}" TextWrapping="Wrap" Foreground="{DynamicResource ErrorForeground}" />
+            </StackPanel>
+
+            <!-- Running -->
+            <Panel IsVisible="{Binding IsRunning}">
+                <views:ProgressPanel DataContext="{Binding Progress}" />
+            </Panel>
+
+            <!-- Done -->
+            <StackPanel Spacing="8" IsVisible="{Binding IsDone}">
+                <SelectableTextBlock Text="{Binding ResultText}" TextWrapping="Wrap" Classes.error="{Binding ResultIsError}">
+                    <SelectableTextBlock.Styles>
+                        <Style Selector="SelectableTextBlock.error">
+                            <Setter Property="Foreground" Value="{DynamicResource ErrorForeground}" />
+                        </Style>
+                    </SelectableTextBlock.Styles>
+                </SelectableTextBlock>
+                <StackPanel Spacing="4" IsVisible="{Binding HasWarnings}">
+                    <TextBlock Text="{x:Static res:Strings.RestoreDoneWarnings}" Foreground="{DynamicResource WarningBorder}" />
+                    <ScrollViewer MaxHeight="200">
+                        <ItemsControl ItemsSource="{Binding Warnings}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="sys:String">
+                                    <SelectableTextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="12" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+    </DockPanel>
+
+</Window>

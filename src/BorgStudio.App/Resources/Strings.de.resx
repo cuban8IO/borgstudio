@@ -1353,4 +1353,109 @@ Warnung: Der Anbieter veröffentlicht die Fingerabdrücke seiner Server, und die
   <data name="BrowserLoadCancelled" xml:space="preserve">
     <value>Lesen der Dateiliste abgebrochen.</value>
   </data>
+  <data name="BrowserRestoreSelection" xml:space="preserve">
+    <value>Auswahl wiederherstellen…</value>
+  </data>
+  <data name="BrowserRestoreAll" xml:space="preserve">
+    <value>Ganzes Archiv wiederherstellen…</value>
+  </data>
+  <data name="RestoreTitle" xml:space="preserve">
+    <value>Wiederherstellen</value>
+  </data>
+  <data name="RestoreWhatSelection" xml:space="preserve">
+    <value>{0:N0} ausgewählte Elemente aus „{1}“ · {2}</value>
+  </data>
+  <data name="RestoreWhatAll" xml:space="preserve">
+    <value>Das ganze Archiv „{0}“ · {1}</value>
+  </data>
+  <data name="RestoreTarget" xml:space="preserve">
+    <value>Wohin</value>
+  </data>
+  <data name="RestoreToFolder" xml:space="preserve">
+    <value>In einen Ordner</value>
+  </data>
+  <data name="RestoreToOriginal" xml:space="preserve">
+    <value>An den Originalort (überschreibt, was dort liegt)</value>
+  </data>
+  <data name="RestoreOriginalUnavailableWsl" xml:space="preserve">
+    <value>Für diese Auswahl nicht möglich: Mit borg in WSL lassen sich nur Windows-Laufwerke zurückschreiben.</value>
+  </data>
+  <data name="RestoreOriginalUnavailableNative" xml:space="preserve">
+    <value>Mit einem nativen borg unter Windows nicht möglich.</value>
+  </data>
+  <data name="RestorePickFolder" xml:space="preserve">
+    <value>Ordner wählen …</value>
+  </data>
+  <data name="RestoreFolderNone" xml:space="preserve">
+    <value>Kein Ordner gewählt</value>
+  </data>
+  <data name="RestoreStructure" xml:space="preserve">
+    <value>Struktur</value>
+  </data>
+  <data name="RestoreDirect" xml:space="preserve">
+    <value>Direkt in den Ordner</value>
+  </data>
+  <data name="RestoreFullPath" xml:space="preserve">
+    <value>Mit vollem Pfad wie im Archiv</value>
+  </data>
+  <data name="RestoreExample" xml:space="preserve">
+    <value>Beispiel: {0}</value>
+  </data>
+  <data name="RestoreStart" xml:space="preserve">
+    <value>Wiederherstellen</value>
+  </data>
+  <data name="RestoreFolderRequired" xml:space="preserve">
+    <value>Bitte einen Zielordner wählen.</value>
+  </data>
+  <data name="RestoreFolderUnreachable" xml:space="preserve">
+    <value>borg in WSL erreicht diesen Ordner nicht (Netzwerkpfade gehen nicht): {0}</value>
+  </data>
+  <data name="RestoreFolderNotCreated" xml:space="preserve">
+    <value>Der Ordner ließ sich nicht anlegen: {0}</value>
+  </data>
+  <data name="RestoreChecking" xml:space="preserve">
+    <value>Prüfe, welche Dateien schon vorhanden sind …</value>
+  </data>
+  <data name="RestoreCheckedFiles" xml:space="preserve">
+    <value>{0:N0} von {1:N0} Dateien geprüft</value>
+  </data>
+  <data name="RestoreOverwriteTitle" xml:space="preserve">
+    <value>Dateien überschreiben?</value>
+  </data>
+  <data name="RestoreOverwriteMessage" xml:space="preserve">
+    <value>{0:N0} Dateien gibt es schon; sie werden überschrieben – {1:N0} davon wurden nach dem Backup geändert.</value>
+  </data>
+  <data name="RestoreOverwriteMore" xml:space="preserve">
+    <value>… und {0:N0} weitere</value>
+  </data>
+  <data name="RestoreOverwriteConfirm" xml:space="preserve">
+    <value>Überschreiben</value>
+  </data>
+  <data name="RestoreRunning" xml:space="preserve">
+    <value>Stelle wieder her …</value>
+  </data>
+  <data name="RestoreRunningDrive" xml:space="preserve">
+    <value>Stelle auf {0} wieder her ({1} von {2}) …</value>
+  </data>
+  <data name="RestorePreparing" xml:space="preserve">
+    <value>borg berechnet die Größe (liest dafür die Dateiliste des Archivs) …</value>
+  </data>
+  <data name="RestoreDone" xml:space="preserve">
+    <value>Wiederhergestellt: {0} nach {1}.</value>
+  </data>
+  <data name="RestoreDoneOriginal" xml:space="preserve">
+    <value>Wiederhergestellt: {0} am Originalort.</value>
+  </data>
+  <data name="RestoreDoneWarnings" xml:space="preserve">
+    <value>Einige Dateien ließen sich nicht schreiben:</value>
+  </data>
+  <data name="RestoreCancelled" xml:space="preserve">
+    <value>Abgebrochen. Was schon wiederhergestellt war, bleibt.</value>
+  </data>
+  <data name="RestoreFailed" xml:space="preserve">
+    <value>Wiederherstellen fehlgeschlagen: {0}</value>
+  </data>
+  <data name="RestoreOpenFolder" xml:space="preserve">
+    <value>Ordner öffnen</value>
+  </data>
 </root>

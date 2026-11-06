@@ -148,10 +148,17 @@ section gets the new version number.
   for the job are touched (`<job>-{hostname}-*`). "Free space" in the overview runs `borg compact` on its own, with
   progress and cancel.
 - Archive browser (tab "Archives" → "Open…" or double-click): folder tree and the files of each folder in a table
-  (resizable, sortable columns) with size and date, a search over the whole archive (part of the name, or patterns like `*.pdf`) and tick boxes to select files and
-  folders (for restoring, next). Windows drives backed up through WSL show as `C:\…`. The file list is read from borg
-  line by line with progress and remaining time (`borg list` reports none: counted against the archive's file count),
-  then cached per archive – archives never change – encrypted with the vault's key when a PIN is set up.
+  (resizable, sortable columns) with size and date, a search over the whole archive (part of the name, or patterns
+  like `*.pdf`) and tick boxes to select files and folders. Windows drives backed up through WSL show as `C:\…`. The
+  file list is read from borg line by line with progress and remaining time (`borg list` reports none: counted against
+  the archive's file count), then cached per archive – archives never change – encrypted with the vault's key when a
+  PIN is set up.
+- Restore (archive browser → "Restore selection…" or "Restore whole archive…"): into a folder – directly (the selected
+  items land in it) or with the full path as in the archive – or back to the original location (with borg in WSL:
+  Windows drives, one run per drive). Before writing, BorgStudio checks which files exist already and asks before
+  overwriting them, naming those changed after the backup. borg extract runs with progress, pace (MB/s), remaining
+  time and the current file; it can be cancelled (what was restored stays). Files borg could not write are listed;
+  "Open folder" shows the result.
 
 **Changed**
 - Every wait shows a progress bar with percent, elapsed and remaining time, so it is clear the app is working:

@@ -305,6 +305,62 @@ public sealed class BorgClientIntegrationTests : IDisposable
         Assert.Equal(BorgErrorKind.PassphraseWrong, wrong.Error!.Kind);
     }
 
+    [BorgFact]
+    public async Task Restores_into_a_folder_and_back_to_the_original_location()
+    {
+        if (OperatingSystem.IsWindows() && Borg.Runtime != BorgRuntime.Wsl)
+            return; // no way back for a native Windows borg
+
+        await _client.InitAsync(Borg, Location(), BorgEncryption.RepokeyBlake2, Passphrase);
+        var source = _directory.Combine("source");
+        Directory.CreateDirectory(Path.Combine(source, "Invoices [2026]"));
+        File.WriteAllText(Path.Combine(source, "letter.txt"), "letter");
+        File.WriteAllBytes(Path.Combine(source, "Invoices [2026]", "a.pdf"), new byte[300_000]);
+        Assert.True((await _client.CreateAsync(Borg, Location(), "restore", [source], [], Passphrase)).Succeeded);
+        var tree = (await _client.ListContentsAsync(Borg, Location(), "restore", Passphrase)).Value!;
+        var folder = tree.Find(BorgClient.BorgPath(Borg, source)!.TrimStart('/'))!;
+        var invoices = folder.Children.Single(child => child.Name == "Invoices [2026]");
+        var letter = folder.Children.Single(child => child.Name == "letter.txt");
+
+        async Task<List<BorgExtractProgress>> RunAsync(RestorePlan plan)
+        {
+            var updates = new List<BorgExtractProgress>();
+            foreach (var run in plan.Runs)
+            {
+                var result = await _client.ExtractAsync(Borg, Location(), "restore", run.Paths, run.TargetDirectory, run.StripComponents,
+                    Passphrase, progress: new SynchronousProgress<BorgExtractProgress>(updates.Add));
+                Assert.True(result.Succeeded, result.Error?.ToString());
+            }
+            return updates;
+        }
+
+        // Directly into a folder (brackets in the name are taken literally).
+        var direct = _directory.Combine("direct");
+        Directory.CreateDirectory(direct);
+        var updates = await RunAsync(RestorePlan.IntoFolder([invoices, letter], direct, keepFullPath: false));
+        Assert.Equal(300_000, new FileInfo(Path.Combine(direct, "Invoices [2026]", "a.pdf")).Length);
+        Assert.Equal("letter", File.ReadAllText(Path.Combine(direct, "letter.txt")));
+        Assert.Contains(updates, update => update is { Preparing: false, Total: > 0 });
+
+        // Existing files are overwritten (after the app asked).
+        File.WriteAllText(Path.Combine(direct, "letter.txt"), "changed");
+        var plan = RestorePlan.IntoFolder([letter], direct, keepFullPath: false);
+        Assert.Single(plan.FindConflicts());
+        await RunAsync(plan);
+        Assert.Equal("letter", File.ReadAllText(Path.Combine(direct, "letter.txt")));
+
+        // With the full path as in the archive.
+        var full = _directory.Combine("full");
+        Directory.CreateDirectory(full);
+        await RunAsync(RestorePlan.IntoFolder([letter], full, keepFullPath: true));
+        Assert.True(File.Exists(Path.Combine([full, .. letter.BorgPath.Split('/')])));
+
+        // Back where it came from (in WSL: "C:\" with "mnt/c" dropped).
+        File.WriteAllText(Path.Combine(source, "letter.txt"), "changed at the source");
+        await RunAsync(RestorePlan.ToOriginal([letter], Borg.Runtime)!);
+        Assert.Equal("letter", File.ReadAllText(Path.Combine(source, "letter.txt")));
+    }
+
     /// <summary>Calls the progress callback right away (Progress&lt;T&gt; would post it to a thread pool).</summary>
     private sealed class SynchronousProgress<T>(Action<T> report) : IProgress<T>
     {
