@@ -2,8 +2,8 @@ using System.Globalization;
 using BorgStudio.App.Resources;
 using BorgStudio.Core.Backups;
 using BorgStudio.Core.Borg;
+using BorgStudio.Core.Progress;
 using BorgStudio.Plugins;
-using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 namespace BorgStudio.App.ViewModels;
@@ -14,20 +14,6 @@ namespace BorgStudio.App.ViewModels;
 /// </summary>
 public partial class MainViewModel
 {
-    private CancellationTokenSource? _workCancellation;
-
-    /// <summary>The running repository operation can be cancelled (freeing space).</summary>
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(CancelWorkCommand))]
-    public partial bool IsWorkCancellable { get; private set; }
-
-    /// <summary>How far the running repository operation is (0..1); <c>null</c> while unknown.</summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasWorkingProgress))]
-    public partial double? WorkingProgress { get; private set; }
-
-    public bool HasWorkingProgress => WorkingProgress is not null;
-
     // --- Cleaning up a job by hand ---
 
     /// <summary>Shows which archives the job's rules would delete and, if confirmed, deletes them and frees the space.</summary>
@@ -59,8 +45,12 @@ public partial class MainViewModel
         CleanupSummary cleanup;
         try
         {
+            var previewKey = DurationHistory.Key(job.RepositoryId, "prune-preview");
+            run.StartPhase(RunPhase.Previewing, _services.Durations.Get(previewKey));
             var preview = await _services.BorgClient.PruneAsync(borg, location, ArchiveGlob(job.Name), retention.Arguments(),
-                dryRun: true, passphrase.Value, ssh.Access, cancellation.Token);
+                dryRun: true, passphrase.Value, ssh.Access, new ViewModelProgress<double>(this, run.ReportPhase), cancellation.Token);
+            if (preview.Succeeded)
+                _services.Durations.Record(previewKey, run.PhaseProgress.Elapsed);
             if (!preview.Succeeded)
                 cleanup = Failed(preview.Error!);
             else if (preview.Value!.Pruned.Count == 0)
@@ -86,18 +76,23 @@ public partial class MainViewModel
     private async Task<CleanupSummary> PruneAndCompactAsync(BackupRunViewModel run, BackupJob job, RetentionPolicy retention,
         BorgInstallation borg, RepositoryLocation location, SshAccess? ssh, string? passphrase, CancellationToken cancellationToken)
     {
-        run.StartPhase(RunPhase.Pruning);
+        var pruneKey = DurationHistory.Key(job.RepositoryId, "prune");
+        run.StartPhase(RunPhase.Pruning, _services.Durations.Get(pruneKey));
         var pruned = await _services.BorgClient.PruneAsync(borg, location, ArchiveGlob(job.Name), retention.Arguments(),
-            dryRun: false, passphrase, ssh, cancellationToken);
+            dryRun: false, passphrase, ssh, new ViewModelProgress<double>(this, run.ReportPhase), cancellationToken);
         if (!pruned.Succeeded)
             return Failed(pruned.Error!);
+        _services.Durations.Record(pruneKey, run.PhaseProgress.Elapsed);
         var count = pruned.Value!.Pruned.Count;
         if (count == 0)
             return new CleanupSummary();
 
-        run.StartPhase(RunPhase.Compacting);
+        var compactKey = DurationHistory.Key(job.RepositoryId, "compact");
+        run.StartPhase(RunPhase.Compacting, _services.Durations.Get(compactKey));
         var compacted = await _services.BorgClient.CompactAsync(borg, location, ssh,
-            new ViewModelProgress<double>(this, run.ReportCompact), cancellationToken);
+            new ViewModelProgress<double>(this, run.ReportPhase), cancellationToken);
+        if (compacted.Succeeded)
+            _services.Durations.Record(compactKey, run.PhaseProgress.Elapsed);
         return compacted.Succeeded
             ? new CleanupSummary { PrunedArchives = count, FreedBytes = compacted.Value!.FreedBytes }
             : Failed(compacted.Error!) with { PrunedArchives = count };
@@ -122,29 +117,10 @@ public partial class MainViewModel
 
         var borg = Borg!;
         using var cancellation = new CancellationTokenSource();
-        _workCancellation = cancellation;
-        IsWorkCancellable = true;
-        var progress = new ViewModelProgress<double>(this, fraction =>
-        {
-            // Progress may arrive after borg has finished.
-            if (_workCancellation != cancellation)
-                return;
-            WorkingProgress = fraction;
-            WorkingText = BorgTexts.Format(Strings.CleanupCompactingPercent, (int)Math.Round(fraction * 100));
-        });
-
-        BorgResult<BorgCompactResult> result;
-        try
-        {
-            result = await RunAsync(Strings.CleanupCompacting,
-                () => _services.BorgClient.CompactAsync(borg, location, ssh.Access, progress, cancellation.Token));
-        }
-        finally
-        {
-            _workCancellation = null;
-            IsWorkCancellable = false;
-            WorkingProgress = null;
-        }
+        // Progress after borg has finished is ignored (the panel is stopped then).
+        var progress = new ViewModelProgress<double>(this, fraction => Work.Report(fraction));
+        var result = await RunAsync(item, Strings.CleanupCompacting, "compact",
+            () => _services.BorgClient.CompactAsync(borg, location, ssh.Access, progress, cancellation.Token), cancellation.Cancel);
 
         if (result.Value is { } compacted)
             item.ShowResult(compacted.FreedBytes is { } freed ? BorgTexts.Format(Strings.SpaceFreed, BorgTexts.Size(freed)) : Strings.SpaceFreedNoSize,
@@ -154,9 +130,6 @@ public partial class MainViewModel
         else
             item.ShowResult(BorgTexts.Describe(result.Error), isError: true);
     }
-
-    [RelayCommand(CanExecute = nameof(IsWorkCancellable))]
-    private void CancelWork() => _workCancellation?.Cancel();
 }
 
 /// <summary>What cleaning up a job would do: which archives go, which stay (and why). Shown before deleting.</summary>

@@ -1187,9 +1187,6 @@ Warning: the provider publishes the fingerprints of its servers, and this key ma
   <data name="CleanupCompacting" xml:space="preserve">
     <value>Freeing space…</value>
   </data>
-  <data name="CleanupCompactingPercent" xml:space="preserve">
-    <value>Freeing space… {0} %</value>
-  </data>
   <data name="CleanupDone" xml:space="preserve">
     <value>Done</value>
   </data>
@@ -1282,5 +1279,23 @@ Warning: the provider publishes the fingerprints of its servers, and this key ma
   </data>
   <data name="SpaceFreeCancelled" xml:space="preserve">
     <value>Freeing space cancelled.</value>
+  </data>
+  <data name="ProgressPercent" xml:space="preserve">
+    <value>{0} %</value>
+  </data>
+  <data name="ProgressElapsed" xml:space="preserve">
+    <value>{0} elapsed</value>
+  </data>
+  <data name="ProgressRemaining" xml:space="preserve">
+    <value>{0} left</value>
+  </data>
+  <data name="ProgressRemainingAbout" xml:space="preserve">
+    <value>about {0} left</value>
+  </data>
+  <data name="ProgressCalculating" xml:space="preserve">
+    <value>working out the remaining time …</value>
+  </data>
+  <data name="ProgressOverdue" xml:space="preserve">
+    <value>taking longer than last time</value>
   </data>
 </root>

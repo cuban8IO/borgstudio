@@ -1167,9 +1167,6 @@ Warnung: Der Anbieter veröffentlicht die Fingerabdrücke seiner Server, und die
   <data name="CleanupCompacting" xml:space="preserve">
     <value>Gebe Speicher frei…</value>
   </data>
-  <data name="CleanupCompactingPercent" xml:space="preserve">
-    <value>Gebe Speicher frei… {0} %</value>
-  </data>
   <data name="CleanupDone" xml:space="preserve">
     <value>Fertig</value>
   </data>
@@ -1262,5 +1259,23 @@ Warnung: Der Anbieter veröffentlicht die Fingerabdrücke seiner Server, und die
   </data>
   <data name="SpaceFreeCancelled" xml:space="preserve">
     <value>Speicher freigeben abgebrochen.</value>
+  </data>
+  <data name="ProgressPercent" xml:space="preserve">
+    <value>{0} %</value>
+  </data>
+  <data name="ProgressElapsed" xml:space="preserve">
+    <value>{0} vergangen</value>
+  </data>
+  <data name="ProgressRemaining" xml:space="preserve">
+    <value>noch {0}</value>
+  </data>
+  <data name="ProgressRemainingAbout" xml:space="preserve">
+    <value>noch ca. {0}</value>
+  </data>
+  <data name="ProgressCalculating" xml:space="preserve">
+    <value>Restzeit wird berechnet …</value>
+  </data>
+  <data name="ProgressOverdue" xml:space="preserve">
+    <value>dauert länger als beim letzten Mal</value>
   </data>
 </root>

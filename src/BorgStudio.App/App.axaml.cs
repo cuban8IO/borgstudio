@@ -12,6 +12,7 @@ using BorgStudio.Core;
 using BorgStudio.Core.Backups;
 using BorgStudio.Core.Borg;
 using BorgStudio.Core.Plugins;
+using BorgStudio.Core.Progress;
 using BorgStudio.Core.Repositories;
 using BorgStudio.Core.Secrets;
 using BorgStudio.Core.Security;
@@ -52,6 +53,7 @@ public partial class App : Application
                 SettingsStore.CreateDefault(),
                 BackupJobStore.CreateDefault(),
                 ArchiveCache.CreateDefault(vault),
+                DurationHistory.CreateDefault(),
                 new DialogService(window)));
             window.DataContext = viewModel;
             desktop.MainWindow = window;

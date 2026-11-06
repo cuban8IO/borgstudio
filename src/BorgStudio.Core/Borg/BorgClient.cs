@@ -192,10 +192,22 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
     /// </summary>
     public async Task<BorgResult<IReadOnlyList<BorgArchive>>> ArchiveDetailsAsync(
         BorgInstallation borg, RepositoryLocation location, int last, string? passphrase, SshAccess? ssh = null,
-        CancellationToken cancellationToken = default)
+        IProgress<double>? progress = null, CancellationToken cancellationToken = default)
     {
+        // borg reports, archive by archive, how far it is with the statistics; each one ends with "finished".
+        var done = 0;
+        void OnLine(string line)
+        {
+            if (ParseProgressPercent(line) is not { MessageId: "archive.calc_stats" } update)
+                return;
+            if (update.Finished)
+                done++;
+            progress?.Report(Math.Min(1, (done + (update.Finished ? 0 : update.Fraction)) / Math.Max(1, last)));
+        }
+
         var result = await RunAsync(borg, location, ssh, ["info"],
-            ["--json", "--last", last.ToString(CultureInfo.InvariantCulture)], [], passphrase, InfoTimeout, cancellationToken);
+            ["--json", "--progress", "--last", last.ToString(CultureInfo.InvariantCulture)], [], passphrase, InfoTimeout, cancellationToken,
+            standardErrorLine: OnLine);
         return ParseArchives(result);
     }
 
@@ -208,16 +220,19 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
     /// <param name="keepOptions">The rules (<see cref="Backups.RetentionPolicy.Arguments"/>); at least one.</param>
     public async Task<BorgResult<BorgPruneResult>> PruneAsync(
         BorgInstallation borg, RepositoryLocation location, string archiveGlob, IReadOnlyList<string> keepOptions,
-        bool dryRun, string? passphrase, SshAccess? ssh = null, CancellationToken cancellationToken = default)
+        bool dryRun, string? passphrase, SshAccess? ssh = null, IProgress<double>? progress = null,
+        CancellationToken cancellationToken = default)
     {
         var archives = new List<BorgPruneEntry>();
         void OnLine(string line)
         {
             if (ParsePruneLine(line) is { } entry)
                 archives.Add(entry);
+            else if (ParseProgressPercent(line) is { MessageId: "prune" } update)
+                progress?.Report(update.Finished ? 1 : update.Fraction);
         }
 
-        List<string> options = ["--list", "--glob-archives", archiveGlob, .. keepOptions];
+        List<string> options = ["--list", "--progress", "--glob-archives", archiveGlob, .. keepOptions];
         if (dryRun)
             options.Insert(0, "--dry-run");
         var result = await RunAsync(borg, location, ssh, ["prune"], options, [], passphrase,
@@ -242,8 +257,8 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         long? freed = null;
         void OnLine(string line)
         {
-            if (ParseCompactProgress(line) is { } fraction)
-                progress?.Report(fraction);
+            if (ParseProgressPercent(line) is { MessageId: "repository.compact_segments" } update)
+                progress?.Report(update.Finished ? 1 : update.Fraction);
             else if (ParseCompactFreed(line) is { } bytes)
                 freed = bytes;
         }
@@ -287,8 +302,11 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         }
     }
 
-    /// <summary>How far <c>borg compact --progress --log-json</c> is (0..1); <c>null</c> for any other line.</summary>
-    internal static double? ParseCompactProgress(string line)
+    /// <summary>
+    /// A <c>progress_percent</c> line of <c>--progress --log-json</c> (compact, prune, info, extract, …); <c>null</c> for
+    /// any other line. The fraction is the percentage borg shows itself, or current/total if the message has none.
+    /// </summary>
+    internal static BorgProgressPercent? ParseProgressPercent(string line)
     {
         if (!line.Contains("\"progress_percent\"", StringComparison.Ordinal))
             return null;
@@ -296,14 +314,26 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         {
             using var document = JsonDocument.Parse(line);
             var root = document.RootElement;
-            if (root.GetProperty("type").GetString() != "progress_percent")
+            if (!root.TryGetProperty("type", out var type) || type.GetString() != "progress_percent")
                 return null;
+            var messageId = root.TryGetProperty("msgid", out var id) && id.ValueKind == JsonValueKind.String ? id.GetString() : null;
             if (root.TryGetProperty("finished", out var finished) && finished.ValueKind == JsonValueKind.True)
-                return 1;
-            if (!root.TryGetProperty("current", out var current) || !root.TryGetProperty("total", out var total)
-                || current.ValueKind != JsonValueKind.Number || total.ValueKind != JsonValueKind.Number || total.GetDouble() <= 0)
+                return new BorgProgressPercent(messageId, 1, true, null);
+
+            var message = root.TryGetProperty("message", out var text) && text.ValueKind == JsonValueKind.String ? text.GetString() : null;
+            double? fraction = message is not null && PercentInMessage().Match(message) is { Success: true } match
+                && double.TryParse(match.Groups["percent"].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var percent)
+                ? percent / 100
+                : root.TryGetProperty("current", out var current) && root.TryGetProperty("total", out var total)
+                  && current.ValueKind == JsonValueKind.Number && total.ValueKind == JsonValueKind.Number && total.GetDouble() > 0
+                    ? current.GetDouble() / total.GetDouble()
+                    : null;
+            if (fraction is null)
                 return null;
-            return Math.Clamp(current.GetDouble() / total.GetDouble(), 0, 1);
+            var info = root.TryGetProperty("info", out var details) && details.ValueKind == JsonValueKind.Array && details.GetArrayLength() > 0
+                ? details[0].GetString()
+                : null;
+            return new BorgProgressPercent(messageId, Math.Clamp(fraction.Value, 0, 1), false, info);
         }
         catch (Exception exception) when (exception is JsonException or KeyNotFoundException or InvalidOperationException)
         {
@@ -837,6 +867,9 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
     [GeneratedRegex(@"^(?:(?<keep>Keeping archive(?: \(rule: (?<rule>[a-z]+)[^#)]*#(?<number>\d+)\))?|Keeping checkpoint archive)|Would prune|Pruning archive[^:]*):\s+(?<name>.+?)\s+\S+\s+(?<time>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\s+\[(?<id>[0-9a-f]+)\]$",
         RegexOptions.CultureInvariant)]
     private static partial Regex PruneLine();
+
+    [GeneratedRegex(@"(?<percent>[0-9]+(?:\.[0-9]+)?)%", RegexOptions.CultureInvariant)]
+    private static partial Regex PercentInMessage();
 
     [GeneratedRegex(@"compaction freed about (?<value>-?[0-9.]+) (?<unit>[kMGTPEZY]?B)\b", RegexOptions.CultureInvariant)]
     private static partial Regex CompactFreed();

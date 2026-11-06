@@ -8,6 +8,9 @@ public abstract class ViewModelBase : ObservableObject
     // The UI thread the view model was created on; none in tests, where everything runs directly.
     private readonly AvaloniaSynchronizationContext? _uiContext = SynchronizationContext.Current as AvaloniaSynchronizationContext;
 
+    /// <summary>Created in the app (not in a test): there is a UI thread to come back to.</summary>
+    protected bool HasUiThread => _uiContext is not null;
+
     /// <summary>Runs <paramref name="action"/> on the UI thread – for events raised by background work.</summary>
     protected void OnViewModelThread(Action action)
     {

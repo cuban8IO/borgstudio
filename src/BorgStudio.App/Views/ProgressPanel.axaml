@@ -1,0 +1,22 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:BorgStudio.App.ViewModels"
+             xmlns:res="using:BorgStudio.App.Resources"
+             x:Class="BorgStudio.App.Views.ProgressPanel"
+             x:DataType="vm:ProgressViewModel">
+
+    <!-- Bar, percent, elapsed and remaining time, current item: the app is visibly working. -->
+    <StackPanel Spacing="4">
+        <TextBlock Text="{Binding Text}" IsVisible="{Binding HasText}" FontSize="12" TextWrapping="Wrap" />
+        <Grid ColumnDefinitions="*,Auto">
+            <ProgressBar Minimum="0" Maximum="1" Value="{Binding Fraction}" IsIndeterminate="{Binding IsIndeterminate}"
+                         VerticalAlignment="Center" />
+            <Button Grid.Column="1" Content="{x:Static res:Strings.Cancel}" Command="{Binding CancelCommand}"
+                    IsVisible="{Binding CanCancel}" Margin="12,0,0,0" />
+        </Grid>
+        <TextBlock Text="{Binding SummaryText}" FontSize="12" Opacity="0.8" TextWrapping="Wrap" />
+        <TextBlock Text="{Binding Detail}" IsVisible="{Binding HasDetail}" FontSize="12" Opacity="0.7"
+                   TextTrimming="LeadingCharacterEllipsis" ToolTip.Tip="{Binding Detail}" />
+    </StackPanel>
+
+</UserControl>

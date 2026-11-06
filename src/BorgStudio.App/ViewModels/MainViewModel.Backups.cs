@@ -84,6 +84,7 @@ public partial class MainViewModel
             SaveJobs();
         RefreshRepositoryJobs();
         _services.Archives.Remove(repositoryId);
+        _services.Durations.Remove(repositoryId);
     }
 
     // --- New / edit / delete ---

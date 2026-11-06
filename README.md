@@ -149,6 +149,11 @@ section gets the new version number.
   progress and cancel.
 
 **Changed**
+- Every wait shows a progress bar with percent, elapsed and remaining time, so it is clear the app is working:
+  testing a connection, exporting the key, freeing space, loading archives and their details (borg now reports
+  archive by archive), cleaning up (prune reports per archive), and the steps in the add/edit repository dialog.
+  Where borg reports no progress, the bar runs on how long the same operation took last time ("about 0:30 left");
+  these durations are remembered per repository in `durations.json`.
 - Dark design in the Beatport palette: dark ground, neon green for primary buttons, the selected list entry, progress
   bars, check boxes and success messages.
 
