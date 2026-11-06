@@ -5,9 +5,24 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace BorgStudio.App.ViewModels;
 
+/// <summary>What a run is doing: the backup itself, then cleaning up (prune, compact).</summary>
+public enum RunPhase
+{
+    Backup,
+
+    /// <summary>borg prune --dry-run, for the preview of a clean-up started by hand.</summary>
+    Previewing,
+
+    Pruning,
+
+    Compacting,
+}
+
 /// <summary>
 /// A running (or just finished) backup: what borg reports, plus rates and an estimate of the remaining time. The
-/// rates look at the last few seconds only, so they follow changes (e.g. many small files, then large ones).
+/// rates look at the last few seconds only, so they follow changes (e.g. many small files, then large ones). After the
+/// backup the job's old archives may be cleaned up; a clean-up started by hand is a run without backup
+/// (<see cref="IsCleanupOnly"/>).
 /// </summary>
 public sealed partial class BackupRunViewModel : ObservableObject
 {
@@ -17,23 +32,41 @@ public sealed partial class BackupRunViewModel : ObservableObject
     private readonly DateTimeOffset _started;
     private readonly Queue<(DateTimeOffset At, long Original, long Deduplicated)> _samples = new();
 
-    public BackupRunViewModel(BackupJob job, TimeProvider? time = null)
+    public BackupRunViewModel(BackupJob job, TimeProvider? time = null, bool cleanupOnly = false)
     {
         _time = time ?? TimeProvider.System;
         _started = _time.GetUtcNow();
         JobId = job.Id;
         JobName = job.Name;
+        IsCleanupOnly = cleanupOnly;
+        Phase = cleanupOnly ? RunPhase.Previewing : RunPhase.Backup;
     }
 
     public Guid JobId { get; }
 
     public string JobName { get; }
 
+    /// <summary>Cleaning up by hand, without a backup.</summary>
+    public bool IsCleanupOnly { get; }
+
+    public string Title => IsCleanupOnly ? BorgTexts.Format(Strings.CleanupTitle, JobName) : JobName;
+
     public DateTimeOffset Started => _started;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsFinished))]
+    [NotifyPropertyChangedFor(nameof(IsFinished), nameof(IsBackupPhase))]
     public partial bool IsRunning { get; private set; } = true;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsBackupPhase), nameof(StatusText))]
+    public partial RunPhase Phase { get; private set; }
+
+    /// <summary>The backup is running (its figures are worth showing).</summary>
+    public bool IsBackupPhase => IsRunning && Phase == RunPhase.Backup;
+
+    /// <summary>The outcome of a clean-up started by hand, once finished.</summary>
+    [ObservableProperty]
+    public partial CleanupSummary? Cleanup { get; private set; }
 
     public bool IsFinished => !IsRunning;
 
@@ -99,11 +132,25 @@ public sealed partial class BackupRunViewModel : ObservableObject
         : EstimatedTotal is null ? Strings.BackupRemainingUnknown : Strings.BackupRemainingCalculating;
 
     public string StatusText => IsCancelling ? Strings.BackupCancelling
-        : IsRunning ? Strings.BackupRunning
+        : IsRunning ? Phase switch
+        {
+            RunPhase.Previewing => Strings.CleanupPreviewing,
+            RunPhase.Pruning => Strings.CleanupPruning,
+            RunPhase.Compacting when !IsIndeterminate => BorgTexts.Format(Strings.CleanupCompactingPercent, (int)Math.Round(Fraction * 100)),
+            RunPhase.Compacting => Strings.CleanupCompacting,
+            _ => Strings.BackupRunning,
+        }
+        : Cleanup is { } cleanup ? cleanup.Error is not null ? Strings.OutcomeFailed
+            : cleanup.Cancelled ? Strings.OutcomeCancelled : Strings.CleanupDone
         : Summary is { } summary ? BorgTexts.BackupOutcome(summary.Outcome) : "";
 
-    /// <summary>The outcome in words, once finished.</summary>
-    public string? ResultText => Summary switch
+    /// <summary>The outcome in words (with the clean-up, if any), once finished.</summary>
+    public string? ResultText => Cleanup is { } cleanup ? BorgTexts.Cleanup(cleanup)
+        : BackupResultText is not { } backup ? null
+        : Summary?.Cleanup is { } afterBackup ? backup + "\n" + BorgTexts.Cleanup(afterBackup)
+        : backup;
+
+    private string? BackupResultText => Summary switch
     {
         null => null,
         { Outcome: BackupOutcome.Succeeded or BackupOutcome.Warnings } summary => BorgTexts.Format(Strings.BackupResult,
@@ -129,11 +176,27 @@ public sealed partial class BackupRunViewModel : ObservableObject
 
     partial void OnIsCancellingChanged(bool value) => OnPropertyChanged(nameof(StatusText));
 
-    partial void OnSummaryChanged(BackupRunSummary? value)
+    partial void OnSummaryChanged(BackupRunSummary? value) => OnResultChanged();
+
+    partial void OnCleanupChanged(CleanupSummary? value) => OnResultChanged();
+
+    private void OnResultChanged()
     {
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(ResultText));
         OnPropertyChanged(nameof(HasResult));
+    }
+
+    partial void OnFractionChanged(double value)
+    {
+        if (Phase == RunPhase.Compacting)
+            OnPropertyChanged(nameof(StatusText));
+    }
+
+    partial void OnIsIndeterminateChanged(bool value)
+    {
+        if (Phase == RunPhase.Compacting)
+            OnPropertyChanged(nameof(StatusText));
     }
 
     partial void OnWarningsChanged(IReadOnlyList<string> value)
@@ -196,6 +259,38 @@ public sealed partial class BackupRunViewModel : ObservableObject
     public void Tick() => Elapsed = _time.GetUtcNow() - _started;
 
     public void MarkCancelling() => IsCancelling = true;
+
+    /// <summary>The backup is done (or wasn't part of the run); now <paramref name="phase"/> of the clean-up.</summary>
+    public void StartPhase(RunPhase phase)
+    {
+        Remaining = null;
+        IsIndeterminate = true;
+        Fraction = 0;
+        Phase = phase;
+    }
+
+    /// <summary>How far borg compact is (0..1).</summary>
+    public void ReportCompact(double fraction)
+    {
+        if (!IsRunning || Phase != RunPhase.Compacting)
+            return;
+        IsIndeterminate = false;
+        Fraction = Math.Clamp(fraction, 0, 1);
+    }
+
+    /// <summary>Ends a clean-up started by hand.</summary>
+    public void FinishCleanup(CleanupSummary cleanup)
+    {
+        Tick();
+        Cleanup = cleanup;
+        if (cleanup is { Error: null, Cancelled: false })
+        {
+            Fraction = 1;
+            IsIndeterminate = false;
+        }
+        IsRunning = false;
+        IsCancelling = false;
+    }
 
     public void Finish(BackupRunSummary summary, IReadOnlyList<string> warnings)
     {

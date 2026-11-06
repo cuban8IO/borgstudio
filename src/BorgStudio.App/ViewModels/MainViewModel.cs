@@ -63,7 +63,8 @@ public partial class MainViewModel : ViewModelBase
 
     /// <summary>The borg used for all repository operations; <c>null</c> until found.</summary>
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(TestRepositoryCommand), nameof(ExportKeyCommand), nameof(RunJobCommand))]
+    [NotifyCanExecuteChangedFor(nameof(TestRepositoryCommand), nameof(ExportKeyCommand), nameof(RunJobCommand), nameof(CleanUpJobCommand),
+        nameof(FreeSpaceCommand))]
     public partial BorgInstallation? Borg { get; private set; }
 
     /// <summary>Status bar text, e.g. "borg 1.4.5 · /usr/bin/borg".</summary>
@@ -147,6 +148,7 @@ public partial class MainViewModel : ViewModelBase
         public Task<string?> PickOpenFileAsync(string title) => Task.FromResult<string?>(null);
         public Task<string?> PickFolderAsync(string title) => Task.FromResult<string?>(null);
         public Task ShowBackupJobEditorAsync(BackupJobEditorViewModel editor) => Task.CompletedTask;
+        public Task<bool> ConfirmPruneAsync(PrunePreviewViewModel preview) => Task.FromResult(false);
         public Task CopyToClipboardAsync(string text) => Task.CompletedTask;
         public Task ShowRepositoryEditorAsync(RepositoryEditorViewModel editor) => Task.CompletedTask;
     }

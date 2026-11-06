@@ -40,6 +40,11 @@ public sealed partial class BackupJobEditorViewModel : ViewModelBase
         if (!CompressionOptions.Contains(SelectedCompression))
             CompressionOptions = [.. CompressionOptions, SelectedCompression];
 
+        // Without a rule the numbers stay empty until clean-up is switched on (then the suggestion is filled in).
+        if (job.Retention is { HasRules: true } retention)
+            ShowRetention(retention);
+        CleanUp = job.Retention is { HasRules: true };
+
         Sources.CollectionChanged += (_, _) => Refresh();
         ExcludedFolders.CollectionChanged += (_, _) => Refresh();
         Refresh();
@@ -103,6 +108,65 @@ public sealed partial class BackupJobEditorViewModel : ViewModelBase
     [ObservableProperty]
     public partial Option<string> SelectedCompression { get; set; }
 
+    // --- Clean-up (borg prune + compact after each backup) ---
+
+    [ObservableProperty]
+    public partial bool CleanUp { get; set; }
+
+    // decimal? for the NumericUpDowns; empty counts as 0.
+    [ObservableProperty]
+    public partial decimal? KeepDaily { get; set; }
+
+    [ObservableProperty]
+    public partial decimal? KeepWeekly { get; set; }
+
+    [ObservableProperty]
+    public partial decimal? KeepMonthly { get; set; }
+
+    [ObservableProperty]
+    public partial decimal? KeepYearly { get; set; }
+
+    [ObservableProperty]
+    public partial decimal? KeepHourly { get; set; }
+
+    [ObservableProperty]
+    public partial decimal? KeepLast { get; set; }
+
+    [ObservableProperty]
+    public partial decimal? KeepWithinDays { get; set; }
+
+    partial void OnCleanUpChanged(bool value)
+    {
+        if (value && !CurrentRetention().HasRules)
+            ShowRetention(RetentionPolicy.Suggested);
+    }
+
+    private void ShowRetention(RetentionPolicy retention)
+    {
+        KeepDaily = retention.Daily;
+        KeepWeekly = retention.Weekly;
+        KeepMonthly = retention.Monthly;
+        KeepYearly = retention.Yearly;
+        KeepHourly = retention.Hourly;
+        KeepLast = retention.Last;
+        KeepWithinDays = retention.WithinDays;
+    }
+
+    private RetentionPolicy CurrentRetention()
+    {
+        static int Count(decimal? value) => value is > 0 ? (int)Math.Min(value.Value, int.MaxValue) : 0;
+        return new RetentionPolicy
+        {
+            Daily = Count(KeepDaily),
+            Weekly = Count(KeepWeekly),
+            Monthly = Count(KeepMonthly),
+            Yearly = Count(KeepYearly),
+            Hourly = Count(KeepHourly),
+            Last = Count(KeepLast),
+            WithinDays = Count(KeepWithinDays),
+        };
+    }
+
     /// <summary>The patterns borg will get, for the curious.</summary>
     [ObservableProperty]
     public partial string PatternPreview { get; private set; } = "";
@@ -162,6 +226,9 @@ public sealed partial class BackupJobEditorViewModel : ViewModelBase
             Errors.Add(Strings.JobEditorSourceRequired);
         if (_borg is { Runtime: BorgRuntime.Wsl } && Sources.FirstOrDefault(source => BorgClient.ToWslPath(source) is null) is { } unreachable)
             Errors.Add(BorgTexts.Format(Strings.JobEditorSourceUnreachable, unreachable));
+        var retention = CurrentRetention();
+        if (CleanUp && !retention.HasRules)
+            Errors.Add(Strings.JobEditorRetentionRequired);
         if (Errors.Count > 0)
             return;
 
@@ -171,6 +238,7 @@ public sealed partial class BackupJobEditorViewModel : ViewModelBase
             Sources = [.. Sources],
             Exclusions = CurrentExclusions(),
             Compression = SelectedCompression.Value,
+            Retention = CleanUp ? retention : null,
         };
         CloseRequested?.Invoke(this, EventArgs.Empty);
     }

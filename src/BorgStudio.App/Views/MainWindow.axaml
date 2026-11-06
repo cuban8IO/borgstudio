@@ -162,12 +162,19 @@
                                     </WrapPanel.Styles>
                                     <Button Content="{x:Static res:Strings.TestConnection}" Command="{Binding TestRepositoryCommand}" Classes="accent" />
                                     <Button Content="{x:Static res:Strings.ExportKey}" Command="{Binding ExportKeyCommand}" />
+                                    <Button Content="{x:Static res:Strings.FreeSpace}" Command="{Binding FreeSpaceCommand}"
+                                            ToolTip.Tip="{x:Static res:Strings.FreeSpaceTip}" />
                                     <Button Content="{x:Static res:Strings.Edit}" Command="{Binding EditRepositoryCommand}" />
                                     <Button Content="{x:Static res:Strings.Remove}" Command="{Binding RemoveRepositoryCommand}" />
                                 </WrapPanel>
 
                                 <StackPanel Spacing="4" IsVisible="{Binding IsWorking}">
-                                    <ProgressBar IsIndeterminate="True" />
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <ProgressBar Minimum="0" Maximum="1" Value="{Binding WorkingProgress, TargetNullValue=0}"
+                                                     IsIndeterminate="{Binding !HasWorkingProgress}" VerticalAlignment="Center" />
+                                        <Button Grid.Column="1" Content="{x:Static res:Strings.Cancel}" Command="{Binding CancelWorkCommand}"
+                                                IsVisible="{Binding IsWorkCancellable}" Margin="12,0,0,0" />
+                                    </Grid>
                                     <TextBlock Text="{Binding WorkingText}" FontSize="12" />
                                 </StackPanel>
 
@@ -188,6 +195,8 @@
                                     </Style>
                                 </WrapPanel.Styles>
                                 <Button Content="{x:Static res:Strings.JobRun}" Command="{Binding RunJobCommand}" Classes="accent" />
+                                <Button Content="{x:Static res:Strings.JobCleanUp}" Command="{Binding CleanUpJobCommand}"
+                                        ToolTip.Tip="{x:Static res:Strings.JobCleanUpTip}" />
                                 <Button Content="{x:Static res:Strings.JobNew}" Command="{Binding NewJobCommand}" />
                                 <Button Content="{x:Static res:Strings.Edit}" Command="{Binding EditJobCommand}" />
                                 <Button Content="{x:Static res:Strings.Delete}" Command="{Binding DeleteJobCommand}" />
@@ -198,7 +207,7 @@
                                 <StackPanel Spacing="8">
                                     <Grid ColumnDefinitions="*,Auto">
                                         <StackPanel Spacing="2">
-                                            <TextBlock Text="{Binding CurrentBackup.JobName}" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding CurrentBackup.Title}" FontWeight="SemiBold" />
                                             <TextBlock Text="{Binding CurrentBackup.StatusText}" FontSize="12" Opacity="0.8" />
                                         </StackPanel>
                                         <Button Grid.Column="1" Content="{x:Static res:Strings.Cancel}" Command="{Binding CancelBackupCommand}"
@@ -207,7 +216,7 @@
                                     <ProgressBar Minimum="0" Maximum="1" Value="{Binding CurrentBackup.Fraction}"
                                                  IsIndeterminate="{Binding CurrentBackup.IsIndeterminate}"
                                                  IsVisible="{Binding CurrentBackup.IsRunning}" />
-                                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" IsVisible="{Binding CurrentBackup.IsRunning}">
+                                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" IsVisible="{Binding CurrentBackup.IsBackupPhase}">
                                         <Grid.Styles>
                                             <Style Selector="TextBlock">
                                                 <Setter Property="FontSize" Value="12" />
@@ -249,6 +258,7 @@
                                             <StackPanel Spacing="2" Margin="2,4">
                                                 <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                                                 <TextBlock Text="{Binding SourcesText}" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding RetentionText}" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis" />
                                                 <TextBlock Text="{Binding LastRunText}" FontSize="12" Opacity="0.85" TextWrapping="Wrap"
                                                            Classes.failed="{Binding LastRunFailed}" Classes.warned="{Binding LastRunWarned}">
                                                     <TextBlock.Styles>

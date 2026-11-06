@@ -199,6 +199,142 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         return ParseArchives(result);
     }
 
+    /// <summary>
+    /// <c>borg prune</c>: deletes the archives matching <paramref name="archiveGlob"/> that none of the keep rules
+    /// keeps. With <paramref name="dryRun"/> it only tells what it would do. Deleting can be cancelled cleanly (borg
+    /// commits only at the end). The space is freed only by <see cref="CompactAsync"/>.
+    /// </summary>
+    /// <param name="archiveGlob">Which archives to look at, e.g. "Documents-{hostname}-*" (borg placeholders allowed).</param>
+    /// <param name="keepOptions">The rules (<see cref="Backups.RetentionPolicy.Arguments"/>); at least one.</param>
+    public async Task<BorgResult<BorgPruneResult>> PruneAsync(
+        BorgInstallation borg, RepositoryLocation location, string archiveGlob, IReadOnlyList<string> keepOptions,
+        bool dryRun, string? passphrase, SshAccess? ssh = null, CancellationToken cancellationToken = default)
+    {
+        var archives = new List<BorgPruneEntry>();
+        void OnLine(string line)
+        {
+            if (ParsePruneLine(line) is { } entry)
+                archives.Add(entry);
+        }
+
+        List<string> options = ["--list", "--glob-archives", archiveGlob, .. keepOptions];
+        if (dryRun)
+            options.Insert(0, "--dry-run");
+        var result = await RunAsync(borg, location, ssh, ["prune"], options, [], passphrase,
+            dryRun ? InfoTimeout : CreateTimeout, cancellationToken, standardErrorLine: OnLine, interruptible: !dryRun);
+        if (!result.Succeeded)
+            return BorgResult<BorgPruneResult>.Failure(result.Error!);
+
+        // borg lists newest first already; sort anyway, the preview shows them in that order.
+        return BorgResult<BorgPruneResult>.Success(new BorgPruneResult(
+            [.. archives.Select((archive, index) => (archive, index))
+                .OrderByDescending(entry => entry.archive.Start).ThenBy(entry => entry.index).Select(entry => entry.archive)]));
+    }
+
+    /// <summary>
+    /// <c>borg compact</c>: frees the space of deleted archives in the repository, reporting progress (0..1). Needs no
+    /// passphrase (it works on the repository's segments only). Can be cancelled cleanly.
+    /// </summary>
+    public async Task<BorgResult<BorgCompactResult>> CompactAsync(
+        BorgInstallation borg, RepositoryLocation location, SshAccess? ssh = null, IProgress<double>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        long? freed = null;
+        void OnLine(string line)
+        {
+            if (ParseCompactProgress(line) is { } fraction)
+                progress?.Report(fraction);
+            else if (ParseCompactFreed(line) is { } bytes)
+                freed = bytes;
+        }
+
+        // --info: borg tells how much it freed only at info level.
+        var result = await RunAsync(borg, location, ssh, ["compact"], ["--info", "--progress"], [], null, CreateTimeout,
+            cancellationToken, standardErrorLine: OnLine, interruptible: true);
+        return result.Succeeded
+            ? BorgResult<BorgCompactResult>.Success(new BorgCompactResult(freed))
+            : BorgResult<BorgCompactResult>.Failure(result.Error!);
+    }
+
+    /// <summary>
+    /// A line of <c>borg prune --list --log-json</c> about one archive, e.g. "Keeping archive (rule: daily #1):  name
+    /// Fri, 2026-11-06 21:06:16 [id]" or "Would prune: …"/"Pruning archive (1/2): …"; <c>null</c> for any other line.
+    /// </summary>
+    internal static BorgPruneEntry? ParsePruneLine(string line)
+    {
+        if (!line.Contains("borg.output.list", StringComparison.Ordinal))
+            return null;
+        try
+        {
+            using var document = JsonDocument.Parse(line);
+            var root = document.RootElement;
+            if (!root.TryGetProperty("message", out var text) || text.GetString() is not { } message)
+                return null;
+            var match = PruneLine().Match(message.Trim());
+            if (!match.Success)
+                return null;
+
+            var start = DateTimeOffset.TryParseExact(match.Groups["time"].Value, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeLocal, out var parsed) ? parsed : DateTimeOffset.MinValue;
+            var kept = match.Groups["keep"].Success;
+            var rule = match.Groups["rule"].Success ? match.Groups["rule"].Value : null;
+            var number = match.Groups["number"].Success ? int.Parse(match.Groups["number"].Value, CultureInfo.InvariantCulture) : 0;
+            return new BorgPruneEntry(match.Groups["name"].Value, match.Groups["id"].Value, start, kept, rule, number);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>How far <c>borg compact --progress --log-json</c> is (0..1); <c>null</c> for any other line.</summary>
+    internal static double? ParseCompactProgress(string line)
+    {
+        if (!line.Contains("\"progress_percent\"", StringComparison.Ordinal))
+            return null;
+        try
+        {
+            using var document = JsonDocument.Parse(line);
+            var root = document.RootElement;
+            if (root.GetProperty("type").GetString() != "progress_percent")
+                return null;
+            if (root.TryGetProperty("finished", out var finished) && finished.ValueKind == JsonValueKind.True)
+                return 1;
+            if (!root.TryGetProperty("current", out var current) || !root.TryGetProperty("total", out var total)
+                || current.ValueKind != JsonValueKind.Number || total.ValueKind != JsonValueKind.Number || total.GetDouble() <= 0)
+                return null;
+            return Math.Clamp(current.GetDouble() / total.GetDouble(), 0, 1);
+        }
+        catch (Exception exception) when (exception is JsonException or KeyNotFoundException or InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>"compaction freed about 5.35 kB repository space." in bytes; <c>null</c> for any other line.</summary>
+    internal static long? ParseCompactFreed(string line)
+    {
+        if (!line.Contains("compaction freed", StringComparison.Ordinal))
+            return null;
+        try
+        {
+            using var document = JsonDocument.Parse(line);
+            if (!document.RootElement.TryGetProperty("message", out var text) || text.GetString() is not { } message)
+                return null;
+            var match = CompactFreed().Match(message);
+            if (!match.Success
+                || !double.TryParse(match.Groups["value"].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var value))
+                return null;
+            // borg uses decimal units (kB = 1000 B).
+            var power = "BkMGTPEZY".IndexOf(match.Groups["unit"].Value[0], StringComparison.Ordinal);
+            return (long)Math.Max(0, Math.Round(value * Math.Pow(1000, Math.Max(0, power))));
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
     private static BorgResult<IReadOnlyList<BorgArchive>> ParseArchives(BorgResult<string> result)
     {
         if (!result.Succeeded)
@@ -695,4 +831,13 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
 
     [GeneratedRegex("^[0-9a-fA-F]{8,}$", RegexOptions.CultureInvariant)]
     private static partial Regex SafeRepositoryId();
+
+    // "<what>:   <name>   <weekday>, <yyyy-mm-dd hh:mm:ss> [<id>]"; "what" is "Keeping archive (rule: daily #1)" (borg 1.4
+    // may add "[oldest]" to the rule), "Keeping checkpoint archive", "Would prune" or "Pruning archive (1/2)".
+    [GeneratedRegex(@"^(?:(?<keep>Keeping archive(?: \(rule: (?<rule>[a-z]+)[^#)]*#(?<number>\d+)\))?|Keeping checkpoint archive)|Would prune|Pruning archive[^:]*):\s+(?<name>.+?)\s+\S+\s+(?<time>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\s+\[(?<id>[0-9a-f]+)\]$",
+        RegexOptions.CultureInvariant)]
+    private static partial Regex PruneLine();
+
+    [GeneratedRegex(@"compaction freed about (?<value>-?[0-9.]+) (?<unit>[kMGTPEZY]?B)\b", RegexOptions.CultureInvariant)]
+    private static partial Regex CompactFreed();
 }

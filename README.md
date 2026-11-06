@@ -141,6 +141,12 @@ section gets the new version number.
   20, more on request. A finished backup shows up right away. The archives are cached per repository (encrypted with
   the vault's key when a PIN is set up): the tab shows them at once and borg is only asked for archives it has not
   described yet, since `borg info` reads all metadata of an archive.
+- Cleaning up old archives (`borg prune` + `borg compact`): each backup job can keep a number of daily, weekly,
+  monthly and yearly archives (plus hourly, the newest N and everything from the last N days); off for new jobs.
+  After each successful backup the job's other archives are deleted and the space is freed. "Clean up…" in the jobs
+  tab shows first which archives would go and which stay (and by which rule). Only the archives this computer created
+  for the job are touched (`<job>-{hostname}-*`). "Free space" in the overview runs `borg compact` on its own, with
+  progress and cancel.
 
 **Changed**
 - Dark design in the Beatport palette: dark ground, neon green for primary buttons, the selected list entry, progress

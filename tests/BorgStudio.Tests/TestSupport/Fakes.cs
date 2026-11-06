@@ -96,6 +96,10 @@ public sealed class FakeBorg : IProcessRunner
 
         if (arguments[0] == "create")
             return CreateAsync(arguments, standardErrorLine, cancellationToken);
+        if (arguments[0] == "prune")
+            return PruneAsync(arguments, standardErrorLine);
+        if (arguments[0] == "compact")
+            return CompactAsync(standardErrorLine, cancellationToken);
 
         if (arguments is ["list", ..])
             return Result(0, "{\"archives\": [" + string.Join(", ", Archives.Select(archive => ArchiveJson(archive, details: false))) + "]}");
@@ -123,7 +127,7 @@ public sealed class FakeBorg : IProcessRunner
     private string ArchiveJson((string Name, DateTime Start) archive, bool details)
     {
         var index = Archives.IndexOf(archive) + 1;
-        var id = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(archive.Name)));
+        var id = ArchiveId(archive.Name);
         var start = archive.Start.ToString("yyyy-MM-ddTHH:mm:ss.ffffff", CultureInfo.InvariantCulture);
         return details
             ? $$$"""{"name": "{{{archive.Name}}}", "id": "{{{id}}}", "start": "{{{start}}}", "duration": {{{index * 10}}}.5, "hostname": "host", "stats": {"original_size": {{{index * 1_000_000}}}, "compressed_size": {{{index * 500_000}}}, "deduplicated_size": {{{index * 1000}}}, "nfiles": {{{index * 100}}}}}"""
@@ -150,6 +154,71 @@ public sealed class FakeBorg : IProcessRunner
         return Result(CreateWarnings.Count > 0 ? 1 : 0,
             "{\"archive\": {\"name\": \"" + name + "\", \"duration\": 2.5, \"stats\": {\"original_size\": 3000, \"compressed_size\": 1500, \"deduplicated_size\": 300, \"nfiles\": 30}}}");
     }
+
+    /// <summary>How many of the newest matching archives "prune" keeps (as "daily #1", "#2", …); the rest go.</summary>
+    public int PruneKeep { get; set; } = 1;
+
+    /// <summary>When set, "prune" fails with this message id.</summary>
+    public string? PruneError { get; set; }
+
+    /// <summary>When set, "compact" fails with this message id.</summary>
+    public string? CompactError { get; set; }
+
+    /// <summary>What "compact" says it freed (borg's decimal units).</summary>
+    public string CompactFreed { get; set; } = "1.50 MB";
+
+    /// <summary>Runs when "compact" starts (e.g. to cancel it).</summary>
+    public Action? BeforeCompact { get; set; }
+
+    /// <summary>Like borg 1.4: one "--list" line per archive matching the glob ({hostname} = "host"), newest first.</summary>
+    private Task<ProcessResult?> PruneAsync(IReadOnlyList<string> arguments, Action<string>? standardErrorLine)
+    {
+        if (PruneError is not null)
+            return Error(PruneError);
+
+        var glob = arguments[arguments.ToList().IndexOf("--glob-archives") + 1].Replace("{hostname}", "host", StringComparison.Ordinal);
+        var pattern = new System.Text.RegularExpressions.Regex("^" + System.Text.RegularExpressions.Regex.Escape(glob).Replace(@"\*", ".*", StringComparison.Ordinal) + "$");
+        var dryRun = arguments.Contains("--dry-run");
+        var matching = Archives.Select((archive, index) => (archive, index)).Where(entry => pattern.IsMatch(entry.archive.Name))
+            .OrderByDescending(entry => entry.archive.Start).ThenByDescending(entry => entry.index).Select(entry => entry.archive).ToList();
+        var kept = 0;
+        var pruned = 0;
+        foreach (var archive in matching)
+        {
+            var keep = kept < PruneKeep;
+            var what = keep ? $"Keeping archive (rule: daily #{++kept}):"
+                : dryRun ? "Would prune:"
+                : $"Pruning archive ({++pruned}/{matching.Count - PruneKeep}):";
+            var message = $"{what,-44} {archive.Name,-36} {archive.Start.ToString("ddd, yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)} [{ArchiveId(archive.Name)}]";
+            standardErrorLine?.Invoke(System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object>
+            {
+                ["type"] = "log_message", ["time"] = 0, ["message"] = message, ["levelname"] = "INFO", ["name"] = "borg.output.list",
+            }));
+            if (!keep && !dryRun)
+                Archives.Remove(archive);
+        }
+        return Result(0, "");
+    }
+
+    /// <summary>Two progress steps, then how much was freed.</summary>
+    private Task<ProcessResult?> CompactAsync(Action<string>? standardErrorLine, CancellationToken cancellationToken)
+    {
+        BeforeCompact?.Invoke();
+        cancellationToken.ThrowIfCancellationRequested();
+        if (CompactError is not null)
+            return Error(CompactError);
+
+        for (var step = 1; step <= 2; step++)
+            standardErrorLine?.Invoke(
+                $$"""{"message": "Compacting segments  {{step * 50}}%", "current": {{step}}, "total": 2, "info": null, "operation": 1, "msgid": "repository.compact_segments", "type": "progress_percent", "finished": false, "time": 0}""");
+        standardErrorLine?.Invoke("""{"operation": 1, "msgid": "repository.compact_segments", "type": "progress_percent", "finished": true, "time": 0}""");
+        standardErrorLine?.Invoke(
+            $$"""{"type": "log_message", "time": 0, "message": "compaction freed about {{CompactFreed}} repository space.", "levelname": "INFO", "name": "borg.repository"}""");
+        return Result(0, "");
+    }
+
+    public static string ArchiveId(string name) =>
+        Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(name)));
 
     public BorgDetector Detector() =>
         new(this, new BorgSearchEnvironment(HostPlatform.Linux, "/usr/bin", "/home/me", null, path => path == BorgPath));
@@ -346,6 +415,18 @@ public sealed class FakeDialogs : IDialogService
     public Func<BackupJobEditorViewModel, Task>? JobEditor { get; set; }
 
     public Task ShowBackupJobEditorAsync(BackupJobEditorViewModel editor) => JobEditor?.Invoke(editor) ?? Task.CompletedTask;
+
+    /// <summary>The clean-up previews shown, in order.</summary>
+    public List<PrunePreviewViewModel> PrunePreviews { get; } = [];
+
+    /// <summary>Whether to confirm the clean-up previews (none left: cancelled).</summary>
+    public Queue<bool> PruneAnswers { get; } = [];
+
+    public Task<bool> ConfirmPruneAsync(PrunePreviewViewModel preview)
+    {
+        PrunePreviews.Add(preview);
+        return Task.FromResult(PruneAnswers.Count > 0 && PruneAnswers.Dequeue());
+    }
 
     public Task CopyToClipboardAsync(string text)
     {

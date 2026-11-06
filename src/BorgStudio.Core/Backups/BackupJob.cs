@@ -62,6 +62,25 @@ public sealed record BackupRunSummary
 
     /// <summary>Why it failed, or the first warning.</summary>
     public string? Message { get; init; }
+
+    /// <summary>The clean-up after the backup (prune + compact); <c>null</c> if the job has none or the backup failed.</summary>
+    public CleanupSummary? Cleanup { get; init; }
+}
+
+/// <summary>The outcome of cleaning up a job's archives: <c>borg prune</c>, then <c>borg compact</c> if anything was deleted.</summary>
+public sealed record CleanupSummary
+{
+    /// <summary>How many archives prune deleted.</summary>
+    public int PrunedArchives { get; init; }
+
+    /// <summary>What compact freed (borg's rounded figure); <c>null</c> if compact didn't run or failed.</summary>
+    public long? FreedBytes { get; init; }
+
+    /// <summary>Stopped by the user.</summary>
+    public bool Cancelled { get; init; }
+
+    /// <summary>Why prune or compact failed.</summary>
+    public string? Error { get; init; }
 }
 
 /// <summary>A backup job: what to back up from where into which repository.</summary>
@@ -82,6 +101,9 @@ public sealed record BackupJob
 
     /// <summary>borg compression spec, e.g. "zstd,3", "lz4" or "none".</summary>
     public string Compression { get; init; } = DefaultCompression;
+
+    /// <summary>Which of the job's archives to keep after each backup; <c>null</c>: keep all (no clean-up).</summary>
+    public RetentionPolicy? Retention { get; init; }
 
     public BackupRunSummary? LastRun { get; init; }
 }

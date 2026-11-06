@@ -81,6 +81,48 @@
                     </StackPanel>
                 </StackPanel>
 
+                <!-- Clean-up -->
+                <StackPanel Spacing="6">
+                    <TextBlock Text="{x:Static res:Strings.JobEditorCleanup}" FontWeight="SemiBold" />
+                    <CheckBox IsChecked="{Binding CleanUp}">
+                        <TextBlock Text="{x:Static res:Strings.JobEditorCleanupEnabled}" TextWrapping="Wrap" />
+                    </CheckBox>
+                    <StackPanel Spacing="8" IsVisible="{Binding CleanUp}" Margin="28,2,0,0">
+                        <Grid ColumnDefinitions="Auto,120" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                            <Grid.Styles>
+                                <Style Selector="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                    <Setter Property="Margin" Value="0,0,16,6" />
+                                </Style>
+                                <Style Selector="NumericUpDown">
+                                    <Setter Property="Minimum" Value="0" />
+                                    <Setter Property="Maximum" Value="9999" />
+                                    <Setter Property="Increment" Value="1" />
+                                    <Setter Property="FormatString" Value="0" />
+                                    <Setter Property="Margin" Value="0,0,0,6" />
+                                </Style>
+                            </Grid.Styles>
+                            <TextBlock Text="{x:Static res:Strings.JobEditorKeepDaily}" />
+                            <NumericUpDown Grid.Column="1" Value="{Binding KeepDaily}" />
+                            <TextBlock Grid.Row="1" Text="{x:Static res:Strings.JobEditorKeepWeekly}" />
+                            <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding KeepWeekly}" />
+                            <TextBlock Grid.Row="2" Text="{x:Static res:Strings.JobEditorKeepMonthly}" />
+                            <NumericUpDown Grid.Row="2" Grid.Column="1" Value="{Binding KeepMonthly}" />
+                            <TextBlock Grid.Row="3" Text="{x:Static res:Strings.JobEditorKeepYearly}" />
+                            <NumericUpDown Grid.Row="3" Grid.Column="1" Value="{Binding KeepYearly}" />
+
+                            <!-- Rarely needed -->
+                            <TextBlock Grid.Row="4" Text="{x:Static res:Strings.JobEditorKeepHourly}" Margin="0,8,16,6" />
+                            <NumericUpDown Grid.Row="4" Grid.Column="1" Value="{Binding KeepHourly}" Margin="0,8,0,6" />
+                            <TextBlock Grid.Row="5" Text="{x:Static res:Strings.JobEditorKeepLast}" />
+                            <NumericUpDown Grid.Row="5" Grid.Column="1" Value="{Binding KeepLast}" />
+                            <TextBlock Grid.Row="6" Text="{x:Static res:Strings.JobEditorKeepWithin}" />
+                            <NumericUpDown Grid.Row="6" Grid.Column="1" Value="{Binding KeepWithinDays}" />
+                        </Grid>
+                        <TextBlock Text="{x:Static res:Strings.JobEditorCleanupHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                    </StackPanel>
+                </StackPanel>
+
                 <Expander Header="{x:Static res:Strings.EditorAdvanced}" HorizontalAlignment="Stretch">
                     <StackPanel Spacing="6">
                         <TextBlock Text="{x:Static res:Strings.JobEditorCompression}" />
