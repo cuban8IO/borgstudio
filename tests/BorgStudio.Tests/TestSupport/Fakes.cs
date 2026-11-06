@@ -5,6 +5,7 @@ using BorgStudio.Core.Backups;
 using BorgStudio.Core.Borg;
 using BorgStudio.Core.Plugins;
 using BorgStudio.Core.Processes;
+using BorgStudio.Core.Progress;
 using BorgStudio.Core.Repositories;
 using BorgStudio.Core.Secrets;
 using BorgStudio.Core.Security;
@@ -108,6 +109,12 @@ public sealed class FakeBorg : IProcessRunner
             if (ArchiveDetailsError is not null)
                 return Error(ArchiveDetailsError);
             var last = int.Parse(arguments[arguments.ToList().IndexOf("--last") + 1], CultureInfo.InvariantCulture);
+            // Like borg 1.4 with --progress: the statistics of each archive, half-way, then finished.
+            foreach (var archive in Archives.TakeLast(last))
+            {
+                standardErrorLine?.Invoke($$"""{"message": "Calculating statistics for archive {{archive.Name}} ...  50%", "current": 5, "total": 10, "info": null, "operation": 1, "msgid": "archive.calc_stats", "type": "progress_percent", "finished": false, "time": 0}""");
+                standardErrorLine?.Invoke("""{"operation": 1, "msgid": "archive.calc_stats", "type": "progress_percent", "finished": true, "time": 0}""");
+            }
             return Result(0, "{\"archives\": [" + string.Join(", ", Archives.TakeLast(last).Select(archive => ArchiveJson(archive, details: true))) + "]}");
         }
 
@@ -197,6 +204,7 @@ public sealed class FakeBorg : IProcessRunner
             if (!keep && !dryRun)
                 Archives.Remove(archive);
         }
+        standardErrorLine?.Invoke("""{"operation": 1, "msgid": "prune", "type": "progress_percent", "finished": true, "time": 0}""");
         return Result(0, "");
     }
 
@@ -296,6 +304,7 @@ public sealed class TestServices : IDisposable
     public SettingsStore Settings { get; }
     public BackupJobStore Jobs { get; }
     public ArchiveCache Archives { get; }
+    public DurationHistory Durations { get; }
     public AppServices Services { get; }
 
     /// <summary>Cheap key derivation: the tests check the logic, not the cost.</summary>
@@ -312,7 +321,8 @@ public sealed class TestServices : IDisposable
         Jobs = new BackupJobStore(Directory.Combine("jobs.json"));
         var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new SshProviderPlugin(), new HetznerProviderPlugin()], "no-plugins-here");
         Archives = new ArchiveCache(Directory.Combine("archives"), Vault);
-        Services = new AppServices(Borg.Detector(), plugins, Store, Secrets, new BorgClient(Borg), Ssh, SshKeys, SshKeygen, Vault, Settings, Jobs, Archives, Dialogs);
+        Durations = new DurationHistory(Directory.Combine("durations.json"));
+        Services = new AppServices(Borg.Detector(), plugins, Store, Secrets, new BorgClient(Borg), Ssh, SshKeys, SshKeygen, Vault, Settings, Jobs, Archives, Durations, Dialogs);
     }
 
     public KnownHostsFile KnownHosts => new(SshKeys.KnownHostsFile);

@@ -89,13 +89,23 @@ public class BorgCleanupTests
     }
 
     [Fact]
-    public void Compact_progress_and_freed_space_are_read()
+    public void Progress_lines_and_freed_space_are_read()
     {
-        Assert.Equal(0.5, BorgClient.ParseCompactProgress(
+        // The percentage borg shows itself (it lags current/total by one step).
+        Assert.Equal(new BorgProgressPercent("repository.compact_segments", 0.25, false, null), BorgClient.ParseProgressPercent(
             """{"message": "Compacting segments  25%", "current": 2, "total": 4, "info": null, "operation": 1, "msgid": "repository.compact_segments", "type": "progress_percent", "finished": false, "time": 1.0}"""));
-        Assert.Equal(1, BorgClient.ParseCompactProgress(
+        Assert.Equal(new BorgProgressPercent("repository.compact_segments", 1, true, null), BorgClient.ParseProgressPercent(
             """{"operation": 1, "msgid": "repository.compact_segments", "type": "progress_percent", "finished": true, "time": 1.0}"""));
-        Assert.Null(BorgClient.ParseCompactProgress("""{"type": "log_message", "message": "progress_percent"}"""));
+        var extract = BorgClient.ParseProgressPercent(
+            """{"message": " 67.6% Extracting: home/me/big", "current": 3000000, "total": 3000002, "info": ["home/me/big"], "operation": 1, "msgid": "extract", "type": "progress_percent", "finished": false, "time": 1.0}""")!;
+        Assert.Equal(0.676, extract.Fraction, 6);
+        Assert.Equal(("extract", "home/me/big", false), (extract.MessageId, extract.Info, extract.Finished));
+        // No percentage in the message: current/total.
+        Assert.Equal(0.5, BorgClient.ParseProgressPercent(
+            """{"message": "Pruning archives", "current": 1, "total": 2, "msgid": "prune", "type": "progress_percent", "finished": false}""")!.Fraction);
+        Assert.Null(BorgClient.ParseProgressPercent(
+            """{"message": "Calculating total archive size for the progress indicator", "current": 0, "total": 0, "msgid": "extract", "type": "progress_percent", "finished": false}"""));
+        Assert.Null(BorgClient.ParseProgressPercent("""{"type": "log_message", "message": "progress_percent"}"""));
 
         static string Freed(string size) =>
             $$"""{"type": "log_message", "time": 1.0, "message": "compaction freed about {{size}} repository space.", "levelname": "INFO", "name": "borg.repository"}""";
@@ -119,7 +129,7 @@ public class BorgCleanupTests
 
         Assert.True(result.Succeeded);
         Assert.Equal(
-            ["prune", "--log-json", "--dry-run", "--list", "--glob-archives", "Docs-{hostname}-*", "--keep-daily", "7", "--keep-weekly",
+            ["prune", "--log-json", "--dry-run", "--list", "--progress", "--glob-archives", "Docs-{hostname}-*", "--keep-daily", "7", "--keep-weekly",
              "4", "--keep-monthly", "6", "/repo"],
             runner.Arguments);
         Assert.Equal("secret", runner.Environment!["BORG_PASSPHRASE"]);

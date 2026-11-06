@@ -98,3 +98,9 @@ public sealed record BorgPruneResult(IReadOnlyList<BorgPruneEntry> Archives)
 /// <summary>The outcome of <c>borg compact</c>.</summary>
 /// <param name="FreedBytes">What it freed, as far as borg says (rounded); <c>null</c> if it didn't say.</param>
 public sealed record BorgCompactResult(long? FreedBytes);
+
+/// <summary>A progress update borg logs with <c>--progress --log-json</c>.</summary>
+/// <param name="MessageId">What it is about, e.g. "extract", "prune", "repository.compact_segments", "archive.calc_stats".</param>
+/// <param name="Fraction">0..1 as borg shows it.</param>
+/// <param name="Info">Extra detail, e.g. the file being extracted.</param>
+public sealed record BorgProgressPercent(string? MessageId, double Fraction, bool Finished, string? Info);

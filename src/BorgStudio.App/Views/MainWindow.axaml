@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:BorgStudio.App.ViewModels"
+        xmlns:views="using:BorgStudio.App.Views"
         xmlns:res="using:BorgStudio.App.Resources"
         xmlns:sys="using:System"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -168,15 +169,9 @@
                                     <Button Content="{x:Static res:Strings.Remove}" Command="{Binding RemoveRepositoryCommand}" />
                                 </WrapPanel>
 
-                                <StackPanel Spacing="4" IsVisible="{Binding IsWorking}">
-                                    <Grid ColumnDefinitions="*,Auto">
-                                        <ProgressBar Minimum="0" Maximum="1" Value="{Binding WorkingProgress, TargetNullValue=0}"
-                                                     IsIndeterminate="{Binding !HasWorkingProgress}" VerticalAlignment="Center" />
-                                        <Button Grid.Column="1" Content="{x:Static res:Strings.Cancel}" Command="{Binding CancelWorkCommand}"
-                                                IsVisible="{Binding IsWorkCancellable}" Margin="12,0,0,0" />
-                                    </Grid>
-                                    <TextBlock Text="{Binding WorkingText}" FontSize="12" />
-                                </StackPanel>
+                                <Panel IsVisible="{Binding IsWorking}">
+                                    <views:ProgressPanel DataContext="{Binding Work}" />
+                                </Panel>
 
                                 <TextBlock Text="{Binding SelectedRepository.ResultText}" TextWrapping="Wrap"
                                            IsVisible="{Binding SelectedRepository.HasSuccess}" Foreground="{DynamicResource SuccessForeground}" />
@@ -215,7 +210,10 @@
                                     </Grid>
                                     <ProgressBar Minimum="0" Maximum="1" Value="{Binding CurrentBackup.Fraction}"
                                                  IsIndeterminate="{Binding CurrentBackup.IsIndeterminate}"
-                                                 IsVisible="{Binding CurrentBackup.IsRunning}" />
+                                                 IsVisible="{Binding CurrentBackup.IsBackupPhase}" />
+                                    <Panel IsVisible="{Binding CurrentBackup.IsCleanupPhase}">
+                                        <views:ProgressPanel DataContext="{Binding CurrentBackup.PhaseProgress}" />
+                                    </Panel>
                                     <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" IsVisible="{Binding CurrentBackup.IsBackupPhase}">
                                         <Grid.Styles>
                                             <Style Selector="TextBlock">
@@ -295,7 +293,9 @@
                             </WrapPanel>
 
                             <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,8">
-                                <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoadingArchives}" />
+                                <Panel IsVisible="{Binding IsLoadingArchives}">
+                                    <views:ProgressPanel DataContext="{Binding ArchivesProgress}" />
+                                </Panel>
                                 <TextBlock Text="{Binding ArchivesStatus}" IsVisible="{Binding HasArchivesStatus}" FontSize="12" Opacity="0.8" />
                                 <SelectableTextBlock Text="{Binding ArchivesError}" IsVisible="{Binding HasArchivesError}" TextWrapping="Wrap"
                                                      Foreground="{DynamicResource ErrorForeground}" />

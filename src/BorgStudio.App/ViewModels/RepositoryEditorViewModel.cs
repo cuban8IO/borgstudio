@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using BorgStudio.App.Resources;
 using BorgStudio.App.Services;
 using BorgStudio.Core.Borg;
+using BorgStudio.Core.Progress;
 using BorgStudio.Core.Repositories;
 using BorgStudio.Core.Secrets;
 using BorgStudio.Core.Security;
@@ -356,8 +357,11 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
     [NotifyCanExecuteChangedFor(nameof(ConfirmCommand), nameof(BackCommand), nameof(CancelCommand))]
     public partial bool IsBusy { get; set; }
 
-    [ObservableProperty]
-    public partial string? BusyText { get; set; }
+    /// <summary>The step being worked on, with elapsed time and – from last time – roughly how long it takes.</summary>
+    public ProgressViewModel Progress { get; } = new();
+
+    /// <summary>Under which key the running step's duration is remembered; <c>null</c> if not worth it.</summary>
+    private string? _busyKey;
 
     public string ConfirmText => IsEditing ? Strings.EditorSave : CreateNew ? Strings.EditorCreate : Strings.EditorConnect;
 
@@ -410,8 +414,9 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         }
         finally
         {
+            FinishBusyStep();
+            Progress.Stop();
             IsBusy = false;
-            BusyText = null;
         }
 
         // Only once idle: the window refuses to close while busy.
@@ -420,6 +425,22 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
     }
 
     private bool IsIdle() => !IsBusy;
+
+    /// <summary>The next step starts; the previous one's duration is remembered if it went well.</summary>
+    private void Busy(string text, string? operation)
+    {
+        FinishBusyStep();
+        _busyKey = operation is null ? null
+            : DurationHistory.Key(_existing is { } existing ? existing.Id.ToString("D") : $"provider-{SelectedProvider?.Provider.Id}", operation);
+        Progress.Start(text, _busyKey is null ? null : _services.Durations.Get(_busyKey));
+    }
+
+    private void FinishBusyStep()
+    {
+        if (_busyKey is not null && Progress.IsActive && Errors.Count == 0)
+            _services.Durations.Record(_busyKey, Progress.Elapsed);
+        _busyKey = null;
+    }
 
     private List<string> Validate(IRepositoryProvider provider, IReadOnlyDictionary<string, string> values)
     {
@@ -481,7 +502,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         var passphrase = UsesPassphrase && Passphrase.Length > 0 ? Passphrase : null;
         if (CreateNew)
         {
-            BusyText = Strings.Creating;
+            Busy(Strings.Creating, "init");
             var created = await _services.BorgClient.InitAsync(borg, location, SelectedEncryption.Value, passphrase, login.Access);
             if (!created.Succeeded)
             {
@@ -490,7 +511,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             }
         }
 
-        BusyText = Strings.Checking;
+        Busy(Strings.Checking, "info");
         var info = await _services.BorgClient.InfoAsync(borg, location, passphrase, login.Access);
         if (!info.Succeeded)
         {
@@ -567,7 +588,8 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         var endpoint = location.Ssh ?? throw new InvalidOperationException("SSH provider without SSH endpoint.");
         var knownHosts = _services.SshKeys.KnownHostsFile;
 
-        BusyText = Strings.ContactingServer;
+        // Includes confirming the host key: the user's time, nothing to remember.
+        Busy(Strings.ContactingServer, operation: null);
         var (hostKey, problem) = await SshTrustDialog.EnsureTrustedAsync(_services.SshTrust, endpoint, Dialogs);
         if (hostKey is null)
         {
@@ -602,7 +624,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
     /// <summary>Adds <paramref name="publicKey"/> to the server with the server password; <c>false</c> with the reason in <see cref="Errors"/>.</summary>
     private async Task<bool> InstallAsync(SshEndpoint endpoint, SshHostKey hostKey, string publicKey, string remoteBorg)
     {
-        BusyText = Strings.InstallingKey;
+        Busy(Strings.InstallingKey, "install-key");
         try
         {
             await SshKeyInstaller.InstallAsync(_services.Ssh, endpoint, ServerPassword, hostKey, publicKey, RestrictKey, remoteBorg);

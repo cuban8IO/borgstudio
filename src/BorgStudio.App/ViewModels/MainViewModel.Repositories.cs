@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using BorgStudio.App.Resources;
 using BorgStudio.Core.Borg;
+using BorgStudio.Core.Progress;
 using BorgStudio.Core.Repositories;
 using BorgStudio.Core.Security;
 using BorgStudio.Plugins;
@@ -36,8 +37,8 @@ public partial class MainViewModel
         nameof(FreeSpaceCommand))]
     public partial bool IsWorking { get; private set; }
 
-    [ObservableProperty]
-    public partial string? WorkingText { get; private set; }
+    /// <summary>Progress of the running repository operation (overview tab).</summary>
+    public ProgressViewModel Work { get; } = new();
 
     private void LoadRepositories()
     {
@@ -145,7 +146,7 @@ public partial class MainViewModel
         if (await GetPassphraseAsync(item) is not { } passphrase)
             return;
 
-        var result = await RunAsync(Strings.Checking,
+        var result = await RunAsync(item, Strings.Checking, "info",
             () => _services.BorgClient.InfoAsync(Borg!, location, passphrase.Value, ssh.Access));
         if (!result.Succeeded)
         {
@@ -185,7 +186,7 @@ public partial class MainViewModel
         if (target is null)
             return;
 
-        var result = await RunAsync(Strings.ExportingKey,
+        var result = await RunAsync(item, Strings.ExportingKey, "key-export",
             () => _services.BorgClient.ExportKeyAsync(Borg!, location, target, ssh.Access));
         item.ShowResult(
             result.Succeeded ? BorgTexts.Format(Strings.KeyExported, target) : BorgTexts.Describe(result.Error!),
@@ -285,18 +286,29 @@ public partial class MainViewModel
         return entered is null ? null : new PassphraseHolder(entered);
     }
 
-    private async Task<BorgResult<T>> RunAsync<T>(string workingText, Func<Task<BorgResult<T>>> operation)
+    /// <summary>
+    /// Runs a borg operation on <paramref name="item"/> with progress in the overview. How long it took is remembered
+    /// (if it worked), so next time the wait shows roughly how long it will be.
+    /// </summary>
+    /// <param name="operation">Name under which the duration is remembered, e.g. "info".</param>
+    /// <param name="cancel">Offers "Cancel", which calls this.</param>
+    private async Task<BorgResult<T>> RunAsync<T>(RepositoryItemViewModel item, string workingText, string operation,
+        Func<Task<BorgResult<T>>> work, Action? cancel = null)
     {
+        var key = DurationHistory.Key(item.Config.Id, operation);
         IsWorking = true;
-        WorkingText = workingText;
+        Work.Start(workingText, _services.Durations.Get(key), cancel);
         try
         {
-            return await Task.Run(operation);
+            var result = await Task.Run(work);
+            if (result.Succeeded)
+                _services.Durations.Record(key, Work.Elapsed);
+            return result;
         }
         finally
         {
+            Work.Stop();
             IsWorking = false;
-            WorkingText = null;
         }
     }
 

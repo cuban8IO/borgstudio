@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using BorgStudio.App.Resources;
 using BorgStudio.Core.Borg;
+using BorgStudio.Core.Progress;
 using BorgStudio.Plugins;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -43,6 +44,18 @@ public partial class MainViewModel
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(RefreshArchivesCommand), nameof(LoadMoreArchiveDetailsCommand))]
     public partial bool IsLoadingArchives { get; private set; }
+
+    /// <summary>
+    /// How far loading is: <c>borg list</c> reports nothing, so its bar runs on how long it took last time; for the
+    /// details borg reports archive by archive.
+    /// </summary>
+    public ProgressViewModel ArchivesProgress { get; } = new();
+
+    partial void OnIsLoadingArchivesChanged(bool value)
+    {
+        if (!value)
+            ArchivesProgress.Stop();
+    }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasArchivesStatus))]
@@ -181,7 +194,11 @@ public partial class MainViewModel
             }
 
             var borg = Borg!;
+            var listKey = DurationHistory.Key(repositoryId, "list");
+            ArchivesProgress.Start(null, _services.Durations.Get(listKey));
             var listed = await Task.Run(() => _services.BorgClient.ListArchivesAsync(borg, location, access.Passphrase.Value, access.Ssh.Access));
+            if (listed.Succeeded)
+                _services.Durations.Record(listKey, ArchivesProgress.Elapsed);
             if (SelectedRepository?.Config.Id != repositoryId)
                 return; // the user moved on
             if (!listed.Succeeded)
@@ -259,7 +276,14 @@ public partial class MainViewModel
 
         ArchivesStatus = BorgTexts.Format(Strings.ArchivesLoadingDetails, count);
         var borg = Borg!;
-        var details = await Task.Run(() => _services.BorgClient.ArchiveDetailsAsync(borg, location, count, access.Passphrase.Value, access.Ssh.Access));
+        // Remembered per archive: the next load may be for a different number of archives.
+        var perArchiveKey = DurationHistory.Key(item.Config.Id, "details-per-archive");
+        ArchivesProgress.Start(null, _services.Durations.Get(perArchiveKey) * count);
+        var progress = new ViewModelProgress<double>(this, fraction => ArchivesProgress.Report(fraction));
+        var details = await Task.Run(() => _services.BorgClient.ArchiveDetailsAsync(borg, location, count, access.Passphrase.Value,
+            access.Ssh.Access, progress));
+        if (details.Succeeded)
+            _services.Durations.Record(perArchiveKey, ArchivesProgress.Elapsed / count);
         if (SelectedRepository?.Config.Id != item.Config.Id)
             return;
         if (!details.Succeeded)

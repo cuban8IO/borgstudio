@@ -244,8 +244,9 @@ public sealed class CleanupFlowTests : IDisposable
         Assert.Contains("--progress", Borg.Calls[0].Arguments);
         Assert.Equal(BorgTexts.Format(Strings.SpaceFreed, BorgTexts.Size(1_500_000)), main.SelectedRepository!.ResultText);
         Assert.False(main.IsWorking);
-        Assert.False(main.IsWorkCancellable);
-        Assert.Null(main.WorkingProgress);
+        Assert.False(main.Work.IsActive);
+        Assert.Equal(1, main.Work.Fraction); // borg's last word: finished
+        Assert.NotNull(_test.Durations.Get(Core.Progress.DurationHistory.Key(_repository.Id, "compact")));
     }
 
     [Fact]
@@ -254,14 +255,53 @@ public sealed class CleanupFlowTests : IDisposable
         var main = await StartAsync(Job(retention: null));
         Borg.BeforeCompact = () =>
         {
-            Assert.True(main.IsWorkCancellable);
-            main.CancelWorkCommand.Execute(null);
+            Assert.True(main.Work.CanCancel);
+            main.Work.CancelCommand.Execute(null);
         };
 
         await main.FreeSpaceCommand.ExecuteAsync(null);
 
         Assert.Equal(Strings.SpaceFreeCancelled, main.SelectedRepository!.ResultText);
         Assert.False(main.SelectedRepository.HasError);
+    }
+
+    [Fact]
+    public async Task Waits_show_borgs_progress_and_remember_how_long_they_took()
+    {
+        Borg.PruneKeep = 2;
+        var main = await StartAsync(Job(KeepTwoDaily));
+        string Key(string operation) => Core.Progress.DurationHistory.Key(_repository.Id, operation);
+
+        Dialogs.Passphrases.Enqueue(Passphrase);
+        await main.TestRepositoryCommand.ExecuteAsync(null);
+        Assert.False(main.Work.IsActive);
+        Assert.NotNull(_test.Durations.Get(Key("info")));
+
+        // Archives: "list" has no progress (remembered for next time), the details report archive by archive.
+        Dialogs.Passphrases.Enqueue(Passphrase);
+        main.SelectedDetailsTab = MainViewModel.ArchivesTab;
+        await main.ArchivesLoad;
+        Assert.False(main.IsLoadingArchives);
+        Assert.False(main.ArchivesProgress.IsActive);
+        Assert.Equal(1, main.ArchivesProgress.Fraction);
+        Assert.NotNull(_test.Durations.Get(Key("list")));
+        Assert.NotNull(_test.Durations.Get(Key("details-per-archive")));
+
+        // The clean-up phases after a backup report too.
+        Dialogs.Passphrases.Enqueue(Passphrase);
+        main.SelectedDetailsTab = MainViewModel.JobsTab;
+        await main.RunJobCommand.ExecuteAsync(null);
+        var phase = main.CurrentBackup!.PhaseProgress;
+        Assert.False(phase.IsActive);
+        Assert.Equal(1, phase.Fraction); // compact finished
+        Assert.False(main.CurrentBackup.IsCleanupPhase);
+        Assert.NotNull(_test.Durations.Get(Key("prune")));
+        Assert.NotNull(_test.Durations.Get(Key("compact")));
+
+        // Removing the repository forgets its durations.
+        Dialogs.ConfirmAnswers.Enqueue(true);
+        await main.RemoveRepositoryCommand.ExecuteAsync(null);
+        Assert.Null(_test.Durations.Get(Key("info")));
     }
 
     [Fact]

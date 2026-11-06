@@ -40,6 +40,7 @@ public sealed partial class BackupRunViewModel : ObservableObject
         JobName = job.Name;
         IsCleanupOnly = cleanupOnly;
         Phase = cleanupOnly ? RunPhase.Previewing : RunPhase.Backup;
+        PhaseProgress = new ProgressViewModel(_time);
     }
 
     public Guid JobId { get; }
@@ -54,15 +55,21 @@ public sealed partial class BackupRunViewModel : ObservableObject
     public DateTimeOffset Started => _started;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsFinished), nameof(IsBackupPhase))]
+    [NotifyPropertyChangedFor(nameof(IsFinished), nameof(IsBackupPhase), nameof(IsCleanupPhase))]
     public partial bool IsRunning { get; private set; } = true;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsBackupPhase), nameof(StatusText))]
+    [NotifyPropertyChangedFor(nameof(IsBackupPhase), nameof(IsCleanupPhase), nameof(StatusText))]
     public partial RunPhase Phase { get; private set; }
 
     /// <summary>The backup is running (its figures are worth showing).</summary>
     public bool IsBackupPhase => IsRunning && Phase == RunPhase.Backup;
+
+    /// <summary>Cleaning up: <see cref="PhaseProgress"/> shows how far.</summary>
+    public bool IsCleanupPhase => IsRunning && Phase != RunPhase.Backup;
+
+    /// <summary>Progress of the clean-up phase (prune, compact), with elapsed and remaining time.</summary>
+    public ProgressViewModel PhaseProgress { get; }
 
     /// <summary>The outcome of a clean-up started by hand, once finished.</summary>
     [ObservableProperty]
@@ -136,7 +143,6 @@ public sealed partial class BackupRunViewModel : ObservableObject
         {
             RunPhase.Previewing => Strings.CleanupPreviewing,
             RunPhase.Pruning => Strings.CleanupPruning,
-            RunPhase.Compacting when !IsIndeterminate => BorgTexts.Format(Strings.CleanupCompactingPercent, (int)Math.Round(Fraction * 100)),
             RunPhase.Compacting => Strings.CleanupCompacting,
             _ => Strings.BackupRunning,
         }
@@ -187,17 +193,6 @@ public sealed partial class BackupRunViewModel : ObservableObject
         OnPropertyChanged(nameof(HasResult));
     }
 
-    partial void OnFractionChanged(double value)
-    {
-        if (Phase == RunPhase.Compacting)
-            OnPropertyChanged(nameof(StatusText));
-    }
-
-    partial void OnIsIndeterminateChanged(bool value)
-    {
-        if (Phase == RunPhase.Compacting)
-            OnPropertyChanged(nameof(StatusText));
-    }
 
     partial void OnWarningsChanged(IReadOnlyList<string> value)
     {
@@ -261,26 +256,25 @@ public sealed partial class BackupRunViewModel : ObservableObject
     public void MarkCancelling() => IsCancelling = true;
 
     /// <summary>The backup is done (or wasn't part of the run); now <paramref name="phase"/> of the clean-up.</summary>
-    public void StartPhase(RunPhase phase)
+    /// <param name="expected">How long the phase took last time (until borg reports progress).</param>
+    public void StartPhase(RunPhase phase, TimeSpan? expected = null)
     {
         Remaining = null;
-        IsIndeterminate = true;
-        Fraction = 0;
         Phase = phase;
+        PhaseProgress.Start(null, expected);
     }
 
-    /// <summary>How far borg compact is (0..1).</summary>
-    public void ReportCompact(double fraction)
+    /// <summary>How far the clean-up phase is (0..1, from borg).</summary>
+    public void ReportPhase(double fraction)
     {
-        if (!IsRunning || Phase != RunPhase.Compacting)
-            return;
-        IsIndeterminate = false;
-        Fraction = Math.Clamp(fraction, 0, 1);
+        if (IsRunning && Phase != RunPhase.Backup)
+            PhaseProgress.Report(fraction);
     }
 
     /// <summary>Ends a clean-up started by hand.</summary>
     public void FinishCleanup(CleanupSummary cleanup)
     {
+        PhaseProgress.Stop();
         Tick();
         Cleanup = cleanup;
         if (cleanup is { Error: null, Cancelled: false })
@@ -294,6 +288,7 @@ public sealed partial class BackupRunViewModel : ObservableObject
 
     public void Finish(BackupRunSummary summary, IReadOnlyList<string> warnings)
     {
+        PhaseProgress.Stop();
         Tick();
         Summary = summary;
         Warnings = warnings;

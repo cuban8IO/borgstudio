@@ -3,6 +3,7 @@ using BorgStudio.App.Services;
 using BorgStudio.Core.Backups;
 using BorgStudio.Core.Borg;
 using BorgStudio.Core.Plugins;
+using BorgStudio.Core.Progress;
 using BorgStudio.Core.Repositories;
 using BorgStudio.Core.Secrets;
 using BorgStudio.Core.Security;
@@ -27,6 +28,7 @@ public sealed record AppServices(
     SettingsStore Settings,
     BackupJobStore Jobs,
     ArchiveCache Archives,
+    DurationHistory Durations,
     IDialogService Dialogs)
 {
     public SshHostTrust SshTrust => new(Ssh, new KnownHostsFile(SshKeys.KnownHostsFile));
@@ -40,7 +42,7 @@ public partial class MainViewModel : ViewModelBase
     public MainViewModel() : this(new AppServices(BorgDetector.CreateDefault(), PluginCatalog.Empty,
         RepositoryStore.CreateDefault(), SecretStores.CreateDefault(), BorgClient.CreateDefault(),
         new SshNetService(), SshKeyStore.CreateDefault(), SshKeygen.CreateDefault(), Vault.CreateDefault(), SettingsStore.CreateDefault(), BackupJobStore.CreateDefault(),
-        ArchiveCache.CreateDefault(Vault.CreateDefault()), new NoDialogs()))
+        ArchiveCache.CreateDefault(Vault.CreateDefault()), DurationHistory.CreateDefault(), new NoDialogs()))
     {
     }
 

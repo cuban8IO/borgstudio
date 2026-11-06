@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:BorgStudio.App.ViewModels"
+        xmlns:views="using:BorgStudio.App.Views"
         xmlns:res="using:BorgStudio.App.Resources"
         xmlns:sys="using:System"
         x:Class="BorgStudio.App.Views.RepositoryEditorWindow"
@@ -26,10 +27,9 @@
 
         <!-- Progress and errors -->
         <StackPanel DockPanel.Dock="Bottom" Spacing="6" Margin="0,12,0,0">
-            <StackPanel Spacing="4" IsVisible="{Binding IsBusy}">
-                <ProgressBar IsIndeterminate="True" />
-                <TextBlock Text="{Binding BusyText}" FontSize="12" />
-            </StackPanel>
+            <Panel IsVisible="{Binding IsBusy}">
+                <views:ProgressPanel DataContext="{Binding Progress}" />
+            </Panel>
             <ItemsControl ItemsSource="{Binding Errors}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="sys:String">
