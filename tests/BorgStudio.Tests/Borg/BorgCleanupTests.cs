@@ -29,7 +29,7 @@ public class BorgCleanupTests
 
         public Task<ProcessResult?> RunAsync(string fileName, IReadOnlyList<string> arguments, TimeSpan timeout,
             IReadOnlyDictionary<string, string?>? environment = null, string? standardInput = null,
-            CancellationToken cancellationToken = default, Action<string>? standardErrorLine = null)
+            CancellationToken cancellationToken = default, Action<string>? standardErrorLine = null, Action<string>? standardOutputLine = null)
         {
             // Linux/macOS run interruptible calls through "sh -c <wrapper> borg …".
             Arguments = fileName == "sh" ? [.. arguments.Skip(3)] : arguments;

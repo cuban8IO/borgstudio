@@ -1298,4 +1298,79 @@ Warning: the provider publishes the fingerprints of its servers, and this key ma
   <data name="ProgressOverdue" xml:space="preserve">
     <value>taking longer than last time</value>
   </data>
+  <data name="ArchiveOpen" xml:space="preserve">
+    <value>Open…</value>
+  </data>
+  <data name="ArchiveOpenTip" xml:space="preserve">
+    <value>Shows the files in the archive (a double-click works too)</value>
+  </data>
+  <data name="BrowserTitle" xml:space="preserve">
+    <value>Archive {0}</value>
+  </data>
+  <data name="BrowserCreated" xml:space="preserve">
+    <value>Created {0}</value>
+  </data>
+  <data name="BrowserCreatedByJob" xml:space="preserve">
+    <value>Created {0} · job “{1}”</value>
+  </data>
+  <data name="BrowserLoading" xml:space="preserve">
+    <value>Reading the file list from borg …</value>
+  </data>
+  <data name="BrowserEntriesOf" xml:space="preserve">
+    <value>{0:N0} of ~{1:N0} entries</value>
+  </data>
+  <data name="BrowserEntriesRead" xml:space="preserve">
+    <value>{0:N0} entries read</value>
+  </data>
+  <data name="BrowserSummary" xml:space="preserve">
+    <value>{0:N0} files in {1:N0} folders · {2}</value>
+  </data>
+  <data name="BrowserSearchPlaceholder" xml:space="preserve">
+    <value>Search the whole archive, e.g. invoice or *.pdf</value>
+  </data>
+  <data name="BrowserSearch" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="BrowserClearSearch" xml:space="preserve">
+    <value>Back to the folder</value>
+  </data>
+  <data name="BrowserSearchResults" xml:space="preserve">
+    <value>{0:N0} matches for “{1}”</value>
+  </data>
+  <data name="BrowserSearchTooMany" xml:space="preserve">
+    <value>More than {0:N0} matches – only the first are shown; narrow the search.</value>
+  </data>
+  <data name="BrowserSearchNone" xml:space="preserve">
+    <value>No matches for “{0}”.</value>
+  </data>
+  <data name="BrowserUp" xml:space="preserve">
+    <value>Up</value>
+  </data>
+  <data name="BrowserSelection" xml:space="preserve">
+    <value>{0:N0} selected · {1}</value>
+  </data>
+  <data name="BrowserSelectionNone" xml:space="preserve">
+    <value>Nothing selected</value>
+  </data>
+  <data name="BrowserClearSelection" xml:space="preserve">
+    <value>Clear selection</value>
+  </data>
+  <data name="BrowserColumnModified" xml:space="preserve">
+    <value>Modified</value>
+  </data>
+  <data name="BrowserColumnFolder" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="BrowserEmptyFolder" xml:space="preserve">
+    <value>This folder is empty.</value>
+  </data>
+  <data name="BrowserFolderFiles" xml:space="preserve">
+    <value>{0:N0} files</value>
+  </data>
+  <data name="BrowserLoadFailed" xml:space="preserve">
+    <value>The file list could not be read: {0}</value>
+  </data>
+  <data name="BrowserLoadCancelled" xml:space="preserve">
+    <value>Reading the file list was cancelled.</value>
+  </data>
 </root>

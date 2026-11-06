@@ -65,7 +65,7 @@ public sealed class FakeBorg : IProcessRunner
 
     public Task<ProcessResult?> RunAsync(string fileName, IReadOnlyList<string> arguments, TimeSpan timeout,
         IReadOnlyDictionary<string, string?>? environment = null, string? standardInput = null,
-        CancellationToken cancellationToken = default, Action<string>? standardErrorLine = null)
+        CancellationToken cancellationToken = default, Action<string>? standardErrorLine = null, Action<string>? standardOutputLine = null)
     {
         // Interruptible calls run borg through a small sh wrapper (on Linux/macOS).
         if (fileName == "sh" && arguments is ["-c", _, BorgPath, ..])
@@ -102,6 +102,8 @@ public sealed class FakeBorg : IProcessRunner
         if (arguments[0] == "compact")
             return CompactAsync(standardErrorLine, cancellationToken);
 
+        if (arguments is ["list", ..] && arguments.Contains("--json-lines"))
+            return ContentsAsync(arguments, standardOutputLine, cancellationToken);
         if (arguments is ["list", ..])
             return Result(0, "{\"archives\": [" + string.Join(", ", Archives.Select(archive => ArchiveJson(archive, details: false))) + "]}");
         if (arguments is ["info", ..] && arguments.Contains("--last"))
@@ -160,6 +162,46 @@ public sealed class FakeBorg : IProcessRunner
         Archives.Add((name, new DateTime(2026, 11, 6, 10, 0, 0)));
         return Result(CreateWarnings.Count > 0 ? 1 : 0,
             "{\"archive\": {\"name\": \"" + name + "\", \"duration\": 2.5, \"stats\": {\"original_size\": 3000, \"compressed_size\": 1500, \"deduplicated_size\": 300, \"nfiles\": 30}}}");
+    }
+
+    /// <summary>What "list --json-lines" lists per archive name: (type, path, size); every archive has <see cref="DefaultContents"/> otherwise.</summary>
+    public Dictionary<string, List<(string Type, string Path, long Size)>> Contents { get; } = [];
+
+    public static readonly List<(string Type, string Path, long Size)> DefaultContents =
+    [
+        ("d", "home/me/Documents", 0),
+        ("-", "home/me/Documents/letter.txt", 1200),
+        ("d", "home/me/Documents/Invoices", 0),
+        ("-", "home/me/Documents/Invoices/invoice-2026.pdf", 50_000),
+        ("l", "home/me/Documents/latest", 0),
+    ];
+
+    /// <summary>The entries of the archive (after "::") as borg 1.4 prints them, one JSON line each.</summary>
+    /// <summary>When set, "list --json-lines" fails with this message id.</summary>
+    public string? ContentsError { get; set; }
+
+    /// <summary>Awaited before listing the contents (e.g. to keep borg "reading" until cancelled).</summary>
+    public Func<CancellationToken, Task>? BeforeContents { get; set; }
+
+    private async Task<ProcessResult?> ContentsAsync(IReadOnlyList<string> arguments, Action<string>? standardOutputLine,
+        CancellationToken cancellationToken)
+    {
+        if (BeforeContents is not null)
+            await BeforeContents(cancellationToken);
+        if (ContentsError is not null)
+            return await Error(ContentsError);
+        var target = arguments.First(argument => argument.Contains("::", StringComparison.Ordinal));
+        var name = target[(target.IndexOf("::", StringComparison.Ordinal) + 2)..];
+        var lines = (Contents.GetValueOrDefault(name) ?? DefaultContents).Select(entry => System.Text.Json.JsonSerializer.Serialize(
+            new Dictionary<string, object>
+            {
+                ["type"] = entry.Type, ["mode"] = "-rw-r--r--", ["user"] = "me", ["group"] = "me", ["uid"] = 1000, ["gid"] = 1000,
+                ["path"] = entry.Path, ["healthy"] = true, ["source"] = "", ["linktarget"] = entry.Type == "l" ? "letter.txt" : "",
+                ["flags"] = 0, ["size"] = entry.Size, ["mtime"] = "2026-11-05T10:20:30.000000",
+            })).ToList();
+        foreach (var line in lines)
+            standardOutputLine?.Invoke(line);
+        return await Result(0, standardOutputLine is null ? string.Join(Environment.NewLine, lines) : "");
     }
 
     /// <summary>How many of the newest matching archives "prune" keeps (as "daily #1", "#2", …); the rest go.</summary>
@@ -431,6 +473,17 @@ public sealed class FakeDialogs : IDialogService
 
     /// <summary>Whether to confirm the clean-up previews (none left: cancelled).</summary>
     public Queue<bool> PruneAnswers { get; } = [];
+
+    /// <summary>What to do while the archive browser is "open" (it closes when this completes).</summary>
+    public Func<ArchiveBrowserViewModel, Task>? Browser { get; set; }
+
+    public List<ArchiveBrowserViewModel> Browsers { get; } = [];
+
+    public Task ShowArchiveBrowserAsync(ArchiveBrowserViewModel browser)
+    {
+        Browsers.Add(browser);
+        return Browser?.Invoke(browser) ?? Task.CompletedTask;
+    }
 
     public Task<bool> ConfirmPruneAsync(PrunePreviewViewModel preview)
     {

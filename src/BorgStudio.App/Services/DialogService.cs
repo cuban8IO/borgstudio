@@ -66,4 +66,7 @@ public sealed class DialogService(Window owner) : IDialogService
 
     public Task<bool> ConfirmPruneAsync(PrunePreviewViewModel preview) =>
         new PrunePreviewWindow { DataContext = preview }.ShowDialog<bool>(owner);
+
+    public Task ShowArchiveBrowserAsync(ArchiveBrowserViewModel browser) =>
+        new ArchiveBrowserWindow { DataContext = browser }.ShowDialog(owner);
 }

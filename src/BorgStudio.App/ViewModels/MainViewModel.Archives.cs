@@ -98,6 +98,7 @@ public partial class MainViewModel
     {
         RefreshArchivesCommand.NotifyCanExecuteChanged();
         LoadMoreArchiveDetailsCommand.NotifyCanExecuteChanged();
+        OpenArchiveCommand.NotifyCanExecuteChanged();
     }
 
     /// <summary>Another repository was selected: its archives are shown when the tab is (or gets) opened.</summary>
@@ -216,6 +217,10 @@ public partial class MainViewModel
             if (Archives.Any(archive => !listedIds.Contains(archive.Archive.Id)))
                 known.Clear();
 
+            // Contents of deleted archives are of no use any more.
+            _services.Archives.KeepContents(repositoryId, listedIds);
+
+            var selected = SelectedArchive?.Archive.Id;
             Archives.Clear();
             foreach (var (archive, index) in listed.Value!.Select((archive, index) => (archive, index)))
             {
@@ -226,6 +231,7 @@ public partial class MainViewModel
                 Archives.Add(NewArchiveItem(item, details ?? archive));
             }
             _shownOf = _archivesOf = repositoryId;
+            SelectedArchive = Archives.FirstOrDefault(archive => archive.Archive.Id == selected);
             SaveArchiveCache(repositoryId);
 
             var top = Math.Min(newest, Archives.Count);
@@ -338,6 +344,9 @@ public partial class MainViewModel
 /// <summary>An archive in the "Archives" tab.</summary>
 public sealed partial class ArchiveItemViewModel(BorgArchive archive, string? jobName) : ObservableObject
 {
+    /// <summary>The job the archive belongs to (by its name); <c>null</c> if none fits.</summary>
+    public string? JobName => jobName;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasDetails), nameof(DurationText), nameof(OriginalText), nameof(NewText), nameof(FilesText))]
     public partial BorgArchive Archive { get; private set; } = archive;

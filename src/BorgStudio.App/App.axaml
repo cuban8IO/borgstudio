@@ -62,6 +62,7 @@
 
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
 
         <!-- Every window (dialogs too) shows the app icon on the dark Beatport ground. -->
         <Style Selector=":is(Window)">

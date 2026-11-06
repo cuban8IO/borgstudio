@@ -43,4 +43,7 @@ public interface IDialogService
 
     /// <summary>Shows which archives a clean-up would delete; <c>true</c> if the user confirms deleting them.</summary>
     Task<bool> ConfirmPruneAsync(PrunePreviewViewModel preview);
+
+    /// <summary>Shows the contents of an archive until the user closes it.</summary>
+    Task ShowArchiveBrowserAsync(ArchiveBrowserViewModel browser);
 }

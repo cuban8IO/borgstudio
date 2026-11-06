@@ -151,6 +151,7 @@ public partial class MainViewModel : ViewModelBase
         public Task<string?> PickFolderAsync(string title) => Task.FromResult<string?>(null);
         public Task ShowBackupJobEditorAsync(BackupJobEditorViewModel editor) => Task.CompletedTask;
         public Task<bool> ConfirmPruneAsync(PrunePreviewViewModel preview) => Task.FromResult(false);
+        public Task ShowArchiveBrowserAsync(ArchiveBrowserViewModel browser) => Task.CompletedTask;
         public Task CopyToClipboardAsync(string text) => Task.CompletedTask;
         public Task ShowRepositoryEditorAsync(RepositoryEditorViewModel editor) => Task.CompletedTask;
     }

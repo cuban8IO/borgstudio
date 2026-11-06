@@ -212,6 +212,33 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
     }
 
     /// <summary>
+    /// The contents of an archive (<c>borg list --json-lines</c>) as a folder tree, read line by line – archives can
+    /// have millions of entries. borg reports no progress here; <paramref name="entriesRead"/> tells how many entries
+    /// were read so far (every 1000 and at the end).
+    /// </summary>
+    public async Task<BorgResult<ArchiveTree>> ListContentsAsync(
+        BorgInstallation borg, RepositoryLocation location, string archive, string? passphrase, SshAccess? ssh = null,
+        IProgress<long>? entriesRead = null, CancellationToken cancellationToken = default)
+    {
+        var tree = new ArchiveTree();
+        void OnLine(string line)
+        {
+            if (BorgItem.Parse(line) is not { } item)
+                return;
+            tree.Add(item);
+            if (tree.EntryCount % 1000 == 0)
+                entriesRead?.Report(tree.EntryCount);
+        }
+
+        var result = await RunAsync(borg, location, ssh, ["list"], ["--json-lines"], [], passphrase, CreateTimeout, cancellationToken,
+            archive, standardOutputLine: OnLine);
+        if (!result.Succeeded)
+            return BorgResult<ArchiveTree>.Failure(result.Error!);
+        entriesRead?.Report(tree.EntryCount);
+        return BorgResult<ArchiveTree>.Success(tree.Complete());
+    }
+
+    /// <summary>
     /// <c>borg prune</c>: deletes the archives matching <paramref name="archiveGlob"/> that none of the keep rules
     /// keeps. With <paramref name="dryRun"/> it only tells what it would do. Deleting can be cancelled cleanly (borg
     /// commits only at the end). The space is freed only by <see cref="CompactAsync"/>.
@@ -552,7 +579,8 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         BorgInstallation borg, RepositoryLocation location, SshAccess? ssh,
         IReadOnlyList<string> command, IReadOnlyList<string> options, IReadOnlyList<string> trailing,
         string? passphrase, TimeSpan timeout, CancellationToken cancellationToken,
-        string? archive = null, Action<string>? standardErrorLine = null, bool interruptible = false)
+        string? archive = null, Action<string>? standardErrorLine = null, bool interruptible = false,
+        Action<string>? standardOutputLine = null)
     {
         var wsl = borg.Runtime == BorgRuntime.Wsl;
         if (wsl && wslExecutable is null)
@@ -593,7 +621,7 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         try
         {
             return await RunBorgAsync(borg, location, arguments, environment, sshFiles, timeout, cancellationToken,
-                standardErrorLine, interruptible);
+                standardErrorLine, interruptible, standardOutputLine);
         }
         finally
         {
@@ -604,7 +632,8 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
 
     private async Task<BorgResult<string>> RunBorgAsync(BorgInstallation borg, RepositoryLocation location,
         List<string> arguments, Dictionary<string, string?> environment, SshFiles? sshFiles, TimeSpan timeout,
-        CancellationToken cancellationToken, Action<string>? standardErrorLine, bool interruptible)
+        CancellationToken cancellationToken, Action<string>? standardErrorLine, bool interruptible,
+        Action<string>? standardOutputLine = null)
     {
         var wsl = borg.Runtime == BorgRuntime.Wsl;
         // Signals need a POSIX system: natively on Linux/macOS, or inside WSL.
@@ -653,7 +682,8 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         {
             result = await processRunner.RunAsync(fileName, arguments, timeout, environment,
                 cancellationToken: hardStop.Token,
-                standardErrorLine: interruptible || standardErrorLine is not null ? OnLine : null);
+                standardErrorLine: interruptible || standardErrorLine is not null ? OnLine : null,
+                standardOutputLine: standardOutputLine);
         }
         catch (TimeoutException)
         {
