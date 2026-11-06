@@ -86,53 +86,75 @@
 
                 <ProgressBar DockPanel.Dock="Top" IsIndeterminate="True" IsVisible="{Binding IsSearching}" Margin="0,0,0,6" />
 
-                <!-- Column headers; the widths match the rows below -->
-                <Grid DockPanel.Dock="Top" ColumnDefinitions="32,*,90,130" Margin="12,0,12,4">
-                    <Grid.Styles>
-                        <Style Selector="TextBlock">
-                            <Setter Property="FontSize" Value="12" />
-                            <Setter Property="Opacity" Value="0.7" />
-                        </Style>
-                    </Grid.Styles>
-                    <TextBlock Grid.Column="1" Text="{x:Static res:Strings.EditorName}" />
-                    <TextBlock Grid.Column="2" Text="{x:Static res:Strings.ArchiveColumnSize}" HorizontalAlignment="Right" />
-                    <TextBlock Grid.Column="3" Text="{x:Static res:Strings.BrowserColumnModified}" Margin="12,0,0,0" />
-                </Grid>
-
+                <!-- A table: columns can be resized and sorted (click the header). -->
                 <Panel>
-                    <ListBox x:Name="EntryList" ItemsSource="{Binding Entries}" DoubleTapped="Entries_DoubleTapped" KeyDown="Entries_KeyDown">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate x:DataType="vm:EntryViewModel">
-                                <Grid ColumnDefinitions="32,*,90,130" ToolTip.Tip="{Binding Tip}">
-                                    <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Center" MinWidth="0" Padding="0" />
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                        <Panel Width="16" Height="16" VerticalAlignment="Center">
-                                            <PathIcon Data="{StaticResource FolderIcon}" Width="16" Height="16" IsVisible="{Binding IsFolder}"
-                                                      Foreground="{DynamicResource BpGreenBrush}" />
-                                            <PathIcon Data="{StaticResource LinkIcon}" Width="16" Height="16" IsVisible="{Binding IsLink}" Opacity="0.7" />
-                                            <PathIcon Data="{StaticResource FileIcon}" Width="14" Height="16" Opacity="0.7">
-                                                <PathIcon.IsVisible>
-                                                    <MultiBinding Converter="{x:Static BoolConverters.And}">
-                                                        <Binding Path="!IsFolder" />
-                                                        <Binding Path="!IsLink" />
-                                                    </MultiBinding>
-                                                </PathIcon.IsVisible>
-                                            </PathIcon>
-                                        </Panel>
-                                        <StackPanel Spacing="1" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
-                                            <TextBlock Text="{Binding LocationText}" IsVisible="{Binding IsSearchResult}" FontSize="11"
-                                                       Opacity="0.65" TextTrimming="LeadingCharacterEllipsis" />
-                                        </StackPanel>
-                                    </StackPanel>
-                                    <TextBlock Grid.Column="2" Text="{Binding SizeText}" HorizontalAlignment="Right" VerticalAlignment="Center"
-                                               FontSize="13" />
-                                    <TextBlock Grid.Column="3" Text="{Binding ModifiedText}" VerticalAlignment="Center" FontSize="13"
-                                               Margin="12,0,0,0" />
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                    <DataGrid x:Name="EntryGrid" ItemsSource="{Binding Entries}" IsReadOnly="True" SelectionMode="Single"
+                              CanUserResizeColumns="True" CanUserSortColumns="True" CanUserReorderColumns="False"
+                              GridLinesVisibility="None" HeadersVisibility="Column" RowHeight="34"
+                              DoubleTapped="Entries_DoubleTapped">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Width="40" CanUserResize="False" CanUserSort="False">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:EntryViewModel">
+                                        <CheckBox IsChecked="{Binding IsSelected}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                  MinWidth="0" Padding="0" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="{x:Static res:Strings.EditorName}" Width="*" MinWidth="140" SortMemberPath="Name">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:EntryViewModel">
+                                        <Grid ColumnDefinitions="Auto,*" ToolTip.Tip="{Binding Tip}" Margin="4,0" VerticalAlignment="Center">
+                                            <Panel Width="16" Height="16" Margin="0,0,8,0">
+                                                <PathIcon Data="{StaticResource FolderIcon}" Width="16" Height="16" IsVisible="{Binding IsFolder}"
+                                                          Foreground="{DynamicResource BpGreenBrush}" />
+                                                <PathIcon Data="{StaticResource LinkIcon}" Width="16" Height="16" IsVisible="{Binding IsLink}" Opacity="0.7" />
+                                                <PathIcon Data="{StaticResource FileIcon}" Width="14" Height="16" Opacity="0.7">
+                                                    <PathIcon.IsVisible>
+                                                        <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                            <Binding Path="!IsFolder" />
+                                                            <Binding Path="!IsLink" />
+                                                        </MultiBinding>
+                                                    </PathIcon.IsVisible>
+                                                </PathIcon>
+                                            </Panel>
+                                            <TextBlock Grid.Column="1" Text="{Binding Name}" TextTrimming="CharacterEllipsis"
+                                                       VerticalAlignment="Center" ToolTip.Tip="{Binding Name}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Only for search results (shown from code-behind). -->
+                            <DataGridTemplateColumn Header="{x:Static res:Strings.BrowserColumnFolder}" Width="*" MinWidth="80"
+                                                    SortMemberPath="LocationText" IsVisible="False">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:EntryViewModel">
+                                        <TextBlock Text="{Binding LocationText}" TextTrimming="LeadingCharacterEllipsis" Opacity="0.75"
+                                                   VerticalAlignment="Center" Margin="4,0" ToolTip.Tip="{Binding LocationText}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="{x:Static res:Strings.ArchiveColumnSize}" Width="100" MinWidth="60" SortMemberPath="Node.Size">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:EntryViewModel">
+                                        <TextBlock Text="{Binding SizeText}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0,12,0" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="{x:Static res:Strings.BrowserColumnModified}" Width="150" MinWidth="80"
+                                                    SortMemberPath="Node.Modified">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:EntryViewModel">
+                                        <TextBlock Text="{Binding ModifiedText}" VerticalAlignment="Center" Margin="4,0" TextTrimming="CharacterEllipsis" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
                     <TextBlock Text="{x:Static res:Strings.BrowserEmptyFolder}" IsVisible="{Binding HasNoEntries}"
                                HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.7" />
                 </Panel>
