@@ -124,6 +124,98 @@ public sealed class BorgClientIntegrationTests : IDisposable
         }
     }
 
+    [BorgFact]
+    public async Task Backs_up_with_progress_and_leaves_out_what_is_excluded()
+    {
+        await _client.InitAsync(Borg, Location(), BorgEncryption.None, null);
+        var source = _directory.Combine("source");
+        Directory.CreateDirectory(Path.Combine(source, "docs"));
+        Directory.CreateDirectory(Path.Combine(source, "node_modules", "lib"));
+        Directory.CreateDirectory(Path.Combine(source, "skip-me"));
+        File.WriteAllText(Path.Combine(source, "docs", "letter.txt"), "keep");
+        File.WriteAllText(Path.Combine(source, "docs", "disc.ISO"), "image");
+        File.WriteAllText(Path.Combine(source, "node_modules", "lib", "index.js"), "dependency");
+        File.WriteAllText(Path.Combine(source, "skip-me", "notes.txt"), "excluded folder");
+        var exclusions = new Core.Backups.BackupExclusions
+        {
+            // The test folder is under AppData\Local\Temp, which this template leaves out.
+            CachesAndTemp = false,
+            DevelopmentFolders = true,
+            Extensions = [".iso"],
+            Folders = [Path.Combine(source, "skip-me")],
+        };
+        var options = new List<string> { "--compression", "zstd,3" };
+        options.AddRange(Core.Backups.BackupPatterns.Arguments(exclusions, path => BorgClient.BorgPath(Borg, path)));
+        var updates = new List<BorgCreateProgress>();
+
+        var created = await _client.CreateAsync(Borg, Location(), "test-{now:%Y%m%d%H%M%S}", [source], options, null,
+            progress: new SynchronousProgress<BorgCreateProgress>(updates.Add));
+
+        Assert.True(created.Succeeded, created.Error?.ToString());
+        Assert.StartsWith("test-", created.Value!.ArchiveName);
+        Assert.Equal(1, created.Value.Files);
+        Assert.Empty(created.Value.Warnings);
+        Assert.NotEmpty(updates);
+
+        var listed = await BorgOutputAsync("list", "--short", $"{BorgClient.BorgPath(Borg, Location().Url)}::{created.Value.ArchiveName}");
+        var files = listed.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        Assert.Contains(files, file => file.EndsWith("docs/letter.txt", StringComparison.Ordinal));
+        Assert.DoesNotContain(files, file => file.Contains("node_modules", StringComparison.Ordinal));
+        Assert.DoesNotContain(files, file => file.EndsWith(".ISO", StringComparison.Ordinal));
+        Assert.DoesNotContain(files, file => file.Contains("skip-me", StringComparison.Ordinal));
+    }
+
+    [BorgFact]
+    public async Task Cancelling_interrupts_borg_and_leaves_a_checkpoint()
+    {
+        if (OperatingSystem.IsWindows() && Borg.Runtime != BorgRuntime.Wsl)
+            return; // no signals for a native Windows borg
+
+        await _client.InitAsync(Borg, Location(), BorgEncryption.None, null);
+        var source = _directory.Combine("big");
+        Directory.CreateDirectory(source);
+        var random = new Random(1);
+        var block = new byte[1024 * 1024];
+        for (var file = 0; file < 300; file++)
+        {
+            random.NextBytes(block);
+            File.WriteAllBytes(Path.Combine(source, $"file{file:000}.bin"), block);
+        }
+
+        using var cancel = new CancellationTokenSource();
+        var progress = new SynchronousProgress<BorgCreateProgress>(update =>
+        {
+            if (update.Files > 3)
+                cancel.Cancel();
+        });
+        // Short checkpoints, so the interrupted run has something to keep.
+        var created = await _client.CreateAsync(Borg, Location(), "big", [source], ["--compression", "none", "--checkpoint-interval", "1"],
+            null, progress: progress, cancellationToken: cancel.Token);
+
+        Assert.Equal(BorgErrorKind.Cancelled, created.Error?.Kind);
+        var archives = await BorgOutputAsync("list", "--short", "--consider-checkpoints", BorgClient.BorgPath(Borg, Location().Url)!);
+        Assert.Contains("big.checkpoint", archives);
+    }
+
+    /// <summary>Calls the progress callback right away (Progress&lt;T&gt; would post it to a thread pool).</summary>
+    private sealed class SynchronousProgress<T>(Action<T> report) : IProgress<T>
+    {
+        public void Report(T value) => report(value);
+    }
+
+    /// <summary>Output of a plain borg command (unencrypted repositories only).</summary>
+    private static async Task<string> BorgOutputAsync(params string[] arguments)
+    {
+        var runner = new Core.Processes.ProcessRunner();
+        var environment = new Dictionary<string, string?> { ["BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK"] = "yes" };
+        var result = Borg.Runtime == BorgRuntime.Wsl
+            ? await runner.RunAsync(Path.Combine(Environment.SystemDirectory, "wsl.exe"),
+                ["-e", "env", "BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK=yes", Borg.Path, .. arguments], TimeSpan.FromMinutes(2))
+            : await runner.RunAsync(Borg.Path, arguments, TimeSpan.FromMinutes(2), environment);
+        Assert.True(result?.ExitCode == 0, result?.StandardError);
+        return result!.StandardOutput;
+    }
+
     /// <summary>Runs a command in the shell borg runs in (inside WSL if borg is there).</summary>
     private static async Task ShellAsync(string script)
     {

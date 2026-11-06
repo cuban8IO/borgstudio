@@ -9,6 +9,7 @@ using BorgStudio.App.Services;
 using BorgStudio.App.ViewModels;
 using BorgStudio.App.Views;
 using BorgStudio.Core;
+using BorgStudio.Core.Backups;
 using BorgStudio.Core.Borg;
 using BorgStudio.Core.Plugins;
 using BorgStudio.Core.Repositories;
@@ -49,6 +50,7 @@ public partial class App : Application
                 SshKeygen.CreateDefault(),
                 vault,
                 SettingsStore.CreateDefault(),
+                BackupJobStore.CreateDefault(),
                 new DialogService(window)));
             window.DataContext = viewModel;
             desktop.MainWindow = window;

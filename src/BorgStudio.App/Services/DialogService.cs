@@ -40,6 +40,12 @@ public sealed class DialogService(Window owner) : IDialogService
         return file?.TryGetLocalPath();
     }
 
+    public async Task<string?> PickFolderAsync(string title)
+    {
+        var folders = await owner.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = title, AllowMultiple = false });
+        return folders.Count > 0 ? folders[0].TryGetLocalPath() : null;
+    }
+
     public async Task<string?> PickOpenFileAsync(string title)
     {
         var files = await owner.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions { Title = title, AllowMultiple = false });
@@ -54,4 +60,7 @@ public sealed class DialogService(Window owner) : IDialogService
 
     public Task ShowRepositoryEditorAsync(RepositoryEditorViewModel editor) =>
         new RepositoryEditorWindow { DataContext = editor }.ShowDialog(owner);
+
+    public Task ShowBackupJobEditorAsync(BackupJobEditorViewModel editor) =>
+        new BackupJobEditorWindow { DataContext = editor }.ShowDialog(owner);
 }

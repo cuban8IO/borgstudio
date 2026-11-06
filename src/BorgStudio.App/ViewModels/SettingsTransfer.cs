@@ -70,6 +70,7 @@ public static class SettingsTransfer
             KnownHosts = new KnownHostsFile(services.SshKeys.KnownHostsFile).Read(),
             Settings = main.Settings,
             BorgKeys = borgKeys,
+            Jobs = [.. main.AllJobs],
         };
         return new ExportResult(contents, problems);
     }
@@ -141,6 +142,7 @@ public static class SettingsTransfer
 
         var imported = contents.Repositories.Select(repository => adjusted.GetValueOrDefault(repository.Id) ?? repository).ToList();
         main.ReplaceRepositories(ImportMerge.Merge(current, imported, repository => repository.Id, mode, replace));
+        main.ReplaceJobs(ImportMerge.Merge(main.AllJobs.ToList(), contents.Jobs, job => job.Id, mode, replace));
 
         // Known hosts and settings.
         var knownHosts = new KnownHostsFile(services.SshKeys.KnownHostsFile);

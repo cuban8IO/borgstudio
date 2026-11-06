@@ -32,7 +32,7 @@ public class BorgClientTests
 
         public Task<ProcessResult?> RunAsync(string fileName, IReadOnlyList<string> arguments, TimeSpan timeout,
             IReadOnlyDictionary<string, string?>? environment = null, string? standardInput = null,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default, Action<string>? standardErrorLine = null)
         {
             Calls.Add((fileName, arguments, standardInput));
             if (environment?.GetValueOrDefault("BORG_RSH") is { } rsh && KeyPath(rsh) is { } key && File.Exists(key))
@@ -123,6 +123,94 @@ public class BorgClientTests
     }
 
     [Fact]
+    public void Progress_warnings_and_statistics_of_borg_create_are_read()
+    {
+        var progress = BorgClient.ParseProgress(
+            """{"type": "archive_progress", "original_size": 2048, "compressed_size": 1024, "deduplicated_size": 512, "nfiles": 7, "path": "home/me/a.txt", "time": 1.0, "finished": false}""");
+        Assert.Equal(new BorgCreateProgress(2048, 1024, 512, 7, "home/me/a.txt"), progress);
+        Assert.Null(BorgClient.ParseProgress("""{"type": "log_message", "levelname": "INFO", "message": "x"}"""));
+        Assert.Null(BorgClient.ParseProgress("not json \"archive_progress\""));
+
+        Assert.Equal("home/me/locked.pst: [Errno 13] Permission denied",
+            BorgClient.ParseWarning("""{"type": "log_message", "levelname": "WARNING", "message": "home/me/locked.pst: [Errno 13] Permission denied"}"""));
+        Assert.Null(BorgClient.ParseWarning("""{"type": "log_message", "levelname": "ERROR", "message": "WARNING in text"}"""));
+
+        var result = BorgClient.ParseCreate(
+            """{"archive": {"name": "Docs-nb-2026", "duration": 12.5, "stats": {"original_size": 10, "compressed_size": 8, "deduplicated_size": 2, "nfiles": 3}}}""");
+        Assert.Equal(new BorgCreateResult("Docs-nb-2026", 10, 8, 2, 3, TimeSpan.FromSeconds(12.5), []), result with { Warnings = [] });
+    }
+
+    [Fact]
+    public async Task Create_inside_WSL_runs_borg_through_the_pid_wrapper_with_translated_paths()
+    {
+        var runner = new RecordingRunner(new ProcessResult(0,
+            """{"archive": {"name": "Docs", "duration": 1, "stats": {"original_size": 1, "compressed_size": 1, "deduplicated_size": 1, "nfiles": 1}}}""", ""));
+
+        var result = await new BorgClient(runner, Wsl).CreateAsync(WslBorg, new RepositoryLocation(@"E:\Backups\repo"), "Docs-{hostname}",
+            [@"C:\Users\me\Documents"], ["--compression", "zstd,3"], "secret");
+
+        Assert.True(result.Succeeded, result.Error?.ToString());
+        Assert.Equal(Wsl, runner.FileName);
+        Assert.Equal(["-e", "sh", "-c"], runner.Arguments.Take(3));
+        Assert.Equal("/usr/bin/borg", runner.Arguments[4]);
+        Assert.Equal(
+            ["create", "--log-json", "--progress", "--json", "--compression", "zstd,3", "/mnt/e/Backups/repo::Docs-{hostname}", "/mnt/c/Users/me/Documents"],
+            runner.Arguments.Skip(5));
+
+        var unreachable = await new BorgClient(runner, Wsl).CreateAsync(WslBorg, new RepositoryLocation(@"E:\Backups\repo"), "Docs",
+            [@"\\nas\share"], [], null);
+        Assert.Equal(BorgErrorKind.UnsupportedPath, unreachable.Error!.Kind);
+    }
+
+    /// <summary>A borg that tells its process id and keeps running until it gets SIGINT.</summary>
+    private sealed class InterruptibleRunner : IProcessRunner
+    {
+        private readonly TaskCompletionSource _interrupted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public List<IReadOnlyList<string>> Kills { get; } = [];
+
+        public async Task<ProcessResult?> RunAsync(string fileName, IReadOnlyList<string> arguments, TimeSpan timeout,
+            IReadOnlyDictionary<string, string?>? environment = null, string? standardInput = null,
+            CancellationToken cancellationToken = default, Action<string>? standardErrorLine = null)
+        {
+            if (arguments.Contains("kill"))
+            {
+                Kills.Add(arguments);
+                _interrupted.TrySetResult();
+                return new ProcessResult(0, "", "");
+            }
+
+            standardErrorLine!("BORGSTUDIO_PID 4242");
+            standardErrorLine("""{"type": "archive_progress", "original_size": 1, "compressed_size": 1, "deduplicated_size": 1, "nfiles": 1, "path": "a"}""");
+            await _interrupted.Task.WaitAsync(cancellationToken);
+            return new ProcessResult(1, "", "");
+        }
+    }
+
+    [Fact]
+    public async Task Cancelling_a_backup_sends_SIGINT_to_borg()
+    {
+        var runner = new InterruptibleRunner();
+        using var cancel = new CancellationTokenSource();
+        var progress = new Progress<BorgCreateProgress>();
+        var lines = new List<BorgCreateProgress>();
+
+        var running = new BorgClient(runner, Wsl).CreateAsync(WslBorg, new RepositoryLocation(@"E:\repo"), "Docs", [@"C:\data"], [], null,
+            progress: new CallbackProgress(lines.Add), cancellationToken: cancel.Token);
+        cancel.Cancel();
+        var result = await running;
+
+        Assert.Equal(BorgErrorKind.Cancelled, result.Error!.Kind);
+        Assert.Equal(["-e", "kill", "-INT", "4242"], Assert.Single(runner.Kills));
+        Assert.Single(lines); // the pid line is not passed on as progress
+    }
+
+    private sealed class CallbackProgress(Action<BorgCreateProgress> report) : IProgress<BorgCreateProgress>
+    {
+        public void Report(BorgCreateProgress value) => report(value);
+    }
+
+    [Fact]
     public async Task Keyfile_keys_go_into_borgs_key_folder_inside_WSL()
     {
         var runner = new RecordingRunner(new ProcessResult(0, "", ""));
@@ -172,7 +260,7 @@ public class BorgClientTests
 
         public Task<ProcessResult?> RunAsync(string fileName, IReadOnlyList<string> arguments, TimeSpan timeout,
             IReadOnlyDictionary<string, string?>? environment = null, string? standardInput = null,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default, Action<string>? standardErrorLine = null)
         {
             Calls.Add((fileName, arguments));
             return Task.FromResult(_results.Dequeue());

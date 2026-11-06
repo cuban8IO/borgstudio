@@ -32,7 +32,7 @@ public partial class MainViewModel
     /// <summary>A borg command is running for the selected repository.</summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddRepositoryCommand), nameof(TestRepositoryCommand), nameof(ExportKeyCommand),
-        nameof(EditRepositoryCommand), nameof(RemoveRepositoryCommand))]
+        nameof(EditRepositoryCommand), nameof(RemoveRepositoryCommand), nameof(RunJobCommand))]
     public partial bool IsWorking { get; private set; }
 
     [ObservableProperty]
@@ -92,7 +92,7 @@ public partial class MainViewModel
         RefreshKeyNames();
     }
 
-    private bool CanEdit() => !IsWorking && SelectedRepository?.Provider is not null;
+    private bool CanEdit() => !IsWorking && !IsBackupRunning && SelectedRepository?.Provider is not null;
 
     [RelayCommand(CanExecute = nameof(CanRemove))]
     private async Task RemoveRepositoryAsync()
@@ -101,6 +101,8 @@ public partial class MainViewModel
         var message = BorgTexts.Format(Strings.RemoveMessage, item.Name);
         if (item.Config.SshKeyId is not null)
             message += " " + Strings.RemoveSshHint;
+        if (_jobs.Any(job => job.RepositoryId == item.Config.Id))
+            message += " " + Strings.RemoveJobsHint;
         if (!await _services.Dialogs.ConfirmAsync(Strings.RemoveTitle, message, Strings.Remove))
             return;
 
@@ -109,6 +111,7 @@ public partial class MainViewModel
         var index = Repositories.IndexOf(item);
         Repositories.Remove(item);
         SaveRepositories();
+        RemoveJobsOf(item.Config.Id);
         SelectedRepository = Repositories.Count == 0 ? null : Repositories[Math.Min(index, Repositories.Count - 1)];
 
         await OfferToDeleteUnusedKeyAsync(item.Config.SshKeyId);
@@ -126,7 +129,7 @@ public partial class MainViewModel
             _services.Vault.RemoveKey(id);
     }
 
-    private bool CanRemove() => !IsWorking && SelectedRepository is not null;
+    private bool CanRemove() => !IsWorking && !IsBackupRunning && SelectedRepository is not null;
 
     // --- borg operations ---
 
@@ -189,7 +192,7 @@ public partial class MainViewModel
     }
 
     private bool CanRunBorg() =>
-        !IsWorking && SelectedRepository?.Location is not null && Borg is { Support: BorgSupport.Supported };
+        !IsWorking && !IsBackupRunning && SelectedRepository?.Location is not null && Borg is { Support: BorgSupport.Supported };
 
     private bool CanExportKey() => CanRunBorg() && SelectedRepository!.IsEncrypted;
 

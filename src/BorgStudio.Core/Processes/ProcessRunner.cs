@@ -12,7 +12,8 @@ public sealed class ProcessRunner : IProcessRunner
         TimeSpan timeout,
         IReadOnlyDictionary<string, string?>? environment = null,
         string? standardInput = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Action<string>? standardErrorLine = null)
     {
         var startInfo = new ProcessStartInfo(fileName)
         {
@@ -51,7 +52,9 @@ public sealed class ProcessRunner : IProcessRunner
         process.StandardInput.Close();
 
         var standardOutput = process.StandardOutput.ReadToEndAsync(cancellationToken);
-        var standardError = process.StandardError.ReadToEndAsync(cancellationToken);
+        var standardError = standardErrorLine is null
+            ? process.StandardError.ReadToEndAsync(cancellationToken)
+            : ReadLinesAsync(process.StandardError, standardErrorLine, cancellationToken);
 
         using var timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeoutSource.CancelAfter(timeout);
@@ -74,5 +77,17 @@ public sealed class ProcessRunner : IProcessRunner
         }
 
         return new ProcessResult(process.ExitCode, await standardOutput, await standardError);
+    }
+
+    /// <summary>Reads to the end, passing every line on as it arrives; returns everything read.</summary>
+    private static async Task<string> ReadLinesAsync(StreamReader reader, Action<string> line, CancellationToken cancellationToken)
+    {
+        var all = new StringBuilder();
+        while (await reader.ReadLineAsync(cancellationToken) is { } next)
+        {
+            all.Append(next).Append('\n');
+            line(next);
+        }
+        return all.ToString();
     }
 }

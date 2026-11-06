@@ -768,7 +768,7 @@ Warning: the provider publishes the fingerprints of its servers, and this key ma
     <value>Export settings</value>
   </data>
   <data name="ExportIntro" xml:space="preserve">
-    <value>Saves everything in one file to set BorgStudio up again on another computer: repositories, stored passphrases, SSH keys, known servers and settings. The file is encrypted with a password of its own – without it nobody can read the file, and you cannot either.</value>
+    <value>Saves everything in one file to set BorgStudio up again on another computer: repositories, backup jobs, stored passphrases, SSH keys, known servers and settings. The file is encrypted with a password of its own – without it nobody can read the file, and you cannot either.</value>
   </data>
   <data name="ExportPassword" xml:space="preserve">
     <value>Export password</value>
@@ -834,7 +834,7 @@ Warning: the provider publishes the fingerprints of its servers, and this key ma
     <value>Merge: add what is new, keep what is here</value>
   </data>
   <data name="ImportModeReplace" xml:space="preserve">
-    <value>Replace: the export replaces all repositories, keys, known servers and settings</value>
+    <value>Replace: the export replaces all repositories, backup jobs, keys, known servers and settings</value>
   </data>
   <data name="ImportConflictHint" xml:space="preserve">
     <value>Some entries exist here already. When merging, tick "replace" where the export should win.</value>
@@ -871,5 +871,188 @@ Warning: the provider publishes the fingerprints of its servers, and this key ma
   </data>
   <data name="ImportStart" xml:space="preserve">
     <value>Import</value>
+  </data>
+  <data name="TabOverview" xml:space="preserve">
+    <value>Overview</value>
+  </data>
+  <data name="TabJobs" xml:space="preserve">
+    <value>Backup jobs</value>
+  </data>
+  <data name="JobRun" xml:space="preserve">
+    <value>Back up now</value>
+  </data>
+  <data name="JobNew" xml:space="preserve">
+    <value>New job…</value>
+  </data>
+  <data name="JobsEmpty" xml:space="preserve">
+    <value>No backup jobs yet. A job says which folders go into this repository – create one with "New job…".</value>
+  </data>
+  <data name="JobNeverRun" xml:space="preserve">
+    <value>Not backed up yet</value>
+  </data>
+  <data name="JobLastRun" xml:space="preserve">
+    <value>Last: {0} · {1} · {2} read, {3} new</value>
+  </data>
+  <data name="JobDeleteTitle" xml:space="preserve">
+    <value>Delete job</value>
+  </data>
+  <data name="JobDeleteMessage" xml:space="preserve">
+    <value>Delete the job "{0}"? Its archives in the repository stay.</value>
+  </data>
+  <data name="RemoveJobsHint" xml:space="preserve">
+    <value>Its backup jobs are deleted too.</value>
+  </data>
+  <data name="OutcomeSucceeded" xml:space="preserve">
+    <value>Succeeded</value>
+  </data>
+  <data name="OutcomeWarnings" xml:space="preserve">
+    <value>Finished with warnings</value>
+  </data>
+  <data name="OutcomeCancelled" xml:space="preserve">
+    <value>Cancelled</value>
+  </data>
+  <data name="OutcomeFailed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
+  <data name="BackupRunning" xml:space="preserve">
+    <value>Backing up…</value>
+  </data>
+  <data name="BackupCancelling" xml:space="preserve">
+    <value>Stopping – borg is saving a checkpoint…</value>
+  </data>
+  <data name="BackupLabelProcessed" xml:space="preserve">
+    <value>Processed</value>
+  </data>
+  <data name="BackupLabelUpload" xml:space="preserve">
+    <value>Upload</value>
+  </data>
+  <data name="BackupLabelElapsed" xml:space="preserve">
+    <value>Elapsed</value>
+  </data>
+  <data name="BackupLabelRemaining" xml:space="preserve">
+    <value>Remaining</value>
+  </data>
+  <data name="BackupLabelCurrent" xml:space="preserve">
+    <value>Current file</value>
+  </data>
+  <data name="BackupProcessed" xml:space="preserve">
+    <value>{0} · {1:N0} files</value>
+  </data>
+  <data name="BackupProcessedOf" xml:space="preserve">
+    <value>{0} of about {1} · {2:N0} files</value>
+  </data>
+  <data name="BackupUpload" xml:space="preserve">
+    <value>{0} (new data so far: {1})</value>
+  </data>
+  <data name="BackupRemaining" xml:space="preserve">
+    <value>about {0}</value>
+  </data>
+  <data name="BackupRemainingCalculating" xml:space="preserve">
+    <value>being calculated…</value>
+  </data>
+  <data name="BackupRemainingUnknown" xml:space="preserve">
+    <value>unknown yet (the size of the sources is being determined)</value>
+  </data>
+  <data name="BackupResult" xml:space="preserve">
+    <value>{0} read, {1} compressed, {2} new in the repository · {3:N0} files · {4} · archive {5}</value>
+  </data>
+  <data name="BackupCancelledText" xml:space="preserve">
+    <value>Cancelled. borg kept what was backed up so far as a checkpoint; the next run continues from there.</value>
+  </data>
+  <data name="BackupMoreWarnings" xml:space="preserve">
+    <value>… and {0:N0} more</value>
+  </data>
+  <data name="BackupRunningCloseTitle" xml:space="preserve">
+    <value>Backup running</value>
+  </data>
+  <data name="BackupRunningCloseMessage" xml:space="preserve">
+    <value>A backup is still running. Stop it and quit? borg keeps what was backed up so far as a checkpoint.</value>
+  </data>
+  <data name="BackupRunningCloseConfirm" xml:space="preserve">
+    <value>Stop and quit</value>
+  </data>
+  <data name="JobEditorTitleNew" xml:space="preserve">
+    <value>New backup job</value>
+  </data>
+  <data name="JobEditorTitleEdit" xml:space="preserve">
+    <value>Edit backup job</value>
+  </data>
+  <data name="JobEditorRepository" xml:space="preserve">
+    <value>Backs up into "{0}"</value>
+  </data>
+  <data name="JobEditorNameHint" xml:space="preserve">
+    <value>Also the start of the archive names, e.g. "Documents-&lt;computer&gt;-&lt;date&gt;".</value>
+  </data>
+  <data name="JobEditorSources" xml:space="preserve">
+    <value>Folders to back up</value>
+  </data>
+  <data name="JobEditorAddSource" xml:space="preserve">
+    <value>Add folder…</value>
+  </data>
+  <data name="JobEditorExclusions" xml:space="preserve">
+    <value>Leave out</value>
+  </data>
+  <data name="JobEditorCachesAndTemp" xml:space="preserve">
+    <value>Caches and temporary files (Temp, browser cache, ~/.cache)</value>
+  </data>
+  <data name="JobEditorDevelopmentFolders" xml:space="preserve">
+    <value>Build output and dependencies of software projects (node_modules, bin/Debug, obj, .venv)</value>
+  </data>
+  <data name="JobEditorRecycleBin" xml:space="preserve">
+    <value>Recycle bins</value>
+  </data>
+  <data name="JobEditorCacheDirTag" xml:space="preserve">
+    <value>Folders marked as cache (CACHEDIR.TAG)</value>
+  </data>
+  <data name="JobEditorExtensions" xml:space="preserve">
+    <value>File extensions (separated by commas)</value>
+  </data>
+  <data name="JobEditorExcludedFolders" xml:space="preserve">
+    <value>Folders</value>
+  </data>
+  <data name="JobEditorAddExcludedFolder" xml:space="preserve">
+    <value>Leave out folder…</value>
+  </data>
+  <data name="JobEditorCompression" xml:space="preserve">
+    <value>Compression</value>
+  </data>
+  <data name="JobEditorPatterns" xml:space="preserve">
+    <value>Further patterns in borg syntax, one per line (e.g. sh:**/*.bak – see "borg help patterns")</value>
+  </data>
+  <data name="JobEditorPreview" xml:space="preserve">
+    <value>What borg gets:</value>
+  </data>
+  <data name="JobEditorNameRequired" xml:space="preserve">
+    <value>Please give the job a name.</value>
+  </data>
+  <data name="JobEditorSourceRequired" xml:space="preserve">
+    <value>Please add at least one folder to back up.</value>
+  </data>
+  <data name="JobEditorSourceUnreachable" xml:space="preserve">
+    <value>borg runs in WSL and cannot reach "{0}" (network shares are not supported).</value>
+  </data>
+  <data name="JobEditorSourceMissing" xml:space="preserve">
+    <value>"{0}" does not exist (any more).</value>
+  </data>
+  <data name="JobEditorSourceExcluded" xml:space="preserve">
+    <value>"{0}" lies in something left out below – nothing of it would be backed up.</value>
+  </data>
+  <data name="CompressionZstd3" xml:space="preserve">
+    <value>zstd, level 3 (recommended)</value>
+  </data>
+  <data name="CompressionLz4" xml:space="preserve">
+    <value>lz4 (fastest)</value>
+  </data>
+  <data name="CompressionZstd9" xml:space="preserve">
+    <value>zstd, level 9 (smaller, slower)</value>
+  </data>
+  <data name="CompressionNone" xml:space="preserve">
+    <value>none</value>
+  </data>
+  <data name="ImportKindJob" xml:space="preserve">
+    <value>Backup job</value>
+  </data>
+  <data name="JobLastRunShort" xml:space="preserve">
+    <value>Last: {0} · {1}</value>
   </data>
 </root>

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using BorgStudio.Core.Backups;
 using BorgStudio.Core.Repositories;
 using BorgStudio.Core.Security;
 using BorgStudio.Core.Settings;
@@ -36,6 +37,9 @@ public sealed record ExportContents
 
     /// <summary>Repository id ("N" format) → its borg key.</summary>
     public Dictionary<string, ExportedBorgKey> BorgKeys { get; init; } = [];
+
+    /// <summary>Backup jobs (empty in exports of versions without jobs).</summary>
+    public List<BackupJob> Jobs { get; init; } = [];
 
     public string? PassphraseFor(Guid repositoryId) => Passphrases.GetValueOrDefault(repositoryId.ToString("N"));
 

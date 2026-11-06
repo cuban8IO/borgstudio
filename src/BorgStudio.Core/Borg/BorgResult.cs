@@ -26,6 +26,9 @@ public enum BorgErrorKind
     /// <summary>borg (or wsl.exe) could not be started.</summary>
     NotStartable,
 
+    /// <summary>Stopped on request (borg was interrupted).</summary>
+    Cancelled,
+
     /// <summary>A path that cannot be handed to borg (e.g. a network share for borg inside WSL).</summary>
     UnsupportedPath,
 
@@ -59,3 +62,13 @@ public enum BorgEncryption
 /// <summary>From <c>borg info --json</c>.</summary>
 /// <param name="EncryptionMode">e.g. "repokey-blake2", "keyfile-blake2", "none".</param>
 public sealed record BorgRepositoryInfo(string Id, string EncryptionMode, DateTimeOffset? LastModified);
+
+/// <summary>A progress update of <c>borg create</c> (sizes so far).</summary>
+/// <param name="DeduplicatedSize">What actually has to go into the repository (new data, compressed).</param>
+/// <param name="Path">The file borg is working on.</param>
+public sealed record BorgCreateProgress(long OriginalSize, long CompressedSize, long DeduplicatedSize, long Files, string? Path, bool Finished = false);
+
+/// <summary>The outcome of <c>borg create</c>.</summary>
+/// <param name="Warnings">What borg warned about, e.g. files it could not read.</param>
+public sealed record BorgCreateResult(string ArchiveName, long OriginalSize, long CompressedSize, long DeduplicatedSize, long Files,
+    TimeSpan Duration, IReadOnlyList<string> Warnings);
