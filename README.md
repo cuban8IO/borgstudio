@@ -147,6 +147,11 @@ section gets the new version number.
   tab shows first which archives would go and which stay (and by which rule). Only the archives this computer created
   for the job are touched (`<job>-{hostname}-*`). "Free space" in the overview runs `borg compact` on its own, with
   progress and cancel.
+- Archive browser (tab "Archives" → "Open…" or double-click): folder tree and the files of each folder with size and
+  date, a search over the whole archive (part of the name, or patterns like `*.pdf`) and tick boxes to select files and
+  folders (for restoring, next). Windows drives backed up through WSL show as `C:\…`. The file list is read from borg
+  line by line with progress and remaining time (`borg list` reports none: counted against the archive's file count),
+  then cached per archive – archives never change – encrypted with the vault's key when a PIN is set up.
 
 **Changed**
 - Every wait shows a progress bar with percent, elapsed and remaining time, so it is clear the app is working:

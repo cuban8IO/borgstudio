@@ -13,7 +13,8 @@ public sealed class ProcessRunner : IProcessRunner
         IReadOnlyDictionary<string, string?>? environment = null,
         string? standardInput = null,
         CancellationToken cancellationToken = default,
-        Action<string>? standardErrorLine = null)
+        Action<string>? standardErrorLine = null,
+        Action<string>? standardOutputLine = null)
     {
         var startInfo = new ProcessStartInfo(fileName)
         {
@@ -51,7 +52,9 @@ public sealed class ProcessRunner : IProcessRunner
             await process.StandardInput.WriteAsync(standardInput.AsMemory(), cancellationToken);
         process.StandardInput.Close();
 
-        var standardOutput = process.StandardOutput.ReadToEndAsync(cancellationToken);
+        var standardOutput = standardOutputLine is null
+            ? process.StandardOutput.ReadToEndAsync(cancellationToken)
+            : ReadLinesAsync(process.StandardOutput, standardOutputLine, cancellationToken, keep: false);
         var standardError = standardErrorLine is null
             ? process.StandardError.ReadToEndAsync(cancellationToken)
             : ReadLinesAsync(process.StandardError, standardErrorLine, cancellationToken);
@@ -80,7 +83,8 @@ public sealed class ProcessRunner : IProcessRunner
     }
 
     /// <summary>Reads to the end, passing every line on as it arrives; returns everything read.</summary>
-    private static async Task<string> ReadLinesAsync(StreamReader reader, Action<string> line, CancellationToken cancellationToken)
+    private static async Task<string> ReadLinesAsync(StreamReader reader, Action<string> line, CancellationToken cancellationToken,
+        bool keep = true)
     {
         var all = new StringBuilder();
         while (await reader.ReadLineAsync(cancellationToken) is { } next)

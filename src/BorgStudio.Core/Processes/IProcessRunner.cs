@@ -18,6 +18,10 @@ public interface IProcessRunner
     /// Called with every line on standard error as soon as it arrives (e.g. borg's progress); the lines are still part
     /// of <see cref="ProcessResult.StandardError"/>.
     /// </param>
+    /// <param name="standardOutputLine">
+    /// Called with every line on standard output as it arrives; the lines are then NOT kept in
+    /// <see cref="ProcessResult.StandardOutput"/> (for large outputs, e.g. the contents of an archive).
+    /// </param>
     /// <exception cref="TimeoutException">The program did not exit within <paramref name="timeout"/>; it has been killed.</exception>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled; the program has been killed.</exception>
     Task<ProcessResult?> RunAsync(
@@ -27,5 +31,6 @@ public interface IProcessRunner
         IReadOnlyDictionary<string, string?>? environment = null,
         string? standardInput = null,
         CancellationToken cancellationToken = default,
-        Action<string>? standardErrorLine = null);
+        Action<string>? standardErrorLine = null,
+        Action<string>? standardOutputLine = null);
 }

@@ -32,7 +32,7 @@ public class BorgClientTests
 
         public Task<ProcessResult?> RunAsync(string fileName, IReadOnlyList<string> arguments, TimeSpan timeout,
             IReadOnlyDictionary<string, string?>? environment = null, string? standardInput = null,
-            CancellationToken cancellationToken = default, Action<string>? standardErrorLine = null)
+            CancellationToken cancellationToken = default, Action<string>? standardErrorLine = null, Action<string>? standardOutputLine = null)
         {
             Calls.Add((fileName, arguments, standardInput));
             if (environment?.GetValueOrDefault("BORG_RSH") is { } rsh && KeyPath(rsh) is { } key && File.Exists(key))
@@ -204,7 +204,7 @@ public class BorgClientTests
 
         public async Task<ProcessResult?> RunAsync(string fileName, IReadOnlyList<string> arguments, TimeSpan timeout,
             IReadOnlyDictionary<string, string?>? environment = null, string? standardInput = null,
-            CancellationToken cancellationToken = default, Action<string>? standardErrorLine = null)
+            CancellationToken cancellationToken = default, Action<string>? standardErrorLine = null, Action<string>? standardOutputLine = null)
         {
             if (arguments.Contains("kill"))
             {
@@ -293,7 +293,7 @@ public class BorgClientTests
 
         public Task<ProcessResult?> RunAsync(string fileName, IReadOnlyList<string> arguments, TimeSpan timeout,
             IReadOnlyDictionary<string, string?>? environment = null, string? standardInput = null,
-            CancellationToken cancellationToken = default, Action<string>? standardErrorLine = null)
+            CancellationToken cancellationToken = default, Action<string>? standardErrorLine = null, Action<string>? standardOutputLine = null)
         {
             Calls.Add((fileName, arguments));
             return Task.FromResult(_results.Dequeue());

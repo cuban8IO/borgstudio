@@ -7,9 +7,10 @@ namespace BorgStudio.Core.Borg;
 /// The archives last seen per repository, with the details borg took long to work out (<c>borg info</c> reads all
 /// metadata of an archive for its own share). Archives never change, so the details stay valid until archives are
 /// deleted. One file per repository in <see cref="Directory"/>: encrypted with the vault's key when a PIN is set up
-/// (<c>&lt;id&gt;.vault</c>), plain JSON otherwise (<c>&lt;id&gt;.json</c>).
+/// (<c>&lt;id&gt;.vault</c>), plain JSON otherwise (<c>&lt;id&gt;.json</c>). The contents of opened archives are kept
+/// alongside (see ArchiveCache.Contents.cs).
 /// </summary>
-public sealed class ArchiveCache(string directory, Vault vault)
+public sealed partial class ArchiveCache(string directory, Vault vault)
 {
     private const string Format = "borgstudio-archive-cache";
     private const int Version = 1;
@@ -78,6 +79,7 @@ public sealed class ArchiveCache(string directory, Vault vault)
     {
         TryDelete(PlainFile(repositoryId));
         TryDelete(SealedFile(repositoryId));
+        TryDeleteDirectory(ContentsDirectory(repositoryId));
     }
 
     /// <summary>Drops the caches of repositories that no longer exist.</summary>
@@ -89,6 +91,7 @@ public sealed class ArchiveCache(string directory, Vault vault)
         foreach (var file in System.IO.Directory.EnumerateFiles(Directory))
             if (!keep.Contains(Path.GetFileNameWithoutExtension(file)))
                 TryDelete(file);
+        RemoveContentsExcept(keep);
     }
 
     /// <summary>
@@ -107,10 +110,12 @@ public sealed class ArchiveCache(string directory, Vault vault)
                         Save(id, archives);
                     else
                         TryDelete(file);
+                SecureContents();
                 break;
             case VaultState.NotSetUp:
                 foreach (var file in System.IO.Directory.EnumerateFiles(Directory, "*.vault"))
                     TryDelete(file);
+                SecureContents();
                 break;
         }
     }

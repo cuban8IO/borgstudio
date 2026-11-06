@@ -54,6 +54,13 @@ public partial class MainWindow : Window
         Close();
     }
 
+    /// <summary>A double-click on an archive opens it.</summary>
+    private void Archives_DoubleTapped(object? sender, Avalonia.Input.TappedEventArgs e)
+    {
+        if (DataContext is MainViewModel { OpenArchiveCommand: var open } && open.CanExecute(null))
+            open.Execute(null);
+    }
+
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(MainViewModel.IsLocked))

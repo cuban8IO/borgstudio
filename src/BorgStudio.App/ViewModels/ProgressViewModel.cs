@@ -89,6 +89,13 @@ public sealed partial class ProgressViewModel : ViewModelBase
     /// <summary>0..1.</summary>
     public void Report(double fraction) => Report(fraction, 1);
 
+    /// <summary>Tells what is going on without a fraction (e.g. "12.345 entries read").</summary>
+    public void SetDetail(string detail)
+    {
+        if (IsActive)
+            Detail = detail;
+    }
+
     /// <summary>Moves the times on; called every second while active.</summary>
     public void Tick()
     {

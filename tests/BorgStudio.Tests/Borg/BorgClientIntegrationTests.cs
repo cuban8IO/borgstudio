@@ -273,6 +273,38 @@ public sealed class BorgClientIntegrationTests : IDisposable
         Assert.NotEmpty(progress);
     }
 
+    [BorgFact]
+    public async Task Reads_the_contents_of_an_archive_as_a_tree()
+    {
+        await _client.InitAsync(Borg, Location(), BorgEncryption.RepokeyBlake2, Passphrase);
+        var source = _directory.Combine("source");
+        Directory.CreateDirectory(Path.Combine(source, "sub folder"));
+        File.WriteAllText(Path.Combine(source, "a.txt"), new string('a', 1000));
+        File.WriteAllText(Path.Combine(source, "sub folder", "b c.txt"), new string('b', 2500));
+        Assert.True((await _client.CreateAsync(Borg, Location(), "contents", [source], [], Passphrase)).Succeeded);
+        var read = new List<long>();
+
+        var listed = await _client.ListContentsAsync(Borg, Location(), "contents", Passphrase,
+            entriesRead: new SynchronousProgress<long>(read.Add));
+
+        Assert.True(listed.Succeeded, listed.Error?.ToString());
+        var tree = listed.Value!;
+        var borgPath = BorgClient.BorgPath(Borg, source)!.TrimStart('/');
+        var folder = tree.Find(borgPath);
+        Assert.NotNull(folder);
+        Assert.Equal(["sub folder", "a.txt"], folder!.Children.Select(node => node.Name));
+        Assert.Equal(3500, folder.Size);
+        Assert.Equal(2, folder.FileCount);
+        Assert.Equal(borgPath + "/sub folder/b c.txt", tree.Find(borgPath + "/sub folder/b c.txt")!.BorgPath);
+        if (Borg.Runtime == BorgRuntime.Wsl)
+            Assert.Equal(Path.GetFullPath(source), folder.DisplayPath, ignoreCase: true); // "mnt/c/…" shown as "C:\…"
+        Assert.True(folder.Modified > DateTimeOffset.Now.AddHours(-1));
+        Assert.Equal(tree.EntryCount, read[^1]);
+
+        var wrong = await _client.ListContentsAsync(Borg, Location(), "contents", "wrong");
+        Assert.Equal(BorgErrorKind.PassphraseWrong, wrong.Error!.Kind);
+    }
+
     /// <summary>Calls the progress callback right away (Progress&lt;T&gt; would post it to a thread pool).</summary>
     private sealed class SynchronousProgress<T>(Action<T> report) : IProgress<T>
     {

@@ -287,6 +287,8 @@
                                         <Setter Property="Margin" Value="0,0,8,8" />
                                     </Style>
                                 </WrapPanel.Styles>
+                                <Button Content="{x:Static res:Strings.ArchiveOpen}" Command="{Binding OpenArchiveCommand}"
+                                        ToolTip.Tip="{x:Static res:Strings.ArchiveOpenTip}" Classes="accent" />
                                 <Button Content="{x:Static res:Strings.ArchivesRefresh}" Command="{Binding RefreshArchivesCommand}"
                                         ToolTip.Tip="{x:Static res:Strings.ArchivesRefreshTip}" />
                                 <Button Content="{x:Static res:Strings.ArchivesLoadMore}" Command="{Binding LoadMoreArchiveDetailsCommand}" />
@@ -322,7 +324,8 @@
                                 <TextBlock Grid.Column="5" Classes="number" Text="{x:Static res:Strings.ArchiveColumnFiles}" />
                             </Grid>
 
-                            <ListBox ItemsSource="{Binding Archives}">
+                            <ListBox ItemsSource="{Binding Archives}" SelectedItem="{Binding SelectedArchive}"
+                                     DoubleTapped="Archives_DoubleTapped">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate x:DataType="vm:ArchiveItemViewModel">
                                         <Grid ColumnDefinitions="*,130,80,90,90,80">
