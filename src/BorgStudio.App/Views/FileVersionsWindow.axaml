@@ -1,0 +1,89 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:BorgStudio.App.ViewModels"
+        xmlns:views="using:BorgStudio.App.Views"
+        xmlns:res="using:BorgStudio.App.Resources"
+        x:Class="BorgStudio.App.Views.FileVersionsWindow"
+        x:DataType="vm:FileVersionsViewModel"
+        Title="{Binding Title}"
+        Width="820" Height="520" MinWidth="560" MinHeight="340"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+    <DockPanel Margin="16">
+
+        <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,10">
+            <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+            <TextBlock Text="{Binding PathText}" Opacity="0.75" TextTrimming="LeadingCharacterEllipsis" ToolTip.Tip="{Binding PathText}" />
+            <TextBlock Text="{Binding SummaryText}" Opacity="0.75" IsVisible="{Binding !IsScanning}" />
+        </StackPanel>
+
+        <Panel DockPanel.Dock="Top" IsVisible="{Binding IsScanning}" Margin="0,0,0,10">
+            <views:ProgressPanel DataContext="{Binding Progress}" />
+        </Panel>
+        <SelectableTextBlock DockPanel.Dock="Top" Text="{Binding Error}" IsVisible="{Binding HasError}" TextWrapping="Wrap"
+                             Foreground="{DynamicResource ErrorForeground}" Margin="0,0,0,10" />
+        <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" IsVisible="{Binding HasSkipped}" Margin="0,0,0,8">
+            <TextBlock Text="{Binding SkippedText}" TextWrapping="Wrap" Opacity="0.8" VerticalAlignment="Center" />
+            <Button Grid.Column="1" Content="{x:Static res:Strings.ScanReadMissing}" Command="{Binding LoadMissingCommand}" Margin="8,0,0,0" />
+        </Grid>
+
+        <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto,Auto" Margin="0,12,0,0">
+            <TextBlock Text="{x:Static res:Strings.VersionsHint}" Opacity="0.7" VerticalAlignment="Center" TextWrapping="Wrap" />
+            <Button Grid.Column="1" Content="{x:Static res:Strings.VersionsRestore}" Command="{Binding RestoreCommand}" Classes="accent"
+                    Margin="8,0,0,0" />
+            <Button Grid.Column="2" Content="{x:Static res:Strings.Close}" Click="Close_Click" IsCancel="True" Margin="8,0,0,0" />
+        </Grid>
+
+        <DataGrid ItemsSource="{Binding Versions}" SelectedItem="{Binding SelectedVersion}" IsReadOnly="True" SelectionMode="Single"
+                  CanUserResizeColumns="True" CanUserSortColumns="True" CanUserReorderColumns="False"
+                  GridLinesVisibility="None" HeadersVisibility="Column" RowHeight="34">
+            <DataGrid.Styles>
+                <!-- Stretches the file is missing from: quieter. -->
+                <Style Selector="DataGridRow" x:DataType="vm:FileVersionRowViewModel">
+                    <Setter Property="Opacity" Value="{Binding IsMissing, Converter={x:Static views:VersionRowOpacity.Instance}}" />
+                </Style>
+            </DataGrid.Styles>
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="{x:Static res:Strings.BrowserColumnModified}" Width="*" MinWidth="140" SortMemberPath="Modified">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:FileVersionRowViewModel">
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="4,0" VerticalAlignment="Center" ToolTip.Tip="{Binding Tip}">
+                                <TextBlock Text="{Binding ModifiedText}" VerticalAlignment="Center" />
+                                <Border IsVisible="{Binding IsNewest}" Background="{DynamicResource BpGreenBrush}" CornerRadius="3" Padding="5,1">
+                                    <TextBlock Text="{x:Static res:Strings.VersionsNewest}" FontSize="11" Foreground="Black" />
+                                </Border>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="{x:Static res:Strings.ArchiveColumnSize}" Width="150" MinWidth="70" SortMemberPath="Size">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:FileVersionRowViewModel">
+                            <TextBlock Text="{Binding SizeText}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0,12,0" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="{x:Static res:Strings.VersionsColumnArchives}" Width="110" MinWidth="70" SortMemberPath="ArchiveCount">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:FileVersionRowViewModel">
+                            <TextBlock Text="{Binding ArchivesText}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0,12,0" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="{x:Static res:Strings.VersionsColumnPeriod}" Width="*" MinWidth="120" SortMemberPath="NewestArchive">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:FileVersionRowViewModel">
+                            <TextBlock Text="{Binding PeriodText}" VerticalAlignment="Center" Margin="4,0" TextTrimming="CharacterEllipsis"
+                                       ToolTip.Tip="{Binding Tip}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
+
+</Window>

@@ -43,6 +43,20 @@ public sealed partial class ArchiveCache
         return null;
     }
 
+    /// <summary>Whether <see cref="LoadContents"/> would find the archive's contents (without reading them).</summary>
+    public bool HasContents(Guid repositoryId, string archiveId)
+    {
+        if (!IsArchiveId(archiveId))
+            return false;
+        return vault.State switch
+        {
+            VaultState.Unlocked => File.Exists(ContentsFile(repositoryId, archiveId, sealedFile: true))
+                                   || File.Exists(ContentsFile(repositoryId, archiveId, sealedFile: false)),
+            VaultState.NotSetUp => File.Exists(ContentsFile(repositoryId, archiveId, sealedFile: false)),
+            _ => false,
+        };
+    }
+
     /// <summary>Remembers the contents of an archive. Does nothing while the vault is locked.</summary>
     public void SaveContents(Guid repositoryId, string archiveId, ArchiveTree tree)
     {

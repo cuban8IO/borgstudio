@@ -99,6 +99,7 @@ public partial class MainViewModel
         RefreshArchivesCommand.NotifyCanExecuteChanged();
         LoadMoreArchiveDetailsCommand.NotifyCanExecuteChanged();
         OpenArchiveCommand.NotifyCanExecuteChanged();
+        SearchArchivesCommand.NotifyCanExecuteChanged();
     }
 
     /// <summary>Another repository was selected: its archives are shown when the tab is (or gets) opened.</summary>
@@ -142,6 +143,7 @@ public partial class MainViewModel
         _shownOf = item.Config.Id;
         ArchivesError = null;
         RestoreArchivesStatus();
+        NotifyArchiveCommands();
     }
 
     /// <summary>Checks the archives with borg again and fetches the details of the newest ones anew.</summary>

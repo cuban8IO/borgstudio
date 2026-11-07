@@ -72,4 +72,10 @@ public sealed class DialogService(Window owner) : IDialogService
 
     public Task ShowRestoreAsync(RestoreViewModel restore) =>
         new RestoreWindow { DataContext = restore }.ShowDialog(owner);
+
+    public Task ShowArchiveSearchAsync(ArchiveSearchViewModel search) =>
+        new ArchiveSearchWindow { DataContext = search }.ShowDialog(owner);
+
+    public Task ShowFileVersionsAsync(FileVersionsViewModel versions) =>
+        new FileVersionsWindow { DataContext = versions }.ShowDialog(owner);
 }

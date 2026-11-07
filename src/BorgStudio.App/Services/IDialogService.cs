@@ -49,4 +49,10 @@ public interface IDialogService
 
     /// <summary>Shows the restore dialog until the user closes it.</summary>
     Task ShowRestoreAsync(RestoreViewModel restore);
+
+    /// <summary>Shows the search over all archives until the user closes it.</summary>
+    Task ShowArchiveSearchAsync(ArchiveSearchViewModel search);
+
+    /// <summary>Shows the versions of a file until the user closes it (looking through the archives starts with it).</summary>
+    Task ShowFileVersionsAsync(FileVersionsViewModel versions);
 }
