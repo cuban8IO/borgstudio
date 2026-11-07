@@ -46,4 +46,7 @@ public interface IDialogService
 
     /// <summary>Shows the contents of an archive until the user closes it.</summary>
     Task ShowArchiveBrowserAsync(ArchiveBrowserViewModel browser);
+
+    /// <summary>Shows the restore dialog until the user closes it.</summary>
+    Task ShowRestoreAsync(RestoreViewModel restore);
 }

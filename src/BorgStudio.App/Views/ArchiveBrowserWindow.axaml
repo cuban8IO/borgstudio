@@ -45,12 +45,17 @@
         <SelectableTextBlock DockPanel.Dock="Top" Text="{Binding Error}" IsVisible="{Binding HasError}" TextWrapping="Wrap"
                              Foreground="{DynamicResource ErrorForeground}" Margin="0,0,0,10" />
 
-        <!-- Selection, close -->
-        <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto,Auto" Margin="0,12,0,0">
-            <TextBlock Text="{Binding SelectionText}" VerticalAlignment="Center" Opacity="0.85" IsVisible="{Binding IsReady}" />
+        <!-- Selection, restore, close -->
+        <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto,Auto,Auto,Auto" Margin="0,12,0,0">
+            <TextBlock Text="{Binding SelectionText}" VerticalAlignment="Center" Opacity="0.85" IsVisible="{Binding IsReady}"
+                       TextTrimming="CharacterEllipsis" />
             <Button Grid.Column="1" Content="{x:Static res:Strings.BrowserClearSelection}" Command="{Binding ClearSelectionCommand}"
                     IsVisible="{Binding IsReady}" Margin="8,0,0,0" />
-            <Button Grid.Column="2" Content="{x:Static res:Strings.Close}" Click="Close_Click" IsCancel="True" Margin="8,0,0,0" />
+            <Button Grid.Column="2" Content="{x:Static res:Strings.BrowserRestoreAll}" Command="{Binding RestoreAllCommand}"
+                    IsVisible="{Binding IsReady}" Margin="8,0,0,0" />
+            <Button Grid.Column="3" Content="{x:Static res:Strings.BrowserRestoreSelection}" Command="{Binding RestoreSelectionCommand}"
+                    IsVisible="{Binding IsReady}" Classes="accent" Margin="8,0,0,0" />
+            <Button Grid.Column="4" Content="{x:Static res:Strings.Close}" Click="Close_Click" IsCancel="True" Margin="8,0,0,0" />
         </Grid>
 
         <Grid ColumnDefinitions="260,6,*" IsVisible="{Binding IsReady}">

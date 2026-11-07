@@ -39,6 +39,9 @@ public sealed class ProgressEstimator
     /// <summary>Takes longer than last time; there is no remaining time to tell then.</summary>
     public bool IsOverdue => IsFromHistory && Elapsed > _expected!.Value;
 
+    /// <summary>The recent pace in units per second (e.g. bytes/s); <c>null</c> while unknown.</summary>
+    public double? Rate { get; private set; }
+
     /// <summary>How long it will still take; <c>null</c> while unknown.</summary>
     public TimeSpan? Remaining
     {
@@ -86,6 +89,7 @@ public sealed class ProgressEstimator
         var (fromAt, fromDone) = now - oldest.At >= TimeSpan.FromSeconds(1) ? oldest : _first.Value;
         var seconds = (now - fromAt).TotalSeconds;
         var rate = seconds >= 1 ? (done - fromDone) / seconds : 0;
+        Rate = seconds >= 1 ? rate : null;
         _remainingAtReport = done >= total ? TimeSpan.Zero
             : rate > 0 ? TimeSpan.FromSeconds(Math.Ceiling((total - done) / rate))
             : null;

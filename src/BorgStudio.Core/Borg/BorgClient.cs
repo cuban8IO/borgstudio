@@ -212,6 +212,46 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
     }
 
     /// <summary>
+    /// <c>borg extract</c>: restores <paramref name="paths"/> (borg paths, e.g. "mnt/c/Users/me/Documents"; none = the
+    /// whole archive) into <paramref name="targetDirectory"/> (a folder on this computer, which must exist), dropping the
+    /// first <paramref name="stripComponents"/> path segments. Existing files are overwritten. borg first works out the
+    /// total size (<see cref="BorgExtractProgress.Preparing"/>), then reports bytes and the current file. Cancelling
+    /// interrupts borg cleanly; what was restored so far stays.
+    /// </summary>
+    public async Task<BorgResult<BorgExtractResult>> ExtractAsync(
+        BorgInstallation borg, RepositoryLocation location, string archive, IReadOnlyList<string> paths, string targetDirectory,
+        int stripComponents, string? passphrase, SshAccess? ssh = null, IProgress<BorgExtractProgress>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (borg.Runtime == BorgRuntime.Wsl && ToWslPath(targetDirectory) is null)
+            return BorgResult<BorgExtractResult>.Failure(new BorgError(BorgErrorKind.UnsupportedPath, targetDirectory));
+
+        var warnings = new List<string>();
+        void OnLine(string line)
+        {
+            if (ParseProgressPercent(line) is { MessageId: "extract" } update)
+            {
+                if (update is { Current: { } done, Total: { } total and > 0 })
+                    progress?.Report(new BorgExtractProgress((long)done, (long)total, update.Info));
+            }
+            else if (line.Contains("\"extract\"", StringComparison.Ordinal) && line.Contains("Calculating", StringComparison.Ordinal))
+                progress?.Report(new BorgExtractProgress(0, 0, null, Preparing: true));
+            else if (ParseWarning(line) is { } warning)
+                warnings.Add(warning);
+        }
+
+        List<string> options = ["--progress"];
+        if (stripComponents > 0)
+            options.AddRange(["--strip-components", stripComponents.ToString(CultureInfo.InvariantCulture)]);
+        // "pp:" – path prefixes, taken literally (names may contain *, [ or ?).
+        var result = await RunAsync(borg, location, ssh, ["extract"], options, [.. paths.Select(path => "pp:" + path)], passphrase,
+            CreateTimeout, cancellationToken, archive, OnLine, interruptible: true, workingDirectory: targetDirectory);
+        return result.Succeeded
+            ? BorgResult<BorgExtractResult>.Success(new BorgExtractResult(warnings))
+            : BorgResult<BorgExtractResult>.Failure(result.Error!);
+    }
+
+    /// <summary>
     /// The contents of an archive (<c>borg list --json-lines</c>) as a folder tree, read line by line – archives can
     /// have millions of entries. borg reports no progress here; <paramref name="entriesRead"/> tells how many entries
     /// were read so far (every 1000 and at the end).
@@ -360,7 +400,8 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
             var info = root.TryGetProperty("info", out var details) && details.ValueKind == JsonValueKind.Array && details.GetArrayLength() > 0
                 ? details[0].GetString()
                 : null;
-            return new BorgProgressPercent(messageId, Math.Clamp(fraction.Value, 0, 1), false, info);
+            double? Number(string name) => root.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.Number ? value.GetDouble() : null;
+            return new BorgProgressPercent(messageId, Math.Clamp(fraction.Value, 0, 1), false, info, Number("current"), Number("total"));
         }
         catch (Exception exception) when (exception is JsonException or KeyNotFoundException or InvalidOperationException)
         {
@@ -580,7 +621,7 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         IReadOnlyList<string> command, IReadOnlyList<string> options, IReadOnlyList<string> trailing,
         string? passphrase, TimeSpan timeout, CancellationToken cancellationToken,
         string? archive = null, Action<string>? standardErrorLine = null, bool interruptible = false,
-        Action<string>? standardOutputLine = null)
+        Action<string>? standardOutputLine = null, string? workingDirectory = null)
     {
         var wsl = borg.Runtime == BorgRuntime.Wsl;
         if (wsl && wslExecutable is null)
@@ -621,7 +662,7 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         try
         {
             return await RunBorgAsync(borg, location, arguments, environment, sshFiles, timeout, cancellationToken,
-                standardErrorLine, interruptible, standardOutputLine);
+                standardErrorLine, interruptible, standardOutputLine, workingDirectory);
         }
         finally
         {
@@ -633,7 +674,7 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
     private async Task<BorgResult<string>> RunBorgAsync(BorgInstallation borg, RepositoryLocation location,
         List<string> arguments, Dictionary<string, string?> environment, SshFiles? sshFiles, TimeSpan timeout,
         CancellationToken cancellationToken, Action<string>? standardErrorLine, bool interruptible,
-        Action<string>? standardOutputLine = null)
+        Action<string>? standardOutputLine = null, string? workingDirectory = null)
     {
         var wsl = borg.Runtime == BorgRuntime.Wsl;
         // Signals need a POSIX system: natively on Linux/macOS, or inside WSL.
@@ -683,7 +724,7 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
             result = await processRunner.RunAsync(fileName, arguments, timeout, environment,
                 cancellationToken: hardStop.Token,
                 standardErrorLine: interruptible || standardErrorLine is not null ? OnLine : null,
-                standardOutputLine: standardOutputLine);
+                standardOutputLine: standardOutputLine, workingDirectory: workingDirectory);
         }
         catch (TimeoutException)
         {

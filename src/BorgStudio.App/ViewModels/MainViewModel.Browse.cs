@@ -29,22 +29,24 @@ public partial class MainViewModel
             return;
 
         var repositoryId = item.Config.Id;
-        var browser = new ArchiveBrowserViewModel(archive.Archive, archive.JobName);
+        var browser = new ArchiveBrowserViewModel(archive.Archive, archive.JobName) { Dialogs = _services.Dialogs };
         using var cancellation = new CancellationTokenSource();
         BrowserLoad = Task.CompletedTask;
-        if (_services.Archives.LoadContents(repositoryId, archive.Archive.Id) is { } cached)
+        var cached = _services.Archives.LoadContents(repositoryId, archive.Archive.Id);
+        // Login and passphrase before the browser opens (nothing may ask on top of it later); usually known from the
+        // tab already. Without them a cached archive can still be looked at, but not restored.
+        var access = await GetArchiveAccessAsync(item, location);
+        if (access is { } known)
+            browser.RestoreFactory = (items, whole) => NewRestore(repositoryId, location, known, archive.Archive, items, whole, browser);
+        if (cached is not null)
             browser.Show(cached);
+        else if (access is null)
+            return;
+        // The PIN may just have been entered for the passphrase: then the cache is readable now.
+        else if (_services.Archives.LoadContents(repositoryId, archive.Archive.Id) is { } unlocked)
+            browser.Show(unlocked);
         else
-        {
-            // Asked before the browser opens: nothing may ask on top of it later.
-            if (await GetArchiveAccessAsync(item, location) is not { } access)
-                return;
-            // The PIN may just have been entered for the passphrase: then the cache is readable now.
-            if (_services.Archives.LoadContents(repositoryId, archive.Archive.Id) is { } unlocked)
-                browser.Show(unlocked);
-            else
-                BrowserLoad = LoadContentsAsync(repositoryId, location, access, archive.Archive, browser, cancellation);
-        }
+            BrowserLoad = LoadContentsAsync(repositoryId, location, access.Value, archive.Archive, browser, cancellation);
 
         await _services.Dialogs.ShowArchiveBrowserAsync(browser);
         // Closed (or locked away) while borg was still reading: stop it.
@@ -55,6 +57,19 @@ public partial class MainViewModel
     private bool CanOpenArchive() =>
         SelectedArchive is not null && !IsBackupRunning && !IsWorking && SelectedRepository?.Location is not null
         && Borg is { Support: BorgSupport.Supported };
+
+    private RestoreViewModel NewRestore(Guid repositoryId, RepositoryLocation location,
+        (SshAccessHolder Ssh, PassphraseHolder Passphrase) access, BorgArchive archive, IReadOnlyList<ArchiveNode> items, bool whole,
+        ArchiveBrowserViewModel browser)
+    {
+        var borg = Borg!;
+        return new RestoreViewModel(archive.Name, items, whole, borg.Runtime,
+            (run, progress, cancellationToken) => Task.Run(() => _services.BorgClient.ExtractAsync(borg, location, archive.Name, run.Paths,
+                run.TargetDirectory, run.StripComponents, access.Passphrase.Value, access.Ssh.Access, progress, cancellationToken)),
+            browser.Dialogs ?? _services.Dialogs,
+            // borg reads the archive's file list to work out the size first: about as long as listing it took.
+            _services.Durations.Get(DurationHistory.Key(repositoryId, "contents")));
+    }
 
     private async Task LoadContentsAsync(Guid repositoryId, RepositoryLocation location,
         (SshAccessHolder Ssh, PassphraseHolder Passphrase) access, BorgArchive archive, ArchiveBrowserViewModel browser,

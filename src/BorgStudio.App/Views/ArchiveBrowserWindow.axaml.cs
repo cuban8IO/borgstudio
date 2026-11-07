@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using BorgStudio.App.Services;
 using BorgStudio.App.ViewModels;
 
 namespace BorgStudio.App.Views;
@@ -28,7 +29,11 @@ public partial class ArchiveBrowserWindow : Window
             _browser.PropertyChanged -= OnBrowserPropertyChanged;
         _browser = DataContext as ArchiveBrowserViewModel;
         if (_browser is not null)
+        {
             _browser.PropertyChanged += OnBrowserPropertyChanged;
+            // The restore dialog belongs to this window.
+            _browser.Dialogs = new DialogService(this);
+        }
         ShowLocationColumn();
     }
 

@@ -98,9 +98,19 @@ public sealed record BorgPruneResult(IReadOnlyList<BorgPruneEntry> Archives)
 /// <summary>The outcome of <c>borg compact</c>.</summary>
 /// <param name="FreedBytes">What it freed, as far as borg says (rounded); <c>null</c> if it didn't say.</param>
 public sealed record BorgCompactResult(long? FreedBytes);
-
-/// <summary>A progress update borg logs with <c>--progress --log-json</c>.</summary>
-/// <param name="MessageId">What it is about, e.g. "extract", "prune", "repository.compact_segments", "archive.calc_stats".</param>
-/// <param name="Fraction">0..1 as borg shows it.</param>
-/// <param name="Info">Extra detail, e.g. the file being extracted.</param>
-public sealed record BorgProgressPercent(string? MessageId, double Fraction, bool Finished, string? Info);
+
+/// <summary>A progress update borg logs with <c>--progress --log-json</c>.</summary>
+/// <param name="MessageId">What it is about, e.g. "extract", "prune", "repository.compact_segments", "archive.calc_stats".</param>
+/// <param name="Fraction">0..1 as borg shows it.</param>
+/// <param name="Info">Extra detail, e.g. the file being extracted.</param>
+/// <param name="Current">How far in borg's unit (e.g. bytes when extracting), if it says.</param>
+public sealed record BorgProgressPercent(string? MessageId, double Fraction, bool Finished, string? Info, double? Current = null, double? Total = null);
+
+/// <summary>Progress of <c>borg extract</c>.</summary>
+/// <param name="Preparing">borg is still working out the total size (it reads the archive's metadata for that).</param>
+/// <param name="Path">The file being extracted, as borg stores it.</param>
+public sealed record BorgExtractProgress(long Done, long Total, string? Path, bool Preparing = false);
+
+/// <summary>The outcome of <c>borg extract</c>.</summary>
+/// <param name="Warnings">What borg warned about, e.g. files it could not write.</param>
+public sealed record BorgExtractResult(IReadOnlyList<string> Warnings);

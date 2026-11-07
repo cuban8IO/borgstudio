@@ -29,7 +29,7 @@ public class BorgCleanupTests
 
         public Task<ProcessResult?> RunAsync(string fileName, IReadOnlyList<string> arguments, TimeSpan timeout,
             IReadOnlyDictionary<string, string?>? environment = null, string? standardInput = null,
-            CancellationToken cancellationToken = default, Action<string>? standardErrorLine = null, Action<string>? standardOutputLine = null)
+            CancellationToken cancellationToken = default, Action<string>? standardErrorLine = null, Action<string>? standardOutputLine = null, string? workingDirectory = null)
         {
             // Linux/macOS run interruptible calls through "sh -c <wrapper> borg …".
             Arguments = fileName == "sh" ? [.. arguments.Skip(3)] : arguments;
@@ -92,7 +92,7 @@ public class BorgCleanupTests
     public void Progress_lines_and_freed_space_are_read()
     {
         // The percentage borg shows itself (it lags current/total by one step).
-        Assert.Equal(new BorgProgressPercent("repository.compact_segments", 0.25, false, null), BorgClient.ParseProgressPercent(
+        Assert.Equal(new BorgProgressPercent("repository.compact_segments", 0.25, false, null, 2, 4), BorgClient.ParseProgressPercent(
             """{"message": "Compacting segments  25%", "current": 2, "total": 4, "info": null, "operation": 1, "msgid": "repository.compact_segments", "type": "progress_percent", "finished": false, "time": 1.0}"""));
         Assert.Equal(new BorgProgressPercent("repository.compact_segments", 1, true, null), BorgClient.ParseProgressPercent(
             """{"operation": 1, "msgid": "repository.compact_segments", "type": "progress_percent", "finished": true, "time": 1.0}"""));

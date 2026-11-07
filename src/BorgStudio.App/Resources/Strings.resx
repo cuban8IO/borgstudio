@@ -1373,4 +1373,109 @@ Warning: the provider publishes the fingerprints of its servers, and this key ma
   <data name="BrowserLoadCancelled" xml:space="preserve">
     <value>Reading the file list was cancelled.</value>
   </data>
+  <data name="BrowserRestoreSelection" xml:space="preserve">
+    <value>Restore selection…</value>
+  </data>
+  <data name="BrowserRestoreAll" xml:space="preserve">
+    <value>Restore whole archive…</value>
+  </data>
+  <data name="RestoreTitle" xml:space="preserve">
+    <value>Restore</value>
+  </data>
+  <data name="RestoreWhatSelection" xml:space="preserve">
+    <value>{0:N0} selected items from “{1}” · {2}</value>
+  </data>
+  <data name="RestoreWhatAll" xml:space="preserve">
+    <value>The whole archive “{0}” · {1}</value>
+  </data>
+  <data name="RestoreTarget" xml:space="preserve">
+    <value>Where to</value>
+  </data>
+  <data name="RestoreToFolder" xml:space="preserve">
+    <value>Into a folder</value>
+  </data>
+  <data name="RestoreToOriginal" xml:space="preserve">
+    <value>Back to the original location (overwrites what is there)</value>
+  </data>
+  <data name="RestoreOriginalUnavailableWsl" xml:space="preserve">
+    <value>Not possible for this selection: with borg in WSL only Windows drives can be written back.</value>
+  </data>
+  <data name="RestoreOriginalUnavailableNative" xml:space="preserve">
+    <value>Not possible with a native borg on Windows.</value>
+  </data>
+  <data name="RestorePickFolder" xml:space="preserve">
+    <value>Choose folder…</value>
+  </data>
+  <data name="RestoreFolderNone" xml:space="preserve">
+    <value>No folder chosen</value>
+  </data>
+  <data name="RestoreStructure" xml:space="preserve">
+    <value>Structure</value>
+  </data>
+  <data name="RestoreDirect" xml:space="preserve">
+    <value>Directly in the folder</value>
+  </data>
+  <data name="RestoreFullPath" xml:space="preserve">
+    <value>With the full path as in the archive</value>
+  </data>
+  <data name="RestoreExample" xml:space="preserve">
+    <value>Example: {0}</value>
+  </data>
+  <data name="RestoreStart" xml:space="preserve">
+    <value>Restore</value>
+  </data>
+  <data name="RestoreFolderRequired" xml:space="preserve">
+    <value>Choose a folder to restore into.</value>
+  </data>
+  <data name="RestoreFolderUnreachable" xml:space="preserve">
+    <value>borg in WSL cannot reach this folder (network paths don't work): {0}</value>
+  </data>
+  <data name="RestoreFolderNotCreated" xml:space="preserve">
+    <value>The folder could not be created: {0}</value>
+  </data>
+  <data name="RestoreChecking" xml:space="preserve">
+    <value>Checking which files exist already …</value>
+  </data>
+  <data name="RestoreCheckedFiles" xml:space="preserve">
+    <value>{0:N0} of {1:N0} files checked</value>
+  </data>
+  <data name="RestoreOverwriteTitle" xml:space="preserve">
+    <value>Overwrite files?</value>
+  </data>
+  <data name="RestoreOverwriteMessage" xml:space="preserve">
+    <value>{0:N0} files exist already and will be overwritten – {1:N0} of them were changed after the backup.</value>
+  </data>
+  <data name="RestoreOverwriteMore" xml:space="preserve">
+    <value>… and {0:N0} more</value>
+  </data>
+  <data name="RestoreOverwriteConfirm" xml:space="preserve">
+    <value>Overwrite</value>
+  </data>
+  <data name="RestoreRunning" xml:space="preserve">
+    <value>Restoring …</value>
+  </data>
+  <data name="RestoreRunningDrive" xml:space="preserve">
+    <value>Restoring to {0} ({1} of {2}) …</value>
+  </data>
+  <data name="RestorePreparing" xml:space="preserve">
+    <value>borg is working out the size (it reads the archive's file list for that) …</value>
+  </data>
+  <data name="RestoreDone" xml:space="preserve">
+    <value>Restored: {0} into {1}.</value>
+  </data>
+  <data name="RestoreDoneOriginal" xml:space="preserve">
+    <value>Restored: {0} to the original location.</value>
+  </data>
+  <data name="RestoreDoneWarnings" xml:space="preserve">
+    <value>Some files could not be written:</value>
+  </data>
+  <data name="RestoreCancelled" xml:space="preserve">
+    <value>Cancelled. What was restored so far stays in place.</value>
+  </data>
+  <data name="RestoreFailed" xml:space="preserve">
+    <value>Restoring failed: {0}</value>
+  </data>
+  <data name="RestoreOpenFolder" xml:space="preserve">
+    <value>Open folder</value>
+  </data>
 </root>

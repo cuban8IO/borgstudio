@@ -213,6 +213,13 @@ public sealed class ArchiveTree
         return node;
     }
 
+    /// <summary>A borg path as the user knows it: "mnt/c/Users/me" → "C:\Users\me", "home/me" → "/home/me".</summary>
+    public static string DisplayPathOf(string borgPath)
+    {
+        var path = Normalize(borgPath);
+        return path.Length >= 2 && IsDrive(path[..2]) ? path.Replace('/', '\\') + (path.Length == 2 ? "\\" : "") : "/" + path;
+    }
+
     internal static bool IsDrive(string segment) => segment.Length == 2 && segment[1] == ':' && char.IsAsciiLetter(segment[0]);
 
     /// <summary>"C:" → "mnt/c" (the first segment of a borg path).</summary>
