@@ -1707,4 +1707,94 @@ BorgStudio kann das jetzt eintragen (als root in WSL, ohne Passwort). Das entspr
   <data name="BorgErrorMountUnavailable" xml:space="preserve">
     <value>borg kann hier keine Archive einhängen: Dafür braucht es FUSE (unter Windows: borg in WSL).</value>
   </data>
+  <data name="MenuCheckForUpdates" xml:space="preserve">
+    <value>Nach Updates suchen …</value>
+  </data>
+  <data name="UpdateTitle" xml:space="preserve">
+    <value>Update</value>
+  </data>
+  <data name="UpdateChecking" xml:space="preserve">
+    <value>Suche nach einer neuen Version …</value>
+  </data>
+  <data name="UpdateAvailable" xml:space="preserve">
+    <value>BorgStudio {0} ist verfügbar.</value>
+  </data>
+  <data name="UpdateUpToDate" xml:space="preserve">
+    <value>BorgStudio {0} ist die neueste Version.</value>
+  </data>
+  <data name="UpdateNoRelease" xml:space="preserve">
+    <value>Es wurde noch keine Version veröffentlicht.</value>
+  </data>
+  <data name="UpdateInstalledVersion" xml:space="preserve">
+    <value>Installiert: {0}</value>
+  </data>
+  <data name="UpdateWhatsNew" xml:space="preserve">
+    <value>Neu in dieser Version</value>
+  </data>
+  <data name="UpdateInstall" xml:space="preserve">
+    <value>Jetzt aktualisieren</value>
+  </data>
+  <data name="UpdateDetails" xml:space="preserve">
+    <value>Details …</value>
+  </data>
+  <data name="UpdateLater" xml:space="preserve">
+    <value>Später</value>
+  </data>
+  <data name="UpdateOpenPage" xml:space="preserve">
+    <value>Release-Seite</value>
+  </data>
+  <data name="UpdateDownloading" xml:space="preserve">
+    <value>Lade BorgStudio {0} …</value>
+  </data>
+  <data name="UpdateReady" xml:space="preserve">
+    <value>BorgStudio {0} ist geladen und geprüft. BorgStudio wird geschlossen, installiert die neue Version und startet neu.</value>
+  </data>
+  <data name="UpdateRestart" xml:space="preserve">
+    <value>Neu starten und installieren</value>
+  </data>
+  <data name="UpdateCheckFailed" xml:space="preserve">
+    <value>Die Suche nach Updates ist fehlgeschlagen: {0}</value>
+  </data>
+  <data name="UpdateFailed" xml:space="preserve">
+    <value>Das Update ist fehlgeschlagen: {0}</value>
+  </data>
+  <data name="UpdateChecksumMismatch" xml:space="preserve">
+    <value>der Download ist beschädigt (die Prüfsumme stimmt nicht). Bitte erneut versuchen.</value>
+  </data>
+  <data name="UpdateChecksumMissing" xml:space="preserve">
+    <value>das Release enthält keine Prüfsumme für dieses Paket.</value>
+  </data>
+  <data name="UpdateUnexpectedPackage" xml:space="preserve">
+    <value>das Paket enthält BorgStudio nicht an der erwarteten Stelle.</value>
+  </data>
+  <data name="UpdateBlockedDevelopment" xml:space="preserve">
+    <value>Dies ist eine Entwicklungsversion; sie wird nicht automatisch aktualisiert.</value>
+  </data>
+  <data name="UpdateBlockedPlatform" xml:space="preserve">
+    <value>Für dieses System gibt es kein Paket. Bitte BorgStudio von der Release-Seite laden.</value>
+  </data>
+  <data name="UpdateBlockedPackage" xml:space="preserve">
+    <value>Dieses Release hat kein Paket für automatische Updates auf diesem System. Bitte von der Release-Seite laden.</value>
+  </data>
+  <data name="UpdateBlockedNotWritable" xml:space="preserve">
+    <value>BorgStudio darf seinen Ordner nicht ändern ({0}). Bitte die neue Version von der Release-Seite laden.</value>
+  </data>
+  <data name="UpdateInstalledNotice" xml:space="preserve">
+    <value>BorgStudio wurde auf {0} aktualisiert.</value>
+  </data>
+  <data name="UpdateFailedNotice" xml:space="preserve">
+    <value>Das Update auf {0} ist fehlgeschlagen, BorgStudio ist unverändert: {1}</value>
+  </data>
+  <data name="SettingsUpdatesHeader" xml:space="preserve">
+    <value>Updates</value>
+  </data>
+  <data name="SettingsVersion" xml:space="preserve">
+    <value>Installierte Version: {0}</value>
+  </data>
+  <data name="SettingsCheckForUpdates" xml:space="preserve">
+    <value>Beim Start und einmal täglich nach einer neuen Version suchen</value>
+  </data>
+  <data name="SettingsCheckNow" xml:space="preserve">
+    <value>Jetzt suchen …</value>
+  </data>
 </root>

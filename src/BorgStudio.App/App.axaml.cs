@@ -18,6 +18,7 @@ using BorgStudio.Core.Secrets;
 using BorgStudio.Core.Security;
 using BorgStudio.Core.Settings;
 using BorgStudio.Core.Ssh;
+using BorgStudio.Core.Updates;
 using BorgStudio.Providers.Hetzner;
 using BorgStudio.Providers.Local;
 using BorgStudio.Providers.Ssh;
@@ -54,15 +55,27 @@ public partial class App : Application
                 BackupJobStore.CreateDefault(),
                 ArchiveCache.CreateDefault(vault),
                 DurationHistory.CreateDefault(),
-                new DialogService(window)));
+                new DialogService(window),
+                Updater.CreateDefault(AppVersion.Current)));
             window.DataContext = viewModel;
             desktop.MainWindow = window;
             viewModel.CheckBorgCommand.Execute(null);
             StartVaultAutoLock(vault, viewModel);
+            StartUpdateChecks(viewModel);
             window.Opened += async (_, _) => await viewModel.OfferVaultForLegacyKeysAsync();
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    /// <summary>Reports a finished update, then looks for a new release now and once a day.</summary>
+    private static void StartUpdateChecks(MainViewModel viewModel)
+    {
+        viewModel.ShowUpdateOutcome();
+        _ = viewModel.CheckForUpdatesInBackgroundAsync();
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromHours(24) };
+        timer.Tick += async (_, _) => await viewModel.CheckForUpdatesInBackgroundAsync();
+        timer.Start();
     }
 
     /// <summary>Any key or click in any window counts as use; a timer locks the vault after the configured idle time.</summary>

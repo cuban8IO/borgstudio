@@ -1727,4 +1727,94 @@ BorgStudio can do this now (as root in WSL, no password needed). It is the same 
   <data name="BorgErrorMountUnavailable" xml:space="preserve">
     <value>borg cannot mount archives here: that needs FUSE (on Windows: borg in WSL).</value>
   </data>
+  <data name="MenuCheckForUpdates" xml:space="preserve">
+    <value>Check for updates…</value>
+  </data>
+  <data name="UpdateTitle" xml:space="preserve">
+    <value>Update</value>
+  </data>
+  <data name="UpdateChecking" xml:space="preserve">
+    <value>Looking for a new version …</value>
+  </data>
+  <data name="UpdateAvailable" xml:space="preserve">
+    <value>BorgStudio {0} is available.</value>
+  </data>
+  <data name="UpdateUpToDate" xml:space="preserve">
+    <value>BorgStudio {0} is the newest version.</value>
+  </data>
+  <data name="UpdateNoRelease" xml:space="preserve">
+    <value>No version has been published yet.</value>
+  </data>
+  <data name="UpdateInstalledVersion" xml:space="preserve">
+    <value>Installed: {0}</value>
+  </data>
+  <data name="UpdateWhatsNew" xml:space="preserve">
+    <value>What's new</value>
+  </data>
+  <data name="UpdateInstall" xml:space="preserve">
+    <value>Update now</value>
+  </data>
+  <data name="UpdateDetails" xml:space="preserve">
+    <value>Details…</value>
+  </data>
+  <data name="UpdateLater" xml:space="preserve">
+    <value>Later</value>
+  </data>
+  <data name="UpdateOpenPage" xml:space="preserve">
+    <value>Release page</value>
+  </data>
+  <data name="UpdateDownloading" xml:space="preserve">
+    <value>Downloading BorgStudio {0} …</value>
+  </data>
+  <data name="UpdateReady" xml:space="preserve">
+    <value>BorgStudio {0} is downloaded and checked. BorgStudio closes, installs it and starts again.</value>
+  </data>
+  <data name="UpdateRestart" xml:space="preserve">
+    <value>Restart and install</value>
+  </data>
+  <data name="UpdateCheckFailed" xml:space="preserve">
+    <value>Could not look for updates: {0}</value>
+  </data>
+  <data name="UpdateFailed" xml:space="preserve">
+    <value>The update failed: {0}</value>
+  </data>
+  <data name="UpdateChecksumMismatch" xml:space="preserve">
+    <value>the download is damaged (its checksum does not match). Please try again.</value>
+  </data>
+  <data name="UpdateChecksumMissing" xml:space="preserve">
+    <value>the release lists no checksum for this package.</value>
+  </data>
+  <data name="UpdateUnexpectedPackage" xml:space="preserve">
+    <value>the package does not contain BorgStudio where expected.</value>
+  </data>
+  <data name="UpdateBlockedDevelopment" xml:space="preserve">
+    <value>This is a development build; it is not updated automatically.</value>
+  </data>
+  <data name="UpdateBlockedPlatform" xml:space="preserve">
+    <value>There is no package for this system. Please download BorgStudio from the release page.</value>
+  </data>
+  <data name="UpdateBlockedPackage" xml:space="preserve">
+    <value>This release has no package for automatic updates on this system. Please download it from the release page.</value>
+  </data>
+  <data name="UpdateBlockedNotWritable" xml:space="preserve">
+    <value>BorgStudio may not change its folder ({0}). Please download the new version from the release page.</value>
+  </data>
+  <data name="UpdateInstalledNotice" xml:space="preserve">
+    <value>BorgStudio was updated to {0}.</value>
+  </data>
+  <data name="UpdateFailedNotice" xml:space="preserve">
+    <value>The update to {0} failed, BorgStudio is unchanged: {1}</value>
+  </data>
+  <data name="SettingsUpdatesHeader" xml:space="preserve">
+    <value>Updates</value>
+  </data>
+  <data name="SettingsVersion" xml:space="preserve">
+    <value>Installed version: {0}</value>
+  </data>
+  <data name="SettingsCheckForUpdates" xml:space="preserve">
+    <value>Look for a new version at startup and once a day</value>
+  </data>
+  <data name="SettingsCheckNow" xml:space="preserve">
+    <value>Check now…</value>
+  </data>
 </root>

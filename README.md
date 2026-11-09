@@ -8,7 +8,8 @@ Cross-platform desktop app (Windows, Linux, macOS) built with .NET 10 and [Avalo
 
 Portable builds for Windows (x64), macOS (Apple Silicon and Intel) and Linux (x64) are on the
 [Releases](https://github.com/cuban8IO/borgstudio/releases) page. They include the .NET runtime:
-unpack and start, no installation needed.
+unpack and start, no installation needed. BorgStudio looks for a new version at startup and once a day and updates
+itself after asking (Tools → Check for updates; can be switched off in Tools → Settings).
 
 [BorgBackup](https://www.borgbackup.org/) 1.2 or newer (1.4 recommended) must be installed separately.
 BorgStudio finds it on `PATH` and in the usual install locations (e.g. Homebrew); on Windows it also
@@ -27,7 +28,9 @@ it follows the system language (English if that is neither) or the choice under 
   a lock screen; unlocking also opens the vault. By default it locks itself again after 15 minutes without use
   (Tools → Settings), or at once with Ctrl+L. A forgotten PIN cannot be recovered:
   the vault can only be reset, losing what is stored in it.
-- **Settings:** `settings.json` in the data folder (app lock, UI language).
+- **Settings:** `settings.json` in the data folder (app lock, UI language, update checks).
+- **Updates:** a downloaded update is unpacked into `updates/` in the data folder and removed after installing;
+  `updates/update.log` tells how the last installation went.
 - **Archive cache:** `archives/` in the data folder – per repository the archives last seen with their sizes, so the
   archives tab opens at once. Encrypted with the vault's key (`<id>.vault`) when a PIN is set up, plain JSON
   (`<id>.json`) otherwise; safe to delete.
@@ -85,6 +88,10 @@ dotnet build
 dotnet test
 dotnet run --project src/BorgStudio.App
 ```
+
+To try the update locally, publish two versions (`-p:Version=0.0.1` and `0.0.2`), serve a copy of GitHub's
+release JSON with the newer package and its `SHA256SUMS` from a local web server and start the older one with
+`BORGSTUDIO_UPDATE_FEED` set to the JSON's URL.
 
 Portable package for one platform, e.g. Linux:
 
@@ -177,6 +184,12 @@ section gets the new version number.
   mounts left behind by a crash are cleaned up on the next start.
 - Language setting (Tools → Settings): system language, English or German; takes effect after a restart, which the
   settings window offers right away.
+- Updates: BorgStudio asks GitHub for the newest release at startup and once a day (can be switched off) and shows a
+  banner when there is one; Tools → Check for updates asks at once. "Update now" shows what is new, downloads the
+  package for this system with progress, checks it against the release's `SHA256SUMS`, closes the app (a running
+  backup asks first, mounts are unmounted) and lets the new version copy itself over the old files – only files of the
+  package are written, the replaced ones are put back if anything fails – and start again. Where the app may not
+  change its folder, or for local builds, the release page is offered instead. Releases now include `SHA256SUMS`.
 
 **Changed**
 - Every wait shows a progress bar with percent, elapsed and remaining time, so it is clear the app is working:

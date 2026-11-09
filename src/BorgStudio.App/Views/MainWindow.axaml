@@ -31,6 +31,8 @@
                     <NativeMenuItem Header="{x:Static res:Strings.MenuImport}" Click="OpenImport_Click" />
                     <NativeMenuItemSeparator />
                     <NativeMenuItem Header="{x:Static res:Strings.MenuPlugins}" Click="OpenPlugins_Click" />
+                    <NativeMenuItemSeparator />
+                    <NativeMenuItem Header="{x:Static res:Strings.MenuCheckForUpdates}" Click="OpenUpdate_Click" />
                 </NativeMenu>
             </NativeMenuItem>
         </NativeMenu>
@@ -106,6 +108,19 @@
                     <Button Content="{x:Static res:Strings.VaultLock}" Command="{Binding LockVaultCommand}"
                             IsVisible="{Binding IsVaultUnlocked}" FontSize="12" Padding="8,1" MinHeight="0" />
                 </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- A new release is out -->
+        <Border DockPanel.Dock="Top" IsVisible="{Binding HasUpdate}" Classes="card" Margin="16,16,16,0" Padding="16,10">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                <PathIcon Data="M11,3 H13 V13 L16.5,9.5 L18,11 L12,17 L6,11 L7.5,9.5 L11,13 Z M5,19 H19 V21 H5 Z" Width="16" Height="16" Margin="0,0,12,0"
+                          Foreground="{DynamicResource BpGreenBrush}" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Text="{Binding UpdateBannerText}" FontWeight="SemiBold" VerticalAlignment="Center"
+                           TextWrapping="Wrap" />
+                <Button Grid.Column="2" Content="{x:Static res:Strings.UpdateDetails}" Command="{Binding ShowUpdateCommand}"
+                        Classes="accent" Margin="12,0,8,0" />
+                <Button Grid.Column="3" Content="{x:Static res:Strings.UpdateLater}" Command="{Binding DismissUpdateCommand}" />
             </Grid>
         </Border>
 

@@ -1,0 +1,61 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:BorgStudio.App.ViewModels"
+        xmlns:views="using:BorgStudio.App.Views"
+        xmlns:res="using:BorgStudio.App.Resources"
+        x:Class="BorgStudio.App.Views.UpdateWindow"
+        x:DataType="vm:UpdateViewModel"
+        Title="{x:Static res:Strings.UpdateTitle}"
+        Width="580" SizeToContent="Height" CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+    <DockPanel Margin="20">
+        <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,14">
+            <TextBlock Text="{Binding Headline}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
+            <TextBlock Text="{Binding InstalledText}" FontSize="12" Opacity="0.7" />
+        </StackPanel>
+
+        <!-- Buttons -->
+        <Panel DockPanel.Dock="Bottom" Margin="0,16,0,0">
+            <HyperlinkButton Content="{x:Static res:Strings.UpdateOpenPage}" NavigateUri="{Binding PageUrl}"
+                             IsVisible="{Binding HasPage}" HorizontalAlignment="Left" VerticalAlignment="Center" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                <Button Content="{x:Static res:Strings.Close}" Command="{Binding CloseCommand}" IsCancel="True" />
+                <Button Content="{x:Static res:Strings.UpdateInstall}" Command="{Binding InstallCommand}" Classes="accent"
+                        IsDefault="True" IsVisible="{Binding CanInstall}" />
+                <Button Content="{x:Static res:Strings.UpdateRestart}" Command="{Binding RestartCommand}" Classes="accent"
+                        IsVisible="{Binding IsReady}" />
+            </StackPanel>
+        </Panel>
+
+        <StackPanel Spacing="12">
+            <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsChecking}" />
+
+            <!-- What's new -->
+            <StackPanel Spacing="6" IsVisible="{Binding HasNotes}">
+                <TextBlock Text="{x:Static res:Strings.UpdateWhatsNew}" FontWeight="SemiBold" />
+                <Border Classes="card" Padding="10,8">
+                    <ScrollViewer MaxHeight="240">
+                        <SelectableTextBlock Text="{Binding Notes}" TextWrapping="Wrap" />
+                    </ScrollViewer>
+                </Border>
+            </StackPanel>
+
+            <Border IsVisible="{Binding HasBlocker}" Padding="12,10" CornerRadius="6" BorderThickness="1"
+                    Background="{DynamicResource WarningBackground}" BorderBrush="{DynamicResource WarningBorder}">
+                <TextBlock Text="{Binding Blocker}" TextWrapping="Wrap" />
+            </Border>
+
+            <Panel IsVisible="{Binding IsDownloading}">
+                <views:ProgressPanel DataContext="{Binding Progress}" />
+            </Panel>
+
+            <TextBlock Text="{Binding ReadyText}" TextWrapping="Wrap" IsVisible="{Binding IsReady}" />
+
+            <TextBlock Text="{Binding Error}" TextWrapping="Wrap" IsVisible="{Binding HasError}"
+                       Foreground="{DynamicResource ErrorForeground}" />
+        </StackPanel>
+    </DockPanel>
+
+</Window>

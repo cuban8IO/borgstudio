@@ -2,6 +2,7 @@
 using System;
 using BorgStudio.App.Services;
 using BorgStudio.Core.Settings;
+using BorgStudio.Core.Updates;
 
 namespace BorgStudio.App;
 
@@ -13,6 +14,13 @@ sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        // Started from a downloaded update to install it: no window, the app starts again when done.
+        if (UpdateApplier.IsApplyCall(args))
+        {
+            Environment.ExitCode = UpdateApplier.Run(args);
+            return;
+        }
+
         // Texts are bound once when the windows load, so the language is set before anything else.
         AppLanguages.Apply(SettingsStore.CreateDefault().Load().Language);
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);

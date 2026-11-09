@@ -105,6 +105,10 @@ jobs:
           path: dist
           merge-multiple: true
 
+      # The app's update checks every download against this list before installing it.
+      - name: Checksums
+        run: cd dist && sha256sum -- * > SHA256SUMS && cat SHA256SUMS
+
       - name: Create GitHub release
         run: |
           {
@@ -120,6 +124,7 @@ jobs:
           | Linux (x64) | `…-linux-x64.tar.gz` |
 
           Portable builds with the .NET runtime included: unpack and start, no installation needed.
+          BorgStudio updates itself from here (Tools → Check for updates); `SHA256SUMS` lists the checksums of the files.
           [BorgBackup](https://www.borgbackup.org/) itself must be installed separately.
 
           **macOS:** the app is not notarized by Apple. If macOS refuses to open it, allow it under
