@@ -23,6 +23,9 @@ public sealed class FakeBorg : IProcessRunner
 {
     public const string BorgPath = "/usr/bin/borg";
 
+    /// <summary>wsl.exe as the fake detector finds it when borg is "in WSL".</summary>
+    public const string WslExecutable = @"C:\Windows\System32\wsl.exe";
+
     public static readonly BorgInstallation Installation = new(BorgPath, new BorgVersion(1, 4, 1), BorgRuntime.Native);
 
     public List<(IReadOnlyList<string> Arguments, string? Passphrase)> Calls { get; } = [];
@@ -67,6 +70,30 @@ public sealed class FakeBorg : IProcessRunner
         IReadOnlyDictionary<string, string?>? environment = null, string? standardInput = null,
         CancellationToken cancellationToken = default, Action<string>? standardErrorLine = null, Action<string>? standardOutputLine = null, string? workingDirectory = null)
     {
+        // borg "in WSL": what wsl.exe would run inside it.
+        var wsl = fileName == WslExecutable;
+        if (wsl)
+        {
+            if (arguments is ["-u", "root", "-e", ..])
+            {
+                RootCommands.Add(string.Join(' ', arguments.Skip(3)));
+                if (CanEnableAllowOther)
+                    AllowOther = true;
+                return Result(CanEnableAllowOther ? 0 : 1, "");
+            }
+            if (arguments is ["-e", "sh", "-lc", ..])
+                return Result(0, BorgPath + "\nborg 1.4.1\n");
+            if (arguments is ["-e", var program, ..])
+            {
+                fileName = program;
+                arguments = arguments.Skip(2).ToList();
+            }
+        }
+
+        // The shell scripts around mounting.
+        if (fileName == "sh" && arguments is ["-c", var script, "sh", ..])
+            return MountShell(script, arguments.Skip(3).ToList(), wsl);
+
         // Interruptible calls run borg through a small sh wrapper (on Linux/macOS).
         if (fileName == "sh" && arguments is ["-c", _, BorgPath, ..])
         {
@@ -101,6 +128,10 @@ public sealed class FakeBorg : IProcessRunner
             return ExtractAsync(arguments, workingDirectory, standardErrorLine, cancellationToken);
         if (arguments[0] == "prune")
             return PruneAsync(arguments, standardErrorLine);
+        if (arguments[0] == "mount")
+            return MountAsync(arguments, cancellationToken);
+        if (arguments is ["umount", var mountPoint])
+            return Unmount(mountPoint);
         if (arguments[0] == "compact")
             return CompactAsync(standardErrorLine, cancellationToken);
 
@@ -326,8 +357,101 @@ public sealed class FakeBorg : IProcessRunner
     public static string ArchiveId(string name) =>
         Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(name)));
 
-    public BorgDetector Detector() =>
-        new(this, new BorgSearchEnvironment(HostPlatform.Linux, "/usr/bin", "/home/me", null, path => path == BorgPath));
+    public BorgDetector Detector(bool wsl = false) => wsl
+        ? new(this, new BorgSearchEnvironment(HostPlatform.Windows, null, @"C:\Users\me", @"C:\Windows\System32",
+            path => path == WslExecutable))
+        : new(this, new BorgSearchEnvironment(HostPlatform.Linux, "/usr/bin", "/home/me", null, path => path == BorgPath));
+
+    // --- Mounting ---
+
+    /// <summary>Whether /etc/fuse.conf has "user_allow_other" (only asked when borg is in WSL).</summary>
+    public bool AllowOther { get; set; } = true;
+
+    /// <summary>Whether "wsl -u root" can add it.</summary>
+    public bool CanEnableAllowOther { get; set; } = true;
+
+    /// <summary>What ran as root in WSL.</summary>
+    public List<string> RootCommands { get; } = [];
+
+    /// <summary>When set, "mount" fails with this message id (or with this text from FUSE, if it has blanks).</summary>
+    public string? MountError { get; set; }
+
+    /// <summary>Mount points a program still uses: "umount" fails there.</summary>
+    public HashSet<string> BusyMounts { get; } = [];
+
+    /// <summary>The running "borg mount" calls by mount point; they end when unmounted.</summary>
+    public Dictionary<string, TaskCompletionSource<ProcessResult?>> Mounted { get; } = [];
+
+    /// <summary>Whether a running "mount" shows up as mounted (false: borg is still getting ready).</summary>
+    public bool MountsReady { get; set; } = true;
+
+    /// <summary>The "-o" options of each "mount".</summary>
+    public List<string> MountOptions { get; } = [];
+
+    /// <summary>Mount points detached by force (closing the app).</summary>
+    public List<string> ForceUnmounted { get; } = [];
+
+    /// <summary>How often the mounts left behind by a crash were cleaned up.</summary>
+    public int MountCleanUps { get; set; }
+
+    /// <summary>Lets the borg mounted at <paramref name="mountPoint"/> stop on its own (e.g. the connection broke).</summary>
+    public void EndMount(string mountPoint, string msgid = "ConnectionClosed")
+    {
+        Mounted.Remove(mountPoint, out var running);
+        running?.TrySetResult(new ProcessResult(2, "",
+            $$"""{"type": "log_message", "levelname": "ERROR", "message": "borg says no", "msgid": "{{msgid}}"}"""));
+    }
+
+    private async Task<ProcessResult?> MountAsync(IReadOnlyList<string> arguments, CancellationToken cancellationToken)
+    {
+        if (MountError is { } error)
+            return error.Contains(' ', StringComparison.Ordinal)
+                ? new ProcessResult(2, "", error + "\n" + """{"type": "log_message", "levelname": "ERROR", "message": "Runtime Error: FUSE mount failed", "msgid": "RTError"}""")
+                : await Error(error);
+
+        var options = arguments.ToList();
+        MountOptions.Add(options[options.IndexOf("-o") + 1]);
+        var running = new TaskCompletionSource<ProcessResult?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Mounted[arguments[^1]] = running;
+        await using var registration = cancellationToken.Register(() => running.TrySetCanceled(cancellationToken));
+        return await running.Task;
+    }
+
+    private Task<ProcessResult?> Unmount(string mountPoint)
+    {
+        if (BusyMounts.Contains(mountPoint) || !Mounted.Remove(mountPoint, out var running))
+            return Task.FromResult<ProcessResult?>(new ProcessResult(1, "", "umount: target is busy"));
+        running.TrySetResult(new ProcessResult(0, "", ""));
+        return Result(0, "");
+    }
+
+    private Task<ProcessResult?> MountShell(string script, IReadOnlyList<string> arguments, bool wsl)
+    {
+        var path = arguments.FirstOrDefault() ?? "";
+        if (script.Contains("mkdir -p", StringComparison.Ordinal))
+        {
+            var mountPoint = "/home/me/" + path;
+            var windows = wsl ? "\n" + @"\\wsl.localhost\Ubuntu\home\me\" + path.Replace('/', '\\') : "";
+            return Result(0, $"{mountPoint}\n1000\n1000{windows}\n");
+        }
+        if (script.Contains("/proc/mounts", StringComparison.Ordinal))
+        {
+            MountCleanUps++;
+            return Result(0, "");
+        }
+        if (script.Contains("fuse.conf", StringComparison.Ordinal))
+            return Result(AllowOther ? 0 : 1, "");
+        if (script.EndsWith("force_unmount \"$1\"", StringComparison.Ordinal))
+        {
+            ForceUnmounted.Add(path);
+            if (Mounted.Remove(path, out var running))
+                running.TrySetResult(new ProcessResult(0, "", ""));
+            return Result(0, "");
+        }
+        if (script.EndsWith("is_mounted \"$1\"", StringComparison.Ordinal))
+            return Result(MountsReady && Mounted.ContainsKey(path) ? 0 : 1, "");
+        return Result(0, ""); // rmdir
+    }
 
     private static Task<ProcessResult?> Result(int exitCode, string output) =>
         Task.FromResult<ProcessResult?>(new ProcessResult(exitCode, output, ""));
@@ -408,7 +532,7 @@ public sealed class TestServices : IDisposable
     /// <summary>Cheap key derivation: the tests check the logic, not the cost.</summary>
     public static readonly KdfParameters FastKdf = new(64, 1, 1);
 
-    public TestServices(bool keychainAvailable = true)
+    public TestServices(bool keychainAvailable = true, bool wsl = false)
     {
         if (!keychainAvailable)
             Secrets = new FakeSecretStore(available: false);
@@ -420,7 +544,8 @@ public sealed class TestServices : IDisposable
         var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new SshProviderPlugin(), new HetznerProviderPlugin()], "no-plugins-here");
         Archives = new ArchiveCache(Directory.Combine("archives"), Vault);
         Durations = new DurationHistory(Directory.Combine("durations.json"));
-        Services = new AppServices(Borg.Detector(), plugins, Store, Secrets, new BorgClient(Borg), Ssh, SshKeys, SshKeygen, Vault, Settings, Jobs, Archives, Durations, Dialogs);
+        Services = new AppServices(Borg.Detector(wsl), plugins, Store, Secrets,
+            new BorgClient(Borg, FakeBorg.WslExecutable) { NativeIsPosix = true }, Ssh, SshKeys, SshKeygen, Vault, Settings, Jobs, Archives, Durations, Dialogs);
     }
 
     public KnownHostsFile KnownHosts => new(SshKeys.KnownHostsFile);
@@ -582,6 +707,15 @@ public sealed class FakeDialogs : IDialogService
     {
         PrunePreviews.Add(preview);
         return Task.FromResult(PruneAnswers.Count > 0 && PruneAnswers.Dequeue());
+    }
+
+    /// <summary>Folders opened in the file manager.</summary>
+    public List<string> OpenedFolders { get; } = [];
+
+    public Task OpenFolderAsync(string path)
+    {
+        OpenedFolders.Add(path);
+        return Task.CompletedTask;
     }
 
     public Task CopyToClipboardAsync(string text)

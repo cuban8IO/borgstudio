@@ -156,6 +156,8 @@ public partial class MainViewModel
         var item = Repositories.FirstOrDefault(repository => repository.Config.Id == job.RepositoryId);
         if (item is null || !TryGetLocation(item, out var location))
             return;
+        if (!await ReleaseMountsAsync(item.Config.Id, item.Name))
+            return;
         // Login and passphrase first: once the backup runs, nothing may wait for an answer.
         if (await GetSshAccessAsync(item, location) is not { } ssh)
             return;

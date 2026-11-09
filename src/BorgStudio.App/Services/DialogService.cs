@@ -58,6 +58,15 @@ public sealed class DialogService(Window owner) : IDialogService
             await clipboard.SetTextAsync(text);
     }
 
+    public async Task OpenFolderAsync(string path)
+    {
+        if (await owner.Launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(path)))
+            return;
+        // Explorer also opens \\wsl.localhost\… folders the launcher may refuse.
+        if (OperatingSystem.IsWindows())
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"\"{path}\"") { UseShellExecute = true })?.Dispose();
+    }
+
     public Task ShowRepositoryEditorAsync(RepositoryEditorViewModel editor) =>
         new RepositoryEditorWindow { DataContext = editor }.ShowDialog(owner);
 

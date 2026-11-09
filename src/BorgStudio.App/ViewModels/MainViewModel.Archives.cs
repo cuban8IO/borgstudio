@@ -100,6 +100,8 @@ public partial class MainViewModel
         LoadMoreArchiveDetailsCommand.NotifyCanExecuteChanged();
         OpenArchiveCommand.NotifyCanExecuteChanged();
         SearchArchivesCommand.NotifyCanExecuteChanged();
+        MountArchiveCommand.NotifyCanExecuteChanged();
+        MountRepositoryCommand.NotifyCanExecuteChanged();
     }
 
     /// <summary>Another repository was selected: its archives are shown when the tab is (or gets) opened.</summary>

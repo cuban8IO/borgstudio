@@ -31,6 +31,9 @@ public partial class MainWindow : Window
     /// <summary>Set once the user agreed to stop a running backup; the window then closes when borg has stopped.</summary>
     private bool _closeAfterBackup;
 
+    /// <summary>Set once the mounts are gone; the window then closes for good.</summary>
+    private bool _unmounted;
+
     protected override void OnClosing(WindowClosingEventArgs e)
     {
         if (_viewModel is { IsBackupRunning: true } viewModel && !_closeAfterBackup)
@@ -38,8 +41,22 @@ public partial class MainWindow : Window
             e.Cancel = true;
             _ = StopBackupAndCloseAsync(viewModel);
         }
+        else if (_viewModel is { HasMounts: true } mounted && !_unmounted)
+        {
+            // Mounts must not outlive the app (borg would keep the repository locked).
+            e.Cancel = true;
+            _ = UnmountAndCloseAsync(mounted);
+        }
 
         base.OnClosing(e);
+    }
+
+    private async Task UnmountAndCloseAsync(MainViewModel viewModel)
+    {
+        IsEnabled = false;
+        await viewModel.UnmountAllAsync();
+        _unmounted = true;
+        Close();
     }
 
     private async Task StopBackupAndCloseAsync(MainViewModel viewModel)

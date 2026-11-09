@@ -107,6 +107,8 @@ public partial class MainViewModel
             message += " " + Strings.RemoveJobsHint;
         if (!await _services.Dialogs.ConfirmAsync(Strings.RemoveTitle, message, Strings.Remove))
             return;
+        foreach (var mount in Mounts.Where(mount => mount.RepositoryId == item.Config.Id).ToList())
+            await UnmountAsync(mount, force: true);
 
         await RemovePassphraseAsync(item.Config);
 

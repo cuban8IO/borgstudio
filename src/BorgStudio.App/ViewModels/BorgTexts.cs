@@ -23,6 +23,8 @@ internal static class BorgTexts
             BorgErrorKind.Timeout => Strings.BorgErrorTimeout,
             BorgErrorKind.NotStartable => Strings.BorgErrorNotStartable,
             BorgErrorKind.UnsupportedPath => Strings.BorgErrorUnsupportedPath,
+            BorgErrorKind.MountNotAllowed => Strings.BorgErrorMountNotAllowed,
+            BorgErrorKind.MountUnavailable => Strings.BorgErrorMountUnavailable,
             _ => Strings.BorgErrorOther,
         };
 

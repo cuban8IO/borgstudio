@@ -32,6 +32,12 @@ public enum BorgErrorKind
     /// <summary>A path that cannot be handed to borg (e.g. a network share for borg inside WSL).</summary>
     UnsupportedPath,
 
+    /// <summary>FUSE refused <c>allow_other</c>: <c>user_allow_other</c> is missing in /etc/fuse.conf.</summary>
+    MountNotAllowed,
+
+    /// <summary>borg cannot mount here (no FUSE, e.g. borg on Windows itself or without llfuse/pyfuse3).</summary>
+    MountUnavailable,
+
     Other,
 }
 

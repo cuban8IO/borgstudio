@@ -892,8 +892,15 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         var sshHostKeyFailed = allText.Any(text => text.Contains("Host key verification failed", StringComparison.Ordinal));
         var sshPermissionDenied = allText.Any(text => text.Contains("Permission denied", StringComparison.Ordinal));
 
+        // FUSE's own complaints are plain text before borg's generic "FUSE mount failed".
+        var mountNotAllowed = allText.Any(text => text.Contains("user_allow_other", StringComparison.Ordinal));
+        var mountUnavailable = allText.Any(text => text.Contains("no FUSE support", StringComparison.OrdinalIgnoreCase)
+            || text.Contains("fusermount: not found", StringComparison.Ordinal) || text.Contains("/dev/fuse", StringComparison.Ordinal));
+
         var kind = messageId switch
         {
+            _ when mountNotAllowed => BorgErrorKind.MountNotAllowed,
+            _ when mountUnavailable => BorgErrorKind.MountUnavailable,
             _ when sshHostKeyFailed => BorgErrorKind.SshHostKeyFailed,
             _ when sshPermissionDenied => BorgErrorKind.SshAuthenticationFailed,
             null => BorgErrorKind.Other,

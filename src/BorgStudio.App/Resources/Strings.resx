@@ -1625,4 +1625,94 @@ Warning: the provider publishes the fingerprints of its servers, and this key ma
   <data name="SearchResultOne" xml:space="preserve">
     <value>1 hit for “{1}” in {2:N0} archives</value>
   </data>
+  <data name="ArchiveMount" xml:space="preserve">
+    <value>Mount</value>
+  </data>
+  <data name="ArchiveMountTip" xml:space="preserve">
+    <value>Mounts the selected archive as a read-only folder and opens it in the file manager</value>
+  </data>
+  <data name="ArchivesMountAll" xml:space="preserve">
+    <value>Mount all archives</value>
+  </data>
+  <data name="ArchivesMountAllTip" xml:space="preserve">
+    <value>Mounts the whole repository as a read-only folder with one folder per archive. borg reads an archive's file list when its folder is opened first.</value>
+  </data>
+  <data name="MountAllFolder" xml:space="preserve">
+    <value>All archives</value>
+  </data>
+  <data name="MountAllTitle" xml:space="preserve">
+    <value>{0} · all archives</value>
+  </data>
+  <data name="Mounting" xml:space="preserve">
+    <value>Mounting “{0}” …</value>
+  </data>
+  <data name="MountFailed" xml:space="preserve">
+    <value>Mounting failed: {0}</value>
+  </data>
+  <data name="MountSetupTitle" xml:space="preserve">
+    <value>Let Windows open mounted archives</value>
+  </data>
+  <data name="MountSetupMessage" xml:space="preserve">
+    <value>borg runs in WSL. Windows Explorer can open a folder mounted there only if FUSE allows other users to access it. For that, the line “user_allow_other” has to be added to /etc/fuse.conf in WSL once.
+
+BorgStudio can do this now (as root in WSL, no password needed). It is the same as running:
+
+{0}</value>
+  </data>
+  <data name="MountSetupConfirm" xml:space="preserve">
+    <value>Set up</value>
+  </data>
+  <data name="MountSetupFailed" xml:space="preserve">
+    <value>BorgStudio could not change /etc/fuse.conf. Please run this command in a WSL terminal (it has been copied to the clipboard), then mount again:
+
+{0}</value>
+  </data>
+  <data name="MountsStatusOne" xml:space="preserve">
+    <value>1 archive mounted</value>
+  </data>
+  <data name="MountsStatus" xml:space="preserve">
+    <value>{0} archives mounted</value>
+  </data>
+  <data name="MountsTip" xml:space="preserve">
+    <value>Mounted archives: open or unmount them</value>
+  </data>
+  <data name="MountsHeader" xml:space="preserve">
+    <value>Mounted archives</value>
+  </data>
+  <data name="MountOpen" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="MountUnmount" xml:space="preserve">
+    <value>Unmount</value>
+  </data>
+  <data name="MountUnmountAll" xml:space="preserve">
+    <value>Unmount all</value>
+  </data>
+  <data name="MountsHint" xml:space="preserve">
+    <value>Closing BorgStudio unmounts everything.</value>
+  </data>
+  <data name="MountBusy" xml:space="preserve">
+    <value>“{0}” is still in use (a program has a file or folder open there). Close it and try again.</value>
+  </data>
+  <data name="MountEnded" xml:space="preserve">
+    <value>“{0}” is no longer mounted: {1}</value>
+  </data>
+  <data name="MountEndedOutside" xml:space="preserve">
+    <value>it was unmounted outside BorgStudio.</value>
+  </data>
+  <data name="MountedBlocksTitle" xml:space="preserve">
+    <value>Archives are mounted</value>
+  </data>
+  <data name="MountedBlocksMessage" xml:space="preserve">
+    <value>Archives of “{0}” are mounted. While they are, borg cannot change the repository. Unmount them and continue?</value>
+  </data>
+  <data name="MountedBlocksConfirm" xml:space="preserve">
+    <value>Unmount and continue</value>
+  </data>
+  <data name="BorgErrorMountNotAllowed" xml:space="preserve">
+    <value>FUSE does not let other users access the mount (“user_allow_other” is missing in /etc/fuse.conf).</value>
+  </data>
+  <data name="BorgErrorMountUnavailable" xml:space="preserve">
+    <value>borg cannot mount archives here: that needs FUSE (on Windows: borg in WSL).</value>
+  </data>
 </root>
