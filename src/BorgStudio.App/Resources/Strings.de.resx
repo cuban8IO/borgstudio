@@ -1,0 +1,1800 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- UI texts, German. Keep in sync with Strings.resx. -->
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Welcome" xml:space="preserve">
+    <value>Willkommen bei BorgStudio</value>
+  </data>
+  <data name="BorgChecking" xml:space="preserve">
+    <value>Suche nach borg …</value>
+  </data>
+  <data name="BorgStatusNative" xml:space="preserve">
+    <value>borg {0} · {1}</value>
+  </data>
+  <data name="BorgStatusWsl" xml:space="preserve">
+    <value>borg {0} · WSL: {1}</value>
+  </data>
+  <data name="BorgStatusNotFound" xml:space="preserve">
+    <value>borg nicht gefunden</value>
+  </data>
+  <data name="BorgMissingTitle" xml:space="preserve">
+    <value>BorgBackup ist nicht installiert</value>
+  </data>
+  <data name="BorgMissingText" xml:space="preserve">
+    <value>BorgStudio benötigt BorgBackup {0} oder neuer. Nach der Installation hier erneut prüfen.</value>
+  </data>
+  <data name="BorgMissingWindowsHint" xml:space="preserve">
+    <value>Unter Windows läuft borg entweder in WSL (Windows-Subsystem für Linux) oder als natives borg.exe.</value>
+  </data>
+  <data name="BorgTooOldTitle" xml:space="preserve">
+    <value>borg {0} ist zu alt</value>
+  </data>
+  <data name="BorgTooOldText" xml:space="preserve">
+    <value>BorgStudio benötigt borg {0} oder neuer. Bitte BorgBackup aktualisieren.</value>
+  </data>
+  <data name="BorgNotYetSupportedTitle" xml:space="preserve">
+    <value>borg {0} wird noch nicht unterstützt</value>
+  </data>
+  <data name="BorgNotYetSupportedText" xml:space="preserve">
+    <value>borg 2 ist noch in der Beta-Phase und funktioniert anders. BorgStudio unterstützt derzeit borg 1.x – bitte borg 1.4 installieren.</value>
+  </data>
+  <data name="BorgCheckFailedTitle" xml:space="preserve">
+    <value>Prüfung auf borg fehlgeschlagen</value>
+  </data>
+  <data name="InstallationGuide" xml:space="preserve">
+    <value>Installationsanleitung</value>
+  </data>
+  <data name="CheckAgain" xml:space="preserve">
+    <value>Erneut prüfen</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Schließen</value>
+  </data>
+  <data name="MenuTools" xml:space="preserve">
+    <value>Extras</value>
+  </data>
+  <data name="MenuPlugins" xml:space="preserve">
+    <value>Plugins …</value>
+  </data>
+  <data name="PluginsTitle" xml:space="preserve">
+    <value>Plugins</value>
+  </data>
+  <data name="PluginsIntro" xml:space="preserve">
+    <value>Repository-Provider stammen aus Plugins. Eingebaute Plugins sind Teil von BorgStudio. Ein weiteres Plugin in einen eigenen Unterordner des Plugin-Ordners legen und BorgStudio neu starten.</value>
+  </data>
+  <data name="PluginsTrustHint" xml:space="preserve">
+    <value>Plugins laufen mit denselben Rechten wie BorgStudio. Nur vertrauenswürdige Plugins installieren.</value>
+  </data>
+  <data name="PluginsFolderLabel" xml:space="preserve">
+    <value>Plugin-Ordner:</value>
+  </data>
+  <data name="OpenPluginsFolder" xml:space="preserve">
+    <value>Plugin-Ordner öffnen</value>
+  </data>
+  <data name="PluginBuiltIn" xml:space="preserve">
+    <value>Eingebaut</value>
+  </data>
+  <data name="PluginExternal" xml:space="preserve">
+    <value>Plugin</value>
+  </data>
+  <data name="PluginVersion" xml:space="preserve">
+    <value>Version {0}</value>
+  </data>
+  <data name="PluginErrorAssemblyMissing" xml:space="preserve">
+    <value>{0} fehlt im Plugin-Ordner.</value>
+  </data>
+  <data name="PluginErrorLoadFailed" xml:space="preserve">
+    <value>Konnte nicht geladen werden: {0}</value>
+  </data>
+  <data name="PluginErrorNoPluginClass" xml:space="preserve">
+    <value>Enthält keine Plugin-Klasse (IBorgStudioPlugin).</value>
+  </data>
+  <data name="PluginErrorRegistrationFailed" xml:space="preserve">
+    <value>Fehler beim Start: {0}</value>
+  </data>
+  <data name="PluginErrorDuplicateProvider" xml:space="preserve">
+    <value>Provider „{0}“ übersprungen: {1} verwendet diese ID bereits.</value>
+  </data>
+  <!-- Allgemein -->
+  <data name="Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Abbrechen</value>
+  </data>
+  <data name="Later" xml:space="preserve">
+    <value>Später</value>
+  </data>
+  <data name="Optional" xml:space="preserve">
+    <value>optional</value>
+  </data>
+  <!-- Repository-Liste und Details -->
+  <data name="RepositoriesHeader" xml:space="preserve">
+    <value>Repositories</value>
+  </data>
+  <data name="AddRepository" xml:space="preserve">
+    <value>Repository hinzufügen</value>
+  </data>
+  <data name="NoRepositoriesText" xml:space="preserve">
+    <value>Ein neues Repository anlegen oder ein vorhandenes verbinden – in einem lokalen Ordner oder auf einem angeschlossenen Laufwerk.</value>
+  </data>
+  <data name="LabelLocation" xml:space="preserve">
+    <value>Ort</value>
+  </data>
+  <data name="LabelEncryption" xml:space="preserve">
+    <value>Verschlüsselung</value>
+  </data>
+  <data name="LabelPassphrase" xml:space="preserve">
+    <value>Passphrase</value>
+  </data>
+  <data name="LabelBorgVersion" xml:space="preserve">
+    <value>borg-Version</value>
+  </data>
+  <data name="EncryptionUnknown" xml:space="preserve">
+    <value>Unbekannt (Verbindung testen)</value>
+  </data>
+  <data name="ProviderMissing" xml:space="preserve">
+    <value>Provider „{0}“ ist nicht verfügbar (Plugin fehlt?).</value>
+  </data>
+  <data name="KeyfileWarning" xml:space="preserve">
+    <value>Der Schlüssel dieses Repositories liegt nur auf diesem Computer. Ohne Sicherung des Schlüssels sind die Backups wertlos, wenn der Computer verloren geht.</value>
+  </data>
+  <data name="TestConnection" xml:space="preserve">
+    <value>Verbindung testen</value>
+  </data>
+  <data name="ExportKey" xml:space="preserve">
+    <value>Schlüssel exportieren</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Bearbeiten</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>Entfernen</value>
+  </data>
+  <data name="Checking" xml:space="preserve">
+    <value>Repository wird geprüft …</value>
+  </data>
+  <data name="Creating" xml:space="preserve">
+    <value>Repository wird angelegt …</value>
+  </data>
+  <data name="ExportingKey" xml:space="preserve">
+    <value>Schlüssel wird exportiert …</value>
+  </data>
+  <data name="TestSucceeded" xml:space="preserve">
+    <value>Verbindung in Ordnung. Letzte Änderung: {0}</value>
+  </data>
+  <data name="TestSucceededNoDate" xml:space="preserve">
+    <value>Verbindung in Ordnung.</value>
+  </data>
+  <data name="RepositoryIdChanged" xml:space="preserve">
+    <value>Achtung: An diesem Ort liegt ein anderes Repository als beim Einrichten.</value>
+  </data>
+  <data name="RepositoryCreated" xml:space="preserve">
+    <value>Repository angelegt.</value>
+  </data>
+  <data name="RepositoryConnected" xml:space="preserve">
+    <value>Repository verbunden.</value>
+  </data>
+  <data name="ExportKeyTitle" xml:space="preserve">
+    <value>Repository-Schlüssel speichern</value>
+  </data>
+  <data name="KeyExported" xml:space="preserve">
+    <value>Schlüssel gespeichert unter {0}. Sicher aufbewahren – getrennt von der Passphrase.</value>
+  </data>
+  <data name="RemoveTitle" xml:space="preserve">
+    <value>Repository entfernen</value>
+  </data>
+  <data name="RemoveMessage" xml:space="preserve">
+    <value>„{0}“ aus der Liste entfernen? Das Repository und seine Backups bleiben unangetastet; eine gespeicherte Passphrase wird gelöscht (aus dem Tresor oder dem Schlüsselbund).</value>
+  </data>
+  <data name="BackupKeyTitle" xml:space="preserve">
+    <value>Schlüssel sichern</value>
+  </data>
+  <data name="BackupKeyRepokey" xml:space="preserve">
+    <value>Der Schlüssel liegt im Repository und ist durch die Passphrase geschützt. Eine separate Sicherung schützt vor Datenverlust, falls das Repository beschädigt wird. Schlüssel jetzt sichern?</value>
+  </data>
+  <data name="BackupKeyKeyfile" xml:space="preserve">
+    <value>Der Schlüssel liegt nur auf diesem Computer. Ohne Sicherung des Schlüssels sind die Backups wertlos, wenn der Computer verloren geht. Schlüssel jetzt sichern?</value>
+  </data>
+  <data name="BackupKeyConfirm" xml:space="preserve">
+    <value>Schlüssel sichern</value>
+  </data>
+  <data name="PassphrasePromptTitle" xml:space="preserve">
+    <value>Passphrase</value>
+  </data>
+  <data name="PassphrasePromptText" xml:space="preserve">
+    <value>Passphrase für „{0}“:</value>
+  </data>
+  <data name="StoreBrokenWarning" xml:space="preserve">
+    <value>Die Repository-Liste war nicht lesbar und wurde nach {0} verschoben. BorgStudio startet mit einer leeren Liste.</value>
+  </data>
+  <data name="KeychainError" xml:space="preserve">
+    <value>Fehler beim Schlüsselbund: {0}</value>
+  </data>
+  <data name="SecretLabel" xml:space="preserve">
+    <value>BorgStudio: {0}</value>
+  </data>
+  <data name="Borg2NotSupported" xml:space="preserve">
+    <value>borg-2-Repositories werden noch nicht unterstützt.</value>
+  </data>
+  <data name="BorgNotReady" xml:space="preserve">
+    <value>Dafür wird ein unterstütztes borg (1.2 oder neuer) benötigt.</value>
+  </data>
+  <!-- Passphrase-Arten, borg-Versionen, Verschlüsselung -->
+  <data name="PassphraseModeNone" xml:space="preserve">
+    <value>Keine (unverschlüsselt)</value>
+  </data>
+  <data name="PassphraseModeStored" xml:space="preserve">
+    <value>Im Schlüsselbund gespeichert</value>
+  </data>
+  <data name="PassphraseModeAsk" xml:space="preserve">
+    <value>Wird jedes Mal abgefragt</value>
+  </data>
+  <data name="BorgVersionAuto" xml:space="preserve">
+    <value>Automatisch</value>
+  </data>
+  <data name="BorgVersionBorg1" xml:space="preserve">
+    <value>borg 1.x</value>
+  </data>
+  <data name="BorgVersionBorg2" xml:space="preserve">
+    <value>borg 2.x (noch nicht unterstützt)</value>
+  </data>
+  <data name="EncryptionRepokey" xml:space="preserve">
+    <value>repokey-blake2 – Schlüssel im Repository (empfohlen)</value>
+  </data>
+  <data name="EncryptionKeyfile" xml:space="preserve">
+    <value>keyfile-blake2 – Schlüssel nur auf diesem Computer</value>
+  </data>
+  <data name="EncryptionNone" xml:space="preserve">
+    <value>none – unverschlüsselt</value>
+  </data>
+  <data name="EncryptionKeyfileHint" xml:space="preserve">
+    <value>Der Schlüssel liegt nur auf diesem Computer. BorgStudio bietet nach dem Anlegen an, ihn zu sichern.</value>
+  </data>
+  <data name="EncryptionNoneHint" xml:space="preserve">
+    <value>Jeder mit Zugriff auf das Repository kann die Backups lesen.</value>
+  </data>
+  <!-- Repository-Assistent -->
+  <data name="EditorTitleAdd" xml:space="preserve">
+    <value>Repository hinzufügen</value>
+  </data>
+  <data name="EditorTitleEdit" xml:space="preserve">
+    <value>Repository bearbeiten</value>
+  </data>
+  <data name="EditorChooseProvider" xml:space="preserve">
+    <value>Wo liegt das Repository?</value>
+  </data>
+  <data name="EditorName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="EditorNameHint" xml:space="preserve">
+    <value>Wird in der Liste angezeigt, z. B. „Externe Festplatte“.</value>
+  </data>
+  <data name="EditorModeConnect" xml:space="preserve">
+    <value>Vorhandenes Repository verbinden</value>
+  </data>
+  <data name="EditorModeCreate" xml:space="preserve">
+    <value>Neues Repository anlegen</value>
+  </data>
+  <data name="EditorEncryption" xml:space="preserve">
+    <value>Verschlüsselung</value>
+  </data>
+  <data name="EditorPassphrase" xml:space="preserve">
+    <value>Passphrase</value>
+  </data>
+  <data name="EditorPassphraseConfirmation" xml:space="preserve">
+    <value>Passphrase wiederholen</value>
+  </data>
+  <data name="EditorPassphraseConnectHint" xml:space="preserve">
+    <value>Bei unverschlüsselten Repositories leer lassen.</value>
+  </data>
+  <data name="EditorPassphraseCreateHint" xml:space="preserve">
+    <value>Ohne Passphrase lassen sich die Backups nicht wiederherstellen. Gut aufschreiben und sicher aufbewahren.</value>
+  </data>
+  <data name="EditorPassphraseEditHint" xml:space="preserve">
+    <value>Nur nötig, um eine (neue) Passphrase zu speichern.</value>
+  </data>
+  <data name="EditorKeychainUnavailable" xml:space="preserve">
+    <value>Auf diesem System ist kein Schlüsselbund verfügbar.</value>
+  </data>
+  <data name="EditorAdvanced" xml:space="preserve">
+    <value>Erweitert</value>
+  </data>
+  <data name="EditorBorgVersion" xml:space="preserve">
+    <value>borg-Version</value>
+  </data>
+  <data name="EditorBrowse" xml:space="preserve">
+    <value>Durchsuchen …</value>
+  </data>
+  <data name="EditorBack" xml:space="preserve">
+    <value>Zurück</value>
+  </data>
+  <data name="EditorNext" xml:space="preserve">
+    <value>Weiter</value>
+  </data>
+  <data name="EditorConnect" xml:space="preserve">
+    <value>Verbinden</value>
+  </data>
+  <data name="EditorCreate" xml:space="preserve">
+    <value>Anlegen</value>
+  </data>
+  <data name="EditorSave" xml:space="preserve">
+    <value>Speichern</value>
+  </data>
+  <data name="EditorNameRequired" xml:space="preserve">
+    <value>Bitte einen Namen eingeben.</value>
+  </data>
+  <data name="EditorPassphraseRequired" xml:space="preserve">
+    <value>Bitte eine Passphrase eingeben.</value>
+  </data>
+  <data name="EditorPassphraseMismatch" xml:space="preserve">
+    <value>Die Passphrasen stimmen nicht überein.</value>
+  </data>
+  <data name="EditorPassphraseRequiredToStore" xml:space="preserve">
+    <value>Bitte die Passphrase eingeben, um sie zu speichern.</value>
+  </data>
+  <!-- borg-Fehler -->
+  <data name="BorgErrorPassphraseWrong" xml:space="preserve">
+    <value>Die Passphrase ist falsch.</value>
+  </data>
+  <data name="BorgErrorRepositoryNotFound" xml:space="preserve">
+    <value>An diesem Ort gibt es kein Repository.</value>
+  </data>
+  <data name="BorgErrorNotARepository" xml:space="preserve">
+    <value>Dieser Ordner ist kein borg-Repository.</value>
+  </data>
+  <data name="BorgErrorRepositoryExists" xml:space="preserve">
+    <value>An diesem Ort gibt es bereits ein Repository oder andere Daten.</value>
+  </data>
+  <data name="BorgErrorLocked" xml:space="preserve">
+    <value>Das Repository ist gesperrt – ein anderer borg-Prozess verwendet es.</value>
+  </data>
+  <data name="BorgErrorConnectionFailed" xml:space="preserve">
+    <value>Die Verbindung zum Repository ist fehlgeschlagen.</value>
+  </data>
+  <data name="BorgErrorTimeout" xml:space="preserve">
+    <value>borg ist nicht rechtzeitig fertig geworden.</value>
+  </data>
+  <data name="BorgErrorNotStartable" xml:space="preserve">
+    <value>borg konnte nicht gestartet werden.</value>
+  </data>
+  <data name="BorgErrorUnsupportedPath" xml:space="preserve">
+    <value>Dieser Pfad ist mit borg in WSL nicht nutzbar (nur Laufwerksbuchstaben, keine Netzwerkfreigaben).</value>
+  </data>
+  <data name="BorgErrorOther" xml:space="preserve">
+    <value>borg hat einen Fehler gemeldet.</value>
+  </data>
+  <data name="BorgErrorSshHostKeyFailed" xml:space="preserve">
+    <value>Die Identität des Servers (Host-Schlüssel) konnte nicht bestätigt werden – ssh hat die Verbindung verweigert.</value>
+  </data>
+  <data name="BorgErrorSshAuthenticationFailed" xml:space="preserve">
+    <value>Der Server hat den SSH-Schlüssel abgelehnt.</value>
+  </data>
+  <!-- SSH -->
+  <data name="LabelSshKey" xml:space="preserve">
+    <value>SSH-Schlüssel</value>
+  </data>
+  <data name="SshKeyRestrictedSuffix" xml:space="preserve">
+    <value>(auf borg beschränkt)</value>
+  </data>
+  <data name="SshKeyMissing" xml:space="preserve">
+    <value>Kein SSH-Schlüssel eingerichtet – zum Einrichten das Repository bearbeiten.</value>
+  </data>
+  <data name="RemoveSshHint" xml:space="preserve">
+    <value>Sein SSH-Schlüssel bleibt in der Schlüsselverwaltung; sein Eintrag in ~/.ssh/authorized_keys auf dem Server bleibt ebenfalls bestehen und kann dort entfernt werden.</value>
+  </data>
+  <data name="HostKeyTitle" xml:space="preserve">
+    <value>Server bestätigen</value>
+  </data>
+  <data name="HostKeyMessage" xml:space="preserve">
+    <value>Erste Verbindung zu {0}. Der Server weist sich mit diesem {1}-Schlüssel aus:
+
+{2}
+
+Nur vertrauen, wenn dieser Fingerabdruck mit dem des Servers übereinstimmt. Auf dem Server zeigt ihn „ssh-keygen -lf /etc/ssh/ssh_host_*_key.pub“ an.</value>
+  </data>
+  <data name="HostKeyTrust" xml:space="preserve">
+    <value>Vertrauen</value>
+  </data>
+  <data name="HostKeyNotPublished" xml:space="preserve">
+    <value>Erste Verbindung zu {0}. Der Server weist sich mit diesem {1}-Schlüssel aus:
+
+{2}
+
+Warnung: Der Anbieter veröffentlicht die Fingerabdrücke seiner Server, und dieser Schlüssel passt zu keinem davon. Möglicherweise besteht keine Verbindung zum echten Server. Nur vertrauen, wenn der Grund bekannt ist, z. B. weil der Anbieter neue Schlüssel angekündigt hat.</value>
+  </data>
+  <data name="HostKeyRejected" xml:space="preserve">
+    <value>Der Server wurde nicht bestätigt – keine Verbindung aufgebaut.</value>
+  </data>
+  <data name="HostKeyChanged" xml:space="preserve">
+    <value>Achtung: {0} zeigt jetzt einen anderen Host-Schlüssel als zuvor. Das kann bedeuten, dass der Server neu installiert wurde – oder dass jemand die Verbindung abfängt. BorgStudio verbindet sich nicht. Ist die Änderung erwartet, den alten Eintrag aus {1} entfernen.</value>
+  </data>
+  <data name="SshConnectionFailed" xml:space="preserve">
+    <value>Der Server ist nicht erreichbar ({0}).</value>
+  </data>
+  <data name="SshLoginFailed" xml:space="preserve">
+    <value>Anmeldung fehlgeschlagen – Benutzer oder Passwort falsch.</value>
+  </data>
+  <data name="SshHostKeyChangedDuringLogin" xml:space="preserve">
+    <value>Der Server hat bei der Anmeldung einen anderen Host-Schlüssel gezeigt – abgebrochen.</value>
+  </data>
+  <data name="SshInstallFailed" xml:space="preserve">
+    <value>Das Hinterlegen des Schlüssels auf dem Server ist fehlgeschlagen ({0}).</value>
+  </data>
+  <data name="ContactingServer" xml:space="preserve">
+    <value>Server wird kontaktiert …</value>
+  </data>
+  <data name="InstallingKey" xml:space="preserve">
+    <value>Schlüssel wird auf dem Server hinterlegt …</value>
+  </data>
+  <data name="EditorSshLogin" xml:space="preserve">
+    <value>SSH-Anmeldung</value>
+  </data>
+  <data name="EditorKeyKeep" xml:space="preserve">
+    <value>Bisherigen Schlüssel behalten</value>
+  </data>
+  <data name="EditorKeyGenerate" xml:space="preserve">
+    <value>Neuen Schlüssel erzeugen und mit dem Passwort auf dem Server hinterlegen</value>
+  </data>
+  <data name="EditorKeyExisting" xml:space="preserve">
+    <value>Schlüssel aus der Schlüsselverwaltung verwenden</value>
+  </data>
+  <data name="EditorServerPassword" xml:space="preserve">
+    <value>Server-Passwort</value>
+  </data>
+  <data name="EditorServerPasswordHint" xml:space="preserve">
+    <value>Wird nur einmal zum Hinterlegen des Schlüssels verwendet und nicht gespeichert.</value>
+  </data>
+  <data name="EditorRestrictKey" xml:space="preserve">
+    <value>Schlüssel auf borg und dieses Repository beschränken (empfohlen)</value>
+  </data>
+  <data name="EditorRestrictKeyHint" xml:space="preserve">
+    <value>Der Schlüssel kann dann nur „borg serve“ für dieses Repository ausführen – keine Shell, keine anderen Ordner.</value>
+  </data>
+  <data name="EditorServerPasswordRequired" xml:space="preserve">
+    <value>Bitte das Server-Passwort eingeben.</value>
+  </data>
+  <data name="PassphraseModeVault" xml:space="preserve">
+    <value>Im Tresor gespeichert</value>
+  </data>
+  <data name="EditorPassphraseStorage" xml:space="preserve">
+    <value>Passphrase aufbewahren:</value>
+  </data>
+  <data name="EditorStorageVault" xml:space="preserve">
+    <value>Im BorgStudio-Tresor (durch deine PIN geschützt, wird mit exportiert)</value>
+  </data>
+  <data name="EditorStorageKeychain" xml:space="preserve">
+    <value>Im Schlüsselbund des Systems</value>
+  </data>
+  <data name="EditorStorageAsk" xml:space="preserve">
+    <value>Gar nicht – jedes Mal abfragen</value>
+  </data>
+  <data name="VaultNotUnlocked" xml:space="preserve">
+    <value>Der Tresor wurde nicht entsperrt, deshalb konnte die Passphrase nicht gespeichert werden.</value>
+  </data>
+  <data name="VaultError" xml:space="preserve">
+    <value>Fehler beim Tresor: {0}</value>
+  </data>
+  <data name="VaultStatusNotSetUp" xml:space="preserve">
+    <value>Keine PIN eingerichtet</value>
+  </data>
+  <data name="VaultStatusLocked" xml:space="preserve">
+    <value>Gesperrt</value>
+  </data>
+  <data name="VaultStatusUnlocked" xml:space="preserve">
+    <value>Entsperrt</value>
+  </data>
+  <data name="VaultLock" xml:space="preserve">
+    <value>Sperren</value>
+  </data>
+  <data name="PinUnlockTitle" xml:space="preserve">
+    <value>Tresor entsperren</value>
+  </data>
+  <data name="PinUnlockText" xml:space="preserve">
+    <value>Gib deine PIN ein, um den BorgStudio-Tresor zu entsperren.</value>
+  </data>
+  <data name="PinCreateTitle" xml:space="preserve">
+    <value>PIN festlegen</value>
+  </data>
+  <data name="PinCreateText" xml:space="preserve">
+    <value>Mit einer PIN ist BorgStudio beim Start und nach einer Weile ohne Bedienung gesperrt, und Passphrasen werden mit einem aus der PIN abgeleiteten Schlüssel verschlüsselt gespeichert. Ohne die PIN kann niemand sie lesen – auch BorgStudio nicht. Eine vergessene PIN lässt sich nicht wiederherstellen: Dann hilft nur, den Tresor zurückzusetzen (die Passphrasen darin gehen verloren) oder einen Export zu importieren.</value>
+  </data>
+  <data name="PinLabel" xml:space="preserve">
+    <value>PIN</value>
+  </data>
+  <data name="PinNewLabel" xml:space="preserve">
+    <value>Neue PIN</value>
+  </data>
+  <data name="PinConfirmLabel" xml:space="preserve">
+    <value>PIN wiederholen</value>
+  </data>
+  <data name="PinHint" xml:space="preserve">
+    <value>Mindestens {0} Zeichen; Buchstaben und Ziffern sind erlaubt. Länger ist sicherer.</value>
+  </data>
+  <data name="PinTooShort" xml:space="preserve">
+    <value>Die PIN braucht mindestens {0} Zeichen.</value>
+  </data>
+  <data name="PinMismatch" xml:space="preserve">
+    <value>Die beiden PINs stimmen nicht überein.</value>
+  </data>
+  <data name="PinWrong" xml:space="preserve">
+    <value>Falsche PIN.</value>
+  </data>
+  <data name="PinChanged" xml:space="preserve">
+    <value>Die PIN wurde geändert.</value>
+  </data>
+  <data name="MenuSettings" xml:space="preserve">
+    <value>Einstellungen …</value>
+  </data>
+  <data name="SettingsTitle" xml:space="preserve">
+    <value>Einstellungen</value>
+  </data>
+  <data name="SettingsVaultHeader" xml:space="preserve">
+    <value>Sperre und Tresor</value>
+  </data>
+  <data name="SettingsVaultIntro" xml:space="preserve">
+    <value>Mit einer PIN startet BorgStudio gesperrt und sperrt sich nach der unten eingestellten Zeit wieder. Beim Entsperren öffnet sich auch der Tresor, in dem die Passphrasen der Repositories verschlüsselt liegen – sie werden dann nicht mehr abgefragt. Sperren jederzeit mit Strg+L.</value>
+  </data>
+  <data name="SettingsVaultStatus" xml:space="preserve">
+    <value>Status:</value>
+  </data>
+  <data name="SettingsSetUpPin" xml:space="preserve">
+    <value>PIN einrichten …</value>
+  </data>
+  <data name="SettingsChangePin" xml:space="preserve">
+    <value>PIN ändern …</value>
+  </data>
+  <data name="SettingsResetVault" xml:space="preserve">
+    <value>Tresor zurücksetzen …</value>
+  </data>
+  <data name="SettingsAutoLock" xml:space="preserve">
+    <value>Automatisch sperren nach</value>
+  </data>
+  <data name="SettingsAutoLockHint" xml:space="preserve">
+    <value>… ohne Bedienung von BorgStudio. Danach muss die App wieder mit der PIN entsperrt werden.</value>
+  </data>
+  <data name="SettingsMinutes" xml:space="preserve">
+    <value>{0} Minuten</value>
+  </data>
+  <data name="SettingsLanguageHeader" xml:space="preserve">
+    <value>Sprache</value>
+  </data>
+  <data name="SettingsLanguageSystem" xml:space="preserve">
+    <value>Systemsprache ({0})</value>
+  </data>
+  <data name="SettingsLanguageRestart" xml:space="preserve">
+    <value>Die neue Sprache gilt nach einem Neustart.</value>
+  </data>
+  <data name="SettingsRestartNow" xml:space="preserve">
+    <value>Jetzt neu starten</value>
+  </data>
+  <data name="VaultSetUpDone" xml:space="preserve">
+    <value>Der Tresor ist eingerichtet und entsperrt.</value>
+  </data>
+  <data name="VaultResetTitle" xml:space="preserve">
+    <value>Tresor zurücksetzen</value>
+  </data>
+  <data name="VaultResetWarning" xml:space="preserve">
+    <value>Damit werden der Tresor mit allen darin gespeicherten Passphrasen und die PIN gelöscht. Das lässt sich nicht rückgängig machen. Repositories, deren Passphrase im Tresor lag, fragen sie danach wieder ab. Mach das nur, wenn du deine PIN vergessen hast.</value>
+  </data>
+  <data name="VaultResetConfirm" xml:space="preserve">
+    <value>Tresor löschen</value>
+  </data>
+  <data name="VaultResetDone" xml:space="preserve">
+    <value>Der Tresor wurde gelöscht. Du kannst eine neue PIN einrichten.</value>
+  </data>
+  <data name="LockScreenTitle" xml:space="preserve">
+    <value>BorgStudio ist gesperrt</value>
+  </data>
+  <data name="LockScreenText" xml:space="preserve">
+    <value>Gib deine PIN ein, um BorgStudio zu entsperren. Damit öffnet sich auch der Tresor mit deinen Passphrasen.</value>
+  </data>
+  <data name="Unlock" xml:space="preserve">
+    <value>Entsperren</value>
+  </data>
+  <data name="ForgotPin" xml:space="preserve">
+    <value>PIN vergessen?</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Löschen</value>
+  </data>
+  <data name="MenuKeys" xml:space="preserve">
+    <value>SSH-Schlüssel …</value>
+  </data>
+  <data name="EditorKeyRequired" xml:space="preserve">
+    <value>Bitte einen Schlüssel wählen (oder importieren).</value>
+  </data>
+  <data name="EditorNoKeys" xml:space="preserve">
+    <value>Noch keine Schlüssel – importiere eine Schlüsseldatei.</value>
+  </data>
+  <data name="EditorInstallExistingKey" xml:space="preserve">
+    <value>Auch mit dem Passwort auf dem Server hinterlegen (sonst muss er dort schon eingetragen sein)</value>
+  </data>
+  <data name="EditorSharedRestrictedKey" xml:space="preserve">
+    <value>Dieser Schlüssel wird auf demselben Konto auch von „{0}“ verwendet, und einer davon ist auf sein Repository beschränkt. Der Server verwendet nur den ersten passenden Eintrag, deshalb würde eins der beiden scheitern. Nimm einen eigenen Schlüssel oder hinterlege diesen unbeschränkt.</value>
+  </data>
+  <data name="SshKeyLegacy" xml:space="preserve">
+    <value>Schlüsseldatei aus einer älteren Version – wird beim Entsperren in den Tresor übernommen</value>
+  </data>
+  <data name="SshKeyLegacyNeedsPin" xml:space="preserve">
+    <value>Dieses Repository verwendet noch eine Schlüsseldatei aus einer älteren Version. SSH-Schlüssel liegen jetzt im Tresor: Richte eine PIN ein (Extras → Einstellungen), dann wird der Schlüssel dorthin übernommen.</value>
+  </data>
+  <data name="RemoveKeyTitle" xml:space="preserve">
+    <value>Schlüssel löschen?</value>
+  </data>
+  <data name="RemoveKeyMessage" xml:space="preserve">
+    <value>Der SSH-Schlüssel „{0}“ wird von keinem Repository mehr verwendet. Auch aus der Schlüsselverwaltung löschen?</value>
+  </data>
+  <data name="KeepKey" xml:space="preserve">
+    <value>Behalten</value>
+  </data>
+  <data name="KeysMigrationTitle" xml:space="preserve">
+    <value>SSH-Schlüssel kommen in den Tresor</value>
+  </data>
+  <data name="KeysMigrationNeedsPin" xml:space="preserve">
+    <value>BorgStudio speichert SSH-Schlüssel jetzt verschlüsselt im Tresor statt in Dateien. Richte jetzt eine PIN ein: Die vorhandenen Schlüssel werden sofort in den Tresor übernommen, und die Dateien von BorgStudio werden danach gelöscht (Schlüssel von anderswo bleiben, wo sie sind).</value>
+  </data>
+  <data name="KeysMigrated" xml:space="preserve">
+    <value>{0} SSH-Schlüssel in den Tresor übernommen.</value>
+  </data>
+  <data name="KeysMigrationFailed" xml:space="preserve">
+    <value>SSH-Schlüssel konnte nicht in den Tresor übernommen werden: {0} – importiere ihn unter Extras → SSH-Schlüssel und wähle ihn im Repository.</value>
+  </data>
+  <data name="KeysTitle" xml:space="preserve">
+    <value>SSH-Schlüssel</value>
+  </data>
+  <data name="KeysNeedPin" xml:space="preserve">
+    <value>SSH-Schlüssel liegen verschlüsselt im Tresor. Richte zuerst eine PIN ein.</value>
+  </data>
+  <data name="KeysEmpty" xml:space="preserve">
+    <value>Noch keine Schlüssel. Erzeuge unten einen oder importiere eine Schlüsseldatei.</value>
+  </data>
+  <data name="KeysNewName" xml:space="preserve">
+    <value>Neuer Schlüssel:</value>
+  </data>
+  <data name="KeysGenerate" xml:space="preserve">
+    <value>Erzeugen</value>
+  </data>
+  <data name="KeysImport" xml:space="preserve">
+    <value>Importieren …</value>
+  </data>
+  <data name="KeysImportTitle" xml:space="preserve">
+    <value>Privaten Schlüssel importieren</value>
+  </data>
+  <data name="KeysRename" xml:space="preserve">
+    <value>Umbenennen</value>
+  </data>
+  <data name="KeysType" xml:space="preserve">
+    <value>Typ</value>
+  </data>
+  <data name="KeysFingerprint" xml:space="preserve">
+    <value>Fingerabdruck</value>
+  </data>
+  <data name="KeysOrigin" xml:space="preserve">
+    <value>Herkunft</value>
+  </data>
+  <data name="KeysUsedBy" xml:space="preserve">
+    <value>Verwendet von</value>
+  </data>
+  <data name="KeysUnused" xml:space="preserve">
+    <value>keinem Repository</value>
+  </data>
+  <data name="KeysPublicKey" xml:space="preserve">
+    <value>Öffentlicher Schlüssel (für ~/.ssh/authorized_keys auf dem Server)</value>
+  </data>
+  <data name="KeysCopyPublicKey" xml:space="preserve">
+    <value>Öffentlichen Schlüssel kopieren</value>
+  </data>
+  <data name="KeysPublicKeyCopied" xml:space="preserve">
+    <value>Öffentlicher Schlüssel kopiert.</value>
+  </data>
+  <data name="KeysSavePrivate" xml:space="preserve">
+    <value>Privaten Schlüssel speichern …</value>
+  </data>
+  <data name="KeysSavePrivateTitle" xml:space="preserve">
+    <value>Privaten Schlüssel speichern</value>
+  </data>
+  <data name="KeysSavePrivateWarning" xml:space="preserve">
+    <value>Die Datei enthält den privaten Schlüssel OHNE Schutz: Wer sie bekommt, kann sich überall anmelden, wo dieser Schlüssel hinterlegt ist. Speichere sie nur an einem sicheren Ort und lösche sie, wenn du sie nicht mehr brauchst.</value>
+  </data>
+  <data name="KeysSavePrivateConfirm" xml:space="preserve">
+    <value>Trotzdem speichern</value>
+  </data>
+  <data name="KeysPrivateKeySaved" xml:space="preserve">
+    <value>Privater Schlüssel gespeichert: {0}</value>
+  </data>
+  <data name="KeysDeleteTitle" xml:space="preserve">
+    <value>Schlüssel löschen</value>
+  </data>
+  <data name="KeysDeleteMessage" xml:space="preserve">
+    <value>Den Schlüssel „{0}“ aus dem Tresor löschen? Das lässt sich nicht rückgängig machen; seine Einträge auf Servern bleiben bestehen und können dort entfernt werden.</value>
+  </data>
+  <data name="KeysDeleteUsedHint" xml:space="preserve">
+    <value>Schlüssel, die ein Repository verwendet, lassen sich nicht löschen.</value>
+  </data>
+  <data name="KeysGenerated" xml:space="preserve">
+    <value>Schlüssel „{0}“ erzeugt. Kopiere seinen öffentlichen Schlüssel auf den Server, oder wähle ihn in einem Repository und lass BorgStudio ihn hinterlegen.</value>
+  </data>
+  <data name="KeysImported" xml:space="preserve">
+    <value>Schlüssel „{0}“ importiert. Die Originaldatei bleibt, wo sie ist.</value>
+  </data>
+  <data name="KeysAlreadyImported" xml:space="preserve">
+    <value>Dieser Schlüssel ist schon als „{0}“ in der Liste.</value>
+  </data>
+  <data name="KeysImportFailed" xml:space="preserve">
+    <value>Die Datei konnte nicht als privater Schlüssel gelesen werden: {0}</value>
+  </data>
+  <data name="KeysPasswordTitle" xml:space="preserve">
+    <value>Passwort des Schlüssels</value>
+  </data>
+  <data name="KeysPasswordPrompt" xml:space="preserve">
+    <value>„{0}“ ist mit einem Passwort geschützt. Gib es einmal ein – danach liegt der Schlüssel ohne Passwort im Tresor, durch den Tresor geschützt.</value>
+  </data>
+  <data name="KeysPasswordWrong" xml:space="preserve">
+    <value>Falsches Passwort.</value>
+  </data>
+  <data name="KeysOriginGenerated" xml:space="preserve">
+    <value>Von BorgStudio erzeugt am {0}</value>
+  </data>
+  <data name="KeysOriginImported" xml:space="preserve">
+    <value>Importiert am {0}</value>
+  </data>
+  <data name="MenuExport" xml:space="preserve">
+    <value>Einstellungen exportieren …</value>
+  </data>
+  <data name="MenuImport" xml:space="preserve">
+    <value>Einstellungen importieren …</value>
+  </data>
+  <data name="ExportTitle" xml:space="preserve">
+    <value>Einstellungen exportieren</value>
+  </data>
+  <data name="ExportIntro" xml:space="preserve">
+    <value>Speichert alles in einer Datei, um BorgStudio auf einem anderen Rechner wieder einzurichten: Repositories, Backup-Jobs, gespeicherte Passphrasen, SSH-Schlüssel, bekannte Server und Einstellungen. Die Datei wird mit einem eigenen Passwort verschlüsselt – ohne es kann niemand sie lesen, auch du nicht.</value>
+  </data>
+  <data name="ExportPassword" xml:space="preserve">
+    <value>Export-Passwort</value>
+  </data>
+  <data name="ExportPasswordConfirmation" xml:space="preserve">
+    <value>Export-Passwort wiederholen</value>
+  </data>
+  <data name="ExportPasswordHint" xml:space="preserve">
+    <value>Mindestens {0} Zeichen. Nicht deine PIN: Die Datei kann weitergegeben werden, deshalb schützt sie ein langes Passwort.</value>
+  </data>
+  <data name="ExportPasswordTooShort" xml:space="preserve">
+    <value>Das Export-Passwort braucht mindestens {0} Zeichen.</value>
+  </data>
+  <data name="ExportPasswordMismatch" xml:space="preserve">
+    <value>Die beiden Passwörter stimmen nicht überein.</value>
+  </data>
+  <data name="ExportIncludeBorgKeys" xml:space="preserve">
+    <value>Die borg-Schlüssel der Repositories mitnehmen (ein borg-Aufruf pro Repository; nötig für Repositories mit keyfile)</value>
+  </data>
+  <data name="ExportFetchingKey" xml:space="preserve">
+    <value>Hole den borg-Schlüssel von „{0}“ …</value>
+  </data>
+  <data name="ExportEncrypting" xml:space="preserve">
+    <value>Verschlüssele …</value>
+  </data>
+  <data name="ExportDone" xml:space="preserve">
+    <value>{0} Repositories, {1} SSH-Schlüssel, {2} Passphrasen und {3} borg-Schlüssel exportiert nach {4}.</value>
+  </data>
+  <data name="ExportStart" xml:space="preserve">
+    <value>Exportieren …</value>
+  </data>
+  <data name="TransferBorgKeyMissing" xml:space="preserve">
+    <value>borg hat keinen Schlüssel geschrieben.</value>
+  </data>
+  <data name="TransferBorgKeyFailed" xml:space="preserve">
+    <value>borg-Schlüssel von „{0}“ nicht enthalten: {1}</value>
+  </data>
+  <data name="TransferProviderMissing" xml:space="preserve">
+    <value>„{0}“ braucht das Plugin „{1}“, das hier nicht installiert ist.</value>
+  </data>
+  <data name="TransferKeyfileFailed" xml:space="preserve">
+    <value>borg-Schlüssel von „{0}“ konnte nicht abgelegt werden: {1}</value>
+  </data>
+  <data name="ImportTitle" xml:space="preserve">
+    <value>Einstellungen importieren</value>
+  </data>
+  <data name="ImportPasswordTitle" xml:space="preserve">
+    <value>Export-Passwort</value>
+  </data>
+  <data name="ImportPasswordPrompt" xml:space="preserve">
+    <value>Passwort des Exports „{0}“:</value>
+  </data>
+  <data name="ImportPasswordWrong" xml:space="preserve">
+    <value>Falsches Passwort (oder die Datei wurde verändert).</value>
+  </data>
+  <data name="ImportUnreadable" xml:space="preserve">
+    <value>Die Datei lässt sich nicht importieren: {0}</value>
+  </data>
+  <data name="ImportSource" xml:space="preserve">
+    <value>Export von {0} vom {1} (BorgStudio {2})</value>
+  </data>
+  <data name="ImportModeMerge" xml:space="preserve">
+    <value>Zusammenführen: Neues ergänzen, Vorhandenes behalten</value>
+  </data>
+  <data name="ImportModeReplace" xml:space="preserve">
+    <value>Ersetzen: Der Export ersetzt alle Repositories, Backup-Jobs, Schlüssel, bekannten Server und Einstellungen</value>
+  </data>
+  <data name="ImportConflictHint" xml:space="preserve">
+    <value>Einige Einträge gibt es hier schon. Beim Zusammenführen bei „ersetzen“ ein Häkchen setzen, wo der Export gewinnen soll.</value>
+  </data>
+  <data name="ImportKindRepository" xml:space="preserve">
+    <value>Repository</value>
+  </data>
+  <data name="ImportKindKey" xml:space="preserve">
+    <value>SSH-Schlüssel</value>
+  </data>
+  <data name="ImportStatusNew" xml:space="preserve">
+    <value>neu</value>
+  </data>
+  <data name="ImportStatusExists" xml:space="preserve">
+    <value>vorhanden</value>
+  </data>
+  <data name="ImportReplaceItem" xml:space="preserve">
+    <value>ersetzen</value>
+  </data>
+  <data name="ImportProviderMissing" xml:space="preserve">
+    <value>Braucht das Plugin „{0}“, das hier nicht installiert ist.</value>
+  </data>
+  <data name="ImportReplaceTitle" xml:space="preserve">
+    <value>Alles ersetzen?</value>
+  </data>
+  <data name="ImportReplaceWarning" xml:space="preserve">
+    <value>Alle Repositories und SSH-Schlüssel hier, ihre gespeicherten Passphrasen, die bekannten Server und die Einstellungen werden durch den Export ersetzt. Was nicht im Export ist, ist danach weg.</value>
+  </data>
+  <data name="ImportReplaceConfirm" xml:space="preserve">
+    <value>Ersetzen</value>
+  </data>
+  <data name="ImportDone" xml:space="preserve">
+    <value>{0} Repositories, {1} SSH-Schlüssel und {2} Passphrasen importiert.</value>
+  </data>
+  <data name="ImportStart" xml:space="preserve">
+    <value>Importieren</value>
+  </data>
+  <data name="TabOverview" xml:space="preserve">
+    <value>Übersicht</value>
+  </data>
+  <data name="TabJobs" xml:space="preserve">
+    <value>Backup-Jobs</value>
+  </data>
+  <data name="JobRun" xml:space="preserve">
+    <value>Jetzt sichern</value>
+  </data>
+  <data name="JobNew" xml:space="preserve">
+    <value>Neuer Job …</value>
+  </data>
+  <data name="JobsEmpty" xml:space="preserve">
+    <value>Noch keine Backup-Jobs. Ein Job legt fest, welche Ordner in dieses Repository gesichert werden – leg einen mit „Neuer Job …“ an.</value>
+  </data>
+  <data name="JobNeverRun" xml:space="preserve">
+    <value>Noch nicht gesichert</value>
+  </data>
+  <data name="JobLastRun" xml:space="preserve">
+    <value>Zuletzt: {0} · {1} · {2} gelesen, {3} neu</value>
+  </data>
+  <data name="JobDeleteTitle" xml:space="preserve">
+    <value>Job löschen</value>
+  </data>
+  <data name="JobDeleteMessage" xml:space="preserve">
+    <value>Den Job „{0}“ löschen? Seine Archive im Repository bleiben erhalten.</value>
+  </data>
+  <data name="RemoveJobsHint" xml:space="preserve">
+    <value>Seine Backup-Jobs werden ebenfalls gelöscht.</value>
+  </data>
+  <data name="OutcomeSucceeded" xml:space="preserve">
+    <value>Erfolgreich</value>
+  </data>
+  <data name="OutcomeWarnings" xml:space="preserve">
+    <value>Mit Warnungen beendet</value>
+  </data>
+  <data name="OutcomeCancelled" xml:space="preserve">
+    <value>Abgebrochen</value>
+  </data>
+  <data name="OutcomeFailed" xml:space="preserve">
+    <value>Fehlgeschlagen</value>
+  </data>
+  <data name="BackupRunning" xml:space="preserve">
+    <value>Sichert …</value>
+  </data>
+  <data name="BackupCancelling" xml:space="preserve">
+    <value>Wird abgebrochen – borg speichert einen Zwischenstand …</value>
+  </data>
+  <data name="BackupLabelProcessed" xml:space="preserve">
+    <value>Verarbeitet</value>
+  </data>
+  <data name="BackupLabelUpload" xml:space="preserve">
+    <value>Upload</value>
+  </data>
+  <data name="BackupLabelElapsed" xml:space="preserve">
+    <value>Laufzeit</value>
+  </data>
+  <data name="BackupLabelRemaining" xml:space="preserve">
+    <value>Restdauer</value>
+  </data>
+  <data name="BackupLabelCurrent" xml:space="preserve">
+    <value>Aktuelle Datei</value>
+  </data>
+  <data name="BackupProcessed" xml:space="preserve">
+    <value>{0} · {1:N0} Dateien</value>
+  </data>
+  <data name="BackupProcessedOf" xml:space="preserve">
+    <value>{0} von ca. {1} · {2:N0} Dateien</value>
+  </data>
+  <data name="BackupUpload" xml:space="preserve">
+    <value>{0} (neue Daten bisher: {1})</value>
+  </data>
+  <data name="BackupRemaining" xml:space="preserve">
+    <value>ca. {0}</value>
+  </data>
+  <data name="BackupRemainingCalculating" xml:space="preserve">
+    <value>wird berechnet …</value>
+  </data>
+  <data name="BackupRemainingUnknown" xml:space="preserve">
+    <value>noch unbekannt (die Größe der Quellen wird ermittelt)</value>
+  </data>
+  <data name="BackupResult" xml:space="preserve">
+    <value>{0} gelesen, {1} komprimiert, {2} neu im Repository · {3:N0} Dateien · {4} · Archiv {5}</value>
+  </data>
+  <data name="BackupCancelledText" xml:space="preserve">
+    <value>Abgebrochen. borg hat das bisher Gesicherte als Zwischenstand behalten; der nächste Lauf macht dort weiter.</value>
+  </data>
+  <data name="BackupMoreWarnings" xml:space="preserve">
+    <value>… und {0:N0} weitere</value>
+  </data>
+  <data name="BackupRunningCloseTitle" xml:space="preserve">
+    <value>Backup läuft</value>
+  </data>
+  <data name="BackupRunningCloseMessage" xml:space="preserve">
+    <value>Es läuft noch ein Backup. Abbrechen und beenden? borg behält das bisher Gesicherte als Zwischenstand.</value>
+  </data>
+  <data name="BackupRunningCloseConfirm" xml:space="preserve">
+    <value>Abbrechen und beenden</value>
+  </data>
+  <data name="JobEditorTitleNew" xml:space="preserve">
+    <value>Neuer Backup-Job</value>
+  </data>
+  <data name="JobEditorTitleEdit" xml:space="preserve">
+    <value>Backup-Job bearbeiten</value>
+  </data>
+  <data name="JobEditorRepository" xml:space="preserve">
+    <value>Sichert in „{0}“</value>
+  </data>
+  <data name="JobEditorNameHint" xml:space="preserve">
+    <value>Auch der Anfang der Archivnamen, z. B. „Dokumente-&lt;Rechner&gt;-&lt;Datum&gt;“.</value>
+  </data>
+  <data name="JobEditorSources" xml:space="preserve">
+    <value>Zu sichernde Ordner</value>
+  </data>
+  <data name="JobEditorAddSource" xml:space="preserve">
+    <value>Ordner hinzufügen …</value>
+  </data>
+  <data name="JobEditorExclusions" xml:space="preserve">
+    <value>Weglassen</value>
+  </data>
+  <data name="JobEditorCachesAndTemp" xml:space="preserve">
+    <value>Caches und temporäre Dateien (Temp, Browser-Cache, ~/.cache)</value>
+  </data>
+  <data name="JobEditorDevelopmentFolders" xml:space="preserve">
+    <value>Build-Ausgaben und Abhängigkeiten von Software-Projekten (node_modules, bin/Debug, obj, .venv)</value>
+  </data>
+  <data name="JobEditorRecycleBin" xml:space="preserve">
+    <value>Papierkörbe</value>
+  </data>
+  <data name="JobEditorCacheDirTag" xml:space="preserve">
+    <value>Als Cache markierte Ordner (CACHEDIR.TAG)</value>
+  </data>
+  <data name="JobEditorExtensions" xml:space="preserve">
+    <value>Dateiendungen (durch Kommas getrennt)</value>
+  </data>
+  <data name="JobEditorExcludedFolders" xml:space="preserve">
+    <value>Ordner</value>
+  </data>
+  <data name="JobEditorAddExcludedFolder" xml:space="preserve">
+    <value>Ordner weglassen …</value>
+  </data>
+  <data name="JobEditorCompression" xml:space="preserve">
+    <value>Kompression</value>
+  </data>
+  <data name="JobEditorPatterns" xml:space="preserve">
+    <value>Weitere Muster in borg-Syntax, eins pro Zeile (z. B. sh:**/*.bak – siehe „borg help patterns“)</value>
+  </data>
+  <data name="JobEditorPreview" xml:space="preserve">
+    <value>Das bekommt borg:</value>
+  </data>
+  <data name="JobEditorNameRequired" xml:space="preserve">
+    <value>Bitte gib dem Job einen Namen.</value>
+  </data>
+  <data name="JobEditorSourceRequired" xml:space="preserve">
+    <value>Bitte mindestens einen zu sichernden Ordner hinzufügen.</value>
+  </data>
+  <data name="JobEditorSourceUnreachable" xml:space="preserve">
+    <value>borg läuft in WSL und kann „{0}“ nicht erreichen (Netzlaufwerke werden nicht unterstützt).</value>
+  </data>
+  <data name="JobEditorSourceMissing" xml:space="preserve">
+    <value>„{0}“ existiert nicht (mehr).</value>
+  </data>
+  <data name="JobEditorSourceExcluded" xml:space="preserve">
+    <value>„{0}“ liegt in etwas, das unten weggelassen wird – davon würde nichts gesichert.</value>
+  </data>
+  <data name="CompressionZstd3" xml:space="preserve">
+    <value>zstd, Stufe 3 (empfohlen)</value>
+  </data>
+  <data name="CompressionLz4" xml:space="preserve">
+    <value>lz4 (am schnellsten)</value>
+  </data>
+  <data name="CompressionZstd9" xml:space="preserve">
+    <value>zstd, Stufe 9 (kleiner, langsamer)</value>
+  </data>
+  <data name="CompressionNone" xml:space="preserve">
+    <value>keine</value>
+  </data>
+  <data name="ImportKindJob" xml:space="preserve">
+    <value>Backup-Job</value>
+  </data>
+  <data name="JobLastRunShort" xml:space="preserve">
+    <value>Zuletzt: {0} · {1}</value>
+  </data>
+  <data name="TabArchives" xml:space="preserve">
+    <value>Archive</value>
+  </data>
+  <data name="ArchivesRefresh" xml:space="preserve">
+    <value>Aktualisieren</value>
+  </data>
+  <data name="ArchivesLoadMore" xml:space="preserve">
+    <value>Weitere Details laden</value>
+  </data>
+  <data name="ArchivesLoading" xml:space="preserve">
+    <value>Lade die Archive …</value>
+  </data>
+  <data name="ArchivesLoadingDetails" xml:space="preserve">
+    <value>Lade Dauer und Größen der neuesten {0} Archive …</value>
+  </data>
+  <data name="ArchivesNone" xml:space="preserve">
+    <value>Noch keine Archive. Starte einen Backup-Job, um das erste anzulegen.</value>
+  </data>
+  <data name="ArchivesCount" xml:space="preserve">
+    <value>{0} Archive</value>
+  </data>
+  <data name="ArchivesCountWithDetails" xml:space="preserve">
+    <value>{0} Archive, Details für die neuesten {1}</value>
+  </data>
+  <data name="ArchiveColumnName" xml:space="preserve">
+    <value>Archiv</value>
+  </data>
+  <data name="ArchiveColumnTime" xml:space="preserve">
+    <value>Erstellt</value>
+  </data>
+  <data name="ArchiveColumnDuration" xml:space="preserve">
+    <value>Dauer</value>
+  </data>
+  <data name="ArchiveColumnSize" xml:space="preserve">
+    <value>Größe</value>
+  </data>
+  <data name="ArchiveColumnSizeTip" xml:space="preserve">
+    <value>Größe der gesicherten Dateien</value>
+  </data>
+  <data name="ArchiveColumnNew" xml:space="preserve">
+    <value>Eigenanteil</value>
+  </data>
+  <data name="ArchiveColumnNewTip" xml:space="preserve">
+    <value>Platz, den nur dieses Archiv im Repository belegt (komprimiert und dedupliziert): so viel würde Löschen freigeben</value>
+  </data>
+  <data name="ArchiveColumnFiles" xml:space="preserve">
+    <value>Dateien</value>
+  </data>
+  <data name="ArchivesChecking" xml:space="preserve">
+    <value>{0} Archive – prüfe auf Änderungen …</value>
+  </data>
+  <data name="ArchivesRefreshTip" xml:space="preserve">
+    <value>borg erneut fragen, auch nach den Details der neuesten Archive</value>
+  </data>
+  <data name="JobEditorCleanup" xml:space="preserve">
+    <value>Aufräumen</value>
+  </data>
+  <data name="JobEditorCleanupEnabled" xml:space="preserve">
+    <value>Alte Archive dieses Jobs nach jedem Backup löschen (borg prune)</value>
+  </data>
+  <data name="JobEditorCleanupHint" xml:space="preserve">
+    <value>Pro Zeitraum bleibt jeweils das neueste Archiv, alles andere wird gelöscht. Danach gibt BorgStudio den Platz im Repository frei (borg compact). Betroffen sind nur Archive, die dieser Rechner für diesen Job angelegt hat. 0 = Regel nicht verwendet.</value>
+  </data>
+  <data name="JobEditorKeepDaily" xml:space="preserve">
+    <value>Täglich (Tage)</value>
+  </data>
+  <data name="JobEditorKeepWeekly" xml:space="preserve">
+    <value>Wöchentlich (Wochen)</value>
+  </data>
+  <data name="JobEditorKeepMonthly" xml:space="preserve">
+    <value>Monatlich (Monate)</value>
+  </data>
+  <data name="JobEditorKeepYearly" xml:space="preserve">
+    <value>Jährlich (Jahre)</value>
+  </data>
+  <data name="JobEditorKeepHourly" xml:space="preserve">
+    <value>Stündlich (Stunden)</value>
+  </data>
+  <data name="JobEditorKeepLast" xml:space="preserve">
+    <value>Neueste Archive</value>
+  </data>
+  <data name="JobEditorKeepWithin" xml:space="preserve">
+    <value>Alles aus den letzten (Tage)</value>
+  </data>
+  <data name="JobEditorRetentionRequired" xml:space="preserve">
+    <value>Für das Aufräumen mindestens eine Regel wählen (oder es ausschalten).</value>
+  </data>
+  <data name="JobRetention" xml:space="preserve">
+    <value>Behält: {0}</value>
+  </data>
+  <data name="JobRetentionNone" xml:space="preserve">
+    <value>Behält alle Archive</value>
+  </data>
+  <data name="RetentionWithin" xml:space="preserve">
+    <value>alles aus {0} Tagen</value>
+  </data>
+  <data name="RetentionLast" xml:space="preserve">
+    <value>die neuesten {0}</value>
+  </data>
+  <data name="RetentionHourly" xml:space="preserve">
+    <value>{0} stündlich</value>
+  </data>
+  <data name="RetentionDaily" xml:space="preserve">
+    <value>{0} täglich</value>
+  </data>
+  <data name="RetentionWeekly" xml:space="preserve">
+    <value>{0} wöchentlich</value>
+  </data>
+  <data name="RetentionMonthly" xml:space="preserve">
+    <value>{0} monatlich</value>
+  </data>
+  <data name="RetentionYearly" xml:space="preserve">
+    <value>{0} jährlich</value>
+  </data>
+  <data name="JobCleanUp" xml:space="preserve">
+    <value>Aufräumen…</value>
+  </data>
+  <data name="JobCleanUpTip" xml:space="preserve">
+    <value>Löscht alte Archive dieses Jobs nach seinen Regeln (mit Vorschau) und gibt danach den Platz frei</value>
+  </data>
+  <data name="CleanupTitle" xml:space="preserve">
+    <value>Aufräumen: {0}</value>
+  </data>
+  <data name="CleanupPreviewing" xml:space="preserve">
+    <value>Prüfe, welche Archive wegfallen…</value>
+  </data>
+  <data name="CleanupPruning" xml:space="preserve">
+    <value>Lösche alte Archive…</value>
+  </data>
+  <data name="CleanupCompacting" xml:space="preserve">
+    <value>Gebe Speicher frei…</value>
+  </data>
+  <data name="CleanupDone" xml:space="preserve">
+    <value>Fertig</value>
+  </data>
+  <data name="CleanupResult" xml:space="preserve">
+    <value>Aufräumen: {0} alte Archive gelöscht, {1} freigegeben.</value>
+  </data>
+  <data name="CleanupResultNoSize" xml:space="preserve">
+    <value>Aufräumen: {0} alte Archive gelöscht, Speicher freigegeben.</value>
+  </data>
+  <data name="CleanupNothing" xml:space="preserve">
+    <value>Aufräumen: nichts zu löschen.</value>
+  </data>
+  <data name="CleanupCancelled" xml:space="preserve">
+    <value>Aufräumen abgebrochen.</value>
+  </data>
+  <data name="CleanupFailed" xml:space="preserve">
+    <value>Aufräumen fehlgeschlagen: {0}</value>
+  </data>
+  <data name="CleanupCompactFailed" xml:space="preserve">
+    <value>Aufräumen: {0} alte Archive gelöscht, aber das Freigeben des Speichers schlug fehl: {1}</value>
+  </data>
+  <data name="CleanupCompactCancelled" xml:space="preserve">
+    <value>Aufräumen: {0} alte Archive gelöscht; das Freigeben des Speichers wurde abgebrochen.</value>
+  </data>
+  <data name="PruneTitle" xml:space="preserve">
+    <value>Alte Archive aufräumen</value>
+  </data>
+  <data name="PruneSummary" xml:space="preserve">
+    <value>Von {1} Archiven des Jobs „{0}“ werden {2} gelöscht, {3} bleiben.</value>
+  </data>
+  <data name="PruneRules" xml:space="preserve">
+    <value>Regeln: {0}</value>
+  </data>
+  <data name="PruneHint" xml:space="preserve">
+    <value>Gelöschte Archive lassen sich nicht wiederherstellen. Danach wird der Speicher freigegeben (borg compact).</value>
+  </data>
+  <data name="PruneConfirm" xml:space="preserve">
+    <value>{0} Archive löschen</value>
+  </data>
+  <data name="PruneDeleted" xml:space="preserve">
+    <value>Wird gelöscht</value>
+  </data>
+  <data name="PruneKept" xml:space="preserve">
+    <value>Bleibt ({0})</value>
+  </data>
+  <data name="PruneKeptCheckpoint" xml:space="preserve">
+    <value>Bleibt (Checkpoint)</value>
+  </data>
+  <data name="PruneRuleFormat" xml:space="preserve">
+    <value>{0} #{1}</value>
+  </data>
+  <data name="ArchiveColumnStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="RuleSecondly" xml:space="preserve">
+    <value>neueste</value>
+  </data>
+  <data name="RuleMinutely" xml:space="preserve">
+    <value>minütlich</value>
+  </data>
+  <data name="RuleHourly" xml:space="preserve">
+    <value>stündlich</value>
+  </data>
+  <data name="RuleDaily" xml:space="preserve">
+    <value>täglich</value>
+  </data>
+  <data name="RuleWeekly" xml:space="preserve">
+    <value>wöchentlich</value>
+  </data>
+  <data name="RuleMonthly" xml:space="preserve">
+    <value>monatlich</value>
+  </data>
+  <data name="RuleYearly" xml:space="preserve">
+    <value>jährlich</value>
+  </data>
+  <data name="RuleWithin" xml:space="preserve">
+    <value>Zeitraum</value>
+  </data>
+  <data name="FreeSpace" xml:space="preserve">
+    <value>Speicher freigeben</value>
+  </data>
+  <data name="FreeSpaceTip" xml:space="preserve">
+    <value>borg compact: gibt den Platz gelöschter Archive im Repository frei</value>
+  </data>
+  <data name="SpaceFreed" xml:space="preserve">
+    <value>Speicher freigegeben: {0}.</value>
+  </data>
+  <data name="SpaceFreedNoSize" xml:space="preserve">
+    <value>Speicher freigegeben.</value>
+  </data>
+  <data name="SpaceFreeCancelled" xml:space="preserve">
+    <value>Speicher freigeben abgebrochen.</value>
+  </data>
+  <data name="ProgressPercent" xml:space="preserve">
+    <value>{0} %</value>
+  </data>
+  <data name="ProgressElapsed" xml:space="preserve">
+    <value>{0} vergangen</value>
+  </data>
+  <data name="ProgressRemaining" xml:space="preserve">
+    <value>noch {0}</value>
+  </data>
+  <data name="ProgressRemainingAbout" xml:space="preserve">
+    <value>noch ca. {0}</value>
+  </data>
+  <data name="ProgressCalculating" xml:space="preserve">
+    <value>Restzeit wird berechnet …</value>
+  </data>
+  <data name="ProgressOverdue" xml:space="preserve">
+    <value>dauert länger als beim letzten Mal</value>
+  </data>
+  <data name="ArchiveOpen" xml:space="preserve">
+    <value>Öffnen…</value>
+  </data>
+  <data name="ArchiveOpenTip" xml:space="preserve">
+    <value>Zeigt die Dateien im Archiv (geht auch per Doppelklick)</value>
+  </data>
+  <data name="BrowserTitle" xml:space="preserve">
+    <value>Archiv {0}</value>
+  </data>
+  <data name="BrowserCreated" xml:space="preserve">
+    <value>Erstellt {0}</value>
+  </data>
+  <data name="BrowserCreatedByJob" xml:space="preserve">
+    <value>Erstellt {0} · Job „{1}“</value>
+  </data>
+  <data name="BrowserLoading" xml:space="preserve">
+    <value>Dateiliste wird von borg gelesen …</value>
+  </data>
+  <data name="BrowserEntriesOf" xml:space="preserve">
+    <value>{0:N0} von ~{1:N0} Einträgen</value>
+  </data>
+  <data name="BrowserEntriesRead" xml:space="preserve">
+    <value>{0:N0} Einträge gelesen</value>
+  </data>
+  <data name="BrowserSummary" xml:space="preserve">
+    <value>{0:N0} Dateien in {1:N0} Ordnern · {2}</value>
+  </data>
+  <data name="BrowserSearchPlaceholder" xml:space="preserve">
+    <value>Im ganzen Archiv suchen, z. B. rechnung oder *.pdf</value>
+  </data>
+  <data name="BrowserSearch" xml:space="preserve">
+    <value>Suchen</value>
+  </data>
+  <data name="BrowserClearSearch" xml:space="preserve">
+    <value>Zurück zum Ordner</value>
+  </data>
+  <data name="BrowserSearchResults" xml:space="preserve">
+    <value>{0:N0} Treffer für „{1}“</value>
+  </data>
+  <data name="BrowserSearchTooMany" xml:space="preserve">
+    <value>Mehr als {0:N0} Treffer – nur die ersten werden gezeigt; Suche eingrenzen.</value>
+  </data>
+  <data name="BrowserSearchNone" xml:space="preserve">
+    <value>Keine Treffer für „{0}“.</value>
+  </data>
+  <data name="BrowserUp" xml:space="preserve">
+    <value>Nach oben</value>
+  </data>
+  <data name="BrowserSelection" xml:space="preserve">
+    <value>{0:N0} ausgewählt · {1}</value>
+  </data>
+  <data name="BrowserSelectionNone" xml:space="preserve">
+    <value>Nichts ausgewählt</value>
+  </data>
+  <data name="BrowserClearSelection" xml:space="preserve">
+    <value>Auswahl aufheben</value>
+  </data>
+  <data name="BrowserColumnModified" xml:space="preserve">
+    <value>Geändert</value>
+  </data>
+  <data name="BrowserColumnFolder" xml:space="preserve">
+    <value>Ordner</value>
+  </data>
+  <data name="BrowserEmptyFolder" xml:space="preserve">
+    <value>Dieser Ordner ist leer.</value>
+  </data>
+  <data name="BrowserFolderFiles" xml:space="preserve">
+    <value>{0:N0} Dateien</value>
+  </data>
+  <data name="BrowserLoadFailed" xml:space="preserve">
+    <value>Die Dateiliste konnte nicht gelesen werden: {0}</value>
+  </data>
+  <data name="BrowserLoadCancelled" xml:space="preserve">
+    <value>Lesen der Dateiliste abgebrochen.</value>
+  </data>
+  <data name="BrowserRestoreSelection" xml:space="preserve">
+    <value>Auswahl wiederherstellen…</value>
+  </data>
+  <data name="BrowserRestoreAll" xml:space="preserve">
+    <value>Ganzes Archiv wiederherstellen…</value>
+  </data>
+  <data name="RestoreTitle" xml:space="preserve">
+    <value>Wiederherstellen</value>
+  </data>
+  <data name="RestoreWhatSelection" xml:space="preserve">
+    <value>{0:N0} ausgewählte Elemente aus „{1}“ · {2}</value>
+  </data>
+  <data name="RestoreWhatAll" xml:space="preserve">
+    <value>Das ganze Archiv „{0}“ · {1}</value>
+  </data>
+  <data name="RestoreTarget" xml:space="preserve">
+    <value>Wohin</value>
+  </data>
+  <data name="RestoreToFolder" xml:space="preserve">
+    <value>In einen Ordner</value>
+  </data>
+  <data name="RestoreToOriginal" xml:space="preserve">
+    <value>An den Originalort (überschreibt, was dort liegt)</value>
+  </data>
+  <data name="RestoreOriginalUnavailableWsl" xml:space="preserve">
+    <value>Für diese Auswahl nicht möglich: Mit borg in WSL lassen sich nur Windows-Laufwerke zurückschreiben.</value>
+  </data>
+  <data name="RestoreOriginalUnavailableNative" xml:space="preserve">
+    <value>Mit einem nativen borg unter Windows nicht möglich.</value>
+  </data>
+  <data name="RestorePickFolder" xml:space="preserve">
+    <value>Ordner wählen …</value>
+  </data>
+  <data name="RestoreFolderNone" xml:space="preserve">
+    <value>Kein Ordner gewählt</value>
+  </data>
+  <data name="RestoreStructure" xml:space="preserve">
+    <value>Struktur</value>
+  </data>
+  <data name="RestoreDirect" xml:space="preserve">
+    <value>Direkt in den Ordner</value>
+  </data>
+  <data name="RestoreFullPath" xml:space="preserve">
+    <value>Mit vollem Pfad wie im Archiv</value>
+  </data>
+  <data name="RestoreExample" xml:space="preserve">
+    <value>Beispiel: {0}</value>
+  </data>
+  <data name="RestoreStart" xml:space="preserve">
+    <value>Wiederherstellen</value>
+  </data>
+  <data name="RestoreFolderRequired" xml:space="preserve">
+    <value>Bitte einen Zielordner wählen.</value>
+  </data>
+  <data name="RestoreFolderUnreachable" xml:space="preserve">
+    <value>borg in WSL erreicht diesen Ordner nicht (Netzwerkpfade gehen nicht): {0}</value>
+  </data>
+  <data name="RestoreFolderNotCreated" xml:space="preserve">
+    <value>Der Ordner ließ sich nicht anlegen: {0}</value>
+  </data>
+  <data name="RestoreChecking" xml:space="preserve">
+    <value>Prüfe, welche Dateien schon vorhanden sind …</value>
+  </data>
+  <data name="RestoreCheckedFiles" xml:space="preserve">
+    <value>{0:N0} von {1:N0} Dateien geprüft</value>
+  </data>
+  <data name="RestoreOverwriteTitle" xml:space="preserve">
+    <value>Dateien überschreiben?</value>
+  </data>
+  <data name="RestoreOverwriteMessage" xml:space="preserve">
+    <value>{0:N0} Dateien gibt es schon; sie werden überschrieben – {1:N0} davon wurden nach dem Backup geändert.</value>
+  </data>
+  <data name="RestoreOverwriteMore" xml:space="preserve">
+    <value>… und {0:N0} weitere</value>
+  </data>
+  <data name="RestoreOverwriteConfirm" xml:space="preserve">
+    <value>Überschreiben</value>
+  </data>
+  <data name="RestoreRunning" xml:space="preserve">
+    <value>Stelle wieder her …</value>
+  </data>
+  <data name="RestoreRunningDrive" xml:space="preserve">
+    <value>Stelle auf {0} wieder her ({1} von {2}) …</value>
+  </data>
+  <data name="RestorePreparing" xml:space="preserve">
+    <value>borg berechnet die Größe (liest dafür die Dateiliste des Archivs) …</value>
+  </data>
+  <data name="RestoreDone" xml:space="preserve">
+    <value>Wiederhergestellt: {0} nach {1}.</value>
+  </data>
+  <data name="RestoreDoneOriginal" xml:space="preserve">
+    <value>Wiederhergestellt: {0} am Originalort.</value>
+  </data>
+  <data name="RestoreDoneWarnings" xml:space="preserve">
+    <value>Einige Dateien ließen sich nicht schreiben:</value>
+  </data>
+  <data name="RestoreCancelled" xml:space="preserve">
+    <value>Abgebrochen. Was schon wiederhergestellt war, bleibt.</value>
+  </data>
+  <data name="RestoreFailed" xml:space="preserve">
+    <value>Wiederherstellen fehlgeschlagen: {0}</value>
+  </data>
+  <data name="RestoreOpenFolder" xml:space="preserve">
+    <value>Ordner öffnen</value>
+  </data>
+  <data name="ArchivesSearch" xml:space="preserve">
+    <value>In allen Archiven suchen…</value>
+  </data>
+  <data name="ArchivesSearchTip" xml:space="preserve">
+    <value>Findet Dateien und Ordner nach Namen in allen Archiven dieses Repositorys und zeigt ihre Versionen</value>
+  </data>
+  <data name="BrowserVersions" xml:space="preserve">
+    <value>Versionen…</value>
+  </data>
+  <data name="BrowserVersionsTip" xml:space="preserve">
+    <value>Die ausgewählte Datei bzw. den Ordner in allen Archiven des Repositorys: wann sie sich geändert hat, und jede Version wiederherstellen</value>
+  </data>
+  <data name="SearchTitle" xml:space="preserve">
+    <value>In allen Archiven suchen – {0}</value>
+  </data>
+  <data name="SearchHeading" xml:space="preserve">
+    <value>In allen Archiven suchen</value>
+  </data>
+  <data name="SearchScopeAll" xml:space="preserve">
+    <value>{0:N0} Archive</value>
+  </data>
+  <data name="SearchScope" xml:space="preserve">
+    <value>{0:N0} Archive – von {1:N0} wurden die Dateilisten schon gelesen; die übrigen liest borg beim Suchen einmal (danach bleiben sie gespeichert)</value>
+  </data>
+  <data name="SearchPlaceholder" xml:space="preserve">
+    <value>Name oder ein Teil davon, z. B. rechnung oder *.pdf</value>
+  </data>
+  <data name="SearchRunning" xml:space="preserve">
+    <value>Suche nach „{0}“ …</value>
+  </data>
+  <data name="SearchResults" xml:space="preserve">
+    <value>{0:N0} Treffer für „{1}“ in {2:N0} Archiven</value>
+  </data>
+  <data name="SearchNone" xml:space="preserve">
+    <value>Nichts mit „{0}“ im Namen in {1:N0} Archiven.</value>
+  </data>
+  <data name="SearchInArchives" xml:space="preserve">
+    <value>{0:N0} von {1:N0}</value>
+  </data>
+  <data name="SearchColumnVersions" xml:space="preserve">
+    <value>Versionen</value>
+  </data>
+  <data name="SearchColumnArchives" xml:space="preserve">
+    <value>In Archiven</value>
+  </data>
+  <data name="SearchColumnLastSeen" xml:space="preserve">
+    <value>Zuletzt gesichert</value>
+  </data>
+  <data name="SearchColumnLastSeenTip" xml:space="preserve">
+    <value>Das neueste Archiv, das sie enthält</value>
+  </data>
+  <data name="SearchShowVersions" xml:space="preserve">
+    <value>Versionen…</value>
+  </data>
+  <data name="SearchHint" xml:space="preserve">
+    <value>Doppelklick auf einen Treffer zeigt seine Versionen; dort lässt er sich wiederherstellen.</value>
+  </data>
+  <data name="ScanArchiveOf" xml:space="preserve">
+    <value>Archiv {0:N0} von {1:N0}: {2}</value>
+  </data>
+  <data name="ScanSkipped" xml:space="preserve">
+    <value>{0:N0} Archive wurden nicht durchsucht: Ihre Dateilisten wurden noch nicht gelesen.</value>
+  </data>
+  <data name="ScanSkippedNoAccess" xml:space="preserve">
+    <value>{0:N0} Archive wurden nicht durchsucht: Ihre Dateilisten wurden noch nicht gelesen, und borg braucht dafür die Passphrase.</value>
+  </data>
+  <data name="ScanReadMissing" xml:space="preserve">
+    <value>Jetzt lesen</value>
+  </data>
+  <data name="ScanReadTitle" xml:space="preserve">
+    <value>Dateilisten lesen?</value>
+  </data>
+  <data name="ScanReadMessage" xml:space="preserve">
+    <value>{0:N0} von {1:N0} Archiven wurden noch nie geöffnet. Um sie zu durchsuchen, muss borg ihre Dateilisten einmal lesen – danach bleiben sie gespeichert und die Suche geht schnell.</value>
+  </data>
+  <data name="ScanReadEstimate" xml:space="preserve">
+    <value>Das dauert etwa {0}.</value>
+  </data>
+  <data name="ScanReadEstimateUnknown" xml:space="preserve">
+    <value>Wie lange das dauert, ist noch nicht bekannt (es hängt von der Anzahl der Dateien ab).</value>
+  </data>
+  <data name="ScanReadConfirm" xml:space="preserve">
+    <value>Lesen und suchen</value>
+  </data>
+  <data name="ScanReadOnlyCached" xml:space="preserve">
+    <value>Nur die übrigen</value>
+  </data>
+  <data name="ScanReadFailed" xml:space="preserve">
+    <value>Archiv {0} konnte nicht gelesen werden: {1}</value>
+  </data>
+  <data name="ScanCancelled" xml:space="preserve">
+    <value>Abgebrochen nach {0:N0} von {1:N0} Archiven</value>
+  </data>
+  <data name="VersionsTitle" xml:space="preserve">
+    <value>Versionen von {0}</value>
+  </data>
+  <data name="VersionsLoading" xml:space="preserve">
+    <value>Durchsuche die Archive …</value>
+  </data>
+  <data name="VersionsSummary" xml:space="preserve">
+    <value>{0:N0} Versionen · in {1:N0} von {2:N0} Archiven</value>
+  </data>
+  <data name="VersionsMissing" xml:space="preserve">
+    <value>nicht in diesen Archiven</value>
+  </data>
+  <data name="VersionsNewest" xml:space="preserve">
+    <value>neueste</value>
+  </data>
+  <data name="VersionsArchiveOne" xml:space="preserve">
+    <value>1 Archiv</value>
+  </data>
+  <data name="VersionsArchives" xml:space="preserve">
+    <value>{0:N0} Archive</value>
+  </data>
+  <data name="VersionsColumnArchives" xml:space="preserve">
+    <value>Archive</value>
+  </data>
+  <data name="VersionsColumnPeriod" xml:space="preserve">
+    <value>Gesichert</value>
+  </data>
+  <data name="VersionsFolderSize" xml:space="preserve">
+    <value>{0} · {1:N0} Dateien</value>
+  </data>
+  <data name="VersionsFrom" xml:space="preserve">
+    <value>Wird aus Archiv {0} wiederhergestellt</value>
+  </data>
+  <data name="VersionsHint" xml:space="preserve">
+    <value>Eine Zeile pro Änderung – Archive, in denen sie gleich blieb, sind zusammengefasst.</value>
+  </data>
+  <data name="VersionsRestore" xml:space="preserve">
+    <value>Diese Version wiederherstellen…</value>
+  </data>
+  <data name="VersionsNotFound" xml:space="preserve">
+    <value>Sie ist nicht mehr in Archiv {0}.</value>
+  </data>
+  <data name="ScanSkippedOne" xml:space="preserve">
+    <value>1 Archiv wurde nicht durchsucht: Seine Dateiliste wurde noch nicht gelesen.</value>
+  </data>
+  <data name="ScanSkippedNoAccessOne" xml:space="preserve">
+    <value>1 Archiv wurde nicht durchsucht: Seine Dateiliste wurde noch nicht gelesen, und borg braucht dafür die Passphrase.</value>
+  </data>
+  <data name="VersionsSummaryOne" xml:space="preserve">
+    <value>1 Version · in {1:N0} von {2:N0} Archiven</value>
+  </data>
+  <data name="SearchResultOne" xml:space="preserve">
+    <value>1 Treffer für „{1}“ in {2:N0} Archiven</value>
+  </data>
+  <data name="ArchiveMount" xml:space="preserve">
+    <value>Einhängen</value>
+  </data>
+  <data name="ArchiveMountTip" xml:space="preserve">
+    <value>Hängt das ausgewählte Archiv als schreibgeschützten Ordner ein und öffnet ihn im Dateimanager</value>
+  </data>
+  <data name="ArchivesMountAll" xml:space="preserve">
+    <value>Alle Archive einhängen</value>
+  </data>
+  <data name="ArchivesMountAllTip" xml:space="preserve">
+    <value>Hängt das ganze Repository als schreibgeschützten Ordner ein, mit einem Ordner pro Archiv. borg liest die Dateiliste eines Archivs, wenn sein Ordner zum ersten Mal geöffnet wird.</value>
+  </data>
+  <data name="MountAllFolder" xml:space="preserve">
+    <value>Alle Archive</value>
+  </data>
+  <data name="MountAllTitle" xml:space="preserve">
+    <value>{0} · alle Archive</value>
+  </data>
+  <data name="Mounting" xml:space="preserve">
+    <value>„{0}“ wird eingehängt …</value>
+  </data>
+  <data name="MountFailed" xml:space="preserve">
+    <value>Einhängen fehlgeschlagen: {0}</value>
+  </data>
+  <data name="MountSetupTitle" xml:space="preserve">
+    <value>Windows eingehängte Archive öffnen lassen</value>
+  </data>
+  <data name="MountSetupMessage" xml:space="preserve">
+    <value>borg läuft in WSL. Der Windows-Explorer kann einen dort eingehängten Ordner nur öffnen, wenn FUSE anderen Benutzern den Zugriff erlaubt. Dazu muss einmalig die Zeile „user_allow_other“ in /etc/fuse.conf in WSL stehen.
+
+BorgStudio kann das jetzt eintragen (als root in WSL, ohne Passwort). Das entspricht diesem Befehl:
+
+{0}</value>
+  </data>
+  <data name="MountSetupConfirm" xml:space="preserve">
+    <value>Einrichten</value>
+  </data>
+  <data name="MountSetupFailed" xml:space="preserve">
+    <value>BorgStudio konnte /etc/fuse.conf nicht ändern. Bitte führe diesen Befehl in einem WSL-Terminal aus (er ist in der Zwischenablage) und hänge danach erneut ein:
+
+{0}</value>
+  </data>
+  <data name="MountsStatusOne" xml:space="preserve">
+    <value>1 Archiv eingehängt</value>
+  </data>
+  <data name="MountsStatus" xml:space="preserve">
+    <value>{0} Archive eingehängt</value>
+  </data>
+  <data name="MountsTip" xml:space="preserve">
+    <value>Eingehängte Archive: öffnen oder aushängen</value>
+  </data>
+  <data name="MountsHeader" xml:space="preserve">
+    <value>Eingehängte Archive</value>
+  </data>
+  <data name="MountOpen" xml:space="preserve">
+    <value>Öffnen</value>
+  </data>
+  <data name="MountUnmount" xml:space="preserve">
+    <value>Aushängen</value>
+  </data>
+  <data name="MountUnmountAll" xml:space="preserve">
+    <value>Alle aushängen</value>
+  </data>
+  <data name="MountsHint" xml:space="preserve">
+    <value>Beim Beenden von BorgStudio wird alles ausgehängt.</value>
+  </data>
+  <data name="MountBusy" xml:space="preserve">
+    <value>„{0}“ wird noch benutzt (ein Programm hat dort eine Datei oder einen Ordner geöffnet). Schließe es und versuche es erneut.</value>
+  </data>
+  <data name="MountEnded" xml:space="preserve">
+    <value>„{0}“ ist nicht mehr eingehängt: {1}</value>
+  </data>
+  <data name="MountEndedOutside" xml:space="preserve">
+    <value>Es wurde außerhalb von BorgStudio ausgehängt.</value>
+  </data>
+  <data name="MountedBlocksTitle" xml:space="preserve">
+    <value>Archive sind eingehängt</value>
+  </data>
+  <data name="MountedBlocksMessage" xml:space="preserve">
+    <value>Archive von „{0}“ sind eingehängt. Solange das so ist, kann borg das Repository nicht ändern. Aushängen und fortfahren?</value>
+  </data>
+  <data name="MountedBlocksConfirm" xml:space="preserve">
+    <value>Aushängen und fortfahren</value>
+  </data>
+  <data name="BorgErrorMountNotAllowed" xml:space="preserve">
+    <value>FUSE erlaubt anderen Benutzern keinen Zugriff auf den eingehängten Ordner („user_allow_other“ fehlt in /etc/fuse.conf).</value>
+  </data>
+  <data name="BorgErrorMountUnavailable" xml:space="preserve">
+    <value>borg kann hier keine Archive einhängen: Dafür braucht es FUSE (unter Windows: borg in WSL).</value>
+  </data>
+  <data name="MenuCheckForUpdates" xml:space="preserve">
+    <value>Nach Updates suchen …</value>
+  </data>
+  <data name="UpdateTitle" xml:space="preserve">
+    <value>Update</value>
+  </data>
+  <data name="UpdateChecking" xml:space="preserve">
+    <value>Suche nach einer neuen Version …</value>
+  </data>
+  <data name="UpdateAvailable" xml:space="preserve">
+    <value>BorgStudio {0} ist verfügbar.</value>
+  </data>
+  <data name="UpdateUpToDate" xml:space="preserve">
+    <value>BorgStudio {0} ist die neueste Version.</value>
+  </data>
+  <data name="UpdateNoRelease" xml:space="preserve">
+    <value>Es wurde noch keine Version veröffentlicht.</value>
+  </data>
+  <data name="UpdateInstalledVersion" xml:space="preserve">
+    <value>Installiert: {0}</value>
+  </data>
+  <data name="UpdateWhatsNew" xml:space="preserve">
+    <value>Neu in dieser Version</value>
+  </data>
+  <data name="UpdateInstall" xml:space="preserve">
+    <value>Jetzt aktualisieren</value>
+  </data>
+  <data name="UpdateDetails" xml:space="preserve">
+    <value>Details …</value>
+  </data>
+  <data name="UpdateLater" xml:space="preserve">
+    <value>Später</value>
+  </data>
+  <data name="UpdateOpenPage" xml:space="preserve">
+    <value>Release-Seite</value>
+  </data>
+  <data name="UpdateDownloading" xml:space="preserve">
+    <value>Lade BorgStudio {0} …</value>
+  </data>
+  <data name="UpdateReady" xml:space="preserve">
+    <value>BorgStudio {0} ist geladen und geprüft. BorgStudio wird geschlossen, installiert die neue Version und startet neu.</value>
+  </data>
+  <data name="UpdateRestart" xml:space="preserve">
+    <value>Neu starten und installieren</value>
+  </data>
+  <data name="UpdateCheckFailed" xml:space="preserve">
+    <value>Die Suche nach Updates ist fehlgeschlagen: {0}</value>
+  </data>
+  <data name="UpdateFailed" xml:space="preserve">
+    <value>Das Update ist fehlgeschlagen: {0}</value>
+  </data>
+  <data name="UpdateChecksumMismatch" xml:space="preserve">
+    <value>der Download ist beschädigt (die Prüfsumme stimmt nicht). Bitte erneut versuchen.</value>
+  </data>
+  <data name="UpdateChecksumMissing" xml:space="preserve">
+    <value>das Release enthält keine Prüfsumme für dieses Paket.</value>
+  </data>
+  <data name="UpdateUnexpectedPackage" xml:space="preserve">
+    <value>das Paket enthält BorgStudio nicht an der erwarteten Stelle.</value>
+  </data>
+  <data name="UpdateBlockedDevelopment" xml:space="preserve">
+    <value>Dies ist eine Entwicklungsversion; sie wird nicht automatisch aktualisiert.</value>
+  </data>
+  <data name="UpdateBlockedPlatform" xml:space="preserve">
+    <value>Für dieses System gibt es kein Paket. Bitte BorgStudio von der Release-Seite laden.</value>
+  </data>
+  <data name="UpdateBlockedPackage" xml:space="preserve">
+    <value>Dieses Release hat kein Paket für automatische Updates auf diesem System. Bitte von der Release-Seite laden.</value>
+  </data>
+  <data name="UpdateBlockedNotWritable" xml:space="preserve">
+    <value>BorgStudio darf seinen Ordner nicht ändern ({0}). Bitte die neue Version von der Release-Seite laden.</value>
+  </data>
+  <data name="UpdateInstalledNotice" xml:space="preserve">
+    <value>BorgStudio wurde auf {0} aktualisiert.</value>
+  </data>
+  <data name="UpdateFailedNotice" xml:space="preserve">
+    <value>Das Update auf {0} ist fehlgeschlagen, BorgStudio ist unverändert: {1}</value>
+  </data>
+  <data name="SettingsUpdatesHeader" xml:space="preserve">
+    <value>Updates</value>
+  </data>
+  <data name="SettingsVersion" xml:space="preserve">
+    <value>Installierte Version: {0}</value>
+  </data>
+  <data name="SettingsCheckForUpdates" xml:space="preserve">
+    <value>Beim Start und einmal täglich nach einer neuen Version suchen</value>
+  </data>
+  <data name="SettingsCheckNow" xml:space="preserve">
+    <value>Jetzt suchen …</value>
+  </data>
+</root>

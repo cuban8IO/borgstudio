@@ -9,6 +9,13 @@ on:
         description: Version baked into the binaries and file names
         required: true
         type: string
+      macos:
+        # macOS runners are scarce and often queue for a long time: build.yml skips the macOS packages,
+        # releases always build them.
+        description: Also build the macOS app bundles
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -22,8 +29,6 @@ jobs:
         include:
           - { rid: win-x64, os: windows-latest }
           - { rid: linux-x64, os: ubuntu-latest }
-          - { rid: osx-arm64, os: macos-latest }
-          - { rid: osx-x64, os: macos-latest }
     runs-on: ${{ matrix.os }}
     env:
       VERSION: ${{ inputs.version }}
@@ -33,9 +38,9 @@ jobs:
         shell: bash
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
 
@@ -57,23 +62,49 @@ jobs:
           chmod +x staging/BorgStudio/BorgStudio
           tar -czf "dist/BorgStudio-$VERSION-$RID.tar.gz" -C staging BorgStudio
 
-      - name: Package (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          app=staging/BorgStudio.app
-          mkdir -p dist "$app/Contents/MacOS" "$app/Contents/Resources"
-          cp -R publish/. "$app/Contents/MacOS/"
-          chmod +x "$app/Contents/MacOS/BorgStudio"
-          sed "s/@VERSION@/$VERSION/g" build/macos/Info.plist > "$app/Contents/Info.plist"
-          plutil -lint "$app/Contents/Info.plist"
-          # Ad-hoc signature (required on Apple Silicon). Not notarized: Gatekeeper still asks on first start.
-          codesign --force --sign - "$app"
-          codesign --verify --verbose "$app"
-          ditto -c -k --keepParent "$app" "dist/BorgStudio-$VERSION-$RID.zip"
-
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: package-${{ matrix.rid }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+
+  # Both macOS bundles (Apple Silicon and Intel) in one job, so a release needs only one macOS runner.
+  package-macos:
+    name: package (macOS)
+    if: inputs.macos
+    runs-on: macos-latest
+    env:
+      VERSION: ${{ inputs.version }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Publish and package
+        run: |
+          mkdir -p dist
+          for rid in osx-arm64 osx-x64; do
+            dotnet publish src/BorgStudio.App/BorgStudio.App.csproj -c Release -r "$rid" -p:Version="$VERSION" -o "publish/$rid"
+            app="staging/$rid/BorgStudio.app"
+            mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
+            cp -R "publish/$rid/." "$app/Contents/MacOS/"
+            chmod +x "$app/Contents/MacOS/BorgStudio"
+            sed "s/@VERSION@/$VERSION/g" build/macos/Info.plist > "$app/Contents/Info.plist"
+            cp build/macos/BorgStudio.icns "$app/Contents/Resources/"
+            plutil -lint "$app/Contents/Info.plist"
+            # Ad-hoc signature (required on Apple Silicon). Not notarized: Gatekeeper still asks on first start.
+            codesign --force --sign - "$app"
+            codesign --verify --verbose "$app"
+            ditto -c -k --keepParent "$app" "dist/BorgStudio-$VERSION-$rid.zip"
+          done
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: package-macos
           path: dist/*
           if-no-files-found: error
           retention-days: 7

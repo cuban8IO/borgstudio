@@ -1,7 +1,8 @@
 name: release
 
 # Every push to main is a release, and nothing else creates one:
-# tests -> next version (.github/scripts/next-release.sh) -> portable packages -> tag vX.Y.Z + GitHub release.
+# tests (Linux and macOS) -> next version (.github/scripts/next-release.sh) -> portable packages
+# -> tag vX.Y.Z + GitHub release.
 on:
   push:
     branches: [main]
@@ -24,11 +25,11 @@ jobs:
       notes: ${{ steps.next.outputs.notes }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # full history and tags for the version calculation
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
 
@@ -53,8 +54,36 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           echo "Releasing **v$version**" >> "$GITHUB_STEP_SUMMARY"
 
+  # The only place the tests run on macOS (build.yml skips macOS: its runners are often unavailable).
+  test-macos:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Build
+        run: dotnet build BorgStudio.slnx --configuration Release
+
+      # An unlocked keychain without auto-lock, so the keychain tests never wait for a password dialog.
+      - name: Prepare keychain
+        run: |
+          security create-keychain -p ci-only build.keychain
+          security list-keychains -d user -s build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p ci-only build.keychain
+          security set-keychain-settings build.keychain
+
+      - name: Test
+        env:
+          BORGSTUDIO_KEYCHAIN_TESTS: "1"
+        run: dotnet test BorgStudio.slnx --configuration Release --no-build
+
   package:
-    needs: prepare
+    needs: [prepare, test-macos]
     uses: ./.github/workflows/package.yml
     with:
       version: ${{ needs.prepare.outputs.version }}
@@ -70,11 +99,15 @@ jobs:
       GH_TOKEN: ${{ github.token }}
 
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: package-*
           path: dist
           merge-multiple: true
+
+      # The app's update checks every download against this list before installing it.
+      - name: Checksums
+        run: cd dist && sha256sum -- * > SHA256SUMS && cat SHA256SUMS
 
       - name: Create GitHub release
         run: |
@@ -91,6 +124,7 @@ jobs:
           | Linux (x64) | `…-linux-x64.tar.gz` |
 
           Portable builds with the .NET runtime included: unpack and start, no installation needed.
+          BorgStudio updates itself from here (Tools → Check for updates); `SHA256SUMS` lists the checksums of the files.
           [BorgBackup](https://www.borgbackup.org/) itself must be installed separately.
 
           **macOS:** the app is not notarized by Apple. If macOS refuses to open it, allow it under

@@ -1,0 +1,120 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:BorgStudio.App.ViewModels"
+        xmlns:res="using:BorgStudio.App.Resources"
+        x:Class="BorgStudio.App.Views.KeysWindow"
+        x:DataType="vm:KeysViewModel"
+        Title="{x:Static res:Strings.KeysTitle}"
+        Width="860" Height="560" MinWidth="640" MinHeight="420"
+        WindowStartupLocation="CenterOwner">
+
+    <Panel Margin="16">
+
+        <!-- No PIN yet: keys live in the vault. -->
+        <StackPanel IsVisible="{Binding NeedsPin}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    MaxWidth="420" Spacing="12">
+            <TextBlock Text="{x:Static res:Strings.KeysNeedPin}" TextWrapping="Wrap" TextAlignment="Center" />
+            <Button Content="{x:Static res:Strings.SettingsSetUpPin}" Command="{Binding SetUpPinCommand}" Classes="accent"
+                    HorizontalAlignment="Center" />
+        </StackPanel>
+
+        <DockPanel IsVisible="{Binding IsVaultOpen}">
+            <!-- New key / import / close -->
+            <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,240,Auto,Auto,*,Auto" Margin="0,12,0,0">
+                <TextBlock Text="{x:Static res:Strings.KeysNewName}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                <TextBox Grid.Column="1" Text="{Binding NewKeyName}" />
+                <Button Grid.Column="2" Content="{x:Static res:Strings.KeysGenerate}" Command="{Binding GenerateCommand}"
+                        Classes="accent" Margin="8,0,0,0" />
+                <Button Grid.Column="3" Content="{x:Static res:Strings.KeysImport}" Command="{Binding ImportCommand}" Margin="8,0,0,0" />
+                <Button Grid.Column="5" Content="{x:Static res:Strings.Close}" Click="Close_Click" IsCancel="True" />
+            </Grid>
+
+            <SelectableTextBlock DockPanel.Dock="Bottom" Text="{Binding Message}" IsVisible="{Binding HasMessage}"
+                                 TextWrapping="Wrap" Margin="0,10,0,0" Classes.error="{Binding MessageIsError}">
+                <SelectableTextBlock.Styles>
+                    <Style Selector="SelectableTextBlock">
+                        <Setter Property="Foreground" Value="{DynamicResource SuccessForeground}" />
+                    </Style>
+                    <Style Selector="SelectableTextBlock.error">
+                        <Setter Property="Foreground" Value="{DynamicResource ErrorForeground}" />
+                    </Style>
+                </SelectableTextBlock.Styles>
+            </SelectableTextBlock>
+
+            <Grid ColumnDefinitions="300,*">
+                <!-- Key list -->
+                <Panel Margin="0,0,12,0">
+                    <ListBox ItemsSource="{Binding Keys}" SelectedItem="{Binding SelectedKey}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:KeyItemViewModel">
+                                <StackPanel Spacing="2" Margin="2,4">
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Type}" FontSize="12" Opacity="0.7" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <TextBlock Text="{x:Static res:Strings.KeysEmpty}" IsVisible="{Binding HasNoKeys}" TextWrapping="Wrap"
+                               Opacity="0.7" Margin="16" VerticalAlignment="Center" TextAlignment="Center" />
+                </Panel>
+
+                <!-- Details of the selected key -->
+                <ScrollViewer Grid.Column="1" IsVisible="{Binding HasSelection}">
+                    <StackPanel Spacing="12" Margin="4,0,8,0">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="{x:Static res:Strings.EditorName}" />
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBox Text="{Binding EditName}" />
+                                <Button Grid.Column="1" Margin="8,0,0,0" Content="{x:Static res:Strings.KeysRename}"
+                                        Command="{Binding RenameCommand}" />
+                            </Grid>
+                        </StackPanel>
+
+                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto">
+                            <Grid.Styles>
+                                <Style Selector="TextBlock.label">
+                                    <Setter Property="Opacity" Value="0.7" />
+                                    <Setter Property="Margin" Value="0,0,16,8" />
+                                </Style>
+                                <Style Selector="SelectableTextBlock">
+                                    <Setter Property="Margin" Value="0,0,0,8" />
+                                    <Setter Property="TextWrapping" Value="Wrap" />
+                                </Style>
+                            </Grid.Styles>
+                            <TextBlock Classes="label" Text="{x:Static res:Strings.KeysType}" />
+                            <SelectableTextBlock Grid.Column="1" Text="{Binding SelectedKey.Type}" />
+                            <TextBlock Grid.Row="1" Classes="label" Text="{x:Static res:Strings.KeysFingerprint}" />
+                            <SelectableTextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedKey.Fingerprint}" />
+                            <TextBlock Grid.Row="2" Classes="label" Text="{x:Static res:Strings.KeysOrigin}" />
+                            <SelectableTextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedKey.OriginText}" />
+                            <TextBlock Grid.Row="3" Classes="label" Text="{x:Static res:Strings.KeysUsedBy}" />
+                            <SelectableTextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedKey.UsedByText}" />
+                        </Grid>
+
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="{x:Static res:Strings.KeysPublicKey}" Opacity="0.7" />
+                            <Border Classes="card" Padding="8">
+                                <SelectableTextBlock Text="{Binding SelectedKey.PublicKey}" TextWrapping="Wrap" FontSize="12"
+                                                     FontFamily="Cascadia Code, Consolas, Menlo, monospace" />
+                            </Border>
+                        </StackPanel>
+
+                        <WrapPanel>
+                            <WrapPanel.Styles>
+                                <Style Selector="Button">
+                                    <Setter Property="Margin" Value="0,0,8,8" />
+                                </Style>
+                            </WrapPanel.Styles>
+                            <Button Content="{x:Static res:Strings.KeysCopyPublicKey}" Command="{Binding CopyPublicKeyCommand}" />
+                            <Button Content="{x:Static res:Strings.KeysSavePrivate}" Command="{Binding SavePrivateKeyCommand}" />
+                            <Button Content="{x:Static res:Strings.Delete}" Command="{Binding DeleteCommand}" />
+                        </WrapPanel>
+                        <TextBlock Text="{x:Static res:Strings.KeysDeleteUsedHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap"
+                                   IsVisible="{Binding SelectedKey.IsUsed}" />
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </DockPanel>
+    </Panel>
+
+</Window>

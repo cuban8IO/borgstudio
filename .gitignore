@@ -264,6 +264,9 @@ Generated_Code/
 # because we have git ;-)
 _UpgradeReport_Files/
 Backup*/
+# ...but BorgStudio's own code about backups is real source.
+!src/**/Backups/
+!tests/**/Backups/
 UpgradeLog*.XML
 UpgradeLog*.htm
 ServiceFabricBackup/

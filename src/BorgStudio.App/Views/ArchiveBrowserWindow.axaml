@@ -1,0 +1,178 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:BorgStudio.App.ViewModels"
+        xmlns:views="using:BorgStudio.App.Views"
+        xmlns:res="using:BorgStudio.App.Resources"
+        x:Class="BorgStudio.App.Views.ArchiveBrowserWindow"
+        x:DataType="vm:ArchiveBrowserViewModel"
+        Title="{Binding Title}"
+        Width="1000" Height="680" MinWidth="640" MinHeight="420"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+    <Window.Resources>
+        <!-- Simple own shapes (no icon font needed). -->
+        <StreamGeometry x:Key="FolderIcon">M2,5 L9,5 L11,7 L22,7 L22,19 L2,19 Z</StreamGeometry>
+        <StreamGeometry x:Key="FileIcon">M5,2 L14,2 L19,7 L19,22 L5,22 Z M14,2 L14,7 L19,7</StreamGeometry>
+        <StreamGeometry x:Key="LinkIcon">M4,12 L10,12 M14,12 L20,12 M9,8 L13,12 L9,16 M15,8 L19,12 L15,16</StreamGeometry>
+    </Window.Resources>
+
+    <DockPanel Margin="16">
+
+        <!-- Archive, summary, search -->
+        <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,10">
+            <TextBlock Text="{Binding Archive.Name}" FontSize="18" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+            <TextBlock Text="{Binding Subtitle}" Opacity="0.75" />
+            <TextBlock Text="{Binding SummaryText}" Opacity="0.75" IsVisible="{Binding IsReady}" />
+        </StackPanel>
+
+        <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,10" IsVisible="{Binding IsReady}">
+            <TextBox Text="{Binding SearchText}" PlaceholderText="{x:Static res:Strings.BrowserSearchPlaceholder}">
+                <TextBox.KeyBindings>
+                    <KeyBinding Gesture="Enter" Command="{Binding SearchCommand}" />
+                    <KeyBinding Gesture="Escape" Command="{Binding ClearSearchCommand}" />
+                </TextBox.KeyBindings>
+            </TextBox>
+            <Button Grid.Column="1" Content="{x:Static res:Strings.BrowserSearch}" Command="{Binding SearchCommand}" Margin="8,0,0,0" />
+            <Button Grid.Column="2" Content="{x:Static res:Strings.BrowserClearSearch}" Command="{Binding ClearSearchCommand}"
+                    IsVisible="{Binding IsSearchResult}" Margin="8,0,0,0" />
+        </Grid>
+
+        <!-- Loading, errors -->
+        <Panel DockPanel.Dock="Top" IsVisible="{Binding IsLoading}" Margin="0,0,0,10">
+            <views:ProgressPanel DataContext="{Binding Progress}" />
+        </Panel>
+        <SelectableTextBlock DockPanel.Dock="Top" Text="{Binding Error}" IsVisible="{Binding HasError}" TextWrapping="Wrap"
+                             Foreground="{DynamicResource ErrorForeground}" Margin="0,0,0,10" />
+
+        <!-- Selection, restore, close -->
+        <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto,Auto,Auto,Auto" Margin="0,12,0,0">
+            <TextBlock Text="{Binding SelectionText}" VerticalAlignment="Center" Opacity="0.85" IsVisible="{Binding IsReady}"
+                       TextTrimming="CharacterEllipsis" />
+            <Button Grid.Column="1" Content="{x:Static res:Strings.BrowserClearSelection}" Command="{Binding ClearSelectionCommand}"
+                    IsVisible="{Binding IsReady}" Margin="8,0,0,0" />
+            <Button Grid.Column="2" Content="{x:Static res:Strings.BrowserRestoreAll}" Command="{Binding RestoreAllCommand}"
+                    IsVisible="{Binding IsReady}" Margin="8,0,0,0" />
+            <Button Grid.Column="3" Content="{x:Static res:Strings.BrowserRestoreSelection}" Command="{Binding RestoreSelectionCommand}"
+                    IsVisible="{Binding IsReady}" Classes="accent" Margin="8,0,0,0" />
+            <Button Grid.Column="4" Content="{x:Static res:Strings.Close}" Click="Close_Click" IsCancel="True" Margin="8,0,0,0" />
+        </Grid>
+
+        <Grid ColumnDefinitions="260,6,*" IsVisible="{Binding IsReady}">
+
+            <!-- Folder tree -->
+            <TreeView ItemsSource="{Binding Folders}" SelectedItem="{Binding SelectedFolder}">
+                <TreeView.Styles>
+                    <Style Selector="TreeViewItem" x:DataType="vm:FolderNodeViewModel">
+                        <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                    </Style>
+                </TreeView.Styles>
+                <TreeView.ItemTemplate>
+                    <TreeDataTemplate ItemsSource="{Binding Children}" x:DataType="vm:FolderNodeViewModel">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Data="{StaticResource FolderIcon}" Width="14" Height="14" Opacity="0.8" />
+                            <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </TreeDataTemplate>
+                </TreeView.ItemTemplate>
+            </TreeView>
+
+            <GridSplitter Grid.Column="1" Background="Transparent" ResizeDirection="Columns" />
+
+            <!-- Entries of the folder (or search results) -->
+            <DockPanel Grid.Column="2">
+                <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,6">
+                    <Button Content="{x:Static res:Strings.BrowserUp}" Command="{Binding UpCommand}" Margin="0,0,8,0" />
+                    <TextBlock Grid.Column="1" Text="{Binding CurrentPathText}" IsVisible="{Binding !IsSearchResult}"
+                               VerticalAlignment="Center" TextTrimming="LeadingCharacterEllipsis" ToolTip.Tip="{Binding CurrentPathText}" />
+                    <TextBlock Grid.Column="1" Text="{Binding SearchStatus}" IsVisible="{Binding IsSearchResult}"
+                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    <Button Grid.Column="2" Content="{x:Static res:Strings.BrowserVersions}" Command="{Binding ShowVersionsCommand}"
+                            ToolTip.Tip="{x:Static res:Strings.BrowserVersionsTip}" Margin="8,0,0,0" />
+                </Grid>
+
+                <ProgressBar DockPanel.Dock="Top" IsIndeterminate="True" IsVisible="{Binding IsSearching}" Margin="0,0,0,6" />
+
+                <!-- A table: columns can be resized and sorted (click the header). -->
+                <Panel>
+                    <DataGrid x:Name="EntryGrid" ItemsSource="{Binding Entries}" SelectedItem="{Binding SelectedEntry}"
+                              IsReadOnly="True" SelectionMode="Single"
+                              CanUserResizeColumns="True" CanUserSortColumns="True" CanUserReorderColumns="False"
+                              GridLinesVisibility="None" HeadersVisibility="Column" RowHeight="34"
+                              DoubleTapped="Entries_DoubleTapped">
+                        <DataGrid.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="{x:Static res:Strings.BrowserVersions}" Command="{Binding ShowVersionsCommand}" />
+                            </ContextMenu>
+                        </DataGrid.ContextMenu>
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Width="40" CanUserResize="False" CanUserSort="False">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:EntryViewModel">
+                                        <CheckBox IsChecked="{Binding IsSelected}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                  MinWidth="0" Padding="0" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="{x:Static res:Strings.EditorName}" Width="*" MinWidth="140" SortMemberPath="Name">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:EntryViewModel">
+                                        <Grid ColumnDefinitions="Auto,*" ToolTip.Tip="{Binding Tip}" Margin="4,0" VerticalAlignment="Center">
+                                            <Panel Width="16" Height="16" Margin="0,0,8,0">
+                                                <PathIcon Data="{StaticResource FolderIcon}" Width="16" Height="16" IsVisible="{Binding IsFolder}"
+                                                          Foreground="{DynamicResource BpGreenBrush}" />
+                                                <PathIcon Data="{StaticResource LinkIcon}" Width="16" Height="16" IsVisible="{Binding IsLink}" Opacity="0.7" />
+                                                <PathIcon Data="{StaticResource FileIcon}" Width="14" Height="16" Opacity="0.7">
+                                                    <PathIcon.IsVisible>
+                                                        <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                            <Binding Path="!IsFolder" />
+                                                            <Binding Path="!IsLink" />
+                                                        </MultiBinding>
+                                                    </PathIcon.IsVisible>
+                                                </PathIcon>
+                                            </Panel>
+                                            <TextBlock Grid.Column="1" Text="{Binding Name}" TextTrimming="CharacterEllipsis"
+                                                       VerticalAlignment="Center" ToolTip.Tip="{Binding Name}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Only for search results (shown from code-behind). -->
+                            <DataGridTemplateColumn Header="{x:Static res:Strings.BrowserColumnFolder}" Width="*" MinWidth="80"
+                                                    SortMemberPath="LocationText" IsVisible="False">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:EntryViewModel">
+                                        <TextBlock Text="{Binding LocationText}" TextTrimming="LeadingCharacterEllipsis" Opacity="0.75"
+                                                   VerticalAlignment="Center" Margin="4,0" ToolTip.Tip="{Binding LocationText}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="{x:Static res:Strings.ArchiveColumnSize}" Width="100" MinWidth="60" SortMemberPath="Node.Size">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:EntryViewModel">
+                                        <TextBlock Text="{Binding SizeText}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0,12,0" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="{x:Static res:Strings.BrowserColumnModified}" Width="150" MinWidth="80"
+                                                    SortMemberPath="Node.Modified">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:EntryViewModel">
+                                        <TextBlock Text="{Binding ModifiedText}" VerticalAlignment="Center" Margin="4,0" TextTrimming="CharacterEllipsis" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <TextBlock Text="{x:Static res:Strings.BrowserEmptyFolder}" IsVisible="{Binding HasNoEntries}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.7" />
+                </Panel>
+            </DockPanel>
+        </Grid>
+    </DockPanel>
+
+</Window>

@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Public plugin API. Shared between BorgStudio and every plugin: plugins compile against it,
+       but must not ship their own copy (see docs/plugins.md). Keep changes additive. -->
+
+  <PropertyGroup>
+    <RootNamespace>BorgStudio.Plugins</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+</Project>

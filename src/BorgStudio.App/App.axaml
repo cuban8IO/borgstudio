@@ -2,14 +2,156 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="BorgStudio.App.App"
              xmlns:local="using:BorgStudio.App"
-             RequestedThemeVariant="Default">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+             Name="BorgStudio"
+             RequestedThemeVariant="Dark">
+    <!-- Always dark, in the Beatport palette (same as the app icon). Views use the semantic brushes below,
+         never colour values of their own. -->
 
     <Application.DataTemplates>
         <local:ViewLocator />
     </Application.DataTemplates>
 
+    <Application.Resources>
+        <ResourceDictionary>
+            <!-- Palette -->
+            <Color x:Key="BpGreen">#01FF95</Color>
+            <Color x:Key="BpGreenHover">#01CC77</Color>
+            <Color x:Key="BpGreenPressed">#01B368</Color>
+            <Color x:Key="BpPink">#FF53A0</Color>
+            <Color x:Key="BpOrange">#FF9800</Color>
+            <Color x:Key="BpRed">#FF5252</Color>
+            <Color x:Key="BpBg">#141414</Color>
+            <Color x:Key="BpSurface">#1F1F1F</Color>
+            <Color x:Key="BpSurface2">#262626</Color>
+            <Color x:Key="BpLine">#2D2D2D</Color>
+            <Color x:Key="BpText">#EAEAEA</Color>
+            <Color x:Key="BpTextSecondary">#9C9C9C</Color>
+
+            <!-- Fluent accent (progress bars, focus, check boxes, radio buttons, links) in Beatport green, light and
+                 dark variants included – otherwise Windows blue shows through in some states. -->
+            <Color x:Key="SystemAccentColor">#01FF95</Color>
+            <Color x:Key="SystemAccentColorDark1">#01CC77</Color>
+            <Color x:Key="SystemAccentColorDark2">#01B368</Color>
+            <Color x:Key="SystemAccentColorDark3">#019A59</Color>
+            <Color x:Key="SystemAccentColorLight1">#33FFAB</Color>
+            <Color x:Key="SystemAccentColorLight2">#66FFC0</Color>
+            <Color x:Key="SystemAccentColorLight3">#99FFD5</Color>
+
+            <SolidColorBrush x:Key="BpGreenBrush" Color="{StaticResource BpGreen}" />
+            <SolidColorBrush x:Key="BpBgBrush" Color="{StaticResource BpBg}" />
+            <SolidColorBrush x:Key="BpSurfaceBrush" Color="{StaticResource BpSurface}" />
+            <SolidColorBrush x:Key="BpSurface2Brush" Color="{StaticResource BpSurface2}" />
+            <SolidColorBrush x:Key="BpLineBrush" Color="{StaticResource BpLine}" />
+            <SolidColorBrush x:Key="BpTextBrush" Color="{StaticResource BpText}" />
+            <SolidColorBrush x:Key="BpTextSecondaryBrush" Color="{StaticResource BpTextSecondary}" />
+
+            <!-- Semantic brushes used by the views -->
+            <SolidColorBrush x:Key="StatusBarBackground" Color="#181818" />
+            <SolidColorBrush x:Key="WarningBackground" Color="#2A2113" />
+            <SolidColorBrush x:Key="WarningBorder" Color="{StaticResource BpOrange}" />
+            <SolidColorBrush x:Key="CardBackground" Color="{StaticResource BpSurface}" />
+            <SolidColorBrush x:Key="CardBorder" Color="{StaticResource BpLine}" />
+            <SolidColorBrush x:Key="ErrorForeground" Color="{StaticResource BpRed}" />
+            <SolidColorBrush x:Key="SuccessForeground" Color="{StaticResource BpGreen}" />
+            <!-- Selected list entry: a light green tint plus a green bar on the left. -->
+            <SolidColorBrush x:Key="SelectionBackground" Color="#2401FF95" />
+            <SolidColorBrush x:Key="SelectionHoverBackground" Color="#3301FF95" />
+            <SolidColorBrush x:Key="HoverBackground" Color="{StaticResource BpSurface2}" />
+        </ResourceDictionary>
+    </Application.Resources>
+
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
+
+        <!-- Every window (dialogs too) shows the app icon on the dark Beatport ground. -->
+        <Style Selector=":is(Window)">
+            <Setter Property="Icon" Value="/Assets/borgstudio.ico" />
+            <Setter Property="Background" Value="{StaticResource BpBgBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource BpTextBrush}" />
+        </Style>
+
+        <!-- Primary buttons: dark text on green (white on neon green is hard to read). The colours are set on the
+             ContentPresenter, where the Fluent theme sets its own. -->
+        <Style Selector="Button.accent /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource BpGreen}" />
+            <Setter Property="Foreground" Value="{StaticResource BpBg}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BpGreen}" />
+        </Style>
+        <Style Selector="Button.accent">
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="Button.accent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource BpGreenHover}" />
+            <Setter Property="Foreground" Value="{StaticResource BpBg}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BpGreenHover}" />
+        </Style>
+        <Style Selector="Button.accent:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource BpGreenPressed}" />
+            <Setter Property="Foreground" Value="{StaticResource BpBg}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BpGreenPressed}" />
+        </Style>
+        <!-- Must come last: dimmed, so a disabled green button doesn't look usable. -->
+        <Style Selector="Button.accent:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource BpGreen}" />
+            <Setter Property="Foreground" Value="{StaticResource BpBg}" />
+            <Setter Property="Opacity" Value="0.35" />
+        </Style>
+
+        <!-- List selection (repositories, providers): green tint and a green bar instead of Fluent's solid accent,
+             so the entry's text stays light and readable. -->
+        <Style Selector="ListBox">
+            <Setter Property="Background" Value="{StaticResource BpSurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BpLineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="4" />
+        </Style>
+        <!-- The template takes border thickness and colour from the item itself. -->
+        <Style Selector="ListBoxItem">
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Margin" Value="0,1" />
+            <Setter Property="BorderThickness" Value="3,0,0,0" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style>
+        <Style Selector="ListBoxItem:selected">
+            <Setter Property="BorderBrush" Value="{StaticResource BpGreenBrush}" />
+        </Style>
+        <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource HoverBackground}" />
+            <Setter Property="Foreground" Value="{StaticResource BpTextBrush}" />
+        </Style>
+        <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource SelectionBackground}" />
+            <Setter Property="Foreground" Value="{StaticResource BpTextBrush}" />
+        </Style>
+        <Style Selector="ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource SelectionHoverBackground}" />
+            <Setter Property="Foreground" Value="{StaticResource BpTextBrush}" />
+        </Style>
+        <Style Selector="ListBoxItem:selected:focus /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource SelectionBackground}" />
+            <Setter Property="Foreground" Value="{StaticResource BpTextBrush}" />
+        </Style>
+        <Style Selector="ListBoxItem:selected:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource SelectionHoverBackground}" />
+            <Setter Property="Foreground" Value="{StaticResource BpTextBrush}" />
+        </Style>
+
+        <!-- Tabs (repository details): smaller headers than Fluent's default. -->
+        <Style Selector="TabItem">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Padding" Value="0,0,20,0" />
+        </Style>
+
+        <!-- Cards (plugins window) -->
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="{StaticResource CardBackground}" />
+            <Setter Property="BorderBrush" Value="{StaticResource CardBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="12" />
+        </Style>
     </Application.Styles>
 </Application>

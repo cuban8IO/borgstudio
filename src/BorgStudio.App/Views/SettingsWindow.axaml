@@ -1,0 +1,78 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:BorgStudio.App.ViewModels"
+        xmlns:res="using:BorgStudio.App.Resources"
+        x:Class="BorgStudio.App.Views.SettingsWindow"
+        x:DataType="vm:SettingsViewModel"
+        Title="{x:Static res:Strings.SettingsTitle}"
+        Width="560" SizeToContent="Height" CanResize="False"
+        WindowStartupLocation="CenterOwner">
+
+    <StackPanel Margin="20" Spacing="16">
+
+        <!-- Language -->
+        <Border Classes="card">
+            <StackPanel Spacing="10">
+                <TextBlock Text="{x:Static res:Strings.SettingsLanguageHeader}" FontSize="16" FontWeight="SemiBold" />
+                <ComboBox ItemsSource="{Binding LanguageOptions}" SelectedItem="{Binding SelectedLanguage}" MinWidth="240" />
+                <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding RestartNeeded}">
+                    <TextBlock Text="{x:Static res:Strings.SettingsLanguageRestart}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                    <Button Content="{x:Static res:Strings.SettingsRestartNow}" Command="{Binding RestartCommand}" Classes="accent" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Updates -->
+        <Border Classes="card">
+            <StackPanel Spacing="10">
+                <TextBlock Text="{x:Static res:Strings.SettingsUpdatesHeader}" FontSize="16" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding VersionText}" Opacity="0.8" />
+                <CheckBox IsChecked="{Binding CheckForUpdates}" Content="{x:Static res:Strings.SettingsCheckForUpdates}" />
+                <Button Content="{x:Static res:Strings.SettingsCheckNow}" Command="{Binding CheckForUpdatesNowCommand}" />
+            </StackPanel>
+        </Border>
+
+        <!-- Vault -->
+        <Border Classes="card">
+            <StackPanel Spacing="10">
+                <TextBlock Text="{x:Static res:Strings.SettingsVaultHeader}" FontSize="16" FontWeight="SemiBold" />
+                <TextBlock Text="{x:Static res:Strings.SettingsVaultIntro}" TextWrapping="Wrap" Opacity="0.8" />
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Text="{x:Static res:Strings.SettingsVaultStatus}" Opacity="0.7" />
+                    <TextBlock Text="{Binding VaultStatus}" FontWeight="SemiBold" />
+                </StackPanel>
+
+                <WrapPanel>
+                    <WrapPanel.Styles>
+                        <Style Selector="Button">
+                            <Setter Property="Margin" Value="0,0,8,8" />
+                        </Style>
+                    </WrapPanel.Styles>
+                    <Button Content="{x:Static res:Strings.SettingsSetUpPin}" Command="{Binding SetUpPinCommand}"
+                            Classes="accent" IsVisible="{Binding IsNotSetUp}" />
+                    <Button Content="{x:Static res:Strings.SettingsChangePin}" Command="{Binding ChangePinCommand}"
+                            IsVisible="{Binding IsSetUp}" />
+                    <Button Content="{x:Static res:Strings.VaultLock}" Command="{Binding LockVaultCommand}"
+                            IsVisible="{Binding IsSetUp}" />
+                    <Button Content="{x:Static res:Strings.SettingsResetVault}" Command="{Binding ResetVaultCommand}"
+                            IsVisible="{Binding IsSetUp}" />
+                </WrapPanel>
+
+                <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
+                <TextBlock Text="{Binding Message}" TextWrapping="Wrap"
+                           IsVisible="{Binding Message, Converter={x:Static ObjectConverters.IsNotNull}}" />
+
+                <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,4,0,0">
+                    <CheckBox IsChecked="{Binding AutoLock}" Content="{x:Static res:Strings.SettingsAutoLock}"
+                              VerticalAlignment="Center" />
+                    <ComboBox ItemsSource="{Binding AutoLockOptions}" SelectedItem="{Binding SelectedAutoLockMinutes}"
+                              IsEnabled="{Binding AutoLock}" MinWidth="140" VerticalAlignment="Center" />
+                </StackPanel>
+                <TextBlock Text="{x:Static res:Strings.SettingsAutoLockHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
+
+        <Button Content="{x:Static res:Strings.Close}" HorizontalAlignment="Right" IsCancel="True" Click="Close_Click" />
+    </StackPanel>
+
+</Window>

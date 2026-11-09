@@ -1,40 +1,120 @@
 # BorgStudio
 
-All-in-one app to manage BorgBackup repositories – create, schedule and upload backups, browse archives and restore files.
+All-in-one app to manage BorgBackup repositories – create and upload backups, clean up old archives, browse
+archives and restore files.
 
 Cross-platform desktop app (Windows, Linux, macOS) built with .NET 10 and [Avalonia UI](https://avaloniaui.net/).
+The **[wiki](https://github.com/cuban8IO/borgstudio/wiki)** explains every function step by step.
+
+## Features
+
+- **Repositories** in a local folder, on an SSH server or on a Hetzner Storage Box – create new ones or connect
+  existing ones; borg runs natively or, on Windows, inside WSL.
+- **Backup jobs** with source folders, exclusions and compression; live progress with upload speed and remaining
+  time; cancelling keeps a checkpoint.
+- **Cleaning up** old archives per job (daily, weekly, monthly, yearly …) with a preview, and freeing space.
+- **Archives**: list with size and own share, a browser with folder tree and search, search across all archives and
+  the versions of a file.
+- **Restore** files and folders into a folder or back to their original place, with a check for files that would be
+  overwritten.
+- **Mount** an archive or the whole repository as a read-only folder and open it in the file manager.
+- **Security**: app lock with a PIN and an encrypted vault for passphrases and SSH keys, or the system keychain;
+  export and import of all settings in one encrypted file.
+- **Updates** from within the app, checked against the release's checksums; UI in English and German.
+
+Scheduled backups are planned for a later version.
 
 ## Download
 
 Portable builds for Windows (x64), macOS (Apple Silicon and Intel) and Linux (x64) are on the
 [Releases](https://github.com/cuban8IO/borgstudio/releases) page. They include the .NET runtime:
-unpack and start, no installation needed. [BorgBackup](https://www.borgbackup.org/) must be installed separately.
+unpack and start, no installation needed. BorgStudio looks for a new version at startup and once a day and updates
+itself after asking (Tools → Check for updates; can be switched off in Tools → Settings). Version 0.1.0 has no
+updater yet: download 0.2.0 once by hand and replace the old files.
+
+[BorgBackup](https://www.borgbackup.org/) 1.2 or newer (1.4 recommended) must be installed separately.
+BorgStudio finds it on `PATH` and in the usual install locations (e.g. Homebrew); on Windows it also
+looks for borg inside WSL. borg 2 is still in beta and not supported yet. The UI is available in English and German:
+it follows the system language (English if that is neither) or the choice under Tools → Settings.
+
+## Your data
+
+- **Repository list:** `repositories.json` in the BorgStudio data folder (Windows `%LOCALAPPDATA%\BorgStudio`,
+  macOS `~/Library/Application Support/BorgStudio`, Linux `~/.local/share/BorgStudio`). It contains names and
+  locations, never passphrases.
+- **Passphrases:** per repository either stored in BorgStudio's vault, in the system keychain (Windows Credential
+  Manager, macOS keychain, Linux Secret Service such as GNOME Keyring or KWallet) or asked for every time.
+- **Vault and app lock:** `vault.json` in the data folder, encrypted with AES-256-GCM under a key derived from your
+  PIN with Argon2id – without the PIN nothing in it can be read. With a PIN, BorgStudio starts locked and shows only
+  a lock screen; unlocking also opens the vault. By default it locks itself again after 15 minutes without use
+  (Tools → Settings), or at once with Ctrl+L. A forgotten PIN cannot be recovered:
+  the vault can only be reset, losing what is stored in it.
+- **Settings:** `settings.json` in the data folder (app lock, UI language, update checks).
+- **Updates:** a downloaded update is unpacked into `updates/` in the data folder and removed after installing;
+  `updates/update.log` tells how the last installation went.
+- **Archive cache:** `archives/` in the data folder – per repository the archives last seen with their sizes, so the
+  archives tab opens at once. Encrypted with the vault's key (`<id>.vault`) when a PIN is set up, plain JSON
+  (`<id>.json`) otherwise; safe to delete.
+- **Backup jobs:** `jobs.json` in the data folder – per job the repository, the source folders, what to leave out,
+  the compression and the outcome of the last run. Archives are named `<job>-<computer>-<date and time>`.
+- **Moving to another computer:** Tools → Export settings writes everything – repositories, stored passphrases
+  (vault and keychain), SSH keys, known servers, settings and, if wanted, the borg keys of the repositories – into one
+  `.borgstudio` file, encrypted with a password of its own (at least 12 characters; Argon2id + AES-256-GCM). Tools →
+  Import settings shows what the file contains and merges it (asking per existing entry) or replaces everything;
+  keyfile keys are put back into borg's key folder. External plugins are not part of an export.
+- **Repository keys:** BorgStudio offers to export the key after creating a repository. Keep the key file and the
+  passphrase safe and separate – without them, backups cannot be restored.
+- **SSH keys:** kept encrypted in the vault (Tools → SSH keys), so SSH repositories need a PIN. One key can serve
+  several repositories. Imported key files are copied (the original stays; a password on it is removed once, the
+  vault protects the key). For a borg call the key is written to a private temporary file – in the `ssh` sub folder
+  of the data folder, or in `~/.borgstudio/ssh` inside WSL – and deleted right after. The confirmed server host keys
+  (`known_hosts`) are kept in the `ssh` sub folder. Server passwords are only used once to install a key and are
+  never stored. Key files of older versions are moved into the vault after unlocking.
+- **Hetzner Storage Box:** connects on port 23 with the borg version you choose (1.4 or 1.2). The server's host key
+  is checked against the fingerprints Hetzner publishes. Restricted login keys are written to
+  `.ssh/authorized_keys` on the box over SFTP; unrestricted ones are installed with Hetzner's `install-ssh-key`.
 
 ## Project structure
 
 ```
 BorgStudio.slnx
 ├── src/
-│   ├── BorgStudio.App     Avalonia desktop UI (MVVM, CommunityToolkit.Mvvm)
-│   └── BorgStudio.Core    UI-independent logic: borg CLI, repositories, schedules
+│   ├── BorgStudio.App                  Avalonia desktop UI (MVVM, CommunityToolkit.Mvvm)
+│   ├── BorgStudio.Core                 UI-independent logic: borg CLI, plugins, repositories
+│   ├── BorgStudio.Plugins.Abstractions Public plugin API (repository providers)
+│   ├── BorgStudio.Providers.Local      Built-in provider: local folder
+│   ├── BorgStudio.Providers.Ssh        Built-in provider: SSH server with borg
+│   └── BorgStudio.Providers.Hetzner    Built-in provider: Hetzner Storage Box
+├── samples/
+│   └── BorgStudio.SamplePlugin         Example external plugin (not part of the release)
 ├── tests/
-│   └── BorgStudio.Tests   xUnit tests for Core
-├── build/                 Packaging assets (macOS Info.plist)
-└── .github/               CI, packaging and release workflows
+│   └── BorgStudio.Tests                xUnit tests
+├── docs/                               Developer documentation
+├── build/                              Packaging assets (app icon source, macOS Info.plist and .icns)
+└── .github/                            CI, packaging and release workflows
 ```
 
 Shared build settings (target framework, nullable, version) live in `Directory.Build.props`.
 
+## Plugins
+
+Repository providers (local folder, SSH server, Hetzner Storage Box, …) are plugins. Built-in providers use the same
+API as external ones; see [docs/plugins.md](docs/plugins.md) for writing and installing a plugin.
+
 ## Build, test, run
 
 Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) and, to actually use the app,
-[BorgBackup](https://www.borgbackup.org/) on `PATH` (1.x; 2.x is detected separately).
+BorgBackup (see above). UI texts live in `src/BorgStudio.App/Resources/Strings*.resx`.
 
 ```bash
 dotnet build
 dotnet test
 dotnet run --project src/BorgStudio.App
 ```
+
+To try the update locally, publish two versions (`-p:Version=0.0.1` and `0.0.2`), serve a copy of GitHub's
+release JSON with the newer package and its `SHA256SUMS` from a local web server and start the older one with
+`BORGSTUDIO_UPDATE_FEED` set to the JSON's URL.
 
 Portable package for one platform, e.g. Linux:
 
@@ -53,3 +133,105 @@ dotnet publish src/BorgStudio.App -c Release -r linux-x64 -o publish
 
 Release versions are calculated automatically from the last `vX.Y.Z` tag: if any `feature/*` branch was merged
 since then, the minor version goes up (0.**x**.0), otherwise the patch version (0.0.**x**).
+Every pull request adds its change to the **Unreleased** section of the changelog below; when releasing, that
+section gets the new version number.
+
+## Changelog
+
+### Unreleased
+
+Nothing yet.
+
+### 0.2.0 – 2026-11-09
+
+**Added**
+- Detects an installed borg on startup: on `PATH`, in the usual install locations and, on Windows, inside WSL.
+- Plugin system for repository providers, with a window listing the loaded plugins.
+- Local repositories: connect an existing one or create a new one, keep the passphrase in the system keychain or
+  ask for it every time, export the repository key.
+- SSH server provider: confirms the server's host key and creates and installs a login key per repository
+  (also when borg runs inside WSL).
+- Hetzner Storage Box provider: port 23, host key checked against Hetzner's published fingerprints, choice of
+  borg 1.4 or 1.2 on the box.
+- App icon and the app version in the window title.
+
+- App lock with a PIN: BorgStudio starts locked and shows a lock screen; unlocking also opens a PIN-protected vault
+  for repository passphrases (Argon2id + AES-256-GCM). Locks again after a configurable idle time (default
+  15 minutes) or with Ctrl+L. New Settings window (Tools → Settings) to set
+  up, change or reset the PIN. Each repository keeps its passphrase in the vault, in the system keychain or not at all.
+- Central SSH key management (Tools → SSH keys): keys are kept encrypted in the vault and can be shared by several
+  repositories; create, import (password-protected keys too), rename, copy the public key, save the private key,
+  delete unused keys. In a repository, pick a key from the list and optionally install it on the server. Key files of
+  older versions move into the vault automatically; borg only gets a key as a temporary file for the duration of a call.
+- Export and import of all settings (Tools → Export/Import settings): one file encrypted with its own password, with
+  repositories, passphrases, SSH keys, known servers, settings and the borg keys; importing merges (with a choice per
+  existing entry) or replaces, sets up a PIN on a new computer and restores keyfile keys for borg.
+- Backup jobs (repository → tab "Backup jobs"): source folders, what to leave out (caches/temp, build folders,
+  recycle bins, CACHEDIR.TAG, file extensions, folders, own borg patterns) and compression per job; several jobs per
+  repository. "Back up now" shows live progress with upload speed, elapsed and estimated remaining time; cancelling
+  stops borg cleanly and keeps a checkpoint the next run builds on. Files borg could not read are listed as warnings.
+  The repository details are now organized in tabs. Jobs are part of exports.
+- Archive list (repository → tab "Archives"): all archives newest first with creation time and the job they come
+  from; duration, size, own share (what only this archive takes up in the repository) and file count for the newest
+  20, more on request. A finished backup shows up right away. The archives are cached per repository (encrypted with
+  the vault's key when a PIN is set up): the tab shows them at once and borg is only asked for archives it has not
+  described yet, since `borg info` reads all metadata of an archive.
+- Cleaning up old archives (`borg prune` + `borg compact`): each backup job can keep a number of daily, weekly,
+  monthly and yearly archives (plus hourly, the newest N and everything from the last N days); off for new jobs.
+  After each successful backup the job's other archives are deleted and the space is freed. "Clean up…" in the jobs
+  tab shows first which archives would go and which stay (and by which rule). Only the archives this computer created
+  for the job are touched (`<job>-{hostname}-*`). "Free space" in the overview runs `borg compact` on its own, with
+  progress and cancel.
+- Archive browser (tab "Archives" → "Open…" or double-click): folder tree and the files of each folder in a table
+  (resizable, sortable columns) with size and date, a search over the whole archive (part of the name, or patterns
+  like `*.pdf`) and tick boxes to select files and folders. Windows drives backed up through WSL show as `C:\…`. The
+  file list is read from borg line by line with progress and remaining time (`borg list` reports none: counted against
+  the archive's file count), then cached per archive – archives never change – encrypted with the vault's key when a
+  PIN is set up.
+- Restore (archive browser → "Restore selection…" or "Restore whole archive…"): into a folder – directly (the selected
+  items land in it) or with the full path as in the archive – or back to the original location (with borg in WSL:
+  Windows drives, one run per drive). Before writing, BorgStudio checks which files exist already and asks before
+  overwriting them, naming those changed after the backup. borg extract runs with progress, pace (MB/s), remaining
+  time and the current file; it can be cancelled (what was restored stays). Files borg could not write are listed;
+  "Open folder" shows the result.
+- Search all archives (tab "Archives" → "Search all archives…"): finds files and folders by name (part of the name or
+  patterns like `*.pdf`) in every archive of the repository, one row per path with how many versions it has and in how
+  many archives it is. Archives whose file list was never read are read by borg once – after asking, with an estimate
+  of how long it takes (or only the others are searched) – archive by archive with progress ("Archive 7 of 42") and
+  remaining time; then they are cached like an opened archive.
+- Versions of a file (search → double-click, or archive browser → "Versions…"): one row per change (size or date) with
+  the archives in which it stayed the same counted together, and the stretches of archives it is missing from
+  (deleted, or not there yet). Any version can be restored, from the newest archive that has it.
+- Mount archives (tab "Archives" → "Mount" or "Mount all archives"): `borg mount` makes an archive – or the whole
+  repository, one folder per archive – a read-only folder below `~/borgstudio-mounts` and opens it in the file
+  manager. With borg in WSL, Explorer reaches it through `\\wsl.localhost\…`; that needs `user_allow_other` in WSL's
+  `/etc/fuse.conf` once, which BorgStudio adds after asking (as root in WSL, no password) or shows the command for.
+  Several archives can be mounted at once; the status bar lists them with "Open" and "Unmount". While a repository has
+  mounts, backups and clean-ups ask to unmount first (borg holds the lock). Closing BorgStudio unmounts everything;
+  mounts left behind by a crash are cleaned up on the next start.
+- Language setting (Tools → Settings): system language, English or German; takes effect after a restart, which the
+  settings window offers right away.
+- Updates: BorgStudio asks GitHub for the newest release at startup and once a day (can be switched off) and shows a
+  banner when there is one; Tools → Check for updates asks at once. "Update now" shows what is new, downloads the
+  package for this system with progress, checks it against the release's `SHA256SUMS`, closes the app (a running
+  backup asks first, mounts are unmounted) and lets the new version copy itself over the old files – only files of the
+  package are written, the replaced ones are put back if anything fails – and start again. Where the app may not
+  change its folder, or for local builds, the release page is offered instead. Releases now include `SHA256SUMS`.
+
+**Changed**
+- Every wait shows a progress bar with percent, elapsed and remaining time, so it is clear the app is working:
+  testing a connection, exporting the key, freeing space, loading archives and their details (borg now reports
+  archive by archive), cleaning up (prune reports per archive), and the steps in the add/edit repository dialog.
+  Where borg reports no progress, the bar runs on how long the same operation took last time ("about 0:30 left");
+  these durations are remembered per repository in `durations.json`.
+- Dark design in the Beatport palette: dark ground, neon green for primary buttons, the selected list entry, progress
+  bars, check boxes and success messages.
+
+**Fixed**
+- The add/edit repository dialog now closes after a successful add or save.
+
+### 0.1.0 – 2026-10-06
+
+**Added**
+- Release pipeline: portable, self-contained packages for Windows (x64), macOS (Apple Silicon and Intel) and
+  Linux (x64), published on every push to `main`.

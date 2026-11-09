@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon>Assets\avalonia-logo.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\borgstudio.ico</ApplicationIcon>
     <AssemblyTitle>BorgStudio</AssemblyTitle>
     <AssemblyName>BorgStudio</AssemblyName>
     <RootNamespace>BorgStudio.App</RootNamespace>
@@ -17,15 +17,31 @@
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
   </PropertyGroup>
 
-  <!-- SkiaSharp/HarfBuzzSharp ship ~100 MB of native .pdb files for Windows; keep them out of the release. -->
+  <!-- Keep the release to the executable: SkiaSharp/HarfBuzzSharp ship ~100 MB of native .pdb files for Windows,
+       and the plugin API's XML documentation is only for plugin authors. -->
   <Target Name="ExcludeSymbolsFromPublish" AfterTargets="ComputeResolvedFilesToPublishList">
     <ItemGroup>
-      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="'%(Extension)' == '.pdb'" />
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="'%(Extension)' == '.pdb' or '%(Extension)' == '.xml'" />
     </ItemGroup>
   </Target>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="BorgStudio.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+  <!-- UI texts: Strings.resx (English, default) + Strings.<culture>.resx. The Strings class is generated at build time. -->
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\Strings.resx">
+      <StronglyTypedFileName>$(IntermediateOutputPath)Strings.Designer.cs</StronglyTypedFileName>
+      <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
+      <StronglyTypedNamespace>BorgStudio.App.Resources</StronglyTypedNamespace>
+      <StronglyTypedClassName>Strings</StronglyTypedClassName>
+      <PublicClass>true</PublicClass>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
@@ -33,6 +49,7 @@
     <PackageReference Include="Avalonia.Desktop" Version="12.1.3" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.3" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.3" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.1.2" />
     <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3">
       <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
@@ -42,5 +59,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BorgStudio.Core\BorgStudio.Core.csproj" />
+    <ProjectReference Include="..\BorgStudio.Providers.Local\BorgStudio.Providers.Local.csproj" />
+    <ProjectReference Include="..\BorgStudio.Providers.Ssh\BorgStudio.Providers.Ssh.csproj" />
+    <ProjectReference Include="..\BorgStudio.Providers.Hetzner\BorgStudio.Providers.Hetzner.csproj" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,324 @@
+using System.Collections.ObjectModel;
+using System.Globalization;
+using BorgStudio.App.Resources;
+using BorgStudio.Core.Borg;
+using BorgStudio.Core.Progress;
+using BorgStudio.Core.Repositories;
+using BorgStudio.Core.Security;
+using BorgStudio.Plugins;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+
+namespace BorgStudio.App.ViewModels;
+
+/// <summary>The repository list and what can be done with a repository.</summary>
+public partial class MainViewModel
+{
+    public ObservableCollection<RepositoryItemViewModel> Repositories { get; } = [];
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasSelection))]
+    [NotifyCanExecuteChangedFor(nameof(TestRepositoryCommand), nameof(ExportKeyCommand), nameof(EditRepositoryCommand),
+        nameof(RemoveRepositoryCommand), nameof(FreeSpaceCommand))]
+    public partial RepositoryItemViewModel? SelectedRepository { get; set; }
+
+    public bool HasRepositories => Repositories.Count > 0;
+
+    public bool HasSelection => SelectedRepository is not null;
+
+    /// <summary>Shown when repositories.json could not be read.</summary>
+    [ObservableProperty]
+    public partial string? StoreWarning { get; private set; }
+
+    /// <summary>A borg command is running for the selected repository.</summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddRepositoryCommand), nameof(TestRepositoryCommand), nameof(ExportKeyCommand),
+        nameof(EditRepositoryCommand), nameof(RemoveRepositoryCommand), nameof(RunJobCommand), nameof(CleanUpJobCommand),
+        nameof(FreeSpaceCommand))]
+    public partial bool IsWorking { get; private set; }
+
+    /// <summary>Progress of the running repository operation (overview tab).</summary>
+    public ProgressViewModel Work { get; } = new();
+
+    private void LoadRepositories()
+    {
+        var result = _services.RepositoryStore.Load();
+        foreach (var repository in result.Repositories)
+            Repositories.Add(new RepositoryItemViewModel(repository, Plugins));
+        if (result.BrokenFileBackup is not null)
+            StoreWarning = BorgTexts.Format(Strings.StoreBrokenWarning, result.BrokenFileBackup);
+
+        Repositories.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasRepositories));
+        SelectedRepository = Repositories.FirstOrDefault();
+    }
+
+    private void SaveRepositories() => _services.RepositoryStore.Save(Repositories.Select(item => item.Config));
+
+    // --- Add / edit / remove ---
+
+    [RelayCommand(CanExecute = nameof(CanAdd))]
+    private async Task AddRepositoryAsync()
+    {
+        var editor = new RepositoryEditorViewModel(_services, Borg, otherRepositories: [.. Repositories.Select(other => other.Config)]);
+        await _services.Dialogs.ShowRepositoryEditorAsync(editor);
+        if (editor.Result is not { } result)
+            return;
+
+        var item = new RepositoryItemViewModel(result.Repository, Plugins);
+        Repositories.Add(item);
+        RefreshKeyNames();
+        SaveRepositories();
+        SelectedRepository = item;
+        item.ShowResult(result.Created ? Strings.RepositoryCreated : Strings.RepositoryConnected, isError: false);
+
+        if (result.Created && item.IsEncrypted
+            && await _services.Dialogs.ConfirmAsync(Strings.BackupKeyTitle,
+                item.IsKeyfile ? Strings.BackupKeyKeyfile : Strings.BackupKeyRepokey,
+                Strings.BackupKeyConfirm, Strings.Later))
+            await ExportKeyAsync();
+    }
+
+    private bool CanAdd() => !IsWorking && Plugins.RepositoryProviders.Count > 0;
+
+    [RelayCommand(CanExecute = nameof(CanEdit))]
+    private async Task EditRepositoryAsync()
+    {
+        var item = SelectedRepository!;
+        var editor = new RepositoryEditorViewModel(_services, Borg, item.Config, [.. Repositories.Select(other => other.Config)]);
+        await _services.Dialogs.ShowRepositoryEditorAsync(editor);
+        if (editor.Result is not { } result)
+            return;
+
+        item.Config = result.Repository;
+        SaveRepositories();
+        RefreshKeyNames();
+    }
+
+    private bool CanEdit() => !IsWorking && !IsBackupRunning && SelectedRepository?.Provider is not null;
+
+    [RelayCommand(CanExecute = nameof(CanRemove))]
+    private async Task RemoveRepositoryAsync()
+    {
+        var item = SelectedRepository!;
+        var message = BorgTexts.Format(Strings.RemoveMessage, item.Name);
+        if (item.Config.SshKeyId is not null)
+            message += " " + Strings.RemoveSshHint;
+        if (_jobs.Any(job => job.RepositoryId == item.Config.Id))
+            message += " " + Strings.RemoveJobsHint;
+        if (!await _services.Dialogs.ConfirmAsync(Strings.RemoveTitle, message, Strings.Remove))
+            return;
+        foreach (var mount in Mounts.Where(mount => mount.RepositoryId == item.Config.Id).ToList())
+            await UnmountAsync(mount, force: true);
+
+        await RemovePassphraseAsync(item.Config);
+
+        var index = Repositories.IndexOf(item);
+        Repositories.Remove(item);
+        SaveRepositories();
+        RemoveJobsOf(item.Config.Id);
+        SelectedRepository = Repositories.Count == 0 ? null : Repositories[Math.Min(index, Repositories.Count - 1)];
+
+        await OfferToDeleteUnusedKeyAsync(item.Config.SshKeyId);
+    }
+
+    /// <summary>The key of a removed repository is used nowhere else: offer to delete it from the key list.</summary>
+    private async Task OfferToDeleteUnusedKeyAsync(Guid? keyId)
+    {
+        if (keyId is not { } id || Repositories.Any(other => other.Config.SshKeyId == id)
+            || _services.Vault.State != VaultState.Unlocked || _services.Vault.GetKey(id) is not { } key)
+            return;
+
+        if (await _services.Dialogs.ConfirmAsync(Strings.RemoveKeyTitle, BorgTexts.Format(Strings.RemoveKeyMessage, key.Name),
+                Strings.Delete, Strings.KeepKey))
+            _services.Vault.RemoveKey(id);
+    }
+
+    private bool CanRemove() => !IsWorking && !IsBackupRunning && SelectedRepository is not null;
+
+    // --- borg operations ---
+
+    [RelayCommand(CanExecute = nameof(CanRunBorg))]
+    private async Task TestRepositoryAsync()
+    {
+        var item = SelectedRepository!;
+        if (!TryGetLocation(item, out var location))
+            return;
+        if (await GetSshAccessAsync(item, location) is not { } ssh)
+            return;
+        if (await GetPassphraseAsync(item) is not { } passphrase)
+            return;
+
+        var result = await RunAsync(item, Strings.Checking, "info",
+            () => _services.BorgClient.InfoAsync(Borg!, location, passphrase.Value, ssh.Access));
+        if (!result.Succeeded)
+        {
+            item.ShowResult(BorgTexts.Describe(result.Error!), isError: true);
+            return;
+        }
+
+        var info = result.Value!;
+        var text = info.LastModified is { } modified
+            ? BorgTexts.Format(Strings.TestSucceeded, modified.ToLocalTime().ToString("g", CultureInfo.CurrentCulture))
+            : Strings.TestSucceededNoDate;
+        var otherRepository = item.Config.BorgRepositoryId is { } knownId && knownId != info.Id;
+        item.ShowResult(otherRepository ? $"{text} {Strings.RepositoryIdChanged}" : text, isError: otherRepository);
+
+        // Fill in what wasn't known yet (e.g. repositories connected before the first successful test).
+        if (item.Config.EncryptionMode is null || item.Config.BorgRepositoryId is null)
+        {
+            item.Config = item.Config with
+            {
+                EncryptionMode = item.Config.EncryptionMode ?? info.EncryptionMode,
+                BorgRepositoryId = item.Config.BorgRepositoryId ?? info.Id,
+            };
+            SaveRepositories();
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanExportKey))]
+    private async Task ExportKeyAsync()
+    {
+        var item = SelectedRepository!;
+        if (!TryGetLocation(item, out var location))
+            return;
+        if (await GetSshAccessAsync(item, location) is not { } ssh)
+            return;
+
+        var target = await _services.Dialogs.PickSaveFileAsync(Strings.ExportKeyTitle, $"{SafeFileName(item.Name)}-borg-key.txt");
+        if (target is null)
+            return;
+
+        var result = await RunAsync(item, Strings.ExportingKey, "key-export",
+            () => _services.BorgClient.ExportKeyAsync(Borg!, location, target, ssh.Access));
+        item.ShowResult(
+            result.Succeeded ? BorgTexts.Format(Strings.KeyExported, target) : BorgTexts.Describe(result.Error!),
+            isError: !result.Succeeded);
+    }
+
+    private bool CanRunBorg() =>
+        !IsWorking && !IsBackupRunning && SelectedRepository?.Location is not null && Borg is { Support: BorgSupport.Supported };
+
+    private bool CanExportKey() => CanRunBorg() && SelectedRepository!.IsEncrypted;
+
+    /// <summary>The location, if borg 1 can handle it; otherwise the reason is shown on the item.</summary>
+    private static bool TryGetLocation(RepositoryItemViewModel item, out RepositoryLocation location)
+    {
+        location = item.Location!;
+        if (RepositoryFormat.Resolve(item.Config.BorgVersion, location) != 2)
+            return true;
+
+        item.ShowResult(Strings.Borg2NotSupported, isError: true);
+        return false;
+    }
+
+    /// <summary>
+    /// How borg logs in (<c>Access</c> is <c>null</c> for local repositories); <c>null</c> if that's not possible –
+    /// the reason is shown on the item. A server not known yet must be confirmed first.
+    /// </summary>
+    private async Task<SshAccessHolder?> GetSshAccessAsync(RepositoryItemViewModel item, RepositoryLocation location)
+    {
+        if (location.Ssh is not { } endpoint)
+            return new SshAccessHolder(null);
+
+        if (item.Config.HasLegacySshKey)
+        {
+            item.ShowResult(Strings.SshKeyLegacyNeedsPin, isError: true);
+            return null;
+        }
+
+        if (item.Config.SshKeyId is not { } keyId)
+        {
+            item.ShowResult(Strings.SshKeyMissing, isError: true);
+            return null;
+        }
+
+        try
+        {
+            if (!await VaultAccess.EnsureUnlockedAsync(_services.Vault, _services.Dialogs))
+                return null;
+        }
+        catch (SecretBoxException exception)
+        {
+            item.ShowResult(BorgTexts.Format(Strings.VaultError, exception.Message), isError: true);
+            return null;
+        }
+
+        if (_services.Vault.GetKey(keyId) is not { } key)
+        {
+            item.ShowResult(Strings.SshKeyMissing, isError: true);
+            return null;
+        }
+
+        var trust = _services.SshTrust;
+        if (!trust.IsKnown(endpoint.Host, endpoint.Port))
+        {
+            var (hostKey, problem) = await SshTrustDialog.EnsureTrustedAsync(trust, endpoint, _services.Dialogs);
+            if (hostKey is null)
+            {
+                item.ShowResult(problem!, isError: true);
+                return null;
+            }
+        }
+
+        return new SshAccessHolder(new SshAccess(key.PrivateKey, _services.SshKeys.KnownHostsFile));
+    }
+
+    private sealed record SshAccessHolder(SshAccess? Access);
+
+    /// <summary>The passphrase to use (<c>Value</c> is <c>null</c> for unencrypted repositories); <c>null</c> if cancelled.</summary>
+    private async Task<PassphraseHolder?> GetPassphraseAsync(RepositoryItemViewModel item)
+    {
+        var mode = item.Config.PassphraseMode;
+        if (mode == PassphraseMode.None)
+            return new PassphraseHolder(null);
+
+        if (mode is PassphraseMode.Vault or PassphraseMode.Stored)
+        {
+            var (stored, cancelled, error) = await new PassphraseStore(_services).GetAsync(item.Config, mode, _services.Dialogs);
+            if (cancelled)
+                return null;
+            if (stored is not null)
+                return new PassphraseHolder(stored);
+            if (error is not null)
+                item.ShowResult(error, isError: true);
+        }
+
+        // Asked for every time – or stored but missing (e.g. after resetting the vault).
+        var entered = await _services.Dialogs.AskPassphraseAsync(item.Name);
+        return entered is null ? null : new PassphraseHolder(entered);
+    }
+
+    /// <summary>
+    /// Runs a borg operation on <paramref name="item"/> with progress in the overview. How long it took is remembered
+    /// (if it worked), so next time the wait shows roughly how long it will be.
+    /// </summary>
+    /// <param name="operation">Name under which the duration is remembered, e.g. "info".</param>
+    /// <param name="cancel">Offers "Cancel", which calls this.</param>
+    private async Task<BorgResult<T>> RunAsync<T>(RepositoryItemViewModel item, string workingText, string operation,
+        Func<Task<BorgResult<T>>> work, Action? cancel = null)
+    {
+        var key = DurationHistory.Key(item.Config.Id, operation);
+        IsWorking = true;
+        Work.Start(workingText, _services.Durations.Get(key), cancel);
+        try
+        {
+            var result = await Task.Run(work);
+            if (result.Succeeded)
+                _services.Durations.Record(key, Work.Elapsed);
+            return result;
+        }
+        finally
+        {
+            Work.Stop();
+            IsWorking = false;
+        }
+    }
+
+    private static string SafeFileName(string name)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        return new string(name.Select(character => invalid.Contains(character) ? '_' : character).ToArray());
+    }
+
+    private sealed record PassphraseHolder(string? Value);
+}
