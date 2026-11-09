@@ -36,6 +36,13 @@
         </NativeMenu>
     </NativeMenu.Menu>
 
+    <Window.Styles>
+        <!-- The list of mounts is wider than a flyout normally may be. -->
+        <Style Selector="FlyoutPresenter.mounts">
+            <Setter Property="MaxWidth" Value="600" />
+        </Style>
+    </Window.Styles>
+
     <Window.KeyBindings>
         <KeyBinding Gesture="Ctrl+L" Command="{Binding LockVaultCommand}" />
     </Window.KeyBindings>
@@ -47,13 +54,53 @@
         <!-- Status bar -->
         <Border DockPanel.Dock="Bottom" Padding="12,5" Background="{DynamicResource StatusBarBackground}"
                 BorderBrush="{DynamicResource BpLineBrush}" BorderThickness="0,1,0,0">
-            <Grid ColumnDefinitions="Auto,*,Auto">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto">
                 <TextBlock Text="{Binding BorgStatus}" FontSize="12" Foreground="{DynamicResource BpTextSecondaryBrush}"
                            VerticalAlignment="Center" />
+
+                <!-- Mounted archives: open or unmount them -->
+                <Button Grid.Column="2" IsVisible="{Binding HasMounts}" FontSize="12" Padding="8,1" MinHeight="0" Margin="0,0,12,0"
+                        ToolTip.Tip="{x:Static res:Strings.MountsTip}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <PathIcon Data="M2,5 L9,5 L11,7 L22,7 L22,19 L2,19 Z" Width="12" Height="12"
+                                  Foreground="{DynamicResource BpGreenBrush}" />
+                        <TextBlock Text="{Binding MountsText}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <Button.Flyout>
+                        <Flyout Placement="TopEdgeAlignedRight" FlyoutPresenterClasses="mounts">
+                            <StackPanel Spacing="8" Width="520">
+                                <TextBlock Text="{x:Static res:Strings.MountsHeader}" FontWeight="SemiBold" />
+                                <ItemsControl ItemsSource="{Binding Mounts}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:MountItemViewModel">
+                                            <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,6">
+                                                <StackPanel Spacing="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Title}" />
+                                                    <TextBlock Text="{Binding OpenPath}" FontSize="11" Opacity="0.65"
+                                                               TextTrimming="LeadingCharacterEllipsis" ToolTip.Tip="{Binding OpenPath}" />
+                                                </StackPanel>
+                                                <Button Grid.Column="1" Content="{x:Static res:Strings.MountOpen}" Command="{Binding OpenCommand}"
+                                                        Margin="8,0,0,0" FontSize="12" />
+                                                <Button Grid.Column="2" Content="{x:Static res:Strings.MountUnmount}" Command="{Binding UnmountCommand}"
+                                                        Margin="6,0,0,0" FontSize="12" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="{x:Static res:Strings.MountsHint}" FontSize="11" Opacity="0.65" TextWrapping="Wrap"
+                                               VerticalAlignment="Center" />
+                                    <Button Grid.Column="1" Content="{x:Static res:Strings.MountUnmountAll}" Command="{Binding UnmountAllMountsCommand}"
+                                            Margin="8,0,0,0" FontSize="12" />
+                                </Grid>
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
                 <TextBlock Grid.Column="1" Text="{Binding Notice}" IsVisible="{Binding HasNotice}" FontSize="12"
                            Foreground="{DynamicResource SuccessForeground}" Margin="16,0" VerticalAlignment="Center"
                            TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Notice}" />
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsVaultSetUp}">
+                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsVaultSetUp}">
                     <TextBlock Text="{Binding VaultStatus}" FontSize="12" Foreground="{DynamicResource BpTextSecondaryBrush}"
                                VerticalAlignment="Center" />
                     <Button Content="{x:Static res:Strings.VaultLock}" Command="{Binding LockVaultCommand}"
@@ -291,6 +338,10 @@
                                         ToolTip.Tip="{x:Static res:Strings.ArchiveOpenTip}" Classes="accent" />
                                 <Button Content="{x:Static res:Strings.ArchivesSearch}" Command="{Binding SearchArchivesCommand}"
                                         ToolTip.Tip="{x:Static res:Strings.ArchivesSearchTip}" />
+                                <Button Content="{x:Static res:Strings.ArchiveMount}" Command="{Binding MountArchiveCommand}"
+                                        ToolTip.Tip="{x:Static res:Strings.ArchiveMountTip}" />
+                                <Button Content="{x:Static res:Strings.ArchivesMountAll}" Command="{Binding MountRepositoryCommand}"
+                                        ToolTip.Tip="{x:Static res:Strings.ArchivesMountAllTip}" />
                                 <Button Content="{x:Static res:Strings.ArchivesRefresh}" Command="{Binding RefreshArchivesCommand}"
                                         ToolTip.Tip="{x:Static res:Strings.ArchivesRefreshTip}" />
                                 <Button Content="{x:Static res:Strings.ArchivesLoadMore}" Command="{Binding LoadMoreArchiveDetailsCommand}" />
@@ -299,6 +350,9 @@
                             <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,8">
                                 <Panel IsVisible="{Binding IsLoadingArchives}">
                                     <views:ProgressPanel DataContext="{Binding ArchivesProgress}" />
+                                </Panel>
+                                <Panel IsVisible="{Binding IsMounting}">
+                                    <views:ProgressPanel DataContext="{Binding MountProgress}" />
                                 </Panel>
                                 <TextBlock Text="{Binding ArchivesStatus}" IsVisible="{Binding HasArchivesStatus}" FontSize="12" Opacity="0.8" />
                                 <SelectableTextBlock Text="{Binding ArchivesError}" IsVisible="{Binding HasArchivesError}" TextWrapping="Wrap"

@@ -361,6 +361,70 @@ public sealed class BorgClientIntegrationTests : IDisposable
         Assert.Equal("letter", File.ReadAllText(Path.Combine(source, "letter.txt")));
     }
 
+    [BorgFact]
+    public async Task Mounts_an_archive_and_the_whole_repository_and_unmounts_them()
+    {
+        await _client.InitAsync(Borg, Location(), BorgEncryption.RepokeyBlake2, Passphrase);
+        var source = _directory.Combine("source");
+        Directory.CreateDirectory(source);
+        File.WriteAllText(Path.Combine(source, "letter.txt"), "letter");
+        Assert.True((await _client.CreateAsync(Borg, Location(), "mounted", [source], [], Passphrase)).Succeeded);
+        var name = "test-" + Guid.NewGuid().ToString("N");
+
+        var setup = await _client.CheckMountSetupAsync(Borg);
+        var archive = await _client.MountAsync(Borg, Location(), "mounted", BorgClient.MountFolder(name, "mounted", "all"), Passphrase);
+        if (setup == MountSetup.AllowOtherMissing)
+        {
+            // Not set up (the app offers to do it): FUSE's refusal is recognised.
+            Assert.Equal(BorgErrorKind.MountNotAllowed, archive.Error?.Kind);
+            return;
+        }
+        if (setup == MountSetup.Unsupported || archive.Error?.Kind == BorgErrorKind.MountUnavailable)
+            return; // no FUSE here (e.g. a CI runner)
+
+        Assert.True(archive.Succeeded, archive.Error?.ToString());
+        var mount = archive.Value!;
+        BorgMount? repository = null;
+        try
+        {
+            Assert.EndsWith($"/{BorgClient.MountRoot}/{name}/mounted", mount.Path);
+            var letter = BorgClient.BorgPath(Borg, Path.Combine(source, "letter.txt"))!.TrimStart('/');
+            await ShellAsync($"grep -q letter {BorgClient.ShellQuote(mount.Path + "/" + letter)}");
+            if (Borg.Runtime == BorgRuntime.Wsl)
+            {
+                // Explorer's view of it (\\wsl.localhost\<distribution>\home\…): readable from Windows.
+                Assert.StartsWith(@"\\wsl", mount.WindowsPath);
+                Assert.Equal("letter", File.ReadAllText(Path.Combine([mount.WindowsPath!, .. letter.Split('/')])));
+            }
+
+            // The whole repository at the same time: one folder per archive.
+            var mounted = await _client.MountAsync(Borg, Location(), null, BorgClient.MountFolder(name, null, "all"), Passphrase);
+            Assert.True(mounted.Succeeded, mounted.Error?.ToString());
+            repository = mounted.Value!;
+            await ShellAsync($"test -d {BorgClient.ShellQuote(repository.Path + "/mounted")}");
+
+            // Reading works meanwhile.
+            Assert.True((await _client.ListArchivesAsync(Borg, Location(), Passphrase)).Succeeded);
+
+            Assert.True(await mount.UnmountAsync());
+            Assert.Null(await mount.Ended);
+            Assert.True(await repository.UnmountAsync());
+            Assert.Null(await repository.Ended);
+            await ShellAsync($"! test -e {BorgClient.ShellQuote(mount.Path)} && ! test -e \"$(dirname {BorgClient.ShellQuote(mount.Path)})\"");
+        }
+        finally
+        {
+            // A failed check must not leave borg running (the test run would wait for it).
+            await mount.UnmountAsync(force: true);
+            if (repository is not null)
+                await repository.UnmountAsync(force: true);
+        }
+
+        // A wrong passphrase stops borg before it is mounted.
+        var wrong = await _client.MountAsync(Borg, Location(), "mounted", BorgClient.MountFolder(name, "mounted", "all"), "wrong");
+        Assert.Equal(BorgErrorKind.PassphraseWrong, wrong.Error?.Kind);
+    }
+
     /// <summary>Calls the progress callback right away (Progress&lt;T&gt; would post it to a thread pool).</summary>
     private sealed class SynchronousProgress<T>(Action<T> report) : IProgress<T>
     {

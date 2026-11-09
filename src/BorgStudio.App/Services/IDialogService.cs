@@ -35,6 +35,9 @@ public interface IDialogService
 
     Task CopyToClipboardAsync(string text);
 
+    /// <summary>Opens a folder in the file manager (Explorer, Finder, …).</summary>
+    Task OpenFolderAsync(string path);
+
     /// <summary>Shows the add/edit dialog; the outcome is in <see cref="RepositoryEditorViewModel.Result"/>.</summary>
     Task ShowRepositoryEditorAsync(RepositoryEditorViewModel editor);
 

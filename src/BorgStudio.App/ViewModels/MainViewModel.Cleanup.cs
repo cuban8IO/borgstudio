@@ -31,6 +31,8 @@ public partial class MainViewModel
         var item = Repositories.FirstOrDefault(repository => repository.Config.Id == job.RepositoryId);
         if (item is null || job.Retention is not { HasRules: true } retention || !TryGetLocation(item, out var location))
             return;
+        if (!await ReleaseMountsAsync(item.Config.Id, item.Name))
+            return;
         if (await GetSshAccessAsync(item, location) is not { } ssh)
             return;
         if (await GetPassphraseAsync(item) is not { } passphrase)
@@ -110,6 +112,8 @@ public partial class MainViewModel
     {
         var item = SelectedRepository!;
         if (!TryGetLocation(item, out var location))
+            return;
+        if (!await ReleaseMountsAsync(item.Config.Id, item.Name))
             return;
         // compact works on the repository's segments only: no passphrase needed.
         if (await GetSshAccessAsync(item, location) is not { } ssh)

@@ -284,6 +284,51 @@ public class BorgClientTests
         Assert.Equal(expected, BorgClient.ParseError(standardError).Kind);
     }
 
+    [Theory]
+    [InlineData("fusermount3: option allow_other only allowed if 'user_allow_other' is set in /etc/fuse.conf", BorgErrorKind.MountNotAllowed)]
+    [InlineData("fuse: device not found, try 'modprobe fuse' first", BorgErrorKind.Other)]
+    [InlineData("fusermount: failed to open /dev/fuse: Operation not permitted", BorgErrorKind.MountUnavailable)]
+    public void FUSE_problems_before_a_failed_mount_are_recognized(string fuseLine, BorgErrorKind expected)
+    {
+        var standardError = fuseLine + "\n" + ErrorLine("RTError", "Runtime Error: FUSE mount failed");
+
+        Assert.Equal(expected, BorgClient.ParseError(standardError).Kind);
+    }
+
+    [Fact]
+    public void Borg_without_FUSE_support_cannot_mount()
+    {
+        var standardError = ErrorLine("Error", "borg mount not available: no FUSE support, BORG_FUSE_IMPL=pyfuse3,llfuse.");
+
+        Assert.Equal(BorgErrorKind.MountUnavailable, BorgClient.ParseError(standardError).Kind);
+    }
+
+    [Theory]
+    [InlineData("dev_Test", "Docs-host-2026-11-06T10:00:00", "dev_Test/Docs-host-2026-11-06T10_00_00")]
+    [InlineData("NAS / Fotos?", null, "NAS _ Fotos_/All archives")]
+    [InlineData(".hidden", "x.", "_.hidden/x")]
+    [InlineData("  ", "a\tb", "_/a_b")]
+    public void Mount_folders_have_names_Windows_can_show(string repository, string? archive, string expected) =>
+        Assert.Equal(expected, BorgClient.MountFolder(repository, archive, "All archives"));
+
+    [Fact]
+    public async Task Allow_other_is_checked_in_WSL_and_added_as_root()
+    {
+        var runner = new ScriptedRunner(new ProcessResult(1, "", ""), new ProcessResult(0, "", ""), new ProcessResult(0, "", ""));
+        var client = new BorgClient(runner, Wsl);
+
+        Assert.Equal(MountSetup.AllowOtherMissing, await client.CheckMountSetupAsync(WslBorg));
+        Assert.True(await client.EnableAllowOtherAsync());
+        Assert.Equal(MountSetup.Ready, await client.CheckMountSetupAsync(WslBorg));
+
+        Assert.Equal(["-e", "sh", "-c"], runner.Calls[0].Arguments.Take(3));
+        Assert.Contains("user_allow_other' /etc/fuse.conf", runner.Calls[0].Arguments[3]);
+        Assert.Equal(["-u", "root", "-e", "sh", "-c"], runner.Calls[1].Arguments.Take(5));
+        Assert.EndsWith("|| echo user_allow_other >> /etc/fuse.conf", runner.Calls[1].Arguments[5]);
+        Assert.Equal(MountSetup.Unsupported,
+            await new BorgClient(runner) { NativeIsPosix = false }.CheckMountSetupAsync(new BorgInstallation("borg.exe", new BorgVersion(1, 4, 1), BorgRuntime.Native)));
+    }
+
     /// <summary>Answers the calls in order.</summary>
     private sealed class ScriptedRunner(params ProcessResult?[] results) : IProcessRunner
     {

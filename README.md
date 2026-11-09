@@ -167,6 +167,13 @@ section gets the new version number.
 - Versions of a file (search → double-click, or archive browser → "Versions…"): one row per change (size or date) with
   the archives in which it stayed the same counted together, and the stretches of archives it is missing from
   (deleted, or not there yet). Any version can be restored, from the newest archive that has it.
+- Mount archives (tab "Archives" → "Mount" or "Mount all archives"): `borg mount` makes an archive – or the whole
+  repository, one folder per archive – a read-only folder below `~/borgstudio-mounts` and opens it in the file
+  manager. With borg in WSL, Explorer reaches it through `\\wsl.localhost\…`; that needs `user_allow_other` in WSL's
+  `/etc/fuse.conf` once, which BorgStudio adds after asking (as root in WSL, no password) or shows the command for.
+  Several archives can be mounted at once; the status bar lists them with "Open" and "Unmount". While a repository has
+  mounts, backups and clean-ups ask to unmount first (borg holds the lock). Closing BorgStudio unmounts everything;
+  mounts left behind by a crash are cleaned up on the next start.
 
 **Changed**
 - Every wait shows a progress bar with percent, elapsed and remaining time, so it is clear the app is working:

@@ -1605,4 +1605,94 @@ Warnung: Der Anbieter veröffentlicht die Fingerabdrücke seiner Server, und die
   <data name="SearchResultOne" xml:space="preserve">
     <value>1 Treffer für „{1}“ in {2:N0} Archiven</value>
   </data>
+  <data name="ArchiveMount" xml:space="preserve">
+    <value>Einhängen</value>
+  </data>
+  <data name="ArchiveMountTip" xml:space="preserve">
+    <value>Hängt das ausgewählte Archiv als schreibgeschützten Ordner ein und öffnet ihn im Dateimanager</value>
+  </data>
+  <data name="ArchivesMountAll" xml:space="preserve">
+    <value>Alle Archive einhängen</value>
+  </data>
+  <data name="ArchivesMountAllTip" xml:space="preserve">
+    <value>Hängt das ganze Repository als schreibgeschützten Ordner ein, mit einem Ordner pro Archiv. borg liest die Dateiliste eines Archivs, wenn sein Ordner zum ersten Mal geöffnet wird.</value>
+  </data>
+  <data name="MountAllFolder" xml:space="preserve">
+    <value>Alle Archive</value>
+  </data>
+  <data name="MountAllTitle" xml:space="preserve">
+    <value>{0} · alle Archive</value>
+  </data>
+  <data name="Mounting" xml:space="preserve">
+    <value>„{0}“ wird eingehängt …</value>
+  </data>
+  <data name="MountFailed" xml:space="preserve">
+    <value>Einhängen fehlgeschlagen: {0}</value>
+  </data>
+  <data name="MountSetupTitle" xml:space="preserve">
+    <value>Windows eingehängte Archive öffnen lassen</value>
+  </data>
+  <data name="MountSetupMessage" xml:space="preserve">
+    <value>borg läuft in WSL. Der Windows-Explorer kann einen dort eingehängten Ordner nur öffnen, wenn FUSE anderen Benutzern den Zugriff erlaubt. Dazu muss einmalig die Zeile „user_allow_other“ in /etc/fuse.conf in WSL stehen.
+
+BorgStudio kann das jetzt eintragen (als root in WSL, ohne Passwort). Das entspricht diesem Befehl:
+
+{0}</value>
+  </data>
+  <data name="MountSetupConfirm" xml:space="preserve">
+    <value>Einrichten</value>
+  </data>
+  <data name="MountSetupFailed" xml:space="preserve">
+    <value>BorgStudio konnte /etc/fuse.conf nicht ändern. Bitte führe diesen Befehl in einem WSL-Terminal aus (er ist in der Zwischenablage) und hänge danach erneut ein:
+
+{0}</value>
+  </data>
+  <data name="MountsStatusOne" xml:space="preserve">
+    <value>1 Archiv eingehängt</value>
+  </data>
+  <data name="MountsStatus" xml:space="preserve">
+    <value>{0} Archive eingehängt</value>
+  </data>
+  <data name="MountsTip" xml:space="preserve">
+    <value>Eingehängte Archive: öffnen oder aushängen</value>
+  </data>
+  <data name="MountsHeader" xml:space="preserve">
+    <value>Eingehängte Archive</value>
+  </data>
+  <data name="MountOpen" xml:space="preserve">
+    <value>Öffnen</value>
+  </data>
+  <data name="MountUnmount" xml:space="preserve">
+    <value>Aushängen</value>
+  </data>
+  <data name="MountUnmountAll" xml:space="preserve">
+    <value>Alle aushängen</value>
+  </data>
+  <data name="MountsHint" xml:space="preserve">
+    <value>Beim Beenden von BorgStudio wird alles ausgehängt.</value>
+  </data>
+  <data name="MountBusy" xml:space="preserve">
+    <value>„{0}“ wird noch benutzt (ein Programm hat dort eine Datei oder einen Ordner geöffnet). Schließe es und versuche es erneut.</value>
+  </data>
+  <data name="MountEnded" xml:space="preserve">
+    <value>„{0}“ ist nicht mehr eingehängt: {1}</value>
+  </data>
+  <data name="MountEndedOutside" xml:space="preserve">
+    <value>Es wurde außerhalb von BorgStudio ausgehängt.</value>
+  </data>
+  <data name="MountedBlocksTitle" xml:space="preserve">
+    <value>Archive sind eingehängt</value>
+  </data>
+  <data name="MountedBlocksMessage" xml:space="preserve">
+    <value>Archive von „{0}“ sind eingehängt. Solange das so ist, kann borg das Repository nicht ändern. Aushängen und fortfahren?</value>
+  </data>
+  <data name="MountedBlocksConfirm" xml:space="preserve">
+    <value>Aushängen und fortfahren</value>
+  </data>
+  <data name="BorgErrorMountNotAllowed" xml:space="preserve">
+    <value>FUSE erlaubt anderen Benutzern keinen Zugriff auf den eingehängten Ordner („user_allow_other“ fehlt in /etc/fuse.conf).</value>
+  </data>
+  <data name="BorgErrorMountUnavailable" xml:space="preserve">
+    <value>borg kann hier keine Archive einhängen: Dafür braucht es FUSE (unter Windows: borg in WSL).</value>
+  </data>
 </root>
