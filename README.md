@@ -1,15 +1,36 @@
 # BorgStudio
 
-All-in-one app to manage BorgBackup repositories – create, schedule and upload backups, browse archives and restore files.
+All-in-one app to manage BorgBackup repositories – create and upload backups, clean up old archives, browse
+archives and restore files.
 
 Cross-platform desktop app (Windows, Linux, macOS) built with .NET 10 and [Avalonia UI](https://avaloniaui.net/).
+The **[wiki](https://github.com/cuban8IO/borgstudio/wiki)** explains every function step by step.
+
+## Features
+
+- **Repositories** in a local folder, on an SSH server or on a Hetzner Storage Box – create new ones or connect
+  existing ones; borg runs natively or, on Windows, inside WSL.
+- **Backup jobs** with source folders, exclusions and compression; live progress with upload speed and remaining
+  time; cancelling keeps a checkpoint.
+- **Cleaning up** old archives per job (daily, weekly, monthly, yearly …) with a preview, and freeing space.
+- **Archives**: list with size and own share, a browser with folder tree and search, search across all archives and
+  the versions of a file.
+- **Restore** files and folders into a folder or back to their original place, with a check for files that would be
+  overwritten.
+- **Mount** an archive or the whole repository as a read-only folder and open it in the file manager.
+- **Security**: app lock with a PIN and an encrypted vault for passphrases and SSH keys, or the system keychain;
+  export and import of all settings in one encrypted file.
+- **Updates** from within the app, checked against the release's checksums; UI in English and German.
+
+Scheduled backups are planned for a later version.
 
 ## Download
 
 Portable builds for Windows (x64), macOS (Apple Silicon and Intel) and Linux (x64) are on the
 [Releases](https://github.com/cuban8IO/borgstudio/releases) page. They include the .NET runtime:
 unpack and start, no installation needed. BorgStudio looks for a new version at startup and once a day and updates
-itself after asking (Tools → Check for updates; can be switched off in Tools → Settings).
+itself after asking (Tools → Check for updates; can be switched off in Tools → Settings). Version 0.1.0 has no
+updater yet: download 0.2.0 once by hand and replace the old files.
 
 [BorgBackup](https://www.borgbackup.org/) 1.2 or newer (1.4 recommended) must be installed separately.
 BorgStudio finds it on `PATH` and in the usual install locations (e.g. Homebrew); on Windows it also
@@ -35,11 +56,13 @@ it follows the system language (English if that is neither) or the choice under 
   archives tab opens at once. Encrypted with the vault's key (`<id>.vault`) when a PIN is set up, plain JSON
   (`<id>.json`) otherwise; safe to delete.
 - **Backup jobs:** `jobs.json` in the data folder – per job the repository, the source folders, what to leave out,
-  the compression and the outcome of the last run. Archives are named `<job>-<computer>-<date and time>`.- **Moving to another computer:** Tools → Export settings writes everything – repositories, stored passphrases
+  the compression and the outcome of the last run. Archives are named `<job>-<computer>-<date and time>`.
+- **Moving to another computer:** Tools → Export settings writes everything – repositories, stored passphrases
   (vault and keychain), SSH keys, known servers, settings and, if wanted, the borg keys of the repositories – into one
   `.borgstudio` file, encrypted with a password of its own (at least 12 characters; Argon2id + AES-256-GCM). Tools →
   Import settings shows what the file contains and merges it (asking per existing entry) or replaces everything;
-  keyfile keys are put back into borg's key folder. External plugins are not part of an export.- **Repository keys:** BorgStudio offers to export the key after creating a repository. Keep the key file and the
+  keyfile keys are put back into borg's key folder. External plugins are not part of an export.
+- **Repository keys:** BorgStudio offers to export the key after creating a repository. Keep the key file and the
   passphrase safe and separate – without them, backups cannot be restored.
 - **SSH keys:** kept encrypted in the vault (Tools → SSH keys), so SSH repositories need a PIN. One key can serve
   several repositories. Imported key files are copied (the original stays; a password on it is removed once, the
@@ -116,6 +139,10 @@ section gets the new version number.
 ## Changelog
 
 ### Unreleased
+
+Nothing yet.
+
+### 0.2.0 – 2026-11-09
 
 **Added**
 - Detects an installed borg on startup: on `PATH`, in the usual install locations and, on Windows, inside WSL.
