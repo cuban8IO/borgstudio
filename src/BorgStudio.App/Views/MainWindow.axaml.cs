@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using BorgStudio.App.Resources;
@@ -34,6 +35,37 @@ public partial class MainWindow : Window
     /// <summary>Set once the mounts are gone; the window then closes for good.</summary>
     private bool _unmounted;
 
+    /// <summary>Start the app again once this window has closed.</summary>
+    private bool _restart;
+
+    /// <summary>Closes the app the usual way (a running backup asks first) and starts it again.</summary>
+    public void Restart()
+    {
+        _restart = true;
+        CloseDialogs(this);
+        Close();
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        base.OnClosed(e);
+        if (_restart)
+            StartAgain();
+    }
+
+    private static void StartAgain()
+    {
+        if (Environment.ProcessPath is not { } path)
+            return;
+        var start = new ProcessStartInfo(path) { UseShellExecute = false };
+        // Started as "dotnet BorgStudio.dll" the dll is the first argument and must stay.
+        var arguments = Environment.GetCommandLineArgs();
+        var isDotnet = Path.GetFileNameWithoutExtension(path).Equals("dotnet", StringComparison.OrdinalIgnoreCase);
+        foreach (var argument in isDotnet ? arguments : arguments.Skip(1))
+            start.ArgumentList.Add(argument);
+        Process.Start(start)?.Dispose();
+    }
+
     protected override void OnClosing(WindowClosingEventArgs e)
     {
         if (_viewModel is { IsBackupRunning: true } viewModel && !_closeAfterBackup)
@@ -63,7 +95,10 @@ public partial class MainWindow : Window
     {
         if (!await new DialogService(this).ConfirmAsync(Strings.BackupRunningCloseTitle, Strings.BackupRunningCloseMessage,
                 Strings.BackupRunningCloseConfirm))
+        {
+            _restart = false;
             return;
+        }
 
         _closeAfterBackup = true;
         viewModel.CancelBackupCommand.Execute(null);

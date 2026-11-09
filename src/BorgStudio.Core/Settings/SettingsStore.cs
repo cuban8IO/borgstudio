@@ -9,6 +9,9 @@ public sealed record AppSettings
 
     /// <summary>Lock the vault after this many minutes without using the app; 0 = never.</summary>
     public int VaultAutoLockMinutes { get; init; } = DefaultVaultAutoLockMinutes;
+
+    /// <summary>UI language as a culture name ("en", "de"); null = the system's language if supported, else English.</summary>
+    public string? Language { get; init; }
 }
 
 /// <summary>Keeps <see cref="AppSettings"/> in settings.json; a missing or unreadable file means defaults.</summary>

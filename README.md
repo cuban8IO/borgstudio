@@ -12,7 +12,8 @@ unpack and start, no installation needed.
 
 [BorgBackup](https://www.borgbackup.org/) 1.2 or newer (1.4 recommended) must be installed separately.
 BorgStudio finds it on `PATH` and in the usual install locations (e.g. Homebrew); on Windows it also
-looks for borg inside WSL. borg 2 is still in beta and not supported yet. The UI is available in English and German.
+looks for borg inside WSL. borg 2 is still in beta and not supported yet. The UI is available in English and German:
+it follows the system language (English if that is neither) or the choice under Tools → Settings.
 
 ## Your data
 
@@ -26,7 +27,7 @@ looks for borg inside WSL. borg 2 is still in beta and not supported yet. The UI
   a lock screen; unlocking also opens the vault. By default it locks itself again after 15 minutes without use
   (Tools → Settings), or at once with Ctrl+L. A forgotten PIN cannot be recovered:
   the vault can only be reset, losing what is stored in it.
-- **Settings:** `settings.json` in the data folder.
+- **Settings:** `settings.json` in the data folder (app lock, UI language).
 - **Archive cache:** `archives/` in the data folder – per repository the archives last seen with their sizes, so the
   archives tab opens at once. Encrypted with the vault's key (`<id>.vault`) when a PIN is set up, plain JSON
   (`<id>.json`) otherwise; safe to delete.
@@ -174,6 +175,8 @@ section gets the new version number.
   Several archives can be mounted at once; the status bar lists them with "Open" and "Unmount". While a repository has
   mounts, backups and clean-ups ask to unmount first (borg holds the lock). Closing BorgStudio unmounts everything;
   mounts left behind by a crash are cleaned up on the next start.
+- Language setting (Tools → Settings): system language, English or German; takes effect after a restart, which the
+  settings window offers right away.
 
 **Changed**
 - Every wait shows a progress bar with percent, elapsed and remaining time, so it is clear the app is working:

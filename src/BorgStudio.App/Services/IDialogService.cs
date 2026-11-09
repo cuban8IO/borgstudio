@@ -38,6 +38,9 @@ public interface IDialogService
     /// <summary>Opens a folder in the file manager (Explorer, Finder, …).</summary>
     Task OpenFolderAsync(string path);
 
+    /// <summary>Closes the app like the user would (stopping backups and mounts first) and starts it again.</summary>
+    void RestartApp();
+
     /// <summary>Shows the add/edit dialog; the outcome is in <see cref="RepositoryEditorViewModel.Result"/>.</summary>
     Task ShowRepositoryEditorAsync(RepositoryEditorViewModel editor);
 
