@@ -159,6 +159,7 @@ public partial class MainViewModel : ViewModelBase
         public Task ShowFileVersionsAsync(FileVersionsViewModel versions) => Task.CompletedTask;
         public Task CopyToClipboardAsync(string text) => Task.CompletedTask;
         public Task OpenFolderAsync(string path) => Task.CompletedTask;
+        public void RestartApp() { }
         public Task ShowRepositoryEditorAsync(RepositoryEditorViewModel editor) => Task.CompletedTask;
     }
 }

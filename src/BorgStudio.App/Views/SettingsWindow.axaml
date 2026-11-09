@@ -10,6 +10,18 @@
 
     <StackPanel Margin="20" Spacing="16">
 
+        <!-- Language -->
+        <Border Classes="card">
+            <StackPanel Spacing="10">
+                <TextBlock Text="{x:Static res:Strings.SettingsLanguageHeader}" FontSize="16" FontWeight="SemiBold" />
+                <ComboBox ItemsSource="{Binding LanguageOptions}" SelectedItem="{Binding SelectedLanguage}" MinWidth="240" />
+                <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding RestartNeeded}">
+                    <TextBlock Text="{x:Static res:Strings.SettingsLanguageRestart}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                    <Button Content="{x:Static res:Strings.SettingsRestartNow}" Command="{Binding RestartCommand}" Classes="accent" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
         <!-- Vault -->
         <Border Classes="card">
             <StackPanel Spacing="10">

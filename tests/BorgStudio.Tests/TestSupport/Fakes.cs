@@ -712,6 +712,10 @@ public sealed class FakeDialogs : IDialogService
     /// <summary>Folders opened in the file manager.</summary>
     public List<string> OpenedFolders { get; } = [];
 
+    public int Restarts { get; private set; }
+
+    public void RestartApp() => Restarts++;
+
     public Task OpenFolderAsync(string path)
     {
         OpenedFolders.Add(path);

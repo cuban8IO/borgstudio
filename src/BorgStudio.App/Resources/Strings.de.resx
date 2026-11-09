@@ -567,6 +567,18 @@ Warnung: Der Anbieter veröffentlicht die Fingerabdrücke seiner Server, und die
   <data name="SettingsMinutes" xml:space="preserve">
     <value>{0} Minuten</value>
   </data>
+  <data name="SettingsLanguageHeader" xml:space="preserve">
+    <value>Sprache</value>
+  </data>
+  <data name="SettingsLanguageSystem" xml:space="preserve">
+    <value>Systemsprache ({0})</value>
+  </data>
+  <data name="SettingsLanguageRestart" xml:space="preserve">
+    <value>Die neue Sprache gilt nach einem Neustart.</value>
+  </data>
+  <data name="SettingsRestartNow" xml:space="preserve">
+    <value>Jetzt neu starten</value>
+  </data>
   <data name="VaultSetUpDone" xml:space="preserve">
     <value>Der Tresor ist eingerichtet und entsperrt.</value>
   </data>

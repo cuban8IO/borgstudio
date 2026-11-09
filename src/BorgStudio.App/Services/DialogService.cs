@@ -67,6 +67,13 @@ public sealed class DialogService(Window owner) : IDialogService
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"\"{path}\"") { UseShellExecute = true })?.Dispose();
     }
 
+    public void RestartApp()
+    {
+        if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime
+            { MainWindow: MainWindow main })
+            main.Restart();
+    }
+
     public Task ShowRepositoryEditorAsync(RepositoryEditorViewModel editor) =>
         new RepositoryEditorWindow { DataContext = editor }.ShowDialog(owner);
 

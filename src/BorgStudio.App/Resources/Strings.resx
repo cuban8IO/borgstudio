@@ -587,6 +587,18 @@ Warning: the provider publishes the fingerprints of its servers, and this key ma
   <data name="SettingsMinutes" xml:space="preserve">
     <value>{0} minutes</value>
   </data>
+  <data name="SettingsLanguageHeader" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="SettingsLanguageSystem" xml:space="preserve">
+    <value>System language ({0})</value>
+  </data>
+  <data name="SettingsLanguageRestart" xml:space="preserve">
+    <value>The new language is used after a restart.</value>
+  </data>
+  <data name="SettingsRestartNow" xml:space="preserve">
+    <value>Restart now</value>
+  </data>
   <data name="VaultSetUpDone" xml:space="preserve">
     <value>The vault is set up and unlocked.</value>
   </data>

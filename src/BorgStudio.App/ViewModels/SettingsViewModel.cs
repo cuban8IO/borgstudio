@@ -1,3 +1,4 @@
+using System.Globalization;
 using BorgStudio.App.Resources;
 using BorgStudio.App.Services;
 using BorgStudio.Core.Security;
@@ -7,7 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace BorgStudio.App.ViewModels;
 
-/// <summary>The settings window: the vault (PIN, lock, reset) and its automatic lock.</summary>
+/// <summary>The settings window: the UI language, the vault (PIN, lock, reset) and its automatic lock.</summary>
 public sealed partial class SettingsViewModel : ViewModelBase
 {
     private readonly MainViewModel _main;
@@ -23,6 +24,14 @@ public sealed partial class SettingsViewModel : ViewModelBase
         AutoLock = minutes > 0;
         SelectedAutoLockMinutes = AutoLockOptions.FirstOrDefault(option => option.Value == minutes)
             ?? AutoLockOptions.First(option => option.Value == AppSettings.DefaultVaultAutoLockMinutes);
+
+        LanguageOptions =
+        [
+            new(null, BorgTexts.Format(Strings.SettingsLanguageSystem, LanguageName(AppLanguages.Resolve(null, AppLanguages.SystemCulture)))),
+            .. AppLanguages.Supported.Select(name => new Option<string?>(name, LanguageName(CultureInfo.GetCultureInfo(name)))),
+        ];
+        SelectedLanguage = LanguageOptions.FirstOrDefault(option => option.Value == main.Settings.Language) ?? LanguageOptions[0];
+        RestartNeeded = AppLanguages.NeedsRestart(main.Settings.Language);
 
         _vault.StateChanged += OnVaultStateChanged;
         Refresh();
@@ -60,6 +69,35 @@ public sealed partial class SettingsViewModel : ViewModelBase
 
     [ObservableProperty]
     public partial Option<int> SelectedAutoLockMinutes { get; set; }
+
+    /// <summary>"System language (English)", then each language in its own name ("Deutsch").</summary>
+    public IReadOnlyList<Option<string?>> LanguageOptions { get; }
+
+    [ObservableProperty]
+    public partial Option<string?> SelectedLanguage { get; set; }
+
+    /// <summary>The chosen language is not the one shown: it takes effect after a restart.</summary>
+    [ObservableProperty]
+    public partial bool RestartNeeded { get; private set; }
+
+    partial void OnSelectedLanguageChanged(Option<string?> value)
+    {
+        // Called while the constructor sets the initial value.
+        if (value is null || _main is null)
+            return;
+        if (value.Value != _main.Settings.Language)
+            _main.UpdateSettings(_main.Settings with { Language = value.Value });
+        RestartNeeded = AppLanguages.NeedsRestart(value.Value);
+    }
+
+    [RelayCommand]
+    private void Restart() => Dialogs.RestartApp();
+
+    private static string LanguageName(CultureInfo culture)
+    {
+        var name = CultureInfo.GetCultureInfo(AppLanguages.Neutral(culture)).NativeName;
+        return name.Length > 0 ? char.ToUpper(name[0], culture) + name[1..] : name;
+    }
 
     partial void OnAutoLockChanged(bool value) => SaveAutoLock();
 
