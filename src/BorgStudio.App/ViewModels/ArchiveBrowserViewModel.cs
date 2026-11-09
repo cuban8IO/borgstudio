@@ -36,6 +36,9 @@ public sealed partial class ArchiveBrowserViewModel : ViewModelBase
     /// <summary>Creates the restore dialog for some entries (or the whole archive); <c>null</c> if restoring isn't possible.</summary>
     public Func<IReadOnlyList<ArchiveNode>, bool, RestoreViewModel>? RestoreFactory { get; set; }
 
+    /// <summary>The versions of an entry across all archives; <c>null</c> if not available.</summary>
+    public Func<ArchiveNode, FileVersionsViewModel>? VersionsFactory { get; set; }
+
     public string? JobName { get; }
 
     public string Title => BorgTexts.Format(Strings.BrowserTitle, Archive.Name);
@@ -86,6 +89,11 @@ public sealed partial class ArchiveBrowserViewModel : ViewModelBase
 
     /// <summary>The entries of the current folder, or the search results.</summary>
     public ObservableCollection<EntryViewModel> Entries { get; } = [];
+
+    /// <summary>The row selected in the table (not ticked).</summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ShowVersionsCommand))]
+    public partial EntryViewModel? SelectedEntry { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasNoEntries))]
@@ -315,6 +323,18 @@ public sealed partial class ArchiveBrowserViewModel : ViewModelBase
             await dialogs.ShowRestoreAsync(restore);
         }
     }
+
+    // --- Versions ---
+
+    /// <summary>Shows the versions of the selected entry in all archives.</summary>
+    [RelayCommand(CanExecute = nameof(CanShowVersions))]
+    private async Task ShowVersionsAsync()
+    {
+        if (Dialogs is { } dialogs)
+            await dialogs.ShowFileVersionsAsync(VersionsFactory!(SelectedEntry!.Node));
+    }
+
+    private bool CanShowVersions() => VersionsFactory is not null && SelectedEntry is not null;
 
     // --- Selection ---
 

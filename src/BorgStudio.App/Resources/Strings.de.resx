@@ -1458,4 +1458,151 @@ Warnung: Der Anbieter veröffentlicht die Fingerabdrücke seiner Server, und die
   <data name="RestoreOpenFolder" xml:space="preserve">
     <value>Ordner öffnen</value>
   </data>
+  <data name="ArchivesSearch" xml:space="preserve">
+    <value>In allen Archiven suchen…</value>
+  </data>
+  <data name="ArchivesSearchTip" xml:space="preserve">
+    <value>Findet Dateien und Ordner nach Namen in allen Archiven dieses Repositorys und zeigt ihre Versionen</value>
+  </data>
+  <data name="BrowserVersions" xml:space="preserve">
+    <value>Versionen…</value>
+  </data>
+  <data name="BrowserVersionsTip" xml:space="preserve">
+    <value>Die ausgewählte Datei bzw. den Ordner in allen Archiven des Repositorys: wann sie sich geändert hat, und jede Version wiederherstellen</value>
+  </data>
+  <data name="SearchTitle" xml:space="preserve">
+    <value>In allen Archiven suchen – {0}</value>
+  </data>
+  <data name="SearchHeading" xml:space="preserve">
+    <value>In allen Archiven suchen</value>
+  </data>
+  <data name="SearchScopeAll" xml:space="preserve">
+    <value>{0:N0} Archive</value>
+  </data>
+  <data name="SearchScope" xml:space="preserve">
+    <value>{0:N0} Archive – von {1:N0} wurden die Dateilisten schon gelesen; die übrigen liest borg beim Suchen einmal (danach bleiben sie gespeichert)</value>
+  </data>
+  <data name="SearchPlaceholder" xml:space="preserve">
+    <value>Name oder ein Teil davon, z. B. rechnung oder *.pdf</value>
+  </data>
+  <data name="SearchRunning" xml:space="preserve">
+    <value>Suche nach „{0}“ …</value>
+  </data>
+  <data name="SearchResults" xml:space="preserve">
+    <value>{0:N0} Treffer für „{1}“ in {2:N0} Archiven</value>
+  </data>
+  <data name="SearchNone" xml:space="preserve">
+    <value>Nichts mit „{0}“ im Namen in {1:N0} Archiven.</value>
+  </data>
+  <data name="SearchInArchives" xml:space="preserve">
+    <value>{0:N0} von {1:N0}</value>
+  </data>
+  <data name="SearchColumnVersions" xml:space="preserve">
+    <value>Versionen</value>
+  </data>
+  <data name="SearchColumnArchives" xml:space="preserve">
+    <value>In Archiven</value>
+  </data>
+  <data name="SearchColumnLastSeen" xml:space="preserve">
+    <value>Zuletzt gesichert</value>
+  </data>
+  <data name="SearchColumnLastSeenTip" xml:space="preserve">
+    <value>Das neueste Archiv, das sie enthält</value>
+  </data>
+  <data name="SearchShowVersions" xml:space="preserve">
+    <value>Versionen…</value>
+  </data>
+  <data name="SearchHint" xml:space="preserve">
+    <value>Doppelklick auf einen Treffer zeigt seine Versionen; dort lässt er sich wiederherstellen.</value>
+  </data>
+  <data name="ScanArchiveOf" xml:space="preserve">
+    <value>Archiv {0:N0} von {1:N0}: {2}</value>
+  </data>
+  <data name="ScanSkipped" xml:space="preserve">
+    <value>{0:N0} Archive wurden nicht durchsucht: Ihre Dateilisten wurden noch nicht gelesen.</value>
+  </data>
+  <data name="ScanSkippedNoAccess" xml:space="preserve">
+    <value>{0:N0} Archive wurden nicht durchsucht: Ihre Dateilisten wurden noch nicht gelesen, und borg braucht dafür die Passphrase.</value>
+  </data>
+  <data name="ScanReadMissing" xml:space="preserve">
+    <value>Jetzt lesen</value>
+  </data>
+  <data name="ScanReadTitle" xml:space="preserve">
+    <value>Dateilisten lesen?</value>
+  </data>
+  <data name="ScanReadMessage" xml:space="preserve">
+    <value>{0:N0} von {1:N0} Archiven wurden noch nie geöffnet. Um sie zu durchsuchen, muss borg ihre Dateilisten einmal lesen – danach bleiben sie gespeichert und die Suche geht schnell.</value>
+  </data>
+  <data name="ScanReadEstimate" xml:space="preserve">
+    <value>Das dauert etwa {0}.</value>
+  </data>
+  <data name="ScanReadEstimateUnknown" xml:space="preserve">
+    <value>Wie lange das dauert, ist noch nicht bekannt (es hängt von der Anzahl der Dateien ab).</value>
+  </data>
+  <data name="ScanReadConfirm" xml:space="preserve">
+    <value>Lesen und suchen</value>
+  </data>
+  <data name="ScanReadOnlyCached" xml:space="preserve">
+    <value>Nur die übrigen</value>
+  </data>
+  <data name="ScanReadFailed" xml:space="preserve">
+    <value>Archiv {0} konnte nicht gelesen werden: {1}</value>
+  </data>
+  <data name="ScanCancelled" xml:space="preserve">
+    <value>Abgebrochen nach {0:N0} von {1:N0} Archiven</value>
+  </data>
+  <data name="VersionsTitle" xml:space="preserve">
+    <value>Versionen von {0}</value>
+  </data>
+  <data name="VersionsLoading" xml:space="preserve">
+    <value>Durchsuche die Archive …</value>
+  </data>
+  <data name="VersionsSummary" xml:space="preserve">
+    <value>{0:N0} Versionen · in {1:N0} von {2:N0} Archiven</value>
+  </data>
+  <data name="VersionsMissing" xml:space="preserve">
+    <value>nicht in diesen Archiven</value>
+  </data>
+  <data name="VersionsNewest" xml:space="preserve">
+    <value>neueste</value>
+  </data>
+  <data name="VersionsArchiveOne" xml:space="preserve">
+    <value>1 Archiv</value>
+  </data>
+  <data name="VersionsArchives" xml:space="preserve">
+    <value>{0:N0} Archive</value>
+  </data>
+  <data name="VersionsColumnArchives" xml:space="preserve">
+    <value>Archive</value>
+  </data>
+  <data name="VersionsColumnPeriod" xml:space="preserve">
+    <value>Gesichert</value>
+  </data>
+  <data name="VersionsFolderSize" xml:space="preserve">
+    <value>{0} · {1:N0} Dateien</value>
+  </data>
+  <data name="VersionsFrom" xml:space="preserve">
+    <value>Wird aus Archiv {0} wiederhergestellt</value>
+  </data>
+  <data name="VersionsHint" xml:space="preserve">
+    <value>Eine Zeile pro Änderung – Archive, in denen sie gleich blieb, sind zusammengefasst.</value>
+  </data>
+  <data name="VersionsRestore" xml:space="preserve">
+    <value>Diese Version wiederherstellen…</value>
+  </data>
+  <data name="VersionsNotFound" xml:space="preserve">
+    <value>Sie ist nicht mehr in Archiv {0}.</value>
+  </data>
+  <data name="ScanSkippedOne" xml:space="preserve">
+    <value>1 Archiv wurde nicht durchsucht: Seine Dateiliste wurde noch nicht gelesen.</value>
+  </data>
+  <data name="ScanSkippedNoAccessOne" xml:space="preserve">
+    <value>1 Archiv wurde nicht durchsucht: Seine Dateiliste wurde noch nicht gelesen, und borg braucht dafür die Passphrase.</value>
+  </data>
+  <data name="VersionsSummaryOne" xml:space="preserve">
+    <value>1 Version · in {1:N0} von {2:N0} Archiven</value>
+  </data>
+  <data name="SearchResultOne" xml:space="preserve">
+    <value>1 Treffer für „{1}“ in {2:N0} Archiven</value>
+  </data>
 </root>

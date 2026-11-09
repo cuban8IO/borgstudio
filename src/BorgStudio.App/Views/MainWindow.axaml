@@ -289,6 +289,8 @@
                                 </WrapPanel.Styles>
                                 <Button Content="{x:Static res:Strings.ArchiveOpen}" Command="{Binding OpenArchiveCommand}"
                                         ToolTip.Tip="{x:Static res:Strings.ArchiveOpenTip}" Classes="accent" />
+                                <Button Content="{x:Static res:Strings.ArchivesSearch}" Command="{Binding SearchArchivesCommand}"
+                                        ToolTip.Tip="{x:Static res:Strings.ArchivesSearchTip}" />
                                 <Button Content="{x:Static res:Strings.ArchivesRefresh}" Command="{Binding RefreshArchivesCommand}"
                                         ToolTip.Tip="{x:Static res:Strings.ArchivesRefreshTip}" />
                                 <Button Content="{x:Static res:Strings.ArchivesLoadMore}" Command="{Binding LoadMoreArchiveDetailsCommand}" />

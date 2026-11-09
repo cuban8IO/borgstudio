@@ -230,6 +230,9 @@ public sealed class FakeBorg : IProcessRunner
         return await Result(0, "");
     }
 
+    /// <summary>The modification time of every entry per archive name (borg's format); "2026-11-05T10:20:30.000000" otherwise.</summary>
+    public Dictionary<string, string> ContentsTime { get; } = [];
+
     /// <summary>When set, "list --json-lines" fails with this message id.</summary>
     public string? ContentsError { get; set; }
 
@@ -250,7 +253,7 @@ public sealed class FakeBorg : IProcessRunner
             {
                 ["type"] = entry.Type, ["mode"] = "-rw-r--r--", ["user"] = "me", ["group"] = "me", ["uid"] = 1000, ["gid"] = 1000,
                 ["path"] = entry.Path, ["healthy"] = true, ["source"] = "", ["linktarget"] = entry.Type == "l" ? "letter.txt" : "",
-                ["flags"] = 0, ["size"] = entry.Size, ["mtime"] = "2026-11-05T10:20:30.000000",
+                ["flags"] = 0, ["size"] = entry.Size, ["mtime"] = ContentsTime.GetValueOrDefault(name, "2026-11-05T10:20:30.000000"),
             })).ToList();
         foreach (var line in lines)
             standardOutputLine?.Invoke(line);
@@ -547,6 +550,32 @@ public sealed class FakeDialogs : IDialogService
     {
         Browsers.Add(browser);
         return Browser?.Invoke(browser) ?? Task.CompletedTask;
+    }
+
+    /// <summary>What to do while the search over all archives is "open" (it closes when this completes).</summary>
+    public Func<ArchiveSearchViewModel, Task>? Search { get; set; }
+
+    public List<ArchiveSearchViewModel> Searches { get; } = [];
+
+    public Task ShowArchiveSearchAsync(ArchiveSearchViewModel search)
+    {
+        Searches.Add(search);
+        search.Dialogs = this;
+        return Search?.Invoke(search) ?? Task.CompletedTask;
+    }
+
+    /// <summary>What to do while a versions window is "open"; like the window, opening starts looking through the archives.</summary>
+    public Func<FileVersionsViewModel, Task>? Versions { get; set; }
+
+    public List<FileVersionsViewModel> VersionWindows { get; } = [];
+
+    public async Task ShowFileVersionsAsync(FileVersionsViewModel versions)
+    {
+        VersionWindows.Add(versions);
+        versions.Dialogs = this;
+        await versions.Begin();
+        if (Versions is not null)
+            await Versions(versions);
     }
 
     public Task<bool> ConfirmPruneAsync(PrunePreviewViewModel preview)

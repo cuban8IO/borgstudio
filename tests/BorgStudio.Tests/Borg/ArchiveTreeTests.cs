@@ -100,8 +100,10 @@ public sealed class ArchiveTreeTests : IDisposable
         var repository = Guid.NewGuid();
         const string archive = "3289a50a66be17669eff18e6acf5730576c02eec768e0bf0ddda075857d112e8";
         Assert.Null(cache.LoadContents(repository, archive));
+        Assert.False(cache.HasContents(repository, archive));
 
         cache.SaveContents(repository, archive, WindowsTree());
+        Assert.True(cache.HasContents(repository, archive));
         var folder = Path.Combine(cache.Directory, "contents", repository.ToString("N"));
         Assert.Equal([archive + ".gz"], Directory.GetFiles(folder).Select(Path.GetFileName));
         AssertSameTree(WindowsTree(), cache.LoadContents(repository, archive)!);
@@ -110,8 +112,10 @@ public sealed class ArchiveTreeTests : IDisposable
         cache.Secure();
         Assert.Equal([archive + ".vault"], Directory.GetFiles(folder).Select(Path.GetFileName));
         AssertSameTree(WindowsTree(), cache.LoadContents(repository, archive)!);
+        Assert.True(cache.HasContents(repository, archive));
         vault.Lock();
         Assert.Null(cache.LoadContents(repository, archive));
+        Assert.False(cache.HasContents(repository, archive)); // not readable now
         Assert.True(vault.Unlock("123456"));
 
         // Deleted archives lose their contents; so does a removed repository.
@@ -122,6 +126,7 @@ public sealed class ArchiveTreeTests : IDisposable
         Assert.False(Directory.Exists(folder));
 
         Assert.Null(cache.LoadContents(repository, "../../evil")); // ids are hex only
+        Assert.False(cache.HasContents(repository, "../../evil"));
     }
 
     private static void AssertSameTree(ArchiveTree expected, ArchiveTree actual)

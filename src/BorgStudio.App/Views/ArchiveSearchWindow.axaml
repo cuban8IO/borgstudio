@@ -1,0 +1,137 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:BorgStudio.App.ViewModels"
+        xmlns:views="using:BorgStudio.App.Views"
+        xmlns:res="using:BorgStudio.App.Resources"
+        x:Class="BorgStudio.App.Views.ArchiveSearchWindow"
+        x:DataType="vm:ArchiveSearchViewModel"
+        Title="{Binding Title}"
+        Width="1000" Height="640" MinWidth="640" MinHeight="400"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+    <Window.Resources>
+        <StreamGeometry x:Key="FolderIcon">M2,5 L9,5 L11,7 L22,7 L22,19 L2,19 Z</StreamGeometry>
+        <StreamGeometry x:Key="FileIcon">M5,2 L14,2 L19,7 L19,22 L5,22 Z M14,2 L14,7 L19,7</StreamGeometry>
+        <StreamGeometry x:Key="LinkIcon">M4,12 L10,12 M14,12 L20,12 M9,8 L13,12 L9,16 M15,8 L19,12 L15,16</StreamGeometry>
+    </Window.Resources>
+
+    <DockPanel Margin="16">
+
+        <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,10">
+            <TextBlock Text="{x:Static res:Strings.SearchHeading}" FontSize="18" FontWeight="SemiBold" />
+            <TextBlock Text="{Binding ScopeText}" Opacity="0.75" TextWrapping="Wrap" />
+        </StackPanel>
+
+        <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="0,0,0,10">
+            <TextBox x:Name="SearchBox" Text="{Binding SearchText}" PlaceholderText="{x:Static res:Strings.SearchPlaceholder}">
+                <TextBox.KeyBindings>
+                    <KeyBinding Gesture="Enter" Command="{Binding SearchCommand}" />
+                </TextBox.KeyBindings>
+            </TextBox>
+            <Button Grid.Column="1" Content="{x:Static res:Strings.BrowserSearch}" Command="{Binding SearchCommand}" Classes="accent"
+                    Margin="8,0,0,0" />
+        </Grid>
+
+        <!-- Progress: archive by archive -->
+        <Panel DockPanel.Dock="Top" IsVisible="{Binding IsScanning}" Margin="0,0,0,10">
+            <views:ProgressPanel DataContext="{Binding Progress}" />
+        </Panel>
+        <SelectableTextBlock DockPanel.Dock="Top" Text="{Binding Error}" IsVisible="{Binding HasError}" TextWrapping="Wrap"
+                             Foreground="{DynamicResource ErrorForeground}" Margin="0,0,0,10" />
+        <TextBlock DockPanel.Dock="Top" Text="{Binding StatusText}" IsVisible="{Binding HasStatus}" TextTrimming="CharacterEllipsis"
+                   Margin="0,0,0,6" />
+        <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" IsVisible="{Binding HasSkipped}" Margin="0,0,0,8">
+            <TextBlock Text="{Binding SkippedText}" TextWrapping="Wrap" Opacity="0.8" VerticalAlignment="Center" />
+            <Button Grid.Column="1" Content="{x:Static res:Strings.ScanReadMissing}" Command="{Binding LoadMissingCommand}" Margin="8,0,0,0" />
+        </Grid>
+
+        <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto,Auto" Margin="0,12,0,0">
+            <TextBlock Text="{x:Static res:Strings.SearchHint}" Opacity="0.7" VerticalAlignment="Center" TextWrapping="Wrap" />
+            <Button Grid.Column="1" Content="{x:Static res:Strings.SearchShowVersions}" Command="{Binding ShowVersionsCommand}"
+                    Classes="accent" Margin="8,0,0,0" />
+            <Button Grid.Column="2" Content="{x:Static res:Strings.Close}" Click="Close_Click" IsCancel="True" Margin="8,0,0,0" />
+        </Grid>
+
+        <DataGrid x:Name="HitGrid" ItemsSource="{Binding Hits}" SelectedItem="{Binding SelectedHit}" IsReadOnly="True"
+                  SelectionMode="Single" CanUserResizeColumns="True" CanUserSortColumns="True" CanUserReorderColumns="False"
+                  GridLinesVisibility="None" HeadersVisibility="Column" RowHeight="34" DoubleTapped="Hits_DoubleTapped">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="{x:Static res:Strings.EditorName}" Width="2*" MinWidth="140" SortMemberPath="Name">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:SearchHitViewModel">
+                            <Grid ColumnDefinitions="Auto,*" Margin="4,0" VerticalAlignment="Center">
+                                <Panel Width="16" Height="16" Margin="0,0,8,0">
+                                    <PathIcon Data="{StaticResource FolderIcon}" Width="16" Height="16" IsVisible="{Binding IsFolder}"
+                                              Foreground="{DynamicResource BpGreenBrush}" />
+                                    <PathIcon Data="{StaticResource LinkIcon}" Width="16" Height="16" IsVisible="{Binding IsLink}" Opacity="0.7" />
+                                    <PathIcon Data="{StaticResource FileIcon}" Width="14" Height="16" Opacity="0.7">
+                                        <PathIcon.IsVisible>
+                                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                <Binding Path="!IsFolder" />
+                                                <Binding Path="!IsLink" />
+                                            </MultiBinding>
+                                        </PathIcon.IsVisible>
+                                    </PathIcon>
+                                </Panel>
+                                <TextBlock Grid.Column="1" Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
+                                           ToolTip.Tip="{Binding Name}" />
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="{x:Static res:Strings.BrowserColumnFolder}" Width="2*" MinWidth="80" SortMemberPath="FolderText">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:SearchHitViewModel">
+                            <TextBlock Text="{Binding FolderText}" TextTrimming="LeadingCharacterEllipsis" Opacity="0.75"
+                                       VerticalAlignment="Center" Margin="4,0" ToolTip.Tip="{Binding FolderText}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="{x:Static res:Strings.SearchColumnVersions}" Width="105" MinWidth="60" SortMemberPath="VersionCount">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:SearchHitViewModel">
+                            <TextBlock Text="{Binding VersionCount}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0,12,0" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="{x:Static res:Strings.SearchColumnArchives}" Width="100" MinWidth="60" SortMemberPath="ArchiveCount">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:SearchHitViewModel">
+                            <TextBlock Text="{Binding ArchivesText}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0,12,0" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="{x:Static res:Strings.ArchiveColumnSize}" Width="90" MinWidth="60" SortMemberPath="Size">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:SearchHitViewModel">
+                            <TextBlock Text="{Binding SizeText}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0,12,0" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="{x:Static res:Strings.BrowserColumnModified}" Width="140" MinWidth="80" SortMemberPath="Modified">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:SearchHitViewModel">
+                            <TextBlock Text="{Binding ModifiedText}" VerticalAlignment="Center" Margin="4,0" TextTrimming="CharacterEllipsis" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="{x:Static res:Strings.SearchColumnLastSeen}" Width="140" MinWidth="80" SortMemberPath="LastSeen">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:SearchHitViewModel">
+                            <TextBlock Text="{Binding LastSeenText}" VerticalAlignment="Center" Margin="4,0" TextTrimming="CharacterEllipsis"
+                                       ToolTip.Tip="{x:Static res:Strings.SearchColumnLastSeenTip}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
+
+</Window>

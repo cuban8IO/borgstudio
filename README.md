@@ -159,6 +159,14 @@ section gets the new version number.
   overwriting them, naming those changed after the backup. borg extract runs with progress, pace (MB/s), remaining
   time and the current file; it can be cancelled (what was restored stays). Files borg could not write are listed;
   "Open folder" shows the result.
+- Search all archives (tab "Archives" → "Search all archives…"): finds files and folders by name (part of the name or
+  patterns like `*.pdf`) in every archive of the repository, one row per path with how many versions it has and in how
+  many archives it is. Archives whose file list was never read are read by borg once – after asking, with an estimate
+  of how long it takes (or only the others are searched) – archive by archive with progress ("Archive 7 of 42") and
+  remaining time; then they are cached like an opened archive.
+- Versions of a file (search → double-click, or archive browser → "Versions…"): one row per change (size or date) with
+  the archives in which it stayed the same counted together, and the stretches of archives it is missing from
+  (deleted, or not there yet). Any version can be restored, from the newest archive that has it.
 
 **Changed**
 - Every wait shows a progress bar with percent, elapsed and remaining time, so it is clear the app is working:

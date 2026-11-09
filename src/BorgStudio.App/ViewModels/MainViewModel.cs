@@ -153,6 +153,8 @@ public partial class MainViewModel : ViewModelBase
         public Task<bool> ConfirmPruneAsync(PrunePreviewViewModel preview) => Task.FromResult(false);
         public Task ShowArchiveBrowserAsync(ArchiveBrowserViewModel browser) => Task.CompletedTask;
         public Task ShowRestoreAsync(RestoreViewModel restore) => Task.CompletedTask;
+        public Task ShowArchiveSearchAsync(ArchiveSearchViewModel search) => Task.CompletedTask;
+        public Task ShowFileVersionsAsync(FileVersionsViewModel versions) => Task.CompletedTask;
         public Task CopyToClipboardAsync(string text) => Task.CompletedTask;
         public Task ShowRepositoryEditorAsync(RepositoryEditorViewModel editor) => Task.CompletedTask;
     }

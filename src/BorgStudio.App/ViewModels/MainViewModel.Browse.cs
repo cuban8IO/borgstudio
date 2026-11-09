@@ -1,4 +1,5 @@
 using BorgStudio.App.Resources;
+using BorgStudio.App.Services;
 using BorgStudio.Core.Borg;
 using BorgStudio.Core.Progress;
 using BorgStudio.Plugins;
@@ -37,7 +38,10 @@ public partial class MainViewModel
         // tab already. Without them a cached archive can still be looked at, but not restored.
         var access = await GetArchiveAccessAsync(item, location);
         if (access is { } known)
-            browser.RestoreFactory = (items, whole) => NewRestore(repositoryId, location, known, archive.Archive, items, whole, browser);
+            browser.RestoreFactory = (items, whole) =>
+                NewRestore(repositoryId, location, known, archive.Archive, items, whole, browser.Dialogs ?? _services.Dialogs);
+        var source = NewContentsSource(item, location, access);
+        browser.VersionsFactory = node => new FileVersionsViewModel(source, node);
         if (cached is not null)
             browser.Show(cached);
         else if (access is null)
@@ -58,15 +62,60 @@ public partial class MainViewModel
         SelectedArchive is not null && !IsBackupRunning && !IsWorking && SelectedRepository?.Location is not null
         && Borg is { Support: BorgSupport.Supported };
 
+    /// <summary>Searches file names in all archives of the repository (tab "Archives").</summary>
+    [RelayCommand(CanExecute = nameof(CanSearchArchives))]
+    private async Task SearchArchivesAsync()
+    {
+        var item = SelectedRepository!;
+        if (!TryGetLocation(item, out var location))
+            return;
+        var access = await GetArchiveAccessAsync(item, location);
+        var source = NewContentsSource(item, location, access);
+        // Without the passphrase only archives read before can be searched.
+        if (access is null && !source.Archives.Any(source.IsCached))
+            return;
+        await _services.Dialogs.ShowArchiveSearchAsync(new ArchiveSearchViewModel(source));
+    }
+
+    private bool CanSearchArchives() =>
+        Archives.Count > 0 && !IsBackupRunning && !IsWorking && SelectedRepository?.Location is not null
+        && Borg is { Support: BorgSupport.Supported };
+
+    /// <summary>The archives in the tab and how to get at their contents: the cache, or borg (with login and passphrase).</summary>
+    private ArchiveContentsSource NewContentsSource(RepositoryItemViewModel item, RepositoryLocation location,
+        (SshAccessHolder Ssh, PassphraseHolder Passphrase)? access)
+    {
+        var repositoryId = item.Config.Id;
+        var key = DurationHistory.Key(repositoryId, "contents");
+        var borg = Borg!;
+        return new ArchiveContentsSource
+        {
+            RepositoryName = item.Name,
+            Archives = [.. Archives.Select(archive => archive.Archive)],
+            IsCached = archive => _services.Archives.HasContents(repositoryId, archive.Id),
+            LoadCached = archive => _services.Archives.LoadContents(repositoryId, archive.Id),
+            Save = (archive, tree) => _services.Archives.SaveContents(repositoryId, archive.Id, tree),
+            Read = access is { } known
+                ? (archive, read, cancellationToken) => _services.BorgClient.ListContentsAsync(borg, location, archive.Name,
+                    known.Passphrase.Value, known.Ssh.Access, read, cancellationToken)
+                : null,
+            ExpectedRead = _services.Durations.Get(key),
+            RecordRead = elapsed => _services.Durations.Record(key, elapsed),
+            RestoreFactory = access is { } granted
+                ? (archive, items) => NewRestore(repositoryId, location, granted, archive, items, whole: false, _services.Dialogs)
+                : null,
+        };
+    }
+
     private RestoreViewModel NewRestore(Guid repositoryId, RepositoryLocation location,
         (SshAccessHolder Ssh, PassphraseHolder Passphrase) access, BorgArchive archive, IReadOnlyList<ArchiveNode> items, bool whole,
-        ArchiveBrowserViewModel browser)
+        IDialogService dialogs)
     {
         var borg = Borg!;
         return new RestoreViewModel(archive.Name, items, whole, borg.Runtime,
             (run, progress, cancellationToken) => Task.Run(() => _services.BorgClient.ExtractAsync(borg, location, archive.Name, run.Paths,
                 run.TargetDirectory, run.StripComponents, access.Passphrase.Value, access.Ssh.Access, progress, cancellationToken)),
-            browser.Dialogs ?? _services.Dialogs,
+            dialogs,
             // borg reads the archive's file list to work out the size first: about as long as listing it took.
             _services.Durations.Get(DurationHistory.Key(repositoryId, "contents")));
     }
