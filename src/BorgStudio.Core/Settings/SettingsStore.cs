@@ -12,6 +12,9 @@ public sealed record AppSettings
 
     /// <summary>UI language as a culture name ("en", "de"); null = the system's language if supported, else English.</summary>
     public string? Language { get; init; }
+
+    /// <summary>Look for a new release at startup and once a day.</summary>
+    public bool CheckForUpdates { get; init; } = true;
 }
 
 /// <summary>Keeps <see cref="AppSettings"/> in settings.json; a missing or unreadable file means defaults.</summary>

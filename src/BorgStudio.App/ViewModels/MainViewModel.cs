@@ -8,6 +8,7 @@ using BorgStudio.Core.Repositories;
 using BorgStudio.Core.Secrets;
 using BorgStudio.Core.Security;
 using BorgStudio.Core.Settings;
+using BorgStudio.Core.Updates;
 using BorgStudio.Core.Ssh;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -29,7 +30,8 @@ public sealed record AppServices(
     BackupJobStore Jobs,
     ArchiveCache Archives,
     DurationHistory Durations,
-    IDialogService Dialogs)
+    IDialogService Dialogs,
+    Updater Updates)
 {
     public SshHostTrust SshTrust => new(Ssh, new KnownHostsFile(SshKeys.KnownHostsFile));
 }
@@ -42,7 +44,8 @@ public partial class MainViewModel : ViewModelBase
     public MainViewModel() : this(new AppServices(BorgDetector.CreateDefault(), PluginCatalog.Empty,
         RepositoryStore.CreateDefault(), SecretStores.CreateDefault(), BorgClient.CreateDefault(),
         new SshNetService(), SshKeyStore.CreateDefault(), SshKeygen.CreateDefault(), Vault.CreateDefault(), SettingsStore.CreateDefault(), BackupJobStore.CreateDefault(),
-        ArchiveCache.CreateDefault(Vault.CreateDefault()), DurationHistory.CreateDefault(), new NoDialogs()))
+        ArchiveCache.CreateDefault(Vault.CreateDefault()), DurationHistory.CreateDefault(), new NoDialogs(),
+        Updater.CreateDefault(AppVersion.Current)))
     {
     }
 
@@ -159,7 +162,8 @@ public partial class MainViewModel : ViewModelBase
         public Task ShowFileVersionsAsync(FileVersionsViewModel versions) => Task.CompletedTask;
         public Task CopyToClipboardAsync(string text) => Task.CompletedTask;
         public Task OpenFolderAsync(string path) => Task.CompletedTask;
-        public void RestartApp() { }
+        public void RestartApp(System.Diagnostics.ProcessStartInfo? instead = null) { }
+        public Task ShowUpdateAsync(UpdateViewModel update) => Task.CompletedTask;
         public Task ShowRepositoryEditorAsync(RepositoryEditorViewModel editor) => Task.CompletedTask;
     }
 }

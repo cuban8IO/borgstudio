@@ -22,6 +22,16 @@
             </StackPanel>
         </Border>
 
+        <!-- Updates -->
+        <Border Classes="card">
+            <StackPanel Spacing="10">
+                <TextBlock Text="{x:Static res:Strings.SettingsUpdatesHeader}" FontSize="16" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding VersionText}" Opacity="0.8" />
+                <CheckBox IsChecked="{Binding CheckForUpdates}" Content="{x:Static res:Strings.SettingsCheckForUpdates}" />
+                <Button Content="{x:Static res:Strings.SettingsCheckNow}" Command="{Binding CheckForUpdatesNowCommand}" />
+            </StackPanel>
+        </Border>
+
         <!-- Vault -->
         <Border Classes="card">
             <StackPanel Spacing="10">

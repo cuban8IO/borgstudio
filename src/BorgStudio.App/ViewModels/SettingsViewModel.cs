@@ -32,6 +32,8 @@ public sealed partial class SettingsViewModel : ViewModelBase
         ];
         SelectedLanguage = LanguageOptions.FirstOrDefault(option => option.Value == main.Settings.Language) ?? LanguageOptions[0];
         RestartNeeded = AppLanguages.NeedsRestart(main.Settings.Language);
+        CheckForUpdates = main.Settings.CheckForUpdates;
+        VersionText = BorgTexts.Format(Strings.SettingsVersion, main.Updates.CurrentText);
 
         _vault.StateChanged += OnVaultStateChanged;
         Refresh();
@@ -92,6 +94,20 @@ public sealed partial class SettingsViewModel : ViewModelBase
 
     [RelayCommand]
     private void Restart() => Dialogs.RestartApp();
+
+    public string VersionText { get; }
+
+    [ObservableProperty]
+    public partial bool CheckForUpdates { get; set; }
+
+    partial void OnCheckForUpdatesChanged(bool value)
+    {
+        if (_main is not null && value != _main.Settings.CheckForUpdates)
+            _main.UpdateSettings(_main.Settings with { CheckForUpdates = value });
+    }
+
+    [RelayCommand]
+    private Task CheckForUpdatesNowAsync() => Dialogs.ShowUpdateAsync(new UpdateViewModel(_main, Dialogs, known: null));
 
     private static string LanguageName(CultureInfo culture)
     {

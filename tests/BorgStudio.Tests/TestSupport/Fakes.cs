@@ -10,6 +10,7 @@ using BorgStudio.Core.Repositories;
 using BorgStudio.Core.Secrets;
 using BorgStudio.Core.Security;
 using BorgStudio.Core.Settings;
+using BorgStudio.Core.Updates;
 using BorgStudio.Core.Ssh;
 using BorgStudio.Plugins;
 using BorgStudio.Providers.Hetzner;
@@ -528,6 +529,11 @@ public sealed class TestServices : IDisposable
     public ArchiveCache Archives { get; }
     public DurationHistory Durations { get; }
     public AppServices Services { get; }
+    public FakeUpdateSource UpdateSource { get; } = new();
+    public Updater Updates { get; }
+
+    /// <summary>The "installed" app the updater replaces.</summary>
+    public string AppFolder => Directory.Combine("app");
 
     /// <summary>Cheap key derivation: the tests check the logic, not the cost.</summary>
     public static readonly KdfParameters FastKdf = new(64, 1, 1);
@@ -544,8 +550,15 @@ public sealed class TestServices : IDisposable
         var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new SshProviderPlugin(), new HetznerProviderPlugin()], "no-plugins-here");
         Archives = new ArchiveCache(Directory.Combine("archives"), Vault);
         Durations = new DurationHistory(Directory.Combine("durations.json"));
+        System.IO.Directory.CreateDirectory(AppFolder);
+        File.WriteAllText(Path.Combine(AppFolder, FakeUpdateSource.Executable), "old");
+        Updates = new Updater(UpdateSource, "0.2.0", new InstallLocation(AppFolder, FakeUpdateSource.Executable), Directory.Combine("updates"))
+        {
+            Rid = "win-x64",
+        };
         Services = new AppServices(Borg.Detector(wsl), plugins, Store, Secrets,
-            new BorgClient(Borg, FakeBorg.WslExecutable) { NativeIsPosix = true }, Ssh, SshKeys, SshKeygen, Vault, Settings, Jobs, Archives, Durations, Dialogs);
+            new BorgClient(Borg, FakeBorg.WslExecutable) { NativeIsPosix = true }, Ssh, SshKeys, SshKeygen, Vault, Settings, Jobs, Archives, Durations, Dialogs,
+            Updates);
     }
 
     public KnownHostsFile KnownHosts => new(SshKeys.KnownHostsFile);
@@ -714,7 +727,25 @@ public sealed class FakeDialogs : IDialogService
 
     public int Restarts { get; private set; }
 
-    public void RestartApp() => Restarts++;
+    /// <summary>What a restart would have started instead of the app.</summary>
+    public List<System.Diagnostics.ProcessStartInfo> RestartsWith { get; } = [];
+
+    public void RestartApp(System.Diagnostics.ProcessStartInfo? instead = null)
+    {
+        Restarts++;
+        if (instead is not null)
+            RestartsWith.Add(instead);
+    }
+
+    public Func<UpdateViewModel, Task>? Update { get; set; }
+
+    public List<UpdateViewModel> Updates { get; } = [];
+
+    public Task ShowUpdateAsync(UpdateViewModel update)
+    {
+        Updates.Add(update);
+        return Update?.Invoke(update) ?? Task.CompletedTask;
+    }
 
     public Task OpenFolderAsync(string path)
     {
@@ -739,4 +770,75 @@ public sealed class ManualTime : TimeProvider
     public override DateTimeOffset GetUtcNow() => _now;
 
     public void Advance(TimeSpan time) => _now += time;
+}
+
+/// <summary>Releases for the updater: <see cref="Publish"/> makes one with a zip package and its checksum.</summary>
+public sealed class FakeUpdateSource : IUpdateSource
+{
+    public const string Executable = "BorgStudio.exe";
+
+    public ReleaseInfo? Latest { get; set; }
+
+    public Dictionary<string, byte[]> Files { get; } = [];
+
+    public Exception? Error { get; set; }
+
+    /// <summary>Runs before a download writes anything (e.g. to cancel it).</summary>
+    public Func<Task>? BeforeDownload { get; set; }
+
+    public int Checks { get; private set; }
+
+    public ReleaseInfo Publish(string version, string rid = "win-x64", string content = "new", bool checksums = true, bool corrupt = false)
+    {
+        using var buffer = new MemoryStream();
+        using (var zip = new System.IO.Compression.ZipArchive(buffer, System.IO.Compression.ZipArchiveMode.Create, leaveOpen: true))
+        {
+            foreach (var (name, text) in new[] { (Executable, content), ("lib/core.dll", "library " + version) })
+            {
+                using var writer = new StreamWriter(zip.CreateEntry(name).Open());
+                writer.Write(text);
+            }
+        }
+        var bytes = buffer.ToArray();
+        var package = $"BorgStudio-{version}-{rid}.zip";
+        var url = $"https://example.test/v{version}/{package}";
+        Files[url] = corrupt ? [.. bytes, 0] : bytes;
+        var assets = new List<ReleaseAsset> { new(package, url, Files[url].Length) };
+        if (checksums)
+        {
+            var sums = System.Text.Encoding.UTF8.GetBytes($"{Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(bytes))}  {package}\n");
+            var sumsUrl = $"https://example.test/v{version}/{Updater.ChecksumsFile}";
+            Files[sumsUrl] = sums;
+            assets.Add(new ReleaseAsset(Updater.ChecksumsFile, sumsUrl, sums.Length));
+        }
+        Latest = new ReleaseInfo(UpdateVersion.Parse(version)!, "v" + version, "## What's new\n- Things\n\n### Downloads\n\n| Platform | File |",
+            $"https://example.test/releases/v{version}", assets);
+        return Latest;
+    }
+
+    public Task<ReleaseInfo?> GetLatestAsync(CancellationToken cancellationToken = default)
+    {
+        Checks++;
+        return Error is null ? Task.FromResult(Latest) : Task.FromException<ReleaseInfo?>(Error);
+    }
+
+    public async Task DownloadAsync(string url, string path, IProgress<long>? progress, CancellationToken cancellationToken = default)
+    {
+        if (BeforeDownload is not null)
+            await BeforeDownload();
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!Files.TryGetValue(url, out var bytes))
+            throw new HttpRequestException("404 " + url);
+        var half = bytes.Length / 2;
+        await using var file = File.Create(path);
+        await file.WriteAsync(bytes.AsMemory(0, half), cancellationToken);
+        progress?.Report(half);
+        await file.WriteAsync(bytes.AsMemory(half), cancellationToken);
+        progress?.Report(bytes.Length);
+    }
+
+    public Task<string> GetTextAsync(string url, CancellationToken cancellationToken = default) =>
+        Files.TryGetValue(url, out var bytes)
+            ? Task.FromResult(System.Text.Encoding.UTF8.GetString(bytes))
+            : Task.FromException<string>(new HttpRequestException("404 " + url));
 }

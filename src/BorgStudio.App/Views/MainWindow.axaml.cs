@@ -38,10 +38,14 @@ public partial class MainWindow : Window
     /// <summary>Start the app again once this window has closed.</summary>
     private bool _restart;
 
-    /// <summary>Closes the app the usual way (a running backup asks first) and starts it again.</summary>
-    public void Restart()
+    /// <summary>Started instead of the app itself (an update's installer).</summary>
+    private ProcessStartInfo? _restartWith;
+
+    /// <summary>Closes the app the usual way (a running backup asks first) and starts it again, or <paramref name="instead"/>.</summary>
+    public void Restart(ProcessStartInfo? instead = null)
     {
         _restart = true;
+        _restartWith = instead;
         CloseDialogs(this);
         Close();
     }
@@ -50,11 +54,16 @@ public partial class MainWindow : Window
     {
         base.OnClosed(e);
         if (_restart)
-            StartAgain();
+            StartAgain(_restartWith);
     }
 
-    private static void StartAgain()
+    private static void StartAgain(ProcessStartInfo? instead)
     {
+        if (instead is not null)
+        {
+            Process.Start(instead)?.Dispose();
+            return;
+        }
         if (Environment.ProcessPath is not { } path)
             return;
         var start = new ProcessStartInfo(path) { UseShellExecute = false };
@@ -177,6 +186,12 @@ public partial class MainWindow : Window
         if (await ImportViewModel.OpenAsync(viewModel, new DialogService(this)) is not { } import)
             return;
         await new ImportWindow { DataContext = import }.ShowDialog(this);
+    }
+
+    private async void OpenUpdate_Click(object? sender, EventArgs e)
+    {
+        if (DataContext is MainViewModel { IsLocked: false } viewModel)
+            await viewModel.ShowUpdateCommand.ExecuteAsync(null);
     }
 
     private async void OpenSettings_Click(object? sender, EventArgs e)
