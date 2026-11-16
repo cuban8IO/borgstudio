@@ -3,7 +3,10 @@
 //   index.html (English, the source)  -> <out>/index.html
 //   index.html + i18n/de.json         -> <out>/de/index.html (a real German page, so search engines index it)
 //   both get structured data (schema.org SoftwareApplication) with the current version from version.json,
-//   and <out>/sitemap.xml lists both with their language alternates.
+//   <out>/sitemap.xml lists both with their language alternates, <out>/robots.txt points to it.
+//
+// The page is published at its own subdomain (set under Settings → Pages → Custom domain, with a DNS CNAME to
+// cuban8io.github.io); GitHub redirects the old cuban8io.github.io/borgstudio/ address there.
 //
 // Usage: node .github/scripts/build-site.mjs <source> <out> [site-url]
 //   site-url defaults to the address the page is published at; it must end with "/".
@@ -11,8 +14,8 @@
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const [source = "site", out = "_site", siteUrl = "https://cuban8io.github.io/borgstudio/"] = process.argv.slice(2);
-const defaultUrl = "https://cuban8io.github.io/borgstudio/";
+const [source = "site", out = "_site", siteUrl = "https://borgstudio.cuban8io.net/"] = process.argv.slice(2);
+const defaultUrl = "https://borgstudio.cuban8io.net/";
 if (!siteUrl.endsWith("/")) throw new Error("The site URL must end with /");
 
 const template = readFileSync(join(source, "index.html"), "utf8");
@@ -124,4 +127,7 @@ const urls = Object.values(pages)
 writeFileSync(join(out, "sitemap.xml"),
   `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls}\n</urlset>\n`);
 
-console.log(`Built ${out}: index.html, de/index.html (${used.size} texts), sitemap.xml${release.version ? `, version ${release.version}` : ""}`);
+// robots.txt only counts at the root of a host: the page has its own (sub)domain, so it is ours.
+writeFileSync(join(out, "robots.txt"), `User-agent: *\nAllow: /\n\nSitemap: ${siteUrl}sitemap.xml\n`);
+
+console.log(`Built ${out}: index.html, de/index.html (${used.size} texts), sitemap.xml, robots.txt${release.version ? `, version ${release.version}` : ""}`);

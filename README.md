@@ -4,7 +4,7 @@ All-in-one app to manage BorgBackup repositories – create and upload backups, 
 archives and restore files.
 
 Cross-platform desktop app (Windows, Linux, macOS) built with .NET 10 and [Avalonia UI](https://avaloniaui.net/).
-The **[product page](https://cuban8io.github.io/borgstudio/)** shows what it does, the
+The **[product page](https://borgstudio.cuban8io.net/)** shows what it does, the
 **[wiki](https://github.com/cuban8IO/borgstudio/wiki)** explains every function step by step.
 
 ## Features
