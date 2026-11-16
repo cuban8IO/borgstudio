@@ -11,6 +11,7 @@ on:
     # and the CI set-up itself. A push that touches only these creates no release.
     paths-ignore:
       - "site/**"
+      - ".github/scripts/build-site.mjs"
       - "README.md"
       - ".gitignore"
       - ".github/workflows/**"

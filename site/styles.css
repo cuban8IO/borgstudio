@@ -67,15 +67,13 @@ h3 { font-size: 1.15rem; }
 .nav-links a { color: var(--muted); font-size: 0.95rem; }
 .nav-links a:hover { color: var(--text); text-decoration: none; }
 .lang { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
-.lang button {
-  background: transparent;
+.lang a {
   color: var(--muted);
-  border: 0;
   padding: 4px 10px;
   font: 600 0.8rem var(--font);
-  cursor: pointer;
 }
-.lang button.active { background: var(--green); color: #0b0b0b; }
+.lang a:hover { color: var(--text); text-decoration: none; }
+.lang a.active { background: var(--green); color: #0b0b0b; }
 
 /* Buttons */
 .button {
