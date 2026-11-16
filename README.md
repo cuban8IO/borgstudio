@@ -4,7 +4,8 @@ All-in-one app to manage BorgBackup repositories – create and upload backups, 
 archives and restore files.
 
 Cross-platform desktop app (Windows, Linux, macOS) built with .NET 10 and [Avalonia UI](https://avaloniaui.net/).
-The **[wiki](https://github.com/cuban8IO/borgstudio/wiki)** explains every function step by step.
+The **[product page](https://cuban8io.github.io/borgstudio/)** shows what it does, the
+**[wiki](https://github.com/cuban8IO/borgstudio/wiki)** explains every function step by step.
 
 ## Features
 
@@ -90,6 +91,7 @@ BorgStudio.slnx
 ├── tests/
 │   └── BorgStudio.Tests                xUnit tests
 ├── docs/                               Developer documentation
+├── site/                               Product page (GitHub Pages)
 ├── build/                              Packaging assets (app icon source, macOS Info.plist and .icns)
 └── .github/                            CI, packaging and release workflows
 ```
@@ -129,7 +131,7 @@ dotnet publish src/BorgStudio.App -c Release -r linux-x64 -o publish
 | `feature/*` | a new feature, merged into `dev` via pull request |
 | `fix/*` | a bug fix, merged into `dev` via pull request |
 | `dev` | integration branch for the next release |
-| `main` | releases only – every push to `main` publishes a release |
+| `main` | releases only – every push to `main` publishes a release, unless it only changes the product page (`site/`), the README, `.gitignore` or the workflows |
 
 Release versions are calculated automatically from the last `vX.Y.Z` tag: if any `feature/*` branch was merged
 since then, the minor version goes up (0.**x**.0), otherwise the patch version (0.0.**x**).
@@ -140,7 +142,11 @@ section gets the new version number.
 
 ### Unreleased
 
-Nothing yet.
+**Added**
+- Product page (`site/`, English and German) on GitHub Pages with the advantages, the main functions with screenshots,
+  examples and the current release with its downloads, read from GitHub when the page is opened. It is published by
+  `.github/workflows/pages.yml` on changes to main and after every release. Pushes to main that only change the
+  page, the README, `.gitignore` or the workflows create no release.
 
 ### 0.2.0 – 2026-11-09
 
