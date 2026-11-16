@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BorgStudio – BorgBackup without the command line</title>
+  <meta name="description" content="BorgStudio is a desktop app for BorgBackup: deduplicated, encrypted backups to a disk, your server or a Hetzner Storage Box – and every file back in a few clicks. Windows, macOS, Linux.">
+  <meta property="og:title" content="BorgStudio – BorgBackup without the command line">
+  <meta property="og:description" content="Deduplicated, encrypted backups with BorgBackup – in a desktop app for Windows, macOS and Linux.">
+  <meta property="og:image" content="images/en/main-archives.png">
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top"><img src="favicon.svg" alt="" width="28" height="28"> BorgStudio</a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#advantages" data-i18n="nav.advantages">Advantages</a>
+      <a href="#features" data-i18n="nav.features">Features</a>
+      <a href="#examples" data-i18n="nav.examples">Examples</a>
+      <a href="#download" data-i18n="nav.download">Download</a>
+      <a href="https://github.com/cuban8IO/borgstudio/wiki" data-i18n="nav.docs">Guide</a>
+      <a href="https://github.com/cuban8IO/borgstudio">GitHub</a>
+    </nav>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="en">EN</button>
+      <button type="button" data-lang="de">DE</button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="wrap hero-inner">
+      <div class="hero-text">
+        <p class="badge"><span class="dot"></span> <span data-i18n="hero.badge">Version</span> <span class="js-version">–</span></p>
+        <h1 data-i18n="hero.title">Backups you can trust.<br><span class="accent">Without the command line.</span></h1>
+        <p class="lead" data-i18n="hero.lead">BorgStudio is a desktop app for <a href="https://www.borgbackup.org/">BorgBackup</a>: deduplicated, encrypted backups to a disk, your own server or a Hetzner Storage Box – and every file back in a few clicks.</p>
+        <div class="cta">
+          <a class="button primary js-primary-download" href="#download" data-i18n="hero.download">Download</a>
+          <a class="button" href="#examples" data-i18n="hero.examples">See examples</a>
+        </div>
+        <p class="small muted" data-i18n="hero.platforms">Windows · macOS · Linux — free, portable, no account.</p>
+      </div>
+      <figure class="hero-shot">
+        <img class="shot" data-shot="main-archives" src="images/en/main-archives.png" width="1180" height="720"
+             alt="BorgStudio showing the archives of a repository">
+      </figure>
+    </div>
+  </section>
+
+  <!-- Advantages -->
+  <section id="advantages" class="section">
+    <div class="wrap">
+      <h2 data-i18n="adv.title">Why BorgStudio</h2>
+      <p class="section-lead" data-i18n="adv.lead">BorgBackup is one of the most reliable backup tools there is. BorgStudio puts it into a window – with everything borg can do, and nothing you have to type.</p>
+      <div class="cards">
+        <article class="card">
+          <div class="icon">⇣</div>
+          <h3 data-i18n="adv.1.title">Small and fast after the first backup</h3>
+          <p data-i18n="adv.1.text">borg deduplicates and compresses: unchanged data is never stored twice, so later backups upload only what is new – often a few megabytes.</p>
+        </article>
+        <article class="card">
+          <div class="icon">🔒</div>
+          <h3 data-i18n="adv.2.title">Encrypted before it leaves your computer</h3>
+          <p data-i18n="adv.2.text">Backups are encrypted on your machine. Passphrases and SSH keys live in a PIN-protected vault (Argon2id + AES-256) or your system keychain.</p>
+        </article>
+        <article class="card">
+          <div class="icon">⌕</div>
+          <h3 data-i18n="adv.3.title">Every file back in seconds</h3>
+          <p data-i18n="adv.3.text">Browse any backup like a folder, search across all of them, see every version of a file – then restore it or simply open it.</p>
+        </article>
+        <article class="card">
+          <div class="icon">⌂</div>
+          <h3 data-i18n="adv.4.title">Your data stays yours</h3>
+          <p data-i18n="adv.4.text">No account, no cloud service of ours, no telemetry. Your backups go where you decide: a USB disk, your NAS, any SSH server or a Storage Box.</p>
+        </article>
+        <article class="card">
+          <div class="icon">⧉</div>
+          <h3 data-i18n="adv.5.title">Plain borg underneath</h3>
+          <p data-i18n="adv.5.text">BorgStudio creates normal borg repositories. Connect the ones you already have, and keep using the borg command line whenever you like.</p>
+        </article>
+        <article class="card">
+          <div class="icon">◎</div>
+          <h3 data-i18n="adv.6.title">Windows, macOS and Linux</h3>
+          <p data-i18n="adv.6.text">Unpack and start – the runtime is included. On Windows borg runs inside WSL. BorgStudio updates itself and checks every download.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="section alt">
+    <div class="wrap">
+      <h2 data-i18n="feat.title">What it does</h2>
+
+      <div class="feature">
+        <div class="feature-text">
+          <h3 data-i18n="feat.1.title">Backup jobs with live progress</h3>
+          <p data-i18n="feat.1.text">Pick folders, leave out caches, build output and recycle bins with one click, choose the compression. While borg runs you see the upload speed and the remaining time; cancelling keeps a checkpoint.</p>
+          <ul class="ticks">
+            <li data-i18n="feat.1.a">Several jobs per repository</li>
+            <li data-i18n="feat.1.b">Old archives cleaned up automatically (daily, weekly, monthly …)</li>
+            <li data-i18n="feat.1.c">Files that could not be read are listed, not hidden</li>
+          </ul>
+        </div>
+        <img class="shot" data-shot="job-editor" src="images/en/job-editor.png" width="640" height="720" alt="The backup job editor" loading="lazy">
+      </div>
+
+      <div class="feature reverse">
+        <div class="feature-text">
+          <h3 data-i18n="feat.2.title">Browse backups like folders</h3>
+          <p data-i18n="feat.2.text">Open any archive: folder tree on the left, files with size and date on the right, a search over the whole archive. Tick what you need and restore it.</p>
+        </div>
+        <img class="shot" data-shot="archive-browser" src="images/en/archive-browser.png" width="1000" height="640" alt="The archive browser" loading="lazy">
+      </div>
+
+      <div class="feature">
+        <div class="feature-text">
+          <h3 data-i18n="feat.3.title">Search all archives, find every version</h3>
+          <p data-i18n="feat.3.text">Which backup still has the old spreadsheet? Search all archives at once by name or pattern (<code>*.pdf</code>) and see how a file changed over time – each version can be restored.</p>
+        </div>
+        <img class="shot" data-shot="search" src="images/en/search.png" width="900" height="560" alt="Searching all archives" loading="lazy">
+      </div>
+
+      <div class="feature reverse">
+        <div class="feature-text">
+          <h3 data-i18n="feat.4.title">Restore safely</h3>
+          <p data-i18n="feat.4.text">Into a folder of your choice or back to the original place. Before writing anything, BorgStudio checks what would be overwritten – and names files that changed after the backup.</p>
+        </div>
+        <img class="shot" data-shot="restore" src="images/en/restore.png" width="640" height="400" alt="The restore dialog" loading="lazy">
+      </div>
+
+      <div class="feature">
+        <div class="feature-text">
+          <h3 data-i18n="feat.5.title">Mount an archive as a folder</h3>
+          <p data-i18n="feat.5.text">Need just one file? Mount the archive – or the whole repository – and open it in Explorer, Finder or your file manager. Read-only, so nothing can go wrong.</p>
+        </div>
+        <img class="shot" data-shot="mounts" src="images/en/mounts.png" width="1180" height="720" alt="Mounted archives in the status bar" loading="lazy">
+      </div>
+
+      <div class="feature reverse">
+        <div class="feature-text">
+          <h3 data-i18n="feat.6.title">Locked, encrypted, up to date</h3>
+          <p data-i18n="feat.6.text">An app lock with a PIN, an encrypted vault for passphrases and SSH keys, English or German, and updates from within the app – checked against the release's checksums before they are installed.</p>
+        </div>
+        <img class="shot" data-shot="settings" src="images/en/settings.png" width="560" height="646" alt="The settings window" loading="lazy">
+      </div>
+    </div>
+  </section>
+
+  <!-- Examples -->
+  <section id="examples" class="section">
+    <div class="wrap">
+      <h2 data-i18n="ex.title">Examples</h2>
+      <p class="section-lead" data-i18n="ex.lead">How people use BorgStudio – each in a few minutes.</p>
+      <div class="examples">
+        <article class="example">
+          <p class="tag" data-i18n="ex.1.tag">Off-site backup</p>
+          <h3 data-i18n="ex.1.title">Laptop → Hetzner Storage Box</h3>
+          <ol>
+            <li data-i18n="ex.1.a">Add a repository, choose <em>Hetzner Storage Box</em>, enter <code>u123456</code> and <code>backups/laptop</code>.</li>
+            <li data-i18n="ex.1.b">BorgStudio checks the box's host key against Hetzner's fingerprints and installs a login key.</li>
+            <li data-i18n="ex.1.c">Create a job “Documents”, keep 7 daily, 4 weekly and 6 monthly archives.</li>
+            <li data-i18n="ex.1.d"><em>Back up now</em> – later runs upload only what changed.</li>
+          </ol>
+        </article>
+        <article class="example">
+          <p class="tag" data-i18n="ex.2.tag">Local copy</p>
+          <h3 data-i18n="ex.2.title">Photos → USB disk</h3>
+          <ol>
+            <li data-i18n="ex.2.a">Add a repository in a folder on the disk, e.g. <code>D:\Backups\borg</code>.</li>
+            <li data-i18n="ex.2.b">Create a job “Photos” with fast <code>lz4</code> compression – photos hardly compress anyway.</li>
+            <li data-i18n="ex.2.c">Keep every archive: deduplication makes another backup of unchanged photos almost free.</li>
+          </ol>
+        </article>
+        <article class="example">
+          <p class="tag" data-i18n="ex.3.tag">Own hardware</p>
+          <h3 data-i18n="ex.3.title">Home NAS over SSH</h3>
+          <ol>
+            <li data-i18n="ex.3.a">Add an <em>SSH server</em> with host, user and path.</li>
+            <li data-i18n="ex.3.b">Confirm the server's fingerprint once; BorgStudio creates a key and installs it with your password – the password is not stored.</li>
+            <li data-i18n="ex.3.c">The key stays encrypted in the vault and is handed to borg only during a backup.</li>
+          </ol>
+        </article>
+        <article class="example">
+          <p class="tag" data-i18n="ex.4.tag">Oops</p>
+          <h3 data-i18n="ex.4.title">Last month's version of a spreadsheet</h3>
+          <ol>
+            <li data-i18n="ex.4.a"><em>Search all archives…</em> for <code>budget.ods</code>.</li>
+            <li data-i18n="ex.4.b">Open its versions: one row per change, with the archives it is in.</li>
+            <li data-i18n="ex.4.c">Restore the version you need into a folder – the current file stays untouched.</li>
+          </ol>
+        </article>
+        <article class="example">
+          <p class="tag" data-i18n="ex.5.tag">Quick look</p>
+          <h3 data-i18n="ex.5.title">One file, without restoring</h3>
+          <ol>
+            <li data-i18n="ex.5.a">Select an archive and click <em>Mount</em>.</li>
+            <li data-i18n="ex.5.b">The archive opens as a folder in your file manager – copy what you need.</li>
+            <li data-i18n="ex.5.c">Unmount from the status bar, or just close BorgStudio.</li>
+          </ol>
+        </article>
+        <article class="example">
+          <p class="tag" data-i18n="ex.6.tag">Moving</p>
+          <h3 data-i18n="ex.6.title">A new computer</h3>
+          <ol>
+            <li data-i18n="ex.6.a"><em>Tools → Export settings</em> writes repositories, passphrases, SSH keys and jobs into one encrypted file.</li>
+            <li data-i18n="ex.6.b">On the new computer: <em>Import settings</em>, enter the file's password.</li>
+            <li data-i18n="ex.6.c">Everything is back – ready for the next backup.</li>
+          </ol>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Steps -->
+  <section class="section alt">
+    <div class="wrap">
+      <h2 data-i18n="steps.title">Up and running in three steps</h2>
+      <div class="steps">
+        <div class="step"><span class="num">1</span><h3 data-i18n="steps.1.title">Install</h3><p data-i18n="steps.1.text">Unpack BorgStudio and install borg (on Windows inside WSL: <code>sudo apt install borgbackup</code>).</p></div>
+        <div class="step"><span class="num">2</span><h3 data-i18n="steps.2.title">Add a repository</h3><p data-i18n="steps.2.text">A local folder, an SSH server or a Storage Box – new or existing.</p></div>
+        <div class="step"><span class="num">3</span><h3 data-i18n="steps.3.title">Back up</h3><p data-i18n="steps.3.text">Create a job, click <em>Back up now</em>, done. Browse and restore whenever you need to.</p></div>
+      </div>
+      <p class="center"><a class="button" href="https://github.com/cuban8IO/borgstudio/wiki/Getting-Started" data-i18n="steps.guide">Read the getting-started guide</a></p>
+    </div>
+  </section>
+
+  <!-- Download -->
+  <section id="download" class="section">
+    <div class="wrap">
+      <h2 data-i18n="dl.title">Download</h2>
+      <p class="section-lead">
+        <span data-i18n="dl.current">Current version:</span> <strong class="js-version">–</strong>
+        <span class="js-date muted"></span>
+        · <a class="js-notes" href="https://github.com/cuban8IO/borgstudio/releases/latest" data-i18n="dl.notes">What's new</a>
+      </p>
+      <div class="downloads">
+        <a class="download js-asset" data-rid="win-x64" href="https://github.com/cuban8IO/borgstudio/releases/latest">
+          <span class="os">Windows</span><span class="arch">x64</span><span class="file js-file">.zip</span>
+        </a>
+        <a class="download js-asset" data-rid="osx-arm64" href="https://github.com/cuban8IO/borgstudio/releases/latest">
+          <span class="os">macOS</span><span class="arch" data-i18n="dl.arm">Apple Silicon (M1 and newer)</span><span class="file js-file">.zip</span>
+        </a>
+        <a class="download js-asset" data-rid="osx-x64" href="https://github.com/cuban8IO/borgstudio/releases/latest">
+          <span class="os">macOS</span><span class="arch">Intel</span><span class="file js-file">.zip</span>
+        </a>
+        <a class="download js-asset" data-rid="linux-x64" href="https://github.com/cuban8IO/borgstudio/releases/latest">
+          <span class="os">Linux</span><span class="arch">x64</span><span class="file js-file">.tar.gz</span>
+        </a>
+      </div>
+      <div class="notes">
+        <p data-i18n="dl.req"><strong>Requires</strong> <a href="https://borgbackup.readthedocs.io/en/stable/installation.html">BorgBackup</a> 1.2 or newer (1.4 recommended) – on Windows inside WSL. The .NET runtime is included.</p>
+        <p data-i18n="dl.check">Every release lists the SHA-256 checksums of its files in <a class="js-sums" href="https://github.com/cuban8IO/borgstudio/releases/latest">SHA256SUMS</a>; the built-in updater checks them before installing.</p>
+        <p data-i18n="dl.mac"><strong>macOS:</strong> the app is not notarized by Apple. If macOS refuses to open it, allow it under System Settings → Privacy &amp; Security → “Open Anyway”.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section alt">
+    <div class="wrap narrow">
+      <h2 data-i18n="faq.title">Questions</h2>
+      <details>
+        <summary data-i18n="faq.1.q">Does BorgStudio cost anything?</summary>
+        <p data-i18n="faq.1.a">No. BorgStudio is free, and its source code is on GitHub. You only pay for storage you choose to rent, such as a Storage Box.</p>
+      </details>
+      <details>
+        <summary data-i18n="faq.2.q">Can I use my existing borg repositories?</summary>
+        <p data-i18n="faq.2.a">Yes. Connect them with their passphrase. Everything BorgStudio creates is a normal borg repository that the borg command line and other borg tools can read too.</p>
+      </details>
+      <details>
+        <summary data-i18n="faq.3.q">Does BorgStudio send my data anywhere?</summary>
+        <p data-i18n="faq.3.a">Only to the repositories you add. To look for updates it asks GitHub's public release list. There is no account and no telemetry.</p>
+      </details>
+      <details>
+        <summary data-i18n="faq.4.q">What happens if I lose my passphrase?</summary>
+        <p data-i18n="faq.4.a">Then the backups cannot be decrypted – by anyone. Write the passphrase down and export the repository key; BorgStudio offers this right after creating a repository.</p>
+      </details>
+      <details>
+        <summary data-i18n="faq.5.q">Are scheduled backups possible?</summary>
+        <p data-i18n="faq.5.a">Not yet – they are the next big feature. Until then, start backups with one click.</p>
+      </details>
+      <details>
+        <summary data-i18n="faq.6.q">Why WSL on Windows?</summary>
+        <p data-i18n="faq.6.a">borg itself does not run on Windows. Inside WSL it runs as on Linux; BorgStudio handles the paths, so your Windows folders show and restore as <code>C:\…</code>.</p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <p><img src="favicon.svg" alt="" width="20" height="20"> BorgStudio <span class="js-version muted"></span></p>
+    <p class="links">
+      <a href="https://github.com/cuban8IO/borgstudio">GitHub</a>
+      <a href="https://github.com/cuban8IO/borgstudio/wiki" data-i18n="nav.docs">Guide</a>
+      <a href="https://github.com/cuban8IO/borgstudio/releases" data-i18n="footer.releases">Releases</a>
+      <a href="https://github.com/cuban8IO/borgstudio/issues" data-i18n="footer.issues">Report a problem</a>
+    </p>
+    <p class="small muted" data-i18n="footer.note">BorgStudio is an independent project and not affiliated with the BorgBackup project or Hetzner.</p>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
