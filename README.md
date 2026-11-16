@@ -4,7 +4,8 @@ All-in-one app to manage BorgBackup repositories – create and upload backups, 
 archives and restore files.
 
 Cross-platform desktop app (Windows, Linux, macOS) built with .NET 10 and [Avalonia UI](https://avaloniaui.net/).
-The **[wiki](https://github.com/cuban8IO/borgstudio/wiki)** explains every function step by step.
+The **[product page](https://cuban8io.github.io/borgstudio/)** shows what it does, the
+**[wiki](https://github.com/cuban8IO/borgstudio/wiki)** explains every function step by step.
 
 ## Features
 
@@ -90,6 +91,7 @@ BorgStudio.slnx
 ├── tests/
 │   └── BorgStudio.Tests                xUnit tests
 ├── docs/                               Developer documentation
+├── site/                               Product page (GitHub Pages)
 ├── build/                              Packaging assets (app icon source, macOS Info.plist and .icns)
 └── .github/                            CI, packaging and release workflows
 ```
@@ -140,7 +142,11 @@ section gets the new version number.
 
 ### Unreleased
 
-Nothing yet.
+**Added**
+- Product page (`site/`, English and German) on GitHub Pages with the advantages, the main functions with screenshots,
+  examples and the current release with its downloads, read from GitHub when the page is opened. It is published by
+  `.github/workflows/pages.yml` on changes to main and after every release; changes to the page alone create no
+  release.
 
 ### 0.2.0 – 2026-11-09
 
