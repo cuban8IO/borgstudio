@@ -486,3 +486,5 @@ $RECYCLE.BIN/
 
 # Written by the pages workflow when the product page is published
 site/version.json
+# Local build of the product page (.github/scripts/build-site.mjs)
+_site/
