@@ -131,7 +131,7 @@ dotnet publish src/BorgStudio.App -c Release -r linux-x64 -o publish
 | `feature/*` | a new feature, merged into `dev` via pull request |
 | `fix/*` | a bug fix, merged into `dev` via pull request |
 | `dev` | integration branch for the next release |
-| `main` | releases only – every push to `main` publishes a release |
+| `main` | releases only – every push to `main` publishes a release, unless it only changes the product page (`site/`), the README, `.gitignore` or the workflows |
 
 Release versions are calculated automatically from the last `vX.Y.Z` tag: if any `feature/*` branch was merged
 since then, the minor version goes up (0.**x**.0), otherwise the patch version (0.0.**x**).
@@ -145,8 +145,8 @@ section gets the new version number.
 **Added**
 - Product page (`site/`, English and German) on GitHub Pages with the advantages, the main functions with screenshots,
   examples and the current release with its downloads, read from GitHub when the page is opened. It is published by
-  `.github/workflows/pages.yml` on changes to main and after every release; changes to the page alone create no
-  release.
+  `.github/workflows/pages.yml` on changes to main and after every release. Pushes to main that only change the
+  page, the README, `.gitignore` or the workflows create no release.
 
 ### 0.2.0 – 2026-11-09
 
