@@ -8,6 +8,7 @@ on:
     branches: [main]
     paths:
       - "site/**"
+      - ".github/scripts/build-site.mjs"
       - ".github/workflows/pages.yml"
   workflow_run:
     workflows: [release]
@@ -43,11 +44,15 @@ jobs:
             > site/version.json || echo '{}' > site/version.json
           cat site/version.json
 
+      # The German page, structured data and the sitemap (no dependencies, the runner's Node is enough).
+      - name: Build
+        run: node .github/scripts/build-site.mjs site _site
+
       - uses: actions/configure-pages@v6
 
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: site
+          path: _site
 
       - id: deployment
         uses: actions/deploy-pages@v5
