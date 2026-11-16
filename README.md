@@ -25,6 +25,12 @@ The **[product page](https://borgstudio.cuban8io.net/)** shows what it does, the
 
 Scheduled backups are planned for a later version.
 
+## No warranty
+
+BorgStudio is free and provided **without any warranty**, as far as the law allows. It runs the well-proven borg
+underneath, but a backup is only as good as its restore: try restoring from your backups now and then, and keep the
+passphrase and the repository key safe – without them nobody can restore your data.
+
 ## Download
 
 Portable builds for Windows (x64), macOS (Apple Silicon and Intel) and Linux (x64) are on the
@@ -148,7 +154,9 @@ section gets the new version number.
   `.github/scripts/build-site.mjs` builds the German page from `site/i18n/de.json` and adds what search engines need:
   canonical and language links, Open Graph data, schema.org structured data and a sitemap. It is published by
   `.github/workflows/pages.yml` on changes to main and after every release. Pushes to main that only change the
-  page, the README, `.gitignore` or the workflows create no release.
+  page, the README, `.gitignore` or the workflows create no release. Footer links to a legal notice (Impressum) and a privacy policy in both languages; the build refuses to
+  publish a page that still contains a placeholder.
+- "No warranty" note on the product page, in the README and in the wiki.
 
 ### 0.2.0 – 2026-11-09
 
