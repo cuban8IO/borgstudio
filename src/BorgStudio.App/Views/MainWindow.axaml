@@ -31,8 +31,16 @@
                     <NativeMenuItem Header="{x:Static res:Strings.MenuImport}" Click="OpenImport_Click" />
                     <NativeMenuItemSeparator />
                     <NativeMenuItem Header="{x:Static res:Strings.MenuPlugins}" Click="OpenPlugins_Click" />
+                </NativeMenu>
+            </NativeMenuItem>
+            <NativeMenuItem Header="{x:Static res:Strings.MenuHelp}">
+                <NativeMenu>
+                    <NativeMenuItem Header="{x:Static res:Strings.MenuGuide}" Click="OpenGuide_Click" />
+                    <NativeMenuItem Header="{x:Static res:Strings.MenuWebsite}" Click="OpenWebsite_Click" />
                     <NativeMenuItemSeparator />
                     <NativeMenuItem Header="{x:Static res:Strings.MenuCheckForUpdates}" Click="OpenUpdate_Click" />
+                    <NativeMenuItemSeparator />
+                    <NativeMenuItem Header="{x:Static res:Strings.MenuAbout}" Click="OpenAbout_Click" />
                 </NativeMenu>
             </NativeMenuItem>
         </NativeMenu>

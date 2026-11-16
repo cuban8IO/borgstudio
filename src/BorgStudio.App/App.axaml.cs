@@ -62,7 +62,11 @@ public partial class App : Application
             viewModel.CheckBorgCommand.Execute(null);
             StartVaultAutoLock(vault, viewModel);
             StartUpdateChecks(viewModel);
-            window.Opened += async (_, _) => await viewModel.OfferVaultForLegacyKeysAsync();
+            window.Opened += async (_, _) =>
+            {
+                await viewModel.OfferVaultForLegacyKeysAsync();
+                await viewModel.ShowWarrantyNoticeIfDueAsync();
+            };
         }
 
         base.OnFrameworkInitializationCompleted();

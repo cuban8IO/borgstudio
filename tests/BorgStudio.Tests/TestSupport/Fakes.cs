@@ -623,7 +623,7 @@ public sealed class FakeDialogs : IDialogService
         return Task.FromResult(ConfirmAnswers.Count > 0 && ConfirmAnswers.Dequeue());
     }
 
-    public Task ShowMessageAsync(string title, string message)
+    public Task ShowMessageAsync(string title, string message, string? buttonText = null)
     {
         Shown.Add(title);
         Messages.Add(message);

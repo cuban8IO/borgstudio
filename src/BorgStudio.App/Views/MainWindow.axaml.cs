@@ -188,6 +188,16 @@ public partial class MainWindow : Window
         await new ImportWindow { DataContext = import }.ShowDialog(this);
     }
 
+    private async void OpenGuide_Click(object? sender, EventArgs e) => await Launcher.LaunchUriAsync(AppLinks.Guide);
+
+    private async void OpenWebsite_Click(object? sender, EventArgs e) => await Launcher.LaunchUriAsync(AppLinks.Website);
+
+    private async void OpenAbout_Click(object? sender, EventArgs e)
+    {
+        if (DataContext is MainViewModel { IsLocked: false })
+            await new AboutWindow().ShowDialog(this);
+    }
+
     private async void OpenUpdate_Click(object? sender, EventArgs e)
     {
         if (DataContext is MainViewModel { IsLocked: false } viewModel)
