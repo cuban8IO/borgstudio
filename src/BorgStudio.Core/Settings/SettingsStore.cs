@@ -15,6 +15,9 @@ public sealed record AppSettings
 
     /// <summary>Look for a new release at startup and once a day.</summary>
     public bool CheckForUpdates { get; init; } = true;
+
+    /// <summary>The "no warranty" notice was shown (once, at the first start; after an update from an older version too).</summary>
+    public bool WarrantyNoticeShown { get; init; }
 }
 
 /// <summary>Keeps <see cref="AppSettings"/> in settings.json; a missing or unreadable file means defaults.</summary>

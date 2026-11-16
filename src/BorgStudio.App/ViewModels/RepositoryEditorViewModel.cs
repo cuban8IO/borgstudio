@@ -502,6 +502,8 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         var passphrase = UsesPassphrase && Passphrase.Length > 0 ? Passphrase : null;
         if (CreateNew)
         {
+            // Every new repository: a backup is only as good as its restore.
+            await Dialogs.ShowMessageAsync(Strings.WarrantyTitle, Strings.WarrantyCreateMessage, Strings.WarrantyConfirm);
             Busy(Strings.Creating, "init");
             var created = await _services.BorgClient.InitAsync(borg, location, SelectedEncryption.Value, passphrase, login.Access);
             if (!created.Succeeded)

@@ -1817,4 +1817,57 @@ BorgStudio can do this now (as root in WSL, no password needed). It is the same 
   <data name="SettingsCheckNow" xml:space="preserve">
     <value>Check now…</value>
   </data>
+  <data name="MenuHelp" xml:space="preserve">
+    <value>Help</value>
+  </data>
+  <data name="MenuGuide" xml:space="preserve">
+    <value>Guide (wiki)</value>
+  </data>
+  <data name="MenuWebsite" xml:space="preserve">
+    <value>Website</value>
+  </data>
+  <data name="MenuAbout" xml:space="preserve">
+    <value>About BorgStudio…</value>
+  </data>
+  <data name="AboutTitle" xml:space="preserve">
+    <value>About BorgStudio</value>
+  </data>
+  <data name="AboutVersion" xml:space="preserve">
+    <value>Version {0}</value>
+  </data>
+  <data name="AboutDescription" xml:space="preserve">
+    <value>A desktop app for BorgBackup: deduplicated, encrypted backups to a disk, an SSH server or a Hetzner Storage Box – browse the archives and restore files.</value>
+  </data>
+  <data name="AboutWebsite" xml:space="preserve">
+    <value>Website</value>
+  </data>
+  <data name="AboutGuide" xml:space="preserve">
+    <value>Guide</value>
+  </data>
+  <data name="AboutSource" xml:space="preserve">
+    <value>Source code on GitHub</value>
+  </data>
+  <data name="AboutLegal" xml:space="preserve">
+    <value>Legal notice</value>
+  </data>
+  <data name="AboutPrivacy" xml:space="preserve">
+    <value>Privacy</value>
+  </data>
+  <data name="AboutIndependent" xml:space="preserve">
+    <value>BorgStudio is an independent project and not affiliated with the BorgBackup project or Hetzner.</value>
+  </data>
+  <data name="WarrantyTitle" xml:space="preserve">
+    <value>No warranty</value>
+  </data>
+  <data name="WarrantyMessage" xml:space="preserve">
+    <value>BorgStudio is free and provided without any warranty, as far as the law allows.
+
+A backup is only as good as its restore: try restoring files from your backups now and then, and keep each repository's passphrase and key safe – without them nobody can restore your data.</value>
+  </data>
+  <data name="WarrantyCreateMessage" xml:space="preserve">
+    <value>You are creating a new repository. BorgStudio comes without warranty: after the first backup, try restoring a few files, and keep the passphrase and the repository key safe and separate.</value>
+  </data>
+  <data name="WarrantyConfirm" xml:space="preserve">
+    <value>Understood</value>
+  </data>
 </root>

@@ -9,7 +9,8 @@ public interface IDialogService
     /// <param name="cancelText">Label of the other button; "Cancel" if not given.</param>
     Task<bool> ConfirmAsync(string title, string message, string confirmText, string? cancelText = null);
 
-    Task ShowMessageAsync(string title, string message);
+    /// <param name="buttonText">The button's text; "OK" if not given.</param>
+    Task ShowMessageAsync(string title, string message, string? buttonText = null);
 
     /// <summary>Asks for a repository passphrase; <c>null</c> if cancelled.</summary>
     Task<string?> AskPassphraseAsync(string repositoryName);

@@ -157,6 +157,9 @@ section gets the new version number.
   page, the README, `.gitignore` or the workflows create no release. Footer links to a legal notice (Impressum) and a privacy policy in both languages; the build refuses to
   publish a page that still contains a placeholder.
 - "No warranty" note on the product page, in the README and in the wiki.
+- In the app: a "no warranty" notice at the first start (also after updating from an older version, with a PIN after
+  unlocking) and every time a new repository is created; a Help menu with the guide, the website, the update check
+  and "About BorgStudio" (version, links to the website, guide, source, legal notice and privacy policy).
 
 ### 0.2.0 – 2026-11-09
 
