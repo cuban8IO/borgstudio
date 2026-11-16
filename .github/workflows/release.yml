@@ -1,15 +1,19 @@
 name: release
 
-# Every push to main is a release (except changes to the product page alone, see pages.yml), and nothing else creates one:
+# Every push to main is a release (except pushes that only change the product page, the README or CI files, see
+# paths-ignore), and nothing else creates one:
 # tests (Linux and macOS) -> next version (.github/scripts/next-release.sh) -> portable packages
 # -> tag vX.Y.Z + GitHub release.
 on:
   push:
     branches: [main]
-    # Changes to the product page alone are published by pages.yml, not released.
+    # Nothing in the app changes with these: the product page (published by pages.yml), the README
+    # and the CI set-up itself. A push that touches only these creates no release.
     paths-ignore:
       - "site/**"
-      - ".github/workflows/pages.yml"
+      - "README.md"
+      - ".gitignore"
+      - ".github/workflows/**"
 
 concurrency:
   group: release
