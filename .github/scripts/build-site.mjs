@@ -109,6 +109,9 @@ html = html.replace(/\b(href|src)="([^"]*)"/g, (whole, name, value) => {
   if (/^([a-z]+:|#|\/)/i.test(value)) return whole;
   return `${name}="${value === "./" ? "../" : `../${value}`}"`;
 });
+// Legal pages: the German ones live in de/ next to this page.
+html = replaceOnce(html, /href="\.\.\/legal-notice\.html"/, 'href="impressum.html"', "legal notice link");
+html = replaceOnce(html, /href="\.\.\/privacy\.html"/, 'href="datenschutz.html"', "privacy link");
 // The language switch: German is this page now.
 html = replaceOnce(html, /href="\.\.\/de\/"/, 'href="./"', "language switch");
 
@@ -126,6 +129,14 @@ const urls = Object.values(pages)
   .join("\n");
 writeFileSync(join(out, "sitemap.xml"),
   `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls}\n</urlset>\n`);
+
+// Nothing goes out with a placeholder (e.g. the legal notice's address still missing).
+for (const page of ["index.html", "de/index.html", "legal-notice.html", "privacy.html", "de/impressum.html", "de/datenschutz.html"]) {
+  const path = join(out, page);
+  if (existsSync(path) && readFileSync(path, "utf8").includes("data-placeholder")) {
+    throw new Error(`${page} still contains a placeholder (data-placeholder): fill it in before publishing`);
+  }
+}
 
 // robots.txt only counts at the root of a host: the page has its own (sub)domain, so it is ours.
 writeFileSync(join(out, "robots.txt"), `User-agent: *\nAllow: /\n\nSitemap: ${siteUrl}sitemap.xml\n`);

@@ -115,5 +115,10 @@
   "faq.6.a": "borg selbst läuft nicht unter Windows. In WSL läuft es wie unter Linux; BorgStudio kümmert sich um die Pfade, deine Windows-Ordner erscheinen und kehren als <code>C:\\…</code> zurück.",
   "footer.releases": "Releases",
   "footer.issues": "Problem melden",
-  "footer.note": "BorgStudio ist ein unabhängiges Projekt und gehört weder zum BorgBackup-Projekt noch zu Hetzner."
+  "footer.note": "BorgStudio ist ein unabhängiges Projekt und gehört weder zum BorgBackup-Projekt noch zu Hetzner.",
+  "dl.warranty": "<strong>Ohne Gewähr:</strong> BorgStudio ist kostenlos und wird ohne jede Gewährleistung bereitgestellt, soweit gesetzlich zulässig. Ein Backup ist nur so gut wie seine Wiederherstellung – probiere ab und zu aus, Dateien aus deinen Backups zurückzuholen, und bewahre Passphrase und Repository-Schlüssel sicher auf.",
+  "faq.7.q": "Gibt es eine Gewährleistung?",
+  "faq.7.a": "Nein. BorgStudio ist ein kostenloses, privates Projekt ohne Gewährleistung und ohne Support-Pflicht. Darunter arbeitet das bewährte borg, trotzdem gilt: Teste regelmäßig, ob sich deine Backups wiederherstellen lassen – nur so bist du sicher.",
+  "footer.legal": "Impressum",
+  "footer.privacy": "Datenschutz"
 }

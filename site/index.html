@@ -271,6 +271,7 @@
       <div class="notes">
         <p data-i18n="dl.req"><strong>Requires</strong> <a href="https://borgbackup.readthedocs.io/en/stable/installation.html">BorgBackup</a> 1.2 or newer (1.4 recommended) – on Windows inside WSL. The .NET runtime is included.</p>
         <p data-i18n="dl.check">Every release lists the SHA-256 checksums of its files in <a class="js-sums" href="https://github.com/cuban8IO/borgstudio/releases/latest">SHA256SUMS</a>; the built-in updater checks them before installing.</p>
+        <p id="warranty" data-i18n="dl.warranty"><strong>No warranty:</strong> BorgStudio is free and comes without any warranty, as far as the law allows. A backup is only as good as its restore – try restoring from your backups now and then, and keep the passphrase and the repository key safe.</p>
         <p data-i18n="dl.mac"><strong>macOS:</strong> the app is not notarized by Apple. If macOS refuses to open it, allow it under System Settings → Privacy &amp; Security → “Open Anyway”.</p>
       </div>
     </div>
@@ -301,6 +302,10 @@
         <p data-i18n="faq.5.a">Not yet – they are the next big feature. Until then, start backups with one click.</p>
       </details>
       <details>
+        <summary data-i18n="faq.7.q">Is there a warranty?</summary>
+        <p data-i18n="faq.7.a">No. BorgStudio is a free, private project and comes without warranty or support obligations. It runs the well-proven borg underneath, but please test restoring your backups regularly – that is the only way to be sure.</p>
+      </details>
+      <details>
         <summary data-i18n="faq.6.q">Why WSL on Windows?</summary>
         <p data-i18n="faq.6.a">borg itself does not run on Windows. Inside WSL it runs as on Linux; BorgStudio handles the paths, so your Windows folders show and restore as <code>C:\…</code>.</p>
       </details>
@@ -316,6 +321,8 @@
       <a href="https://github.com/cuban8IO/borgstudio/wiki" data-i18n="nav.docs">Guide</a>
       <a href="https://github.com/cuban8IO/borgstudio/releases" data-i18n="footer.releases">Releases</a>
       <a href="https://github.com/cuban8IO/borgstudio/issues" data-i18n="footer.issues">Report a problem</a>
+      <a href="legal-notice.html" data-i18n="footer.legal">Legal notice</a>
+      <a href="privacy.html" data-i18n="footer.privacy">Privacy</a>
     </p>
     <p class="small muted" data-i18n="footer.note">BorgStudio is an independent project and not affiliated with the BorgBackup project or Hetzner.</p>
   </div>
