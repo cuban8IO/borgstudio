@@ -5,6 +5,8 @@
 <dict>
   <key>CFBundleName</key>
   <string>BorgStudio</string>
+  <key>NSHumanReadableCopyright</key>
+  <string>Copyright (c) 2026 Niklas Fischbach. MIT License.</string>
   <key>CFBundleDisplayName</key>
   <string>BorgStudio</string>
   <key>CFBundleIdentifier</key>

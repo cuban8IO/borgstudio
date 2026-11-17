@@ -36,7 +36,7 @@ passphrase and the repository key safe – without them nobody can restore your 
 Portable builds for Windows (x64), macOS (Apple Silicon and Intel) and Linux (x64) are on the
 [Releases](https://github.com/cuban8IO/borgstudio/releases) page. They include the .NET runtime:
 unpack and start, no installation needed. BorgStudio looks for a new version at startup and once a day and updates
-itself after asking (Tools → Check for updates; can be switched off in Tools → Settings). Version 0.1.0 has no
+itself after asking (Help → Check for updates; can be switched off in Tools → Settings). Version 0.1.0 has no
 updater yet: download 0.2.0 once by hand and replace the old files.
 
 [BorgBackup](https://www.borgbackup.org/) 1.2 or newer (1.4 recommended) must be installed separately.
@@ -80,6 +80,13 @@ it follows the system language (English if that is neither) or the choice under 
 - **Hetzner Storage Box:** connects on port 23 with the borg version you choose (1.4 or 1.2). The server's host key
   is checked against the fingerprints Hetzner publishes. Restricted login keys are written to
   `.ssh/authorized_keys` on the box over SFTP; unrestricted ones are installed with Hetzner's `install-ssh-key`.
+
+## License
+
+BorgStudio is licensed under the [MIT License](LICENSE). The release packages include `LICENSE.txt` and
+`THIRD-PARTY-NOTICES.txt` with the licenses of everything they contain (Avalonia, SkiaSharp, HarfBuzz, SSH.NET,
+BouncyCastle, the .NET runtime, the Inter font and more); `.github/scripts/third-party-notices.mjs` writes the latter
+from the restore data when the packages are built.
 
 ## Project structure
 
@@ -148,15 +155,28 @@ section gets the new version number.
 
 ### Unreleased
 
+Nothing yet.
+
+### 0.3.0 – 2026-11-17
+
 **Added**
-- Product page (`site/`, English at `/` and German at `/de/`) on GitHub Pages with the advantages, the main functions
-  with screenshots, examples and the current release with its downloads, read from GitHub when the page is opened.
-  `.github/scripts/build-site.mjs` builds the German page from `site/i18n/de.json` and adds what search engines need:
-  canonical and language links, Open Graph data, schema.org structured data and a sitemap. It is published by
-  `.github/workflows/pages.yml` on changes to main and after every release. Pushes to main that only change the
-  page, the README, `.gitignore` or the workflows create no release. Footer links to a legal notice (Impressum) and a privacy policy in both languages; the build refuses to
-  publish a page that still contains a placeholder.
+- Product page at https://borgstudio.cuban8io.net/ (`site/`, English at `/` and German at `/de/`) with the
+  advantages, the main functions with screenshots, examples and the current release with its downloads, read from
+  GitHub when the page is opened. `.github/scripts/build-site.mjs` builds the German page from `site/i18n/de.json`
+  and adds what search engines need: canonical and language links, Open Graph data, schema.org structured data, a
+  sitemap and robots.txt. It is published by `.github/workflows/pages.yml` on changes to main and after every
+  release. Pushes to main that only change the page, the README, `.gitignore` or the workflows create no release.
+  The footer links to a legal notice (Impressum) and a privacy policy in both languages; the build refuses to publish
+  a page that still contains a placeholder.
 - "No warranty" note on the product page, in the README and in the wiki.
+- MIT License (`LICENSE`); every release package carries `LICENSE.txt` and `THIRD-PARTY-NOTICES.txt` (in a macOS
+  bundle under `Contents/Resources`), linked from the About window.
+- In the app: a "no warranty" notice at the first start (also after updating from an older version, with a PIN after
+  unlocking) and every time a new repository is created; a Help menu with the guide, the website, the update check
+  and "About BorgStudio" (version, links to the website, guide, source, legal notice and privacy policy).
+
+**Changed**
+- "Check for updates" moved from the Tools menu to the new Help menu.
 
 ### 0.2.0 – 2026-11-09
 

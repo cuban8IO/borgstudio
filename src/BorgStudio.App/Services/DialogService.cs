@@ -13,8 +13,8 @@ public sealed class DialogService(Window owner) : IDialogService
     public Task<bool> ConfirmAsync(string title, string message, string confirmText, string? cancelText = null) =>
         new MessageWindow(title, message, confirmText, cancelText ?? Strings.Cancel).ShowDialog<bool>(owner);
 
-    public Task ShowMessageAsync(string title, string message) =>
-        new MessageWindow(title, message, Strings.Ok, cancelText: null).ShowDialog<bool>(owner);
+    public Task ShowMessageAsync(string title, string message, string? buttonText = null) =>
+        new MessageWindow(title, message, buttonText ?? Strings.Ok, cancelText: null).ShowDialog<bool>(owner);
 
     public Task<string?> AskPassphraseAsync(string repositoryName) =>
         new PassphraseWindow(repositoryName).ShowDialog<string?>(owner);

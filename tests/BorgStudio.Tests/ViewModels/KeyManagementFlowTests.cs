@@ -195,7 +195,8 @@ public sealed class KeyManagementFlowTests : IDisposable
         await main.OfferVaultForLegacyKeysAsync();
         await main.MigrateLegacyKeysAsync();
 
-        Assert.Equal([Strings.KeysMigrationTitle], Dialogs.Shown);
+        // The app is unlocked for the first time now: the one-time "no warranty" notice follows.
+        Assert.Equal([Strings.KeysMigrationTitle, Strings.WarrantyTitle], Dialogs.Shown);
         Assert.Equal(VaultState.Unlocked, Vault.State);
         Assert.Single(Vault.Keys);
         Assert.False(Assert.Single(_test.Store.Load().Repositories).HasLegacySshKey);

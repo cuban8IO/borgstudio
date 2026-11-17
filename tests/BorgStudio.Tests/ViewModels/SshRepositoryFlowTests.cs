@@ -62,7 +62,8 @@ public sealed class SshRepositoryFlowTests : IDisposable
         await editor.ConfirmCommand.ExecuteAsync(null);
 
         Assert.Empty(editor.Errors);
-        Assert.Equal([Strings.HostKeyTitle], _test.Dialogs.Shown);
+        // Creating a repository always ends with the "no warranty" note before borg init.
+        Assert.Equal([Strings.HostKeyTitle, Strings.WarrantyTitle], _test.Dialogs.Shown);
         Assert.True(FakeSsh.ServerKey.SameAs(Assert.Single(_test.KnownHosts.Find("nas.local", 2222))));
 
         var repository = editor.Result!.Repository;

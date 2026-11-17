@@ -135,6 +135,7 @@ public partial class MainViewModel
             _services.Vault.RemovePassphrase(id);
         _pendingVaultRemovals.Clear();
         _ = MigrateLegacyKeysAsync();
+        _ = ShowWarrantyNoticeIfDueAsync();
     }
 
     /// <summary>Shows the names of the repositories' keys (known only while the vault is open).</summary>

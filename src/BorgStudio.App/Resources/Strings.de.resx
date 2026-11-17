@@ -1797,4 +1797,63 @@ BorgStudio kann das jetzt eintragen (als root in WSL, ohne Passwort). Das entspr
   <data name="SettingsCheckNow" xml:space="preserve">
     <value>Jetzt suchen …</value>
   </data>
+  <data name="MenuHelp" xml:space="preserve">
+    <value>Hilfe</value>
+  </data>
+  <data name="MenuGuide" xml:space="preserve">
+    <value>Anleitung (Wiki)</value>
+  </data>
+  <data name="MenuWebsite" xml:space="preserve">
+    <value>Webseite</value>
+  </data>
+  <data name="MenuAbout" xml:space="preserve">
+    <value>Über BorgStudio …</value>
+  </data>
+  <data name="AboutTitle" xml:space="preserve">
+    <value>Über BorgStudio</value>
+  </data>
+  <data name="AboutVersion" xml:space="preserve">
+    <value>Version {0}</value>
+  </data>
+  <data name="AboutDescription" xml:space="preserve">
+    <value>Eine Desktop-App für BorgBackup: deduplizierte, verschlüsselte Backups auf eine Festplatte, einen SSH-Server oder eine Hetzner Storage Box – Archive durchsuchen und Dateien wiederherstellen.</value>
+  </data>
+  <data name="AboutWebsite" xml:space="preserve">
+    <value>Webseite</value>
+  </data>
+  <data name="AboutGuide" xml:space="preserve">
+    <value>Anleitung</value>
+  </data>
+  <data name="AboutSource" xml:space="preserve">
+    <value>Quellcode auf GitHub</value>
+  </data>
+  <data name="AboutLegal" xml:space="preserve">
+    <value>Impressum</value>
+  </data>
+  <data name="AboutPrivacy" xml:space="preserve">
+    <value>Datenschutz</value>
+  </data>
+  <data name="AboutIndependent" xml:space="preserve">
+    <value>BorgStudio ist ein unabhängiges Projekt und gehört weder zum BorgBackup-Projekt noch zu Hetzner.</value>
+  </data>
+  <data name="WarrantyTitle" xml:space="preserve">
+    <value>Ohne Gewähr</value>
+  </data>
+  <data name="WarrantyMessage" xml:space="preserve">
+    <value>BorgStudio ist kostenlos und wird ohne jede Gewährleistung bereitgestellt, soweit gesetzlich zulässig.
+
+Ein Backup ist nur so gut wie seine Wiederherstellung: Hol ab und zu Dateien aus deinen Backups zurück und bewahre Passphrase und Schlüssel jedes Repositorys sicher auf – ohne sie kann niemand deine Daten wiederherstellen.</value>
+  </data>
+  <data name="WarrantyCreateMessage" xml:space="preserve">
+    <value>Du legst ein neues Repository an. BorgStudio kommt ohne Gewähr: Hol nach dem ersten Backup probeweise ein paar Dateien zurück und bewahre Passphrase und Repository-Schlüssel sicher und getrennt voneinander auf.</value>
+  </data>
+  <data name="WarrantyConfirm" xml:space="preserve">
+    <value>Verstanden</value>
+  </data>
+  <data name="AboutLicense" xml:space="preserve">
+    <value>MIT-Lizenz</value>
+  </data>
+  <data name="AboutThirdParty" xml:space="preserve">
+    <value>Lizenzen von Drittanbietern</value>
+  </data>
 </root>

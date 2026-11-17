@@ -1,0 +1,52 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:res="using:BorgStudio.App.Resources"
+        xmlns:svc="using:BorgStudio.App.Services"
+        x:Class="BorgStudio.App.Views.AboutWindow"
+        Title="{x:Static res:Strings.AboutTitle}"
+        Width="520" SizeToContent="Height" CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+    <StackPanel Margin="24" Spacing="16">
+        <StackPanel Orientation="Horizontal" Spacing="14">
+            <Image Source="/Assets/borgstudio.png" Width="56" Height="56" />
+            <StackPanel VerticalAlignment="Center" Spacing="2">
+                <TextBlock Text="BorgStudio" FontSize="22" FontWeight="SemiBold" />
+                <TextBlock x:Name="VersionText" Opacity="0.7" />
+            </StackPanel>
+        </StackPanel>
+
+        <TextBlock Text="{x:Static res:Strings.AboutDescription}" TextWrapping="Wrap" />
+
+        <!-- No warranty -->
+        <Border Padding="14,12" CornerRadius="6" BorderThickness="1"
+                Background="{DynamicResource WarningBackground}" BorderBrush="{DynamicResource WarningBorder}">
+            <StackPanel Spacing="6">
+                <TextBlock Text="{x:Static res:Strings.WarrantyTitle}" FontWeight="SemiBold" />
+                <TextBlock Text="{x:Static res:Strings.WarrantyMessage}" TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
+
+        <WrapPanel>
+            <WrapPanel.Styles>
+                <Style Selector="HyperlinkButton">
+                    <Setter Property="Margin" Value="0,0,16,4" />
+                    <Setter Property="Padding" Value="0" />
+                </Style>
+            </WrapPanel.Styles>
+            <HyperlinkButton Content="{x:Static res:Strings.AboutWebsite}" NavigateUri="{x:Static svc:AppLinks.Website}" />
+            <HyperlinkButton Content="{x:Static res:Strings.AboutGuide}" NavigateUri="{x:Static svc:AppLinks.Guide}" />
+            <HyperlinkButton Content="{x:Static res:Strings.AboutSource}" NavigateUri="{x:Static svc:AppLinks.Source}" />
+            <HyperlinkButton Content="{x:Static res:Strings.AboutLegal}" NavigateUri="{x:Static svc:AppLinks.LegalNotice}" />
+            <HyperlinkButton Content="{x:Static res:Strings.AboutPrivacy}" NavigateUri="{x:Static svc:AppLinks.Privacy}" />
+            <HyperlinkButton Content="{x:Static res:Strings.AboutLicense}" NavigateUri="{x:Static svc:AppLinks.License}" />
+            <HyperlinkButton x:Name="ThirdPartyLink" Content="{x:Static res:Strings.AboutThirdParty}" />
+        </WrapPanel>
+
+        <TextBlock Text="{x:Static res:Strings.AboutIndependent}" TextWrapping="Wrap" FontSize="12" Opacity="0.7" />
+
+        <Button Content="{x:Static res:Strings.Close}" HorizontalAlignment="Right" IsCancel="True" IsDefault="True" Click="Close_Click" />
+    </StackPanel>
+
+</Window>

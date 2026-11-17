@@ -146,7 +146,7 @@ public partial class MainViewModel : ViewModelBase
     private sealed class NoDialogs : IDialogService
     {
         public Task<bool> ConfirmAsync(string title, string message, string confirmText, string? cancelText = null) => Task.FromResult(false);
-        public Task ShowMessageAsync(string title, string message) => Task.CompletedTask;
+        public Task ShowMessageAsync(string title, string message, string? buttonText = null) => Task.CompletedTask;
         public Task<string?> AskPassphraseAsync(string repositoryName) => Task.FromResult<string?>(null);
         public Task<string?> AskPinAsync(string? error = null) => Task.FromResult<string?>(null);
         public Task<string?> AskNewPinAsync() => Task.FromResult<string?>(null);

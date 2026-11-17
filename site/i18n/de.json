@@ -102,7 +102,7 @@
   "dl.mac": "<strong>macOS:</strong> Die App ist nicht von Apple notarisiert. Verweigert macOS das Öffnen, erlaube es unter Systemeinstellungen → Datenschutz &amp; Sicherheit → „Trotzdem öffnen“.",
   "faq.title": "Fragen",
   "faq.1.q": "Kostet BorgStudio etwas?",
-  "faq.1.a": "Nein. BorgStudio ist kostenlos, der Quellcode liegt auf GitHub. Du zahlst nur für Speicher, den du selbst mietest, etwa eine Storage Box.",
+  "faq.1.a": "Nein. BorgStudio ist kostenlos und quelloffen unter der <a href=\"https://github.com/cuban8IO/borgstudio/blob/main/LICENSE\">MIT-Lizenz</a>. Du zahlst nur für Speicher, den du selbst mietest, etwa eine Storage Box.",
   "faq.2.q": "Kann ich meine vorhandenen borg-Repositories nutzen?",
   "faq.2.a": "Ja. Verbinde sie mit ihrer Passphrase. Alles, was BorgStudio anlegt, ist ein normales borg-Repository, das auch die borg-Kommandozeile und andere borg-Werkzeuge lesen können.",
   "faq.3.q": "Schickt BorgStudio meine Daten irgendwohin?",
