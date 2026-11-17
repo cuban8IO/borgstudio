@@ -36,27 +36,10 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            // Built-in providers use the same plugin API as external ones.
-            var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new SshProviderPlugin(), new HetznerProviderPlugin()], AppPaths.PluginsDirectory);
-
             var window = new MainWindow();
-            var vault = Vault.CreateDefault();
-            var viewModel = new MainViewModel(new AppServices(
-                BorgDetector.CreateDefault(),
-                plugins,
-                RepositoryStore.CreateDefault(),
-                SecretStores.CreateDefault(),
-                BorgClient.CreateDefault(),
-                new SshNetService(),
-                SshKeyStore.CreateDefault(),
-                SshKeygen.CreateDefault(),
-                vault,
-                SettingsStore.CreateDefault(),
-                BackupJobStore.CreateDefault(),
-                ArchiveCache.CreateDefault(vault),
-                DurationHistory.CreateDefault(),
-                new DialogService(window),
-                Updater.CreateDefault(AppVersion.Current)));
+            var services = CreateServices(new DialogService(window));
+            var vault = services.Vault;
+            var viewModel = new MainViewModel(services);
             window.DataContext = viewModel;
             desktop.MainWindow = window;
             viewModel.CheckBorgCommand.Execute(null);
@@ -70,6 +53,30 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    /// <summary>The real services – for the window, and for runs without window (scheduled backups).</summary>
+    public static AppServices CreateServices(IDialogService dialogs)
+    {
+        // Built-in providers use the same plugin API as external ones.
+        var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new SshProviderPlugin(), new HetznerProviderPlugin()], AppPaths.PluginsDirectory);
+        var vault = Vault.CreateDefault();
+        return new AppServices(
+            BorgDetector.CreateDefault(),
+            plugins,
+            RepositoryStore.CreateDefault(),
+            SecretStores.CreateDefault(),
+            BorgClient.CreateDefault(),
+            new SshNetService(),
+            SshKeyStore.CreateDefault(),
+            SshKeygen.CreateDefault(),
+            vault,
+            SettingsStore.CreateDefault(),
+            BackupJobStore.CreateDefault(),
+            ArchiveCache.CreateDefault(vault),
+            DurationHistory.CreateDefault(),
+            dialogs,
+            Updater.CreateDefault(AppVersion.Current));
     }
 
     /// <summary>Reports a finished update, then looks for a new release now and once a day.</summary>

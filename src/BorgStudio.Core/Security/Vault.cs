@@ -98,7 +98,27 @@ public sealed class Vault
 
     /// <summary>Opens the vault; <c>false</c> if the PIN is wrong. Slow (key derivation).</summary>
     /// <exception cref="SecretBoxException">The file is damaged.</exception>
-    public bool Unlock(string pin)
+    public bool Unlock(string pin) => Open(envelope => SecretBox.Open(envelope, pin));
+
+    /// <summary>
+    /// Opens the vault with its key itself instead of the PIN (see <see cref="ExportKey"/>): for scheduled runs, which
+    /// keep the key in the system keychain. <c>false</c> if the key does not fit (e.g. the PIN was changed since).
+    /// </summary>
+    /// <exception cref="SecretBoxException">The file is damaged.</exception>
+    public bool UnlockWithKey(byte[] key) => Open(envelope => (SecretBox.Open(envelope, key), (byte[])key.Clone()));
+
+    /// <summary>A copy of the key the vault is encrypted with; it changes with the PIN (<see cref="KeyChanged"/>).</summary>
+    /// <exception cref="VaultLockedException" />
+    public byte[] ExportKey()
+    {
+        lock (_gate)
+            return (byte[])(_key ?? throw new VaultLockedException()).Clone();
+    }
+
+    /// <summary>Raised after the PIN – and so the vault's key – changed, while the vault is unlocked.</summary>
+    public event EventHandler? KeyChanged;
+
+    private bool Open(Func<SecretEnvelope, (byte[] Plaintext, byte[] Key)> open)
     {
         SecretEnvelope envelope;
         try
@@ -121,7 +141,7 @@ public sealed class Vault
         byte[] plaintext, key;
         try
         {
-            (plaintext, key) = SecretBox.Open(envelope, pin);
+            (plaintext, key) = open(envelope);
         }
         catch (SecretBoxException)
         {
@@ -190,6 +210,7 @@ public sealed class Vault
             Save();
         }
 
+        KeyChanged?.Invoke(this, EventArgs.Empty);
         return true;
     }
 

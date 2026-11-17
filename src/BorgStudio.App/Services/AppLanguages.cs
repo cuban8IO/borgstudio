@@ -21,10 +21,26 @@ public static class AppLanguages
     public static CultureInfo Resolve(string? setting, CultureInfo system)
     {
         if (setting is not null && Supported.Contains(setting, StringComparer.OrdinalIgnoreCase))
-            return CultureInfo.GetCultureInfo(setting);
+            return Culture(setting);
         if (Supported.Contains(Neutral(system), StringComparer.OrdinalIgnoreCase))
             return system;
-        return CultureInfo.GetCultureInfo(Supported[0]);
+        return Culture(Supported[0]);
+    }
+
+    /// <summary>
+    /// The culture; the invariant one (English texts) where .NET runs without culture data, e.g. on a minimal Linux
+    /// without ICU and DOTNET_SYSTEM_GLOBALIZATION_INVARIANT set.
+    /// </summary>
+    private static CultureInfo Culture(string name)
+    {
+        try
+        {
+            return CultureInfo.GetCultureInfo(name);
+        }
+        catch (CultureNotFoundException)
+        {
+            return CultureInfo.InvariantCulture;
+        }
     }
 
     /// <summary>Sets the UI language of every thread; number and date formats stay the system's.</summary>

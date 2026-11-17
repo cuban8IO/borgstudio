@@ -1862,4 +1862,31 @@ Ein Backup ist nur so gut wie seine Wiederherstellung: Hol ab und zu Dateien aus
   <data name="BackupSkippedBusy" xml:space="preserve">
     <value>Nicht gestartet: Ein anderer Lauf (z. B. ein geplantes Backup) arbeitet gerade mit diesem Repository. Versuch es noch einmal, wenn er fertig ist.</value>
   </data>
+  <data name="SkipRepositoryBusy" xml:space="preserve">
+    <value>Ein anderer Lauf arbeitete gerade mit diesem Repository.</value>
+  </data>
+  <data name="SkipPassphraseAsked" xml:space="preserve">
+    <value>Das Repository fragt die Passphrase jedes Mal ab und kann deshalb nicht zeitgesteuert gesichert werden. Speichere die Passphrase (Repository bearbeiten).</value>
+  </data>
+  <data name="SkipPassphraseMissing" xml:space="preserve">
+    <value>Die gespeicherte Passphrase fehlt (z. B. nach dem Zurücksetzen des Tresors). Gib sie unter „Repository bearbeiten“ neu ein.</value>
+  </data>
+  <data name="SkipScheduledAccessMissing" xml:space="preserve">
+    <value>Der Tresor ist per PIN geschützt und geplante Backups dürfen ihn nicht öffnen. Richte den Zeitplan neu ein, um das zu erlauben.</value>
+  </data>
+  <data name="SkipTargetMissing" xml:space="preserve">
+    <value>Der Ordner des Repositorys wurde nicht gefunden – ist die Platte angeschlossen?</value>
+  </data>
+  <data name="SkipBorgMissing" xml:space="preserve">
+    <value>BorgBackup wurde nicht gefunden.</value>
+  </data>
+  <data name="SkipRepositoryMissing" xml:space="preserve">
+    <value>Das Repository des Jobs ist nicht mehr eingerichtet.</value>
+  </data>
+  <data name="SkipSshKeyMissing" xml:space="preserve">
+    <value>Der SSH-Schlüssel für den Server fehlt.</value>
+  </data>
+  <data name="SkipHostUnknown" xml:space="preserve">
+    <value>Der Server wurde noch nie bestätigt. Starte das Backup einmal von Hand, um ihn zu bestätigen.</value>
+  </data>
 </root>

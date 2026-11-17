@@ -23,6 +23,14 @@ sealed class Program
 
         // Texts are bound once when the windows load, so the language is set before anything else.
         AppLanguages.Apply(SettingsStore.CreateDefault().Load().Language);
+
+        // Started by a schedule: one backup job, no window.
+        if (ScheduledRun.IsRunCall(args))
+        {
+            Environment.ExitCode = ScheduledRun.Run(args);
+            return;
+        }
+
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
 
