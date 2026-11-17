@@ -44,11 +44,35 @@ public enum BackupOutcome
     Skipped,
 }
 
-/// <summary>Why a run did not start.</summary>
+/// <summary>Why a run did not start (a run started by hand is skipped; a scheduled one counts as failed, except <see cref="PassphraseAsked"/>).</summary>
 public enum BackupSkipReason
 {
     /// <summary>Another BorgStudio run (e.g. a scheduled one) is working on the same repository.</summary>
     RepositoryBusy,
+
+    /// <summary>The repository asks for its passphrase every time: nobody is there to type it.</summary>
+    PassphraseAsked,
+
+    /// <summary>The passphrase should be stored but is not (e.g. after resetting the vault).</summary>
+    PassphraseMissing,
+
+    /// <summary>The vault is protected by a PIN and scheduled runs were not allowed to open it.</summary>
+    ScheduledAccessMissing,
+
+    /// <summary>The repository's folder is not there (e.g. the USB disk is not connected).</summary>
+    TargetMissing,
+
+    /// <summary>No supported borg was found.</summary>
+    BorgMissing,
+
+    /// <summary>The job's repository is no longer set up (or its provider plugin is gone).</summary>
+    RepositoryMissing,
+
+    /// <summary>The SSH key for the server is missing.</summary>
+    SshKeyMissing,
+
+    /// <summary>The server's host key was never confirmed: that needs the window.</summary>
+    HostUnknown,
 }
 
 /// <summary>The last run of a job, kept to show it and to estimate the next run.</summary>

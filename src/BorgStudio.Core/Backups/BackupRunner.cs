@@ -26,7 +26,9 @@ public interface IBackupRunReport
 }
 
 /// <summary>Everything a run needs that the caller has to find out first (with questions, if it may ask).</summary>
-public sealed record BackupRunRequest(BorgInstallation Borg, RepositoryLocation Location, BackupJob Job, string? Passphrase, SshAccess? Ssh);
+/// <param name="Scheduled">Started by a schedule: a busy repository then counts as a failed run, recorded with the job.</param>
+public sealed record BackupRunRequest(BorgInstallation Borg, RepositoryLocation Location, BackupJob Job, string? Passphrase, SshAccess? Ssh,
+    bool Scheduled = false);
 
 /// <summary>A finished run: its summary (also saved with the job and in its history) and borg's warnings.</summary>
 public sealed record BackupRunResult(BackupRunSummary Summary, IReadOnlyList<string> Warnings);
@@ -56,16 +58,11 @@ public sealed class BackupRunner(BorgClient borg, BackupJobStore jobs, DurationH
         using var repositoryLock = RepositoryLock.TryAcquire(LockDirectory, job.RepositoryId);
         if (repositoryLock is null)
         {
-            // The run that holds the lock records its own outcome: this one only goes into the history.
-            var skipped = new BackupRunSummary
-            {
-                Started = started,
-                Duration = TimeSpan.Zero,
-                Outcome = BackupOutcome.Skipped,
-                SkipReason = BackupSkipReason.RepositoryBusy,
-            };
-            History.Add(job.Id, skipped);
-            return new BackupRunResult(skipped, []);
+            // By hand: the run that holds the lock records the job's outcome, this one only goes into the history.
+            // Scheduled: a backup that did not happen is a failure of the job.
+            var notRun = NotRun(BackupSkipReason.RepositoryBusy, request.Scheduled ? BackupOutcome.Failed : BackupOutcome.Skipped);
+            Record(job.Id, notRun, asLastRun: request.Scheduled);
+            return new BackupRunResult(notRun, []);
         }
 
         var tracker = new Tracker(report);
@@ -78,9 +75,25 @@ public sealed class BackupRunner(BorgClient borg, BackupJobStore jobs, DurationH
         if (summary.Outcome is BackupOutcome.Succeeded or BackupOutcome.Warnings && job.Retention is { HasRules: true } retention)
             summary = summary with { Cleanup = await PruneAndCompactAsync(request, retention, report, cancellationToken) };
 
-        jobs.UpdateLastRun(job.Id, summary);
-        History.Add(job.Id, summary);
+        Record(job.Id, summary);
         return new BackupRunResult(summary, created.Value?.Warnings ?? []);
+    }
+
+    /// <summary>A run that did not start, as of now.</summary>
+    public BackupRunSummary NotRun(BackupSkipReason reason, BackupOutcome outcome) => new()
+    {
+        Started = _time.GetUtcNow(),
+        Duration = TimeSpan.Zero,
+        Outcome = outcome,
+        SkipReason = reason,
+    };
+
+    /// <summary>Keeps a run in the job's history and, by default, as its last run.</summary>
+    public void Record(Guid jobId, BackupRunSummary run, bool asLastRun = true)
+    {
+        if (asLastRun)
+            jobs.UpdateLastRun(jobId, run);
+        History.Add(jobId, run);
     }
 
     /// <summary>Deletes the job's archives its rules don't keep and, if any went, frees their space.</summary>

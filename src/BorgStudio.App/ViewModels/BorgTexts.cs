@@ -49,6 +49,20 @@ internal static class BorgTexts
         _ => Strings.VaultStatusNotSetUp,
     };
 
+    /// <summary>Why a run did not start.</summary>
+    public static string SkipReason(Core.Backups.BackupSkipReason reason) => reason switch
+    {
+        Core.Backups.BackupSkipReason.RepositoryBusy => Strings.SkipRepositoryBusy,
+        Core.Backups.BackupSkipReason.PassphraseAsked => Strings.SkipPassphraseAsked,
+        Core.Backups.BackupSkipReason.PassphraseMissing => Strings.SkipPassphraseMissing,
+        Core.Backups.BackupSkipReason.ScheduledAccessMissing => Strings.SkipScheduledAccessMissing,
+        Core.Backups.BackupSkipReason.TargetMissing => Strings.SkipTargetMissing,
+        Core.Backups.BackupSkipReason.BorgMissing => Strings.SkipBorgMissing,
+        Core.Backups.BackupSkipReason.RepositoryMissing => Strings.SkipRepositoryMissing,
+        Core.Backups.BackupSkipReason.SshKeyMissing => Strings.SkipSshKeyMissing,
+        _ => Strings.SkipHostUnknown,
+    };
+
     public static string BackupOutcome(Core.Backups.BackupOutcome outcome) => outcome switch
     {
         Core.Backups.BackupOutcome.Succeeded => Strings.OutcomeSucceeded,

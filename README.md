@@ -41,7 +41,8 @@ updater yet: download 0.2.0 once by hand and replace the old files.
 
 [BorgBackup](https://www.borgbackup.org/) 1.2 or newer (1.4 recommended) must be installed separately.
 BorgStudio finds it on `PATH` and in the usual install locations (e.g. Homebrew); on Windows it also
-looks for borg inside WSL. borg 2 is still in beta and not supported yet. The UI is available in English and German:
+looks for borg inside WSL. borg 2 is still in beta and not supported yet. On Linux, .NET needs ICU (`libicu`), which
+desktop distributions have installed. The UI is available in English and German:
 it follows the system language (English if that is neither) or the choice under Tools → Settings.
 
 ## Your data
@@ -67,6 +68,10 @@ it follows the system language (English if that is neither) or the choice under 
 - **Run history:** `history/<job>.json` in the data folder – the last 100 runs of each job (outcome, sizes, clean-up);
   removed with the job. `locks/` holds one lock file per repository while a backup runs, so two BorgStudio runs never
   work on the same repository at once.
+- **Scheduled runs:** `logs/scheduled.log` gets one line per run started without window (`BorgStudio --run-job <job>`).
+  With a PIN, scheduled runs open the vault with its key kept in the system keychain (entry `scheduled-access`) – or,
+  without a keychain, in `scheduled-access.key`, readable only by the user. It follows PIN changes and goes when the
+  vault is reset.
 - **Moving to another computer:** Tools → Export settings writes everything – repositories, stored passphrases
   (vault and keychain), SSH keys, known servers, settings and, if wanted, the borg keys of the repositories – into one
   `.borgstudio` file, encrypted with a password of its own (at least 12 characters; Argon2id + AES-256-GCM). Tools →
@@ -163,6 +168,17 @@ section gets the new version number.
   the job’s history (last 100 runs). While a backup works on a repository, another one for the same repository is
   turned away with a clear message instead of failing on borg’s lock, and a job’s last run recorded by another
   BorgStudio process is no longer overwritten when the app saves its jobs.
+
+**Added**
+- Backups without window: `BorgStudio --run-job <job id>` runs one job as a schedule will start it (exit code 0 backed
+  up, 1 failed, 2 skipped, 3 unknown job). Nothing is asked: what is missing ends the run with its reason, recorded with
+  the job – disk not connected, repository busy, passphrase missing, vault not open for scheduled runs, server never
+  confirmed. These count as failures; a repository that asks for its passphrase every time is skipped.
+- Key for scheduled runs (`ScheduledAccess`): lets them open the PIN-protected vault through the system keychain, or a
+  file only the user can read where there is none. Set up with the first schedule (next step).
+
+**Fixed**
+- BorgStudio no longer crashes at startup when .NET runs without culture data (Linux without ICU).
 
 ### 0.3.0 – 2026-11-17
 

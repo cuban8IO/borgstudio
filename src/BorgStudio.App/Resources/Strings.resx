@@ -1882,4 +1882,31 @@ A backup is only as good as its restore: try restoring files from your backups n
   <data name="BackupSkippedBusy" xml:space="preserve">
     <value>Not started: another run (e.g. a scheduled backup) is working on this repository right now. Try again when it has finished.</value>
   </data>
+  <data name="SkipRepositoryBusy" xml:space="preserve">
+    <value>Another run was working on this repository.</value>
+  </data>
+  <data name="SkipPassphraseAsked" xml:space="preserve">
+    <value>The repository asks for its passphrase every time, so it cannot be backed up on a schedule. Store the passphrase (Edit repository).</value>
+  </data>
+  <data name="SkipPassphraseMissing" xml:space="preserve">
+    <value>The stored passphrase is missing (e.g. after resetting the vault). Enter it again under Edit repository.</value>
+  </data>
+  <data name="SkipScheduledAccessMissing" xml:space="preserve">
+    <value>The vault is protected by a PIN and scheduled backups may not open it. Set up the schedule again to allow it.</value>
+  </data>
+  <data name="SkipTargetMissing" xml:space="preserve">
+    <value>The repository's folder was not found – is the disk connected?</value>
+  </data>
+  <data name="SkipBorgMissing" xml:space="preserve">
+    <value>BorgBackup was not found.</value>
+  </data>
+  <data name="SkipRepositoryMissing" xml:space="preserve">
+    <value>The job's repository is no longer set up.</value>
+  </data>
+  <data name="SkipSshKeyMissing" xml:space="preserve">
+    <value>The SSH key for the server is missing.</value>
+  </data>
+  <data name="SkipHostUnknown" xml:space="preserve">
+    <value>The server was never confirmed. Run the backup once by hand to confirm it.</value>
+  </data>
 </root>

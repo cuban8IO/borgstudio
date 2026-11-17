@@ -52,6 +52,8 @@ public partial class MainViewModel : ViewModelBase
     public MainViewModel(AppServices services)
     {
         _services = services;
+        // Created right away: it follows PIN changes and vault resets from now on.
+        ScheduledAccess = CreateScheduledAccess(services);
         InitializeVault();
         LoadRepositories();
         LoadJobs();
@@ -59,6 +61,12 @@ public partial class MainViewModel : ViewModelBase
     }
 
     public PluginCatalog Plugins => _services.Plugins;
+
+    /// <summary>The key that lets scheduled runs open the vault.</summary>
+    public ScheduledAccess ScheduledAccess { get; }
+
+    public static ScheduledAccess CreateScheduledAccess(AppServices services) =>
+        new(services.Vault, services.SecretStore, Path.Combine(services.Jobs.DataDirectory, "scheduled-access.key"));
 
     /// <summary>For the windows opened from the main window (settings, keys).</summary>
     public AppServices Services => _services;
@@ -143,7 +151,8 @@ public partial class MainViewModel : ViewModelBase
     }
 
     /// <summary>For the designer, which has no windows to show dialogs in.</summary>
-    private sealed class NoDialogs : IDialogService
+    /// <summary>Answers no question (designer, and runs without window).</summary>
+    internal sealed class NoDialogs : IDialogService
     {
         public Task<bool> ConfirmAsync(string title, string message, string confirmText, string? cancelText = null) => Task.FromResult(false);
         public Task ShowMessageAsync(string title, string message, string? buttonText = null) => Task.CompletedTask;
