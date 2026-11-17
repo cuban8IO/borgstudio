@@ -327,6 +327,8 @@
                                                 <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                                                 <TextBlock Text="{Binding SourcesText}" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis" />
                                                 <TextBlock Text="{Binding RetentionText}" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding ScheduleText}" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis"
+                                                           ToolTip.Tip="{Binding ScheduleText}" />
                                                 <TextBlock Text="{Binding LastRunText}" FontSize="12" Opacity="0.85" TextWrapping="Wrap"
                                                            Classes.failed="{Binding LastRunFailed}" Classes.warned="{Binding LastRunWarned}">
                                                     <TextBlock.Styles>

@@ -81,6 +81,54 @@
                     </StackPanel>
                 </StackPanel>
 
+                <!-- Schedules -->
+                <StackPanel Spacing="6">
+                    <TextBlock Text="{x:Static res:Strings.JobEditorSchedules}" FontWeight="SemiBold" />
+                    <ItemsControl ItemsSource="{Binding Schedules}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ScheduleItemViewModel">
+                                <Border Classes="card" Padding="10,8" Margin="0,0,0,6">
+                                    <StackPanel Spacing="8">
+                                        <WrapPanel>
+                                            <WrapPanel.Styles>
+                                                <Style Selector="WrapPanel > :is(Control)">
+                                                    <Setter Property="Margin" Value="0,0,8,4" />
+                                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                                </Style>
+                                            </WrapPanel.Styles>
+                                            <ComboBox ItemsSource="{Binding KindOptions}" SelectedItem="{Binding SelectedKind}" MinWidth="150" />
+                                            <NumericUpDown Value="{Binding Hours}" Minimum="1" Maximum="12" Increment="1" FormatString="0"
+                                                           Width="110" IsVisible="{Binding IsEveryHours}" />
+                                            <TextBlock Text="{x:Static res:Strings.JobEditorScheduleHours}" IsVisible="{Binding IsEveryHours}" />
+                                            <TextBlock Text="{Binding TimeLabel}" />
+                                            <TimePicker SelectedTime="{Binding Time}" ClockIdentifier="24HourClock" MinuteIncrement="5" />
+                                            <Button Content="{x:Static res:Strings.JobEditorRemoveSchedule}" Command="{Binding RemoveCommand}" />
+                                        </WrapPanel>
+                                        <ItemsControl ItemsSource="{Binding Days}" IsVisible="{Binding IsWeekdays}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <StackPanel Orientation="Horizontal" Spacing="4" />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:ScheduleDayViewModel">
+                                                    <ToggleButton Content="{Binding Label}" IsChecked="{Binding IsChecked}" MinWidth="44" />
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Button Content="{x:Static res:Strings.JobEditorAddSchedule}" Command="{Binding AddScheduleCommand}" HorizontalAlignment="Left" />
+                    <CheckBox IsChecked="{Binding CatchUp}" IsVisible="{Binding HasSchedules}">
+                        <TextBlock Text="{x:Static res:Strings.JobEditorCatchUp}" TextWrapping="Wrap" />
+                    </CheckBox>
+                    <TextBlock Text="{x:Static res:Strings.JobEditorSchedulesHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap"
+                               IsVisible="{Binding HasSchedules}" />
+                </StackPanel>
+
                 <!-- Clean-up -->
                 <StackPanel Spacing="6">
                     <TextBlock Text="{x:Static res:Strings.JobEditorCleanup}" FontWeight="SemiBold" />

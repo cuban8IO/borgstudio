@@ -530,6 +530,7 @@ public sealed class TestServices : IDisposable
     public DurationHistory Durations { get; }
     public AppServices Services { get; }
     public FakeUpdateSource UpdateSource { get; } = new();
+    public FakeSystemScheduler Scheduler { get; } = new();
     public Updater Updates { get; }
 
     /// <summary>The "installed" app the updater replaces.</summary>
@@ -558,7 +559,8 @@ public sealed class TestServices : IDisposable
         };
         Services = new AppServices(Borg.Detector(wsl), plugins, Store, Secrets,
             new BorgClient(Borg, FakeBorg.WslExecutable) { NativeIsPosix = true }, Ssh, SshKeys, SshKeygen, Vault, Settings, Jobs, Archives, Durations, Dialogs,
-            Updates);
+            Updates,
+            Scheduler);
     }
 
     public KnownHostsFile KnownHosts => new(SshKeys.KnownHostsFile);
@@ -841,4 +843,26 @@ public sealed class FakeUpdateSource : IUpdateSource
         Files.TryGetValue(url, out var bytes)
             ? Task.FromResult(System.Text.Encoding.UTF8.GetString(bytes))
             : Task.FromException<string>(new HttpRequestException("404 " + url));
+}
+
+/// <summary>The system's scheduler: remembers what it was told last.</summary>
+public sealed class FakeSystemScheduler : ISystemScheduler
+{
+    public List<IReadOnlyList<BackupJob>> Applied { get; } = [];
+
+    public string? Executable { get; private set; }
+
+    public string? Error { get; set; }
+
+    /// <summary>The scheduled jobs of the last update.</summary>
+    public IReadOnlyList<BackupJob> Scheduled => Applied.Count == 0 ? [] : [.. Applied[^1].Where(job => job.IsScheduled)];
+
+    public Task ApplyAsync(IReadOnlyList<BackupJob> jobs, string executable, CancellationToken cancellationToken = default)
+    {
+        if (Error is not null)
+            throw new SchedulerException(Error);
+        Applied.Add(jobs);
+        Executable = executable;
+        return Task.CompletedTask;
+    }
 }

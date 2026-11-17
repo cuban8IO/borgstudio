@@ -31,7 +31,8 @@ public sealed record AppServices(
     ArchiveCache Archives,
     DurationHistory Durations,
     IDialogService Dialogs,
-    Updater Updates)
+    Updater Updates,
+    ISystemScheduler? Scheduler = null)
 {
     public SshHostTrust SshTrust => new(Ssh, new KnownHostsFile(SshKeys.KnownHostsFile));
 }
@@ -57,6 +58,8 @@ public partial class MainViewModel : ViewModelBase
         InitializeVault();
         LoadRepositories();
         LoadJobs();
+        // The system's scheduler may be out of step (jobs imported, app moved, entries removed by hand).
+        ApplySchedules();
         RefreshKeyNames();
     }
 

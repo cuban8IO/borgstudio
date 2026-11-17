@@ -76,7 +76,8 @@ public partial class App : Application
             ArchiveCache.CreateDefault(vault),
             DurationHistory.CreateDefault(),
             dialogs,
-            Updater.CreateDefault(AppVersion.Current));
+            Updater.CreateDefault(AppVersion.Current),
+            SystemScheduler.CreateDefault());
     }
 
     /// <summary>Reports a finished update, then looks for a new release now and once a day.</summary>

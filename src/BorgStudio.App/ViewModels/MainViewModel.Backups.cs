@@ -48,7 +48,11 @@ public partial class MainViewModel
         RefreshRepositoryJobs();
     }
 
-    private void SaveJobs() => _services.Jobs.Save(_jobs);
+    private void SaveJobs()
+    {
+        _services.Jobs.Save(_jobs);
+        ApplySchedules();
+    }
 
     partial void OnSelectedRepositoryChanged(RepositoryItemViewModel? value)
     {
@@ -97,6 +101,7 @@ public partial class MainViewModel
         if (editor.Result is not { } job)
             return;
 
+        await PrepareScheduleAsync(job);
         _jobs.Add(job);
         SaveJobs();
         RefreshRepositoryJobs();
@@ -113,6 +118,8 @@ public partial class MainViewModel
         if (editor.Result is not { } job)
             return;
 
+        if (!SelectedJob!.Job.IsScheduled)
+            await PrepareScheduleAsync(job);
         _jobs[_jobs.FindIndex(existing => existing.Id == job.Id)] = job;
         SaveJobs();
         RefreshRepositoryJobs();
@@ -298,4 +305,12 @@ public sealed class BackupJobItemViewModel(BackupJob job)
         : Strings.JobRetentionNone;
 
     public bool HasRetention => Job.Retention is { HasRules: true };
+
+    public bool IsScheduled => Job.IsScheduled;
+
+    /// <summary>"Täglich 20:00 · Mo, Di 12:30 · nächster Lauf: Mo., 17.11. 20:00".</summary>
+    public string ScheduleText => !Job.IsScheduled ? Strings.JobNotScheduled
+        : ScheduleCalendar.Next(Job.Schedules, DateTime.Now) is { } next
+            ? BorgTexts.Format(Strings.JobSchedule, BorgTexts.Schedules(Job.Schedules), $"{next.ToString("ddd", CultureInfo.CurrentCulture)} {next.ToString("g", CultureInfo.CurrentCulture)}")
+            : BorgTexts.Schedules(Job.Schedules);
 }
