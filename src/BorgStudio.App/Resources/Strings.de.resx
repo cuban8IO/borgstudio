@@ -1856,4 +1856,10 @@ Ein Backup ist nur so gut wie seine Wiederherstellung: Hol ab und zu Dateien aus
   <data name="AboutThirdParty" xml:space="preserve">
     <value>Lizenzen von Drittanbietern</value>
   </data>
+  <data name="OutcomeSkipped" xml:space="preserve">
+    <value>Übersprungen</value>
+  </data>
+  <data name="BackupSkippedBusy" xml:space="preserve">
+    <value>Nicht gestartet: Ein anderer Lauf (z. B. ein geplantes Backup) arbeitet gerade mit diesem Repository. Versuch es noch einmal, wenn er fertig ist.</value>
+  </data>
 </root>

@@ -129,6 +129,7 @@ public partial class MainViewModel
 
         _jobs.RemoveAll(existing => existing.Id == job.Id);
         SaveJobs();
+        Runner.History.Remove(job.Id);
         RefreshRepositoryJobs();
     }
 
@@ -179,27 +180,12 @@ public partial class MainViewModel
         else
             _ = EstimateAsync(run, job, ticker.Token);
 
-        var options = new List<string> { "--compression", job.Compression };
-        options.AddRange(BackupPatterns.Arguments(job.Exclusions, path => BorgClient.BorgPath(borg, path)));
-        var archive = $"{ArchivePrefix(job.Name)}-{{hostname}}-{{now:%Y-%m-%dT%H:%M:%S}}";
-        var progress = new ViewModelProgress<BorgCreateProgress>(this, run.Report);
-
-        BorgResult<BorgCreateResult> result;
-        BackupRunSummary summary;
+        // borg create, then the job's clean-up; the runner records the outcome with the job and in its history.
+        BackupRunResult result;
         try
         {
-            result = await _services.BorgClient.CreateAsync(borg, location, archive, job.Sources, options, passphrase.Value,
-                ssh.Access, progress, cancellation.Token);
-            summary = Summarize(run, result);
-
-            // A new archive: the job's old ones may go now.
-            if (summary.Outcome is BackupOutcome.Succeeded or BackupOutcome.Warnings && job.Retention is { HasRules: true } retention)
-            {
-                summary = summary with
-                {
-                    Cleanup = await PruneAndCompactAsync(run, job, retention, borg, location, ssh.Access, passphrase.Value, cancellation.Token),
-                };
-            }
+            result = await Runner.RunAsync(new BackupRunRequest(borg, location, job, passphrase.Value, ssh.Access),
+                new RunReport(this, run), cancellation.Token);
         }
         finally
         {
@@ -207,64 +193,30 @@ public partial class MainViewModel
             _backupCancellation = null;
         }
 
-        run.Finish(summary, result.Value?.Warnings ?? []);
+        var summary = result.Summary;
+        run.Finish(summary, result.Warnings);
         var index = _jobs.FindIndex(existing => existing.Id == job.Id);
-        if (index >= 0)
+        // A run turned away (another one is busy) leaves the job's last run to that one.
+        if (index >= 0 && summary.Outcome != BackupOutcome.Skipped)
         {
             _jobs[index] = _jobs[index] with { LastRun = summary };
-            SaveJobs();
             RefreshRepositoryJobs();
         }
         IsBackupRunning = false;
-        ArchivesChanged(job.RepositoryId);
+        if (summary.Outcome != BackupOutcome.Skipped)
+            ArchivesChanged(job.RepositoryId);
     }
 
-    private static BackupRunSummary Summarize(BackupRunViewModel run, BorgResult<BorgCreateResult> result)
-    {
-        if (result.Value is { } created)
-        {
-            return new BackupRunSummary
-            {
-                Started = run.Started,
-                Duration = run.Elapsed,
-                Outcome = created.Warnings.Count > 0 ? BackupOutcome.Warnings : BackupOutcome.Succeeded,
-                ArchiveName = created.ArchiveName,
-                OriginalSize = created.OriginalSize,
-                CompressedSize = created.CompressedSize,
-                DeduplicatedSize = created.DeduplicatedSize,
-                Files = created.Files,
-                Message = created.Warnings.FirstOrDefault(),
-            };
-        }
+    /// <summary>Runs backups and clean-ups – the same for the window, the background and scheduled runs.</summary>
+    internal BackupRunner Runner => _runner ??= new BackupRunner(_services.BorgClient, _services.Jobs, _services.Durations, BorgTexts.Describe);
 
-        var cancelled = result.Error!.Kind == BorgErrorKind.Cancelled;
-        return new BackupRunSummary
-        {
-            Started = run.Started,
-            Duration = run.Elapsed,
-            Outcome = cancelled ? BackupOutcome.Cancelled : BackupOutcome.Failed,
-            OriginalSize = run.OriginalSize,
-            DeduplicatedSize = run.DeduplicatedSize,
-            Files = run.Files,
-            Message = cancelled ? null : BorgTexts.Describe(result.Error),
-        };
-    }
+    private BackupRunner? _runner;
 
-    /// <summary>"Dokumente & Fotos" → "Dokumente-Fotos": safe in an archive name and for later per-job clean-ups.</summary>
-    public static string ArchivePrefix(string jobName)
-    {
-        var safe = new string(jobName.Trim().Select(c => char.IsLetterOrDigit(c) || c is '_' or '.' ? c : '-').ToArray());
-        while (safe.Contains("--", StringComparison.Ordinal))
-            safe = safe.Replace("--", "-", StringComparison.Ordinal);
-        safe = safe.Trim('-');
-        return safe.Length > 0 ? safe : "backup";
-    }
+    /// <summary>"Dokumente & Fotos" → "Dokumente-Fotos" (see <see cref="BackupNames.ArchivePrefix"/>).</summary>
+    public static string ArchivePrefix(string jobName) => BackupNames.ArchivePrefix(jobName);
 
-    /// <summary>
-    /// The archives this computer created for the job – "Documents-{hostname}-*" – which is what its clean-up looks at.
-    /// With the host name a job "Documents-Old" (or another computer backing up into the same repository) stays out.
-    /// </summary>
-    public static string ArchiveGlob(string jobName) => $"{ArchivePrefix(jobName)}-{{hostname}}-*";
+    /// <summary>The archives this computer created for the job (see <see cref="BackupNames.ArchiveGlob"/>).</summary>
+    public static string ArchiveGlob(string jobName) => BackupNames.ArchiveGlob(jobName);
 
     private async Task TickAsync(BackupRunViewModel run, CancellationToken cancellationToken)
     {
@@ -291,6 +243,22 @@ public partial class MainViewModel
         catch (OperationCanceledException)
         {
         }
+    }
+
+    /// <summary>Shows what the runner reports in the run's card (on the view model's thread).</summary>
+    private sealed class RunReport(MainViewModel owner, BackupRunViewModel run) : IBackupRunReport
+    {
+        public void Created(BorgCreateProgress progress) => owner.OnViewModelThread(() => run.Report(progress));
+
+        public void PhaseStarted(BackupRunPhase phase, TimeSpan? expected) => owner.OnViewModelThread(() => run.StartPhase(
+            phase switch
+            {
+                BackupRunPhase.Pruning => RunPhase.Pruning,
+                BackupRunPhase.Compacting => RunPhase.Compacting,
+                _ => RunPhase.Backup,
+            }, expected));
+
+        public void PhaseProgress(double fraction) => owner.OnViewModelThread(() => run.ReportPhase(fraction));
     }
 
     /// <summary>Hands progress to the view model's thread (borg reports on a background thread).</summary>

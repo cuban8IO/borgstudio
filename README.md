@@ -64,6 +64,9 @@ it follows the system language (English if that is neither) or the choice under 
   (`<id>.json`) otherwise; safe to delete.
 - **Backup jobs:** `jobs.json` in the data folder – per job the repository, the source folders, what to leave out,
   the compression and the outcome of the last run. Archives are named `<job>-<computer>-<date and time>`.
+- **Run history:** `history/<job>.json` in the data folder – the last 100 runs of each job (outcome, sizes, clean-up);
+  removed with the job. `locks/` holds one lock file per repository while a backup runs, so two BorgStudio runs never
+  work on the same repository at once.
 - **Moving to another computer:** Tools → Export settings writes everything – repositories, stored passphrases
   (vault and keychain), SSH keys, known servers, settings and, if wanted, the borg keys of the repositories – into one
   `.borgstudio` file, encrypted with a password of its own (at least 12 characters; Argon2id + AES-256-GCM). Tools →
@@ -155,7 +158,11 @@ section gets the new version number.
 
 ### Unreleased
 
-Nothing yet.
+**Changed**
+- Backups run through one shared runner (`BackupRunner`) – the groundwork for scheduled backups. Each run is kept in
+  the job’s history (last 100 runs). While a backup works on a repository, another one for the same repository is
+  turned away with a clear message instead of failing on borg’s lock, and a job’s last run recorded by another
+  BorgStudio process is no longer overwritten when the app saves its jobs.
 
 ### 0.3.0 – 2026-11-17
 

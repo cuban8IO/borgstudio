@@ -135,6 +135,31 @@ public sealed class BackupJobFlowTests : IDisposable
     }
 
     [Fact]
+    public async Task A_run_while_another_one_works_on_the_repository_is_turned_away()
+    {
+        _test.Jobs.Save([Job()]);
+        var main = await StartAsync();
+
+        // E.g. a scheduled run in another process.
+        using (RepositoryLock.TryAcquire(main.Runner.LockDirectory, _repository.Id))
+            await main.RunJobCommand.ExecuteAsync(null);
+
+        Assert.Empty(_test.Borg.Calls);
+        var run = main.CurrentBackup!;
+        Assert.False(main.IsBackupRunning);
+        Assert.Equal(BackupOutcome.Skipped, run.Summary!.Outcome);
+        Assert.Equal(Strings.OutcomeSkipped, run.StatusText);
+        Assert.Equal(Strings.BackupSkippedBusy, run.ResultText);
+        // The job keeps the last run of the one that is busy.
+        Assert.Null(Assert.Single(_test.Jobs.Load()).LastRun);
+        Assert.Equal(Strings.JobNeverRun, main.SelectedJob!.LastRunText);
+
+        // Free again: the backup runs.
+        await main.RunJobCommand.ExecuteAsync(null);
+        Assert.Equal(BackupOutcome.Succeeded, main.CurrentBackup!.Summary!.Outcome);
+    }
+
+    [Fact]
     public async Task Warnings_are_kept_and_shown()
     {
         _test.Jobs.Save([Job()]);
