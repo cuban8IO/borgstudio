@@ -61,7 +61,8 @@ public partial class MainViewModel
                      || cancellation.IsCancellationRequested)
                 cleanup = new CleanupSummary { Cancelled = true };
             else
-                cleanup = await PruneAndCompactAsync(run, job, retention, borg, location, ssh.Access, passphrase.Value, cancellation.Token);
+                cleanup = await Runner.PruneAndCompactAsync(new BackupRunRequest(borg, location, job, passphrase.Value, ssh.Access),
+                    retention, new RunReport(this, run), cancellation.Token);
         }
         finally
         {
@@ -72,32 +73,6 @@ public partial class MainViewModel
         IsBackupRunning = false;
         if (cleanup.PrunedArchives > 0)
             ArchivesChanged(job.RepositoryId);
-    }
-
-    /// <summary>Deletes the job's archives its rules don't keep and, if any went, frees their space.</summary>
-    private async Task<CleanupSummary> PruneAndCompactAsync(BackupRunViewModel run, BackupJob job, RetentionPolicy retention,
-        BorgInstallation borg, RepositoryLocation location, SshAccess? ssh, string? passphrase, CancellationToken cancellationToken)
-    {
-        var pruneKey = DurationHistory.Key(job.RepositoryId, "prune");
-        run.StartPhase(RunPhase.Pruning, _services.Durations.Get(pruneKey));
-        var pruned = await _services.BorgClient.PruneAsync(borg, location, ArchiveGlob(job.Name), retention.Arguments(),
-            dryRun: false, passphrase, ssh, new ViewModelProgress<double>(this, run.ReportPhase), cancellationToken);
-        if (!pruned.Succeeded)
-            return Failed(pruned.Error!);
-        _services.Durations.Record(pruneKey, run.PhaseProgress.Elapsed);
-        var count = pruned.Value!.Pruned.Count;
-        if (count == 0)
-            return new CleanupSummary();
-
-        var compactKey = DurationHistory.Key(job.RepositoryId, "compact");
-        run.StartPhase(RunPhase.Compacting, _services.Durations.Get(compactKey));
-        var compacted = await _services.BorgClient.CompactAsync(borg, location, ssh,
-            new ViewModelProgress<double>(this, run.ReportPhase), cancellationToken);
-        if (compacted.Succeeded)
-            _services.Durations.Record(compactKey, run.PhaseProgress.Elapsed);
-        return compacted.Succeeded
-            ? new CleanupSummary { PrunedArchives = count, FreedBytes = compacted.Value!.FreedBytes }
-            : Failed(compacted.Error!) with { PrunedArchives = count };
     }
 
     private static CleanupSummary Failed(BorgError error) => error.Kind == BorgErrorKind.Cancelled

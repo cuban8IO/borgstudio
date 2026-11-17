@@ -163,6 +163,7 @@ public sealed partial class BackupRunViewModel : ObservableObject
             BorgTexts.Size(summary.OriginalSize), BorgTexts.Size(summary.CompressedSize), BorgTexts.Size(summary.DeduplicatedSize),
             summary.Files, BorgTexts.Duration(summary.Duration), summary.ArchiveName ?? ""),
         { Outcome: BackupOutcome.Cancelled } => Strings.BackupCancelledText,
+        { Outcome: BackupOutcome.Skipped, SkipReason: BackupSkipReason.RepositoryBusy } => Strings.BackupSkippedBusy,
         { Message: { } message } => message,
         _ => null,
     };

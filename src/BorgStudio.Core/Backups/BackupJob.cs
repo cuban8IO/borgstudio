@@ -39,6 +39,16 @@ public enum BackupOutcome
 
     /// <summary>Stopped by the user; borg left a checkpoint archive.</summary>
     Cancelled,
+
+    /// <summary>Not started (see <see cref="BackupRunSummary.SkipReason"/>); nothing changed in the repository.</summary>
+    Skipped,
+}
+
+/// <summary>Why a run did not start.</summary>
+public enum BackupSkipReason
+{
+    /// <summary>Another BorgStudio run (e.g. a scheduled one) is working on the same repository.</summary>
+    RepositoryBusy,
 }
 
 /// <summary>The last run of a job, kept to show it and to estimate the next run.</summary>
@@ -62,6 +72,9 @@ public sealed record BackupRunSummary
 
     /// <summary>Why it failed, or the first warning.</summary>
     public string? Message { get; init; }
+
+    /// <summary>Why it was <see cref="BackupOutcome.Skipped"/>.</summary>
+    public BackupSkipReason? SkipReason { get; init; }
 
     /// <summary>The clean-up after the backup (prune + compact); <c>null</c> if the job has none or the backup failed.</summary>
     public CleanupSummary? Cleanup { get; init; }
@@ -115,6 +128,9 @@ public sealed class BackupJobStore(string filePath)
 
     public string FilePath { get; } = filePath;
 
+    /// <summary>The folder of jobs.json; the runs' history and the repository locks live below it.</summary>
+    public string DataDirectory => Path.GetDirectoryName(Path.GetFullPath(FilePath))!;
+
     /// <summary>The saved jobs; an unreadable file is moved aside (like repositories.json) and none are returned.</summary>
     public IReadOnlyList<BackupJob> Load()
     {
@@ -132,12 +148,34 @@ public sealed class BackupJobStore(string filePath)
         }
     }
 
+    /// <summary>
+    /// Saves <paramref name="jobs"/>. A run in another process (a scheduled backup) may have recorded a newer last run
+    /// since they were loaded: that one is kept, so the app does not overwrite it with what it still had in memory.
+    /// </summary>
     public void Save(IEnumerable<BackupJob> jobs)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
-        var temporary = FilePath + ".tmp";
-        File.WriteAllText(temporary, JsonSerializer.Serialize(new StoreFile { Jobs = [.. jobs] }, RepositoryStore.JsonOptions));
-        File.Move(temporary, FilePath, overwrite: true);
+        lock (Gate)
+        {
+            var saved = Load().ToDictionary(job => job.Id);
+            Write([.. jobs.Select(job => saved.GetValueOrDefault(job.Id)?.LastRun is { } newer
+                                         && (job.LastRun is null || newer.Started > job.LastRun.Started)
+                ? job with { LastRun = newer }
+                : job)]);
+        }
+    }
+
+    /// <summary>Records a finished run for one job, leaving everything else as it is on disk.</summary>
+    public void UpdateLastRun(Guid jobId, BackupRunSummary run)
+    {
+        lock (Gate)
+            Write([.. Load().Select(job => job.Id == jobId ? job with { LastRun = run } : job)]);
+    }
+
+    private static readonly object Gate = new();
+
+    private void Write(List<BackupJob> jobs)
+    {
+        AtomicFile.WriteAllText(FilePath, JsonSerializer.Serialize(new StoreFile { Jobs = jobs }, RepositoryStore.JsonOptions));
     }
 
     private sealed class StoreFile

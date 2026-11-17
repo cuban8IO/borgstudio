@@ -1876,4 +1876,10 @@ A backup is only as good as its restore: try restoring files from your backups n
   <data name="AboutThirdParty" xml:space="preserve">
     <value>Third-party licenses</value>
   </data>
+  <data name="OutcomeSkipped" xml:space="preserve">
+    <value>Skipped</value>
+  </data>
+  <data name="BackupSkippedBusy" xml:space="preserve">
+    <value>Not started: another run (e.g. a scheduled backup) is working on this repository right now. Try again when it has finished.</value>
+  </data>
 </root>

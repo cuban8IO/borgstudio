@@ -54,6 +54,7 @@ internal static class BorgTexts
         Core.Backups.BackupOutcome.Succeeded => Strings.OutcomeSucceeded,
         Core.Backups.BackupOutcome.Warnings => Strings.OutcomeWarnings,
         Core.Backups.BackupOutcome.Cancelled => Strings.OutcomeCancelled,
+        Core.Backups.BackupOutcome.Skipped => Strings.OutcomeSkipped,
         _ => Strings.OutcomeFailed,
     };
 
