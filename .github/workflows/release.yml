@@ -133,7 +133,7 @@ jobs:
           | Linux (x64) | `…-linux-x64.tar.gz` |
 
           Portable builds with the .NET runtime included: unpack and start, no installation needed.
-          BorgStudio updates itself from here (Tools → Check for updates); `SHA256SUMS` lists the checksums of the files.
+          BorgStudio updates itself from here (Help → Check for updates); `SHA256SUMS` lists the checksums of the files.
           [BorgBackup](https://www.borgbackup.org/) itself must be installed separately.
 
           **macOS:** the app is not notarized by Apple. If macOS refuses to open it, allow it under
