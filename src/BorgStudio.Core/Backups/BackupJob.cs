@@ -142,6 +142,14 @@ public sealed record BackupJob
     /// <summary>Which of the job's archives to keep after each backup; <c>null</c>: keep all (no clean-up).</summary>
     public RetentionPolicy? Retention { get; init; }
 
+    /// <summary>When the job runs by itself; none: only by hand.</summary>
+    public List<BackupSchedule> Schedules { get; init; } = [];
+
+    /// <summary>A scheduled time missed while the computer was off is made up for once, at the next start.</summary>
+    public bool CatchUp { get; init; } = true;
+
+    public bool IsScheduled => Schedules.Any(schedule => schedule.IsValid);
+
     public BackupRunSummary? LastRun { get; init; }
 }
 

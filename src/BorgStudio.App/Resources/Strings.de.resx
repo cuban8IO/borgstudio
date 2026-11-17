@@ -1889,4 +1889,89 @@ Ein Backup ist nur so gut wie seine Wiederherstellung: Hol ab und zu Dateien aus
   <data name="SkipHostUnknown" xml:space="preserve">
     <value>Der Server wurde noch nie bestätigt. Starte das Backup einmal von Hand, um ihn zu bestätigen.</value>
   </data>
+  <data name="ScheduleApplyFailed" xml:space="preserve">
+    <value>Die Zeitpläne konnten nicht an die Aufgabenplanung des Systems übergeben werden: {0}</value>
+  </data>
+  <data name="ScheduleAccessTitle" xml:space="preserve">
+    <value>Geplante Backups erlauben</value>
+  </data>
+  <data name="ScheduleAccessMessage" xml:space="preserve">
+    <value>Deine Passphrasen und SSH-Schlüssel liegen im PIN-geschützten Tresor. Damit geplante Backups laufen, ohne dass du die PIN eingibst, legt BorgStudio den Schlüssel des Tresors im Schlüsselbund des Systems ab – nur für geplante Läufe.
+
+Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleibt per PIN gesperrt. Eine neue PIN nimmt den Schlüssel mit, Zurücksetzen des Tresors entfernt ihn.</value>
+  </data>
+  <data name="ScheduleAccessMessageFile" xml:space="preserve">
+    <value>Deine Passphrasen und SSH-Schlüssel liegen im PIN-geschützten Tresor. Damit geplante Backups laufen, ohne dass du die PIN eingibst, legt BorgStudio den Schlüssel des Tresors in einer Datei ab, die nur dein Benutzer lesen darf – dieses System hat keinen Schlüsselbund.
+
+Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleibt per PIN gesperrt.</value>
+  </data>
+  <data name="ScheduleAccessConfirm" xml:space="preserve">
+    <value>Erlauben</value>
+  </data>
+  <data name="ScheduleAccessLater" xml:space="preserve">
+    <value>Nicht jetzt</value>
+  </data>
+  <data name="ScheduleAccessFailed" xml:space="preserve">
+    <value>Geplante Backups konnten nicht erlaubt werden: {0}</value>
+  </data>
+  <data name="SchedulePassphraseTitle" xml:space="preserve">
+    <value>Passphrase speichern</value>
+  </data>
+  <data name="SchedulePassphraseMessage" xml:space="preserve">
+    <value>„{0}“ fragt die Passphrase jedes Mal ab, deshalb können geplante Backups nicht laufen. Passphrase jetzt speichern?</value>
+  </data>
+  <data name="SchedulePassphraseConfirm" xml:space="preserve">
+    <value>Speichern</value>
+  </data>
+  <data name="JobNotScheduled" xml:space="preserve">
+    <value>Nur von Hand</value>
+  </data>
+  <data name="JobSchedule" xml:space="preserve">
+    <value>{0} · nächster Lauf: {1}</value>
+  </data>
+  <data name="ScheduleDaily" xml:space="preserve">
+    <value>Täglich {0}</value>
+  </data>
+  <data name="ScheduleOnDays" xml:space="preserve">
+    <value>{0} {1}</value>
+  </data>
+  <data name="ScheduleEveryHours" xml:space="preserve">
+    <value>Alle {0} Std. ab {1}</value>
+  </data>
+  <data name="JobEditorSchedules" xml:space="preserve">
+    <value>Zeitplan</value>
+  </data>
+  <data name="JobEditorSchedulesHint" xml:space="preserve">
+    <value>Die Aufgabenplanung des Systems startet das Backup, auch wenn BorgStudio geschlossen ist (solange du angemeldet bist).</value>
+  </data>
+  <data name="JobEditorAddSchedule" xml:space="preserve">
+    <value>Zeitplan hinzufügen</value>
+  </data>
+  <data name="JobEditorRemoveSchedule" xml:space="preserve">
+    <value>Entfernen</value>
+  </data>
+  <data name="JobEditorCatchUp" xml:space="preserve">
+    <value>Verpasste Termine beim nächsten Start einmal nachholen</value>
+  </data>
+  <data name="JobEditorScheduleDaily" xml:space="preserve">
+    <value>Täglich</value>
+  </data>
+  <data name="JobEditorScheduleWeekdays" xml:space="preserve">
+    <value>An Wochentagen</value>
+  </data>
+  <data name="JobEditorScheduleEveryHours" xml:space="preserve">
+    <value>Alle … Stunden</value>
+  </data>
+  <data name="JobEditorScheduleAt" xml:space="preserve">
+    <value>um</value>
+  </data>
+  <data name="JobEditorScheduleFrom" xml:space="preserve">
+    <value>ab</value>
+  </data>
+  <data name="JobEditorScheduleHours" xml:space="preserve">
+    <value>Stunden</value>
+  </data>
+  <data name="JobEditorScheduleDaysRequired" xml:space="preserve">
+    <value>Wähle für jeden Wochentags-Zeitplan mindestens einen Tag.</value>
+  </data>
 </root>

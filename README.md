@@ -68,6 +68,9 @@ it follows the system language (English if that is neither) or the choice under 
 - **Run history:** `history/<job>.json` in the data folder – the last 100 runs of each job (outcome, sizes, clean-up);
   removed with the job. `locks/` holds one lock file per repository while a backup runs, so two BorgStudio runs never
   work on the same repository at once.
+- **Schedules:** kept with the jobs in `jobs.json`; the system’s task scheduler gets one entry per scheduled job
+  (Windows: Task Scheduler folder `\BorgStudio`, macOS: `~/Library/LaunchAgents/net.cuban8io.borgstudio.*.plist`,
+  Linux: `~/.config/systemd/user/borgstudio-*.timer`). Removing a job or its schedules removes the entry.
 - **Scheduled runs:** `logs/scheduled.log` gets one line per run started without window (`BorgStudio --run-job <job>`).
   With a PIN, scheduled runs open the vault with its key kept in the system keychain (entry `scheduled-access`) – or,
   without a keychain, in `scheduled-access.key`, readable only by the user. It follows PIN changes and goes when the
@@ -174,6 +177,13 @@ section gets the new version number.
   up, 1 failed, 2 skipped, 3 unknown job). Nothing is asked: what is missing ends the run with its reason, recorded with
   the job – disk not connected, repository busy, passphrase missing, vault not open for scheduled runs, server never
   confirmed. These count as failures; a repository that asks for its passphrase every time is skipped.
+- Schedules (backup job editor → Schedule): any number per job – daily at a time, on chosen weekdays, or every 1–12
+  hours from a time – and "make up for missed times once at the next start". The job list shows the schedules and the
+  next run. BorgStudio keeps the system’s task scheduler in step whenever the jobs are saved and at startup: a task
+  `\BorgStudio\<job>` in the Windows Task Scheduler, a LaunchAgent per job on macOS (plus one that catches up at
+  login, `BorgStudio --catch-up`), a systemd user timer per job on Linux (`Persistent=true`). The first schedule of a
+  job offers to store a passphrase that is asked every time and, with a PIN, asks whether scheduled runs may open the
+  vault.
 - Key for scheduled runs (`ScheduledAccess`): lets them open the PIN-protected vault through the system keychain, or a
   file only the user can read where there is none. Set up with the first schedule (next step).
 

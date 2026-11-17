@@ -49,6 +49,23 @@ internal static class BorgTexts
         _ => Strings.VaultStatusNotSetUp,
     };
 
+    /// <summary>"Täglich 20:00 · Mo, Fr 12:30 · alle 4 Std. ab 08:00".</summary>
+    public static string Schedules(IEnumerable<Core.Backups.BackupSchedule> schedules) =>
+        string.Join(" · ", schedules.Where(schedule => schedule.IsValid).Select(Schedule));
+
+    public static string Schedule(Core.Backups.BackupSchedule schedule)
+    {
+        var time = schedule.Time.ToString("t", CultureInfo.CurrentCulture);
+        return schedule.Kind switch
+        {
+            Core.Backups.ScheduleKind.Weekdays => Format(Strings.ScheduleOnDays,
+                string.Join(", ", schedule.Days.Distinct().OrderBy(day => ((int)day + 6) % 7)
+                    .Select(day => CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(day))), time),
+            Core.Backups.ScheduleKind.EveryHours => Format(Strings.ScheduleEveryHours, schedule.Hours, time),
+            _ => Format(Strings.ScheduleDaily, time),
+        };
+    }
+
     /// <summary>Why a run did not start.</summary>
     public static string SkipReason(Core.Backups.BackupSkipReason reason) => reason switch
     {

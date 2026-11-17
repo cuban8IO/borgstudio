@@ -1909,4 +1909,89 @@ A backup is only as good as its restore: try restoring files from your backups n
   <data name="SkipHostUnknown" xml:space="preserve">
     <value>The server was never confirmed. Run the backup once by hand to confirm it.</value>
   </data>
+  <data name="ScheduleApplyFailed" xml:space="preserve">
+    <value>The schedules could not be passed to the system's task scheduler: {0}</value>
+  </data>
+  <data name="ScheduleAccessTitle" xml:space="preserve">
+    <value>Allow scheduled backups</value>
+  </data>
+  <data name="ScheduleAccessMessage" xml:space="preserve">
+    <value>Your passphrases and SSH keys are in the PIN-protected vault. So that scheduled backups can run without you typing the PIN, BorgStudio keeps the vault's key in the system keychain, for scheduled runs only.
+
+Anyone logged in as you can then open the vault. BorgStudio itself stays locked by the PIN. Changing the PIN takes the key along; resetting the vault removes it.</value>
+  </data>
+  <data name="ScheduleAccessMessageFile" xml:space="preserve">
+    <value>Your passphrases and SSH keys are in the PIN-protected vault. So that scheduled backups can run without you typing the PIN, BorgStudio keeps the vault's key in a file only your user may read – this system has no keychain.
+
+Anyone logged in as you can then open the vault. BorgStudio itself stays locked by the PIN.</value>
+  </data>
+  <data name="ScheduleAccessConfirm" xml:space="preserve">
+    <value>Allow</value>
+  </data>
+  <data name="ScheduleAccessLater" xml:space="preserve">
+    <value>Not now</value>
+  </data>
+  <data name="ScheduleAccessFailed" xml:space="preserve">
+    <value>Scheduled backups could not be allowed: {0}</value>
+  </data>
+  <data name="SchedulePassphraseTitle" xml:space="preserve">
+    <value>Store the passphrase</value>
+  </data>
+  <data name="SchedulePassphraseMessage" xml:space="preserve">
+    <value>"{0}" asks for its passphrase every time, so scheduled backups cannot run. Store the passphrase now?</value>
+  </data>
+  <data name="SchedulePassphraseConfirm" xml:space="preserve">
+    <value>Store</value>
+  </data>
+  <data name="JobNotScheduled" xml:space="preserve">
+    <value>Only by hand</value>
+  </data>
+  <data name="JobSchedule" xml:space="preserve">
+    <value>{0} · next run: {1}</value>
+  </data>
+  <data name="ScheduleDaily" xml:space="preserve">
+    <value>Daily {0}</value>
+  </data>
+  <data name="ScheduleOnDays" xml:space="preserve">
+    <value>{0} {1}</value>
+  </data>
+  <data name="ScheduleEveryHours" xml:space="preserve">
+    <value>Every {0} h from {1}</value>
+  </data>
+  <data name="JobEditorSchedules" xml:space="preserve">
+    <value>Schedule</value>
+  </data>
+  <data name="JobEditorSchedulesHint" xml:space="preserve">
+    <value>The system's task scheduler starts the backup, also while BorgStudio is closed (as long as you are logged in).</value>
+  </data>
+  <data name="JobEditorAddSchedule" xml:space="preserve">
+    <value>Add schedule</value>
+  </data>
+  <data name="JobEditorRemoveSchedule" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="JobEditorCatchUp" xml:space="preserve">
+    <value>Make up for missed times once at the next start</value>
+  </data>
+  <data name="JobEditorScheduleDaily" xml:space="preserve">
+    <value>Daily</value>
+  </data>
+  <data name="JobEditorScheduleWeekdays" xml:space="preserve">
+    <value>On weekdays</value>
+  </data>
+  <data name="JobEditorScheduleEveryHours" xml:space="preserve">
+    <value>Every … hours</value>
+  </data>
+  <data name="JobEditorScheduleAt" xml:space="preserve">
+    <value>at</value>
+  </data>
+  <data name="JobEditorScheduleFrom" xml:space="preserve">
+    <value>from</value>
+  </data>
+  <data name="JobEditorScheduleHours" xml:space="preserve">
+    <value>hours</value>
+  </data>
+  <data name="JobEditorScheduleDaysRequired" xml:space="preserve">
+    <value>Pick at least one weekday for each weekday schedule.</value>
+  </data>
 </root>

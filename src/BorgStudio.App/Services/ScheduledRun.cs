@@ -14,12 +14,18 @@ public static class ScheduledRun
 {
     public const string Argument = "--run-job";
 
+    /// <summary>Runs every scheduled job with "catch up" whose last scheduled time passed since its last run.</summary>
+    public const string CatchUpArgument = "--catch-up";
+
     private const long LogLimit = 1024 * 1024;
 
-    public static bool IsRunCall(IReadOnlyList<string> args) => args.Count > 0 && args[0] == Argument;
+    public static bool IsRunCall(IReadOnlyList<string> args) => args.Count > 0 && args[0] is Argument or CatchUpArgument;
 
     public static int Run(IReadOnlyList<string> args)
     {
+        if (args[0] == CatchUpArgument)
+            return CatchUp();
+
         if (args.Count < 2 || !Guid.TryParse(args[1], out var jobId))
         {
             Log($"Usage: {Argument} <job id>");
@@ -50,6 +56,25 @@ public static class ScheduledRun
         catch (Exception exception)
         {
             Log($"{jobId}: {exception}");
+            return 4;
+        }
+    }
+
+    private static int CatchUp()
+    {
+        try
+        {
+            var services = App.CreateServices(new MainViewModel.NoDialogs());
+            var missed = services.Jobs.Load().Where(job => job.IsScheduled && ScheduleCalendar.IsMissed(job, DateTime.Now)).ToList();
+            Log($"Catching up: {missed.Count} job(s)");
+            var worst = 0;
+            foreach (var job in missed)
+                worst = Math.Max(worst, Run([Argument, job.Id.ToString()]));
+            return worst;
+        }
+        catch (Exception exception)
+        {
+            Log($"Catching up: {exception}");
             return 4;
         }
     }

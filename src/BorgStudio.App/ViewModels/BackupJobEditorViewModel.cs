@@ -45,6 +45,11 @@ public sealed partial class BackupJobEditorViewModel : ViewModelBase
             ShowRetention(retention);
         CleanUp = job.Retention is { HasRules: true };
 
+        foreach (var schedule in job.Schedules)
+            Schedules.Add(new ScheduleItemViewModel(schedule, RemoveSchedule));
+        CatchUp = job.CatchUp;
+        Schedules.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasSchedules));
+
         Sources.CollectionChanged += (_, _) => Refresh();
         ExcludedFolders.CollectionChanged += (_, _) => Refresh();
         Refresh();
@@ -216,6 +221,20 @@ public sealed partial class BackupJobEditorViewModel : ViewModelBase
             ExcludedFolders.Remove(remove);
     }
 
+    // --- Schedules ---
+
+    public ObservableCollection<ScheduleItemViewModel> Schedules { get; } = [];
+
+    public bool HasSchedules => Schedules.Count > 0;
+
+    [ObservableProperty]
+    public partial bool CatchUp { get; set; }
+
+    [RelayCommand]
+    private void AddSchedule() => Schedules.Add(new ScheduleItemViewModel(new BackupSchedule(), RemoveSchedule));
+
+    private void RemoveSchedule(ScheduleItemViewModel schedule) => Schedules.Remove(schedule);
+
     [RelayCommand]
     private void Save()
     {
@@ -229,6 +248,9 @@ public sealed partial class BackupJobEditorViewModel : ViewModelBase
         var retention = CurrentRetention();
         if (CleanUp && !retention.HasRules)
             Errors.Add(Strings.JobEditorRetentionRequired);
+        var schedules = Schedules.Select(schedule => schedule.ToSchedule()).ToList();
+        if (schedules.Any(schedule => !schedule.IsValid))
+            Errors.Add(Strings.JobEditorScheduleDaysRequired);
         if (Errors.Count > 0)
             return;
 
@@ -239,6 +261,8 @@ public sealed partial class BackupJobEditorViewModel : ViewModelBase
             Exclusions = CurrentExclusions(),
             Compression = SelectedCompression.Value,
             Retention = CleanUp ? retention : null,
+            Schedules = schedules,
+            CatchUp = CatchUp,
         };
         CloseRequested?.Invoke(this, EventArgs.Empty);
     }
