@@ -18,4 +18,21 @@ public static class AppLinks
     public static Uri LegalNotice => new(German ? $"{SiteUrl}de/impressum.html" : $"{SiteUrl}legal-notice.html");
 
     public static Uri Privacy => new(German ? $"{SiteUrl}de/datenschutz.html" : $"{SiteUrl}privacy.html");
+
+    public static Uri License { get; } = new($"{RepositoryUrl}/blob/main/LICENSE");
+
+    /// <summary>
+    /// THIRD-PARTY-NOTICES.txt of a published package: next to the program, in a macOS bundle under Contents/Resources;
+    /// null for a local build, which has none.
+    /// </summary>
+    public static Uri? ThirdPartyNotices()
+    {
+        foreach (var folder in new[] { AppContext.BaseDirectory, Path.Combine(AppContext.BaseDirectory, "..", "Resources") })
+        {
+            var file = Path.GetFullPath(Path.Combine(folder, "THIRD-PARTY-NOTICES.txt"));
+            if (File.Exists(file))
+                return new Uri(file);
+        }
+        return null;
+    }
 }

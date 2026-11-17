@@ -1870,4 +1870,10 @@ A backup is only as good as its restore: try restoring files from your backups n
   <data name="WarrantyConfirm" xml:space="preserve">
     <value>Understood</value>
   </data>
+  <data name="AboutLicense" xml:space="preserve">
+    <value>MIT License</value>
+  </data>
+  <data name="AboutThirdParty" xml:space="preserve">
+    <value>Third-party licenses</value>
+  </data>
 </root>

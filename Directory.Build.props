@@ -10,5 +10,7 @@
     <!-- Local builds only. Release builds get their version from the release workflow (git tags). -->
     <Version>0.0.0-dev</Version>
     <Product>BorgStudio</Product>
+    <Authors>Niklas Fischbach</Authors>
+    <Copyright>Copyright (c) 2026 Niklas Fischbach</Copyright>
   </PropertyGroup>
 </Project>

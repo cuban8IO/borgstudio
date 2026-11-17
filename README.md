@@ -81,6 +81,13 @@ it follows the system language (English if that is neither) or the choice under 
   is checked against the fingerprints Hetzner publishes. Restricted login keys are written to
   `.ssh/authorized_keys` on the box over SFTP; unrestricted ones are installed with Hetzner's `install-ssh-key`.
 
+## License
+
+BorgStudio is licensed under the [MIT License](LICENSE). The release packages include `LICENSE.txt` and
+`THIRD-PARTY-NOTICES.txt` with the licenses of everything they contain (Avalonia, SkiaSharp, HarfBuzz, SSH.NET,
+BouncyCastle, the .NET runtime, the Inter font and more); `.github/scripts/third-party-notices.mjs` writes the latter
+from the restore data when the packages are built.
+
 ## Project structure
 
 ```
@@ -157,6 +164,8 @@ section gets the new version number.
   page, the README, `.gitignore` or the workflows create no release. Footer links to a legal notice (Impressum) and a privacy policy in both languages; the build refuses to
   publish a page that still contains a placeholder.
 - "No warranty" note on the product page, in the README and in the wiki.
+- MIT License (`LICENSE`); every release package carries `LICENSE.txt` and `THIRD-PARTY-NOTICES.txt` (in a macOS
+  bundle under `Contents/Resources`), linked from the About window.
 - In the app: a "no warranty" notice at the first start (also after updating from an older version, with a PIN after
   unlocking) and every time a new repository is created; a Help menu with the guide, the website, the update check
   and "About BorgStudio" (version, links to the website, guide, source, legal notice and privacy policy).

@@ -1850,4 +1850,10 @@ Ein Backup ist nur so gut wie seine Wiederherstellung: Hol ab und zu Dateien aus
   <data name="WarrantyConfirm" xml:space="preserve">
     <value>Verstanden</value>
   </data>
+  <data name="AboutLicense" xml:space="preserve">
+    <value>MIT-Lizenz</value>
+  </data>
+  <data name="AboutThirdParty" xml:space="preserve">
+    <value>Lizenzen von Drittanbietern</value>
+  </data>
 </root>
