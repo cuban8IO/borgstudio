@@ -40,6 +40,8 @@
             <HyperlinkButton Content="{x:Static res:Strings.AboutSource}" NavigateUri="{x:Static svc:AppLinks.Source}" />
             <HyperlinkButton Content="{x:Static res:Strings.AboutLegal}" NavigateUri="{x:Static svc:AppLinks.LegalNotice}" />
             <HyperlinkButton Content="{x:Static res:Strings.AboutPrivacy}" NavigateUri="{x:Static svc:AppLinks.Privacy}" />
+            <HyperlinkButton Content="{x:Static res:Strings.AboutLicense}" NavigateUri="{x:Static svc:AppLinks.License}" />
+            <HyperlinkButton x:Name="ThirdPartyLink" Content="{x:Static res:Strings.AboutThirdParty}" />
         </WrapPanel>
 
         <TextBlock Text="{x:Static res:Strings.AboutIndependent}" TextWrapping="Wrap" FontSize="12" Opacity="0.7" />

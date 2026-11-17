@@ -47,6 +47,12 @@ jobs:
       - name: Publish
         run: dotnet publish src/BorgStudio.App/BorgStudio.App.csproj -c Release -r "$RID" -p:Version="$VERSION" -o publish
 
+      # BorgStudio's license and the licenses of everything it ships (NuGet packages, .NET runtime, Inter font).
+      - name: Licenses
+        run: |
+          cp LICENSE publish/LICENSE.txt
+          node .github/scripts/third-party-notices.mjs src/BorgStudio.App/obj/project.assets.json "$RID" publish/THIRD-PARTY-NOTICES.txt
+
       - name: Package (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
@@ -93,6 +99,9 @@ jobs:
             mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
             cp -R "publish/$rid/." "$app/Contents/MacOS/"
             chmod +x "$app/Contents/MacOS/BorgStudio"
+            # Licenses go to Resources: only code may sit in Contents/MacOS of a signed bundle.
+            cp LICENSE "$app/Contents/Resources/LICENSE.txt"
+            node .github/scripts/third-party-notices.mjs src/BorgStudio.App/obj/project.assets.json "$rid" "$app/Contents/Resources/THIRD-PARTY-NOTICES.txt"
             sed "s/@VERSION@/$VERSION/g" build/macos/Info.plist > "$app/Contents/Info.plist"
             cp build/macos/BorgStudio.icns "$app/Contents/Resources/"
             plutil -lint "$app/Contents/Info.plist"
