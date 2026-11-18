@@ -254,7 +254,7 @@ public sealed class LaunchdScheduler(IProcessRunner runner, string agentsDirecto
         {calendar}</dict>
         </plist>
 
-        """;
+        """.ReplaceLineEndings("\n"); // A Windows checkout gives the template CRLF; the files are Unix files.
 
     private static string Escape(string text) => SecurityElement.Escape(text) ?? "";
 }
@@ -304,7 +304,7 @@ public sealed class SystemdScheduler(IProcessRunner runner, string unitDirectory
         Type=oneshot
         ExecStart="{executable.Replace("\"", "\\\"", StringComparison.Ordinal)}" --run-job {job.Id}
 
-        """;
+        """.ReplaceLineEndings("\n");
 
     public static string Timer(BackupJob job)
     {
@@ -329,6 +329,6 @@ public sealed class SystemdScheduler(IProcessRunner runner, string unitDirectory
             [Install]
             WantedBy=timers.target
 
-            """;
+            """.ReplaceLineEndings("\n");
     }
 }

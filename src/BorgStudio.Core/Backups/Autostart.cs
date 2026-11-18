@@ -131,7 +131,7 @@ public sealed class XdgAutostart(string autostartDirectory) : IAutostart
         Terminal=false
         X-GNOME-Autostart-enabled=true
 
-        """;
+        """.ReplaceLineEndings("\n"); // A Windows checkout gives the template CRLF; desktop files are Unix files.
 
     /// <summary>Quoted as the desktop entry specification wants it: in double quotes, with ", `, $ and \ escaped.</summary>
     private static string Quote(string argument)
