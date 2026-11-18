@@ -186,6 +186,15 @@ section gets the new version number.
   vault.
 - Key for scheduled runs (`ScheduledAccess`): lets them open the PIN-protected vault through the system keychain, or a
   file only the user can read where there is none. Set up with the first schedule (next step).
+- Background mode (Settings → Scheduled backups → "BorgStudio in the background"): instead of the system’s task
+  scheduler, BorgStudio runs the schedules itself. It starts at login without window (`--background`: a `Run` entry in
+  the registry on Windows, a LaunchAgent on macOS, `~/.config/autostart/borgstudio.desktop` on Linux), stays in the
+  notification area, and closing the window only hides it (a hint says so the first time). Scheduled backups run in the
+  app, one after the other, with their progress in the window; missed times are made up for once at startup. The
+  vault stays locked for the window – the scheduler opens its own copy with the key for scheduled runs. The icon shows
+  a running backup, a failed one or paused schedules; its menu opens the window, shows the next backup, starts a job,
+  pauses the schedules and quits. Switching modes removes or restores the system’s entries and the start at login.
+- Only one BorgStudio per user: starting it again brings the running one’s window forward.
 
 **Fixed**
 - BorgStudio no longer crashes at startup when .NET runs without culture data (Linux without ICU).

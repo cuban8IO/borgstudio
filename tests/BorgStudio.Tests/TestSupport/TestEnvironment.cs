@@ -23,6 +23,16 @@ public sealed class TemporaryDirectory : IDisposable
     }
 }
 
+/// <summary>Runs only on Windows (the registry, named pipes as Windows has them).</summary>
+public sealed class WindowsFactAttribute : FactAttribute
+{
+    public WindowsFactAttribute()
+    {
+        if (!OperatingSystem.IsWindows())
+            Skip = "Windows only.";
+    }
+}
+
 /// <summary>Runs only where a supported borg (1.2+) is installed, e.g. in the Linux CI job.</summary>
 public sealed class BorgFactAttribute : FactAttribute
 {

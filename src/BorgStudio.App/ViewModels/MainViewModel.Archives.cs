@@ -80,6 +80,7 @@ public partial class MainViewModel
     partial void OnIsBackupRunningChanged(bool value)
     {
         NotifyArchiveCommands();
+        RaiseBackgroundStateChanged();
         // borg waits for the repository lock, so the tab may have been opened during the backup without checking.
         if (!value)
             _ = EnsureArchivesAsync();

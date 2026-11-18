@@ -80,11 +80,11 @@ public static class ScheduledRun
     }
 
     /// <summary>One line per run in logs/scheduled.log (kept below about 1 MB: the older half moves to .old).</summary>
-    private static void Log(string text)
+    internal static void Log(string text, string? dataDirectory = null)
     {
         try
         {
-            var folder = Path.Combine(AppPaths.DataDirectory, "logs");
+            var folder = Path.Combine(dataDirectory ?? AppPaths.DataDirectory, "logs");
             Directory.CreateDirectory(folder);
             var file = Path.Combine(folder, "scheduled.log");
             if (File.Exists(file) && new FileInfo(file).Length > LogLimit)

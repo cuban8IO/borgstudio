@@ -1994,4 +1994,58 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
   <data name="JobEditorScheduleDaysRequired" xml:space="preserve">
     <value>Pick at least one weekday for each weekday schedule.</value>
   </data>
+  <data name="AutostartFailed" xml:space="preserve">
+    <value>Starting BorgStudio at login could not be set up: {0}</value>
+  </data>
+  <data name="BackgroundRunFailed" xml:space="preserve">
+    <value>The scheduled backup "{0}" could not run: {1}</value>
+  </data>
+  <data name="TrayOpen" xml:space="preserve">
+    <value>Open BorgStudio</value>
+  </data>
+  <data name="TrayRunJob" xml:space="preserve">
+    <value>Back up now</value>
+  </data>
+  <data name="TrayNoJobs" xml:space="preserve">
+    <value>No backup jobs</value>
+  </data>
+  <data name="TrayNext" xml:space="preserve">
+    <value>Next: {0}, {1}</value>
+  </data>
+  <data name="TrayNothingScheduled" xml:space="preserve">
+    <value>No backup scheduled</value>
+  </data>
+  <data name="TrayPause" xml:space="preserve">
+    <value>Pause schedules</value>
+  </data>
+  <data name="TrayPaused" xml:space="preserve">
+    <value>Schedules paused</value>
+  </data>
+  <data name="TrayRunning" xml:space="preserve">
+    <value>Backing up: {0}</value>
+  </data>
+  <data name="TrayFailed" xml:space="preserve">
+    <value>The last backup of "{0}" failed</value>
+  </data>
+  <data name="TrayQuit" xml:space="preserve">
+    <value>Quit BorgStudio</value>
+  </data>
+  <data name="TrayHintTitle" xml:space="preserve">
+    <value>BorgStudio keeps running</value>
+  </data>
+  <data name="TrayHintMessage" xml:space="preserve">
+    <value>BorgStudio keeps running in the notification area so that scheduled backups can start. Click its icon to open the window again; to quit BorgStudio, choose "Quit BorgStudio" in the icon's menu.</value>
+  </data>
+  <data name="SettingsSchedules" xml:space="preserve">
+    <value>Scheduled backups</value>
+  </data>
+  <data name="SettingsRunnerSystem" xml:space="preserve">
+    <value>System task scheduler – runs even when BorgStudio is closed</value>
+  </data>
+  <data name="SettingsRunnerBackground" xml:space="preserve">
+    <value>BorgStudio in the background – icon in the notification area, starts at login</value>
+  </data>
+  <data name="SettingsRunnerHint" xml:space="preserve">
+    <value>In the background, closing the window keeps BorgStudio running in the notification area, and backups show their progress in the window. On Linux the desktop needs a notification area (on GNOME: the AppIndicator extension).</value>
+  </data>
 </root>

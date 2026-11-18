@@ -1974,4 +1974,58 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
   <data name="JobEditorScheduleDaysRequired" xml:space="preserve">
     <value>Wähle für jeden Wochentags-Zeitplan mindestens einen Tag.</value>
   </data>
+  <data name="AutostartFailed" xml:space="preserve">
+    <value>Der Start mit der Anmeldung konnte nicht eingerichtet werden: {0}</value>
+  </data>
+  <data name="BackgroundRunFailed" xml:space="preserve">
+    <value>Die geplante Sicherung „{0}“ konnte nicht laufen: {1}</value>
+  </data>
+  <data name="TrayOpen" xml:space="preserve">
+    <value>BorgStudio öffnen</value>
+  </data>
+  <data name="TrayRunJob" xml:space="preserve">
+    <value>Jetzt sichern</value>
+  </data>
+  <data name="TrayNoJobs" xml:space="preserve">
+    <value>Keine Sicherungsjobs</value>
+  </data>
+  <data name="TrayNext" xml:space="preserve">
+    <value>Nächste: {0}, {1}</value>
+  </data>
+  <data name="TrayNothingScheduled" xml:space="preserve">
+    <value>Keine Sicherung geplant</value>
+  </data>
+  <data name="TrayPause" xml:space="preserve">
+    <value>Zeitpläne pausieren</value>
+  </data>
+  <data name="TrayPaused" xml:space="preserve">
+    <value>Zeitpläne pausiert</value>
+  </data>
+  <data name="TrayRunning" xml:space="preserve">
+    <value>Sichert: {0}</value>
+  </data>
+  <data name="TrayFailed" xml:space="preserve">
+    <value>Die letzte Sicherung von „{0}“ ist fehlgeschlagen</value>
+  </data>
+  <data name="TrayQuit" xml:space="preserve">
+    <value>BorgStudio beenden</value>
+  </data>
+  <data name="TrayHintTitle" xml:space="preserve">
+    <value>BorgStudio läuft weiter</value>
+  </data>
+  <data name="TrayHintMessage" xml:space="preserve">
+    <value>BorgStudio läuft im Infobereich weiter, damit geplante Sicherungen starten können. Ein Klick auf das Symbol öffnet das Fenster wieder; beenden lässt sich BorgStudio über „BorgStudio beenden“ im Menü des Symbols.</value>
+  </data>
+  <data name="SettingsSchedules" xml:space="preserve">
+    <value>Geplante Sicherungen</value>
+  </data>
+  <data name="SettingsRunnerSystem" xml:space="preserve">
+    <value>Aufgabenplanung des Systems – läuft auch, wenn BorgStudio geschlossen ist</value>
+  </data>
+  <data name="SettingsRunnerBackground" xml:space="preserve">
+    <value>BorgStudio im Hintergrund – Symbol im Infobereich, startet mit der Anmeldung</value>
+  </data>
+  <data name="SettingsRunnerHint" xml:space="preserve">
+    <value>Im Hintergrund läuft BorgStudio nach dem Schließen des Fensters im Infobereich weiter, und Sicherungen zeigen ihren Fortschritt im Fenster. Unter Linux braucht der Desktop einen Infobereich (unter GNOME: die Erweiterung AppIndicator).</value>
+  </data>
 </root>

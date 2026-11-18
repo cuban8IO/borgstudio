@@ -238,7 +238,7 @@ public sealed class LaunchdScheduler(IProcessRunner runner, string agentsDirecto
             calendar: $"    <key>StartCalendarInterval</key>\n    <array>\n{entries}    </array>\n");
     }
 
-    private static string Plist(string label, IReadOnlyList<string> arguments, bool runAtLoad, string calendar) =>
+    internal static string Plist(string label, IReadOnlyList<string> arguments, bool runAtLoad, string calendar) =>
         $"""
         <?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -254,7 +254,7 @@ public sealed class LaunchdScheduler(IProcessRunner runner, string agentsDirecto
         {calendar}</dict>
         </plist>
 
-        """;
+        """.ReplaceLineEndings("\n"); // A Windows checkout gives the template CRLF; the files are Unix files.
 
     private static string Escape(string text) => SecurityElement.Escape(text) ?? "";
 }
@@ -304,7 +304,7 @@ public sealed class SystemdScheduler(IProcessRunner runner, string unitDirectory
         Type=oneshot
         ExecStart="{executable.Replace("\"", "\\\"", StringComparison.Ordinal)}" --run-job {job.Id}
 
-        """;
+        """.ReplaceLineEndings("\n");
 
     public static string Timer(BackupJob job)
     {
@@ -329,6 +329,6 @@ public sealed class SystemdScheduler(IProcessRunner runner, string unitDirectory
             [Install]
             WantedBy=timers.target
 
-            """;
+            """.ReplaceLineEndings("\n");
     }
 }

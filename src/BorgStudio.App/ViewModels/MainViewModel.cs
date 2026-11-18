@@ -32,7 +32,8 @@ public sealed record AppServices(
     DurationHistory Durations,
     IDialogService Dialogs,
     Updater Updates,
-    ISystemScheduler? Scheduler = null)
+    ISystemScheduler? Scheduler = null,
+    IAutostart? Autostart = null)
 {
     public SshHostTrust SshTrust => new(Ssh, new KnownHostsFile(SshKeys.KnownHostsFile));
 }
@@ -60,6 +61,8 @@ public partial class MainViewModel : ViewModelBase
         LoadJobs();
         // The system's scheduler may be out of step (jobs imported, app moved, entries removed by hand).
         ApplySchedules();
+        // The entry follows the app when it moved or was updated.
+        ApplyAutostart();
         RefreshKeyNames();
     }
 

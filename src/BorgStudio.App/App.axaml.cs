@@ -41,10 +41,17 @@ public partial class App : Application
             var vault = services.Vault;
             var viewModel = new MainViewModel(services);
             window.DataContext = viewModel;
-            desktop.MainWindow = window;
+            // In the background the app outlives its window; it ends when the window really closes (or on "Quit").
+            desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            window.Closed += (_, _) => desktop.Shutdown();
+            // Started at login: only the icon in the notification area.
+            var hidden = desktop.Args?.Contains(Autostart.BackgroundArgument) == true && viewModel.IsBackgroundMode;
+            if (!hidden)
+                desktop.MainWindow = window;
             viewModel.CheckBorgCommand.Execute(null);
             StartVaultAutoLock(vault, viewModel);
             StartUpdateChecks(viewModel);
+            StartBackground(window, viewModel, desktop);
             window.Opened += async (_, _) =>
             {
                 await viewModel.OfferVaultForLegacyKeysAsync();
@@ -53,6 +60,25 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    /// <summary>The icon in the notification area, the scheduler's look every half minute, and a second start's call.</summary>
+    private void StartBackground(MainWindow window, MainViewModel viewModel, IClassicDesktopStyleApplicationLifetime desktop)
+    {
+        void Show()
+        {
+            desktop.MainWindow ??= window;
+            window.ShowFromTray();
+        }
+
+        _ = new TrayController(this, viewModel, Show, window.Quit);
+        if (SingleInstance.Current is { } instance)
+            instance.ShowRequested += (_, _) => Dispatcher.UIThread.Post(Show);
+
+        // The first look (after half a minute, when the network is up after login) makes up for missed times.
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
+        timer.Tick += (_, _) => viewModel.ScheduleTick();
+        timer.Start();
     }
 
     /// <summary>The real services – for the window, and for runs without window (scheduled backups).</summary>
@@ -77,7 +103,8 @@ public partial class App : Application
             DurationHistory.CreateDefault(),
             dialogs,
             Updater.CreateDefault(AppVersion.Current),
-            SystemScheduler.CreateDefault());
+            SystemScheduler.CreateDefault(),
+            Autostart.CreateDefault());
     }
 
     /// <summary>Reports a finished update, then looks for a new release now and once a day.</summary>

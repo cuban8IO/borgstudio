@@ -27,7 +27,8 @@ public partial class MainViewModel
         if (_services.Scheduler is not { } scheduler || SchedulerExecutable is not { } executable)
             return;
 
-        var jobs = _jobs.ToList();
+        // In the background BorgStudio starts the jobs itself: the system's entries go.
+        List<BackupJob> jobs = IsBackgroundMode ? [] : [.. _jobs];
         await _scheduleGate.WaitAsync();
         try
         {
