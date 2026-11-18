@@ -1,0 +1,136 @@
+using System.Text.Json.Serialization;
+
+namespace BorgStudio.Core.Notifications;
+
+/// <summary>What a notification is about.</summary>
+[JsonConverter(typeof(JsonStringEnumConverter<NotificationEvent>))]
+public enum NotificationEvent
+{
+    /// <summary>A backup finished without problems.</summary>
+    Succeeded,
+
+    /// <summary>A backup finished, but borg warned (e.g. files it could not read).</summary>
+    Warnings,
+
+    /// <summary>A backup failed (also a scheduled run that could not start).</summary>
+    Failed,
+
+    /// <summary>A backup did not start (e.g. the repository asks for its passphrase every time).</summary>
+    Skipped,
+
+    /// <summary>A job works again after a failure, a skipped run or warnings were reported.</summary>
+    Recovered,
+}
+
+/// <summary>How a channel's messages reach their receiver.</summary>
+public abstract record NotificationChannel
+{
+    public bool Enabled { get; init; }
+
+    /// <summary>The events this channel reports.</summary>
+    public List<NotificationEvent> Events { get; init; } = [NotificationEvent.Failed, NotificationEvent.Skipped, NotificationEvent.Recovered];
+
+    [JsonIgnore]
+    public bool IsConfigured => this switch
+    {
+        EmailChannel email => email.Host.Trim().Length > 0 && email.From.Trim().Length > 0 && email.Recipients.Count > 0,
+        WebhookChannel webhook => webhook.Url.Trim().Length > 0,
+        _ => true,
+    };
+
+    public bool Reports(NotificationEvent notificationEvent) => Enabled && Events.Contains(notificationEvent);
+}
+
+/// <summary>The system's own notifications (Windows notification center, macOS notification center, libnotify).</summary>
+public sealed record SystemNotificationChannel : NotificationChannel;
+
+[JsonConverter(typeof(JsonStringEnumConverter<SmtpSecurity>))]
+public enum SmtpSecurity
+{
+    /// <summary>TLS on connect for port 465, STARTTLS where the server offers it otherwise.</summary>
+    Auto,
+
+    /// <summary>STARTTLS, required.</summary>
+    StartTls,
+
+    /// <summary>TLS from the start (usually port 465).</summary>
+    SslOnConnect,
+
+    /// <summary>No encryption (only for servers in the local network).</summary>
+    None,
+}
+
+/// <summary>E-mail over SMTP. The password is a secret (<see cref="NotificationSecrets.SmtpPassword"/>).</summary>
+public sealed record EmailChannel : NotificationChannel
+{
+    public string Host { get; init; } = "";
+
+    public int Port { get; init; } = 587;
+
+    public SmtpSecurity Security { get; init; } = SmtpSecurity.Auto;
+
+    /// <summary>Login name; empty: the server takes mail without login.</summary>
+    public string UserName { get; init; } = "";
+
+    public string From { get; init; } = "";
+
+    /// <summary>One or more addresses, separated by commas or semicolons.</summary>
+    public string To { get; init; } = "";
+
+    [JsonIgnore]
+    public IReadOnlyList<string> Recipients =>
+        [.. To.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
+}
+
+/// <summary>What the outgoing webhook sends.</summary>
+[JsonConverter(typeof(JsonStringEnumConverter<WebhookFormat>))]
+public enum WebhookFormat
+{
+    /// <summary>BorgStudio's own JSON (all details), for scripts and home automation.</summary>
+    Json,
+
+    /// <summary>ntfy: the URL is the topic, e.g. https://ntfy.sh/my-backups.</summary>
+    Ntfy,
+
+    /// <summary>A Discord channel webhook.</summary>
+    Discord,
+
+    /// <summary>A Slack incoming webhook.</summary>
+    Slack,
+
+    /// <summary>Gotify: the URL ends in /message; the app token goes in the header X-Gotify-Key.</summary>
+    Gotify,
+}
+
+/// <summary>An HTTP POST to a URL. The header's value is a secret (<see cref="NotificationSecrets.WebhookHeader"/>).</summary>
+public sealed record WebhookChannel : NotificationChannel
+{
+    public string Url { get; init; } = "";
+
+    public WebhookFormat Format { get; init; } = WebhookFormat.Json;
+
+    /// <summary>An extra header for the receiver's token, e.g. "Authorization"; empty: none.</summary>
+    public string HeaderName { get; init; } = "";
+}
+
+/// <summary>Who gets told what (app-wide; a job can be left out with <see cref="Backups.BackupJob.Notify"/>).</summary>
+public sealed record NotificationSettings
+{
+    public SystemNotificationChannel System { get; init; } = new();
+
+    public EmailChannel Email { get; init; } = new();
+
+    public WebhookChannel Webhook { get; init; } = new();
+
+    /// <summary>
+    /// The same problem of a job is reported once – not again after every run – until the job works again, which is
+    /// then reported as <see cref="NotificationEvent.Recovered"/>.
+    /// </summary>
+    public bool SuppressRepeats { get; init; } = true;
+
+    [JsonIgnore]
+    public IEnumerable<NotificationChannel> Channels => [System, Email, Webhook];
+
+    [JsonIgnore]
+    public bool AnyEnabled => Channels.Any(channel => channel.Enabled);
+}

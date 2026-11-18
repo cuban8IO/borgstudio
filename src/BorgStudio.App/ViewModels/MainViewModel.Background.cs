@@ -139,9 +139,13 @@ public partial class MainViewModel
         }
     }
 
-    private async Task RunScheduledAsync(BackupJob job)
+    /// <summary>
+    /// A copy of the vault, opened with the window's key while the window is unlocked; otherwise locked or – with
+    /// <paramref name="scheduledAccess"/> – opened with the key for scheduled runs. Opening and locking it leaves the
+    /// window's vault alone.
+    /// </summary>
+    private Vault OpenVaultCopy(bool scheduledAccess)
     {
-        // The scheduler's own copy of the vault: opening and locking it leaves the window's alone.
         var vault = new Vault(_services.Vault.FilePath);
         if (_services.Vault.State == VaultState.Unlocked)
         {
@@ -154,6 +158,44 @@ public partial class MainViewModel
                 // Locked in the meantime: the key for scheduled runs it is.
             }
         }
+        if (scheduledAccess && vault.State == VaultState.Locked)
+        {
+            try
+            {
+                new ScheduledAccess(vault, _services.SecretStore, ScheduledAccess.FallbackFile).TryUnlock();
+            }
+            catch (SecretBoxException)
+            {
+                // The stored key no longer fits: the secrets stay unreadable.
+            }
+        }
+        return vault;
+    }
+
+    /// <summary>Reports a run of the window through the notification channels (in the background, never failing).</summary>
+    private async Task NotifyRunAsync(BackupJob job, BackupRunSummary summary)
+    {
+        if (_services.Notifier is null || !job.Notify)
+            return;
+        var vault = OpenVaultCopy(scheduledAccess: true);
+        try
+        {
+            await Task.Run(() => new RunNotifications(_services).NotifyAsync(job, summary, vault));
+        }
+        catch (Exception exception)
+        {
+            AppLog.Write(RunNotifications.LogFile, $"{job.Name}: {exception}", _services.Jobs.DataDirectory);
+        }
+        finally
+        {
+            vault.Lock();
+        }
+    }
+
+    private async Task RunScheduledAsync(BackupJob job)
+    {
+        // The scheduler's own copy of the vault (it opens it with its key itself, if needed).
+        var vault = OpenVaultCopy(scheduledAccess: false);
         var services = _services with { Vault = vault };
         var runner = new ScheduledJobRunner(services, new ScheduledAccess(vault, _services.SecretStore, ScheduledAccess.FallbackFile));
 

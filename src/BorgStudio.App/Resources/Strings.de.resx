@@ -2028,4 +2028,205 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
   <data name="SettingsRunnerHint" xml:space="preserve">
     <value>Im Hintergrund läuft BorgStudio nach dem Schließen des Fensters im Infobereich weiter, und Sicherungen zeigen ihren Fortschritt im Fenster. Unter Linux braucht der Desktop einen Infobereich (unter GNOME: die Erweiterung AppIndicator).</value>
   </data>
+  <data name="NotifyTitleSucceeded" xml:space="preserve">
+    <value>Sicherung erfolgreich: {0}</value>
+  </data>
+  <data name="NotifyTitleWarnings" xml:space="preserve">
+    <value>Sicherung mit Warnungen: {0}</value>
+  </data>
+  <data name="NotifyTitleFailed" xml:space="preserve">
+    <value>Sicherung fehlgeschlagen: {0}</value>
+  </data>
+  <data name="NotifyTitleSkipped" xml:space="preserve">
+    <value>Sicherung übersprungen: {0}</value>
+  </data>
+  <data name="NotifyTitleRecovered" xml:space="preserve">
+    <value>Sicherung läuft wieder: {0}</value>
+  </data>
+  <data name="NotifyLineRepository" xml:space="preserve">
+    <value>Repository: {0}</value>
+  </data>
+  <data name="NotifyLineStarted" xml:space="preserve">
+    <value>Gestartet: {0} · Dauer {1}</value>
+  </data>
+  <data name="NotifyLineReason" xml:space="preserve">
+    <value>Grund: {0}</value>
+  </data>
+  <data name="NotifyLineArchive" xml:space="preserve">
+    <value>Archiv: {0}</value>
+  </data>
+  <data name="NotifyLineSizes" xml:space="preserve">
+    <value>Gelesen: {0} · neu gespeichert: {1} · {2} Dateien</value>
+  </data>
+  <data name="NotifyLineWarning" xml:space="preserve">
+    <value>Warnung: {0}</value>
+  </data>
+  <data name="NotifyLineCleanup" xml:space="preserve">
+    <value>Aufräumen: {0}</value>
+  </data>
+  <data name="NotifyLineComputer" xml:space="preserve">
+    <value>Computer: {0}</value>
+  </data>
+  <data name="NotifyTestTitle" xml:space="preserve">
+    <value>Testmeldung von BorgStudio</value>
+  </data>
+  <data name="NotifyTestBody" xml:space="preserve">
+    <value>Wenn du das liest, funktioniert der Kanal „{0}“.</value>
+  </data>
+  <data name="MenuNotifications" xml:space="preserve">
+    <value>Benachrichtigungen …</value>
+  </data>
+  <data name="NotifyTitle" xml:space="preserve">
+    <value>Benachrichtigungen</value>
+  </data>
+  <data name="NotifyIntro" xml:space="preserve">
+    <value>BorgStudio kann dir mitteilen, wie deine Sicherungen gelaufen sind – von Hand gestartete, im Hintergrund und über die Aufgabenplanung. Wähle für jeden Kanal, was er meldet.</value>
+  </data>
+  <data name="NotifyChannelSystem" xml:space="preserve">
+    <value>Systembenachrichtigung</value>
+  </data>
+  <data name="NotifyChannelEmail" xml:space="preserve">
+    <value>E-Mail</value>
+  </data>
+  <data name="NotifyChannelWebhook" xml:space="preserve">
+    <value>Webhook</value>
+  </data>
+  <data name="NotifySystemHint" xml:space="preserve">
+    <value>Erscheint in der Mitteilungszentrale des Systems (Windows, macOS; unter Linux über notify-send).</value>
+  </data>
+  <data name="NotifyEventsLabel" xml:space="preserve">
+    <value>Melden bei:</value>
+  </data>
+  <data name="NotifyEventFailed" xml:space="preserve">
+    <value>Fehlern</value>
+  </data>
+  <data name="NotifyEventSkipped" xml:space="preserve">
+    <value>übersprungenen Läufen</value>
+  </data>
+  <data name="NotifyEventWarnings" xml:space="preserve">
+    <value>Warnungen</value>
+  </data>
+  <data name="NotifyEventRecovered" xml:space="preserve">
+    <value>„läuft wieder“</value>
+  </data>
+  <data name="NotifyEventSucceeded" xml:space="preserve">
+    <value>jedem Erfolg</value>
+  </data>
+  <data name="NotifyTest" xml:space="preserve">
+    <value>Testen</value>
+  </data>
+  <data name="NotifyTesting" xml:space="preserve">
+    <value>Wird gesendet …</value>
+  </data>
+  <data name="NotifyTestSent" xml:space="preserve">
+    <value>Gesendet – prüfe, ob sie angekommen ist.</value>
+  </data>
+  <data name="NotifyTestFailed" xml:space="preserve">
+    <value>Fehlgeschlagen: {0}</value>
+  </data>
+  <data name="NotifyUnavailable" xml:space="preserve">
+    <value>Benachrichtigungen sind hier nicht verfügbar.</value>
+  </data>
+  <data name="NotifySmtpServer" xml:space="preserve">
+    <value>SMTP-Server</value>
+  </data>
+  <data name="NotifySmtpPort" xml:space="preserve">
+    <value>Port</value>
+  </data>
+  <data name="NotifySmtpSecurity" xml:space="preserve">
+    <value>Verschlüsselung</value>
+  </data>
+  <data name="NotifySecurityAuto" xml:space="preserve">
+    <value>Automatisch (empfohlen)</value>
+  </data>
+  <data name="NotifySecurityNone" xml:space="preserve">
+    <value>Keine (nur im lokalen Netz)</value>
+  </data>
+  <data name="NotifySmtpUser" xml:space="preserve">
+    <value>Benutzername (leer: ohne Anmeldung)</value>
+  </data>
+  <data name="NotifySmtpPassword" xml:space="preserve">
+    <value>Passwort</value>
+  </data>
+  <data name="NotifySmtpFrom" xml:space="preserve">
+    <value>Absender</value>
+  </data>
+  <data name="NotifySmtpTo" xml:space="preserve">
+    <value>Empfänger (durch Kommas getrennt)</value>
+  </data>
+  <data name="NotifySecretsVault" xml:space="preserve">
+    <value>Passwort und Token des Webhooks liegen im PIN-geschützten Tresor.</value>
+  </data>
+  <data name="NotifySecretsKeychain" xml:space="preserve">
+    <value>Passwort und Token des Webhooks liegen im Schlüsselbund des Systems.</value>
+  </data>
+  <data name="NotifySecretsNowhere" xml:space="preserve">
+    <value>Hier gibt es keinen sicheren Ort für ein Passwort: Richte eine PIN ein (Extras → Einstellungen), um eines zu verwenden.</value>
+  </data>
+  <data name="NotifyWebhookFormat" xml:space="preserve">
+    <value>Format</value>
+  </data>
+  <data name="NotifyWebhookUrl" xml:space="preserve">
+    <value>URL</value>
+  </data>
+  <data name="NotifyFormatJson" xml:space="preserve">
+    <value>JSON (alle Details)</value>
+  </data>
+  <data name="NotifyUrlHintJson" xml:space="preserve">
+    <value>BorgStudio sendet ein JSON-Objekt mit Ereignis, Job und den Details des Laufs – für Skripte und Hausautomation.</value>
+  </data>
+  <data name="NotifyUrlHintNtfy" xml:space="preserve">
+    <value>Die URL des Themas, z. B. https://ntfy.sh/meine-backups. Für ein geschütztes Thema: Header Authorization, Wert „Bearer &lt;Token&gt;“.</value>
+  </data>
+  <data name="NotifyUrlHintDiscord" xml:space="preserve">
+    <value>Die Webhook-URL des Kanals (Kanaleinstellungen → Integrationen → Webhooks).</value>
+  </data>
+  <data name="NotifyUrlHintSlack" xml:space="preserve">
+    <value>Die URL eines Incoming Webhooks deiner Slack-App.</value>
+  </data>
+  <data name="NotifyUrlHintGotify" xml:space="preserve">
+    <value>Die /message-URL deines Servers, z. B. https://gotify.example.com/message; der App-Token gehört in den Header X-Gotify-Key.</value>
+  </data>
+  <data name="NotifyWebhookHeader" xml:space="preserve">
+    <value>Zusätzlicher Header (optional)</value>
+  </data>
+  <data name="NotifyWebhookHeaderValue" xml:space="preserve">
+    <value>Wert (Token)</value>
+  </data>
+  <data name="NotifyWebhookHeaderHint" xml:space="preserve">
+    <value>Für Empfänger, die einen Token verlangen, z. B. Authorization: Bearer …; der Wert wird wie ein Passwort gespeichert.</value>
+  </data>
+  <data name="NotifyExtras" xml:space="preserve">
+    <value>Weiteres</value>
+  </data>
+  <data name="NotifySuppressRepeats" xml:space="preserve">
+    <value>Dasselbe Problem eines Jobs nur einmal melden – bis er wieder läuft (dann kommt „läuft wieder“)</value>
+  </data>
+  <data name="NotifyPerJobHint" xml:space="preserve">
+    <value>Einzelne Jobs lassen sich in ihrem Editor ausnehmen („Benachrichtigungen für diesen Job senden“).</value>
+  </data>
+  <data name="NotifyErrorIn" xml:space="preserve">
+    <value>{0}: {1}</value>
+  </data>
+  <data name="NotifyErrorHost" xml:space="preserve">
+    <value>Der SMTP-Server fehlt.</value>
+  </data>
+  <data name="NotifyErrorPort" xml:space="preserve">
+    <value>Der Port muss eine Zahl von 1 bis 65535 sein.</value>
+  </data>
+  <data name="NotifyErrorFrom" xml:space="preserve">
+    <value>Der Absender fehlt.</value>
+  </data>
+  <data name="NotifyErrorTo" xml:space="preserve">
+    <value>Es fehlt mindestens ein Empfänger.</value>
+  </data>
+  <data name="NotifyErrorUrl" xml:space="preserve">
+    <value>Die URL muss mit http:// oder https:// beginnen.</value>
+  </data>
+  <data name="NotifySecretFailed" xml:space="preserve">
+    <value>Das Passwort konnte nicht gespeichert werden: {0}</value>
+  </data>
+  <data name="JobEditorNotify" xml:space="preserve">
+    <value>Benachrichtigungen für diesen Job senden (siehe Extras → Benachrichtigungen)</value>
+  </data>
 </root>

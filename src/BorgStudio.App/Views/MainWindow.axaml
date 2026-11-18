@@ -25,6 +25,7 @@
             <NativeMenuItem Header="{x:Static res:Strings.MenuTools}">
                 <NativeMenu>
                     <NativeMenuItem Header="{x:Static res:Strings.MenuSettings}" Click="OpenSettings_Click" />
+                    <NativeMenuItem Header="{x:Static res:Strings.MenuNotifications}" Click="OpenNotifications_Click" />
                     <NativeMenuItem Header="{x:Static res:Strings.MenuKeys}" Click="OpenKeys_Click" />
                     <NativeMenuItemSeparator />
                     <NativeMenuItem Header="{x:Static res:Strings.MenuExport}" Click="OpenExport_Click" />

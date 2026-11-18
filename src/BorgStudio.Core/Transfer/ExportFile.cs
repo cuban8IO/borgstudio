@@ -41,6 +41,9 @@ public sealed record ExportContents
     /// <summary>Backup jobs (empty in exports of versions without jobs).</summary>
     public List<BackupJob> Jobs { get; init; } = [];
 
+    /// <summary>Other secrets by name, e.g. the notifications' SMTP password (see <see cref="Notifications.NotificationSecrets"/>).</summary>
+    public Dictionary<string, string> Secrets { get; init; } = [];
+
     public string? PassphraseFor(Guid repositoryId) => Passphrases.GetValueOrDefault(repositoryId.ToString("N"));
 
     public ExportedBorgKey? BorgKeyFor(Guid repositoryId) => BorgKeys.GetValueOrDefault(repositoryId.ToString("N"));

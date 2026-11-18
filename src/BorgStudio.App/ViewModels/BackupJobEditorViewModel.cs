@@ -48,6 +48,7 @@ public sealed partial class BackupJobEditorViewModel : ViewModelBase
         foreach (var schedule in job.Schedules)
             Schedules.Add(new ScheduleItemViewModel(schedule, RemoveSchedule));
         CatchUp = job.CatchUp;
+        Notify = job.Notify;
         Schedules.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasSchedules));
 
         Sources.CollectionChanged += (_, _) => Refresh();
@@ -230,6 +231,10 @@ public sealed partial class BackupJobEditorViewModel : ViewModelBase
     [ObservableProperty]
     public partial bool CatchUp { get; set; }
 
+    /// <summary>The job's runs are reported through the notification channels.</summary>
+    [ObservableProperty]
+    public partial bool Notify { get; set; } = true;
+
     [RelayCommand]
     private void AddSchedule() => Schedules.Add(new ScheduleItemViewModel(new BackupSchedule(), RemoveSchedule));
 
@@ -263,6 +268,7 @@ public sealed partial class BackupJobEditorViewModel : ViewModelBase
             Retention = CleanUp ? retention : null,
             Schedules = schedules,
             CatchUp = CatchUp,
+            Notify = Notify,
         };
         CloseRequested?.Invoke(this, EventArgs.Empty);
     }

@@ -31,6 +31,8 @@
 
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
+    <!-- Also readable without Avalonia (scheduled runs): the icon shown with system notifications. -->
+    <EmbeddedResource Include="Assets\borgstudio.png" LogicalName="BorgStudio.NotificationIcon.png" />
   </ItemGroup>
 
   <!-- UI texts: Strings.resx (English, default) + Strings.<culture>.resx. The Strings class is generated at build time. -->

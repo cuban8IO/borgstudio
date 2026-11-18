@@ -3,6 +3,7 @@ using BorgStudio.App.Services;
 using BorgStudio.App.ViewModels;
 using BorgStudio.Core.Backups;
 using BorgStudio.Core.Borg;
+using BorgStudio.Core.Notifications;
 using BorgStudio.Core.Plugins;
 using BorgStudio.Core.Processes;
 using BorgStudio.Core.Progress;
@@ -534,6 +535,14 @@ public sealed class TestServices : IDisposable
     public FakeAutostart Autostart { get; } = new();
     public Updater Updates { get; }
 
+    /// <summary>The programs system notifications start (notify-send: the notifier pretends to be on Linux).</summary>
+    public RecordingProcesses NotifyProcesses { get; } = new();
+
+    /// <summary>What webhooks post.</summary>
+    public FakeHttpHandler Http { get; } = new();
+
+    public Notifier Notifier { get; }
+
     /// <summary>The "installed" app the updater replaces.</summary>
     public string AppFolder => Directory.Combine("app");
 
@@ -558,11 +567,14 @@ public sealed class TestServices : IDisposable
         {
             Rid = "win-x64",
         };
+        Notifier = new Notifier(new SystemNotifier(NotifyProcesses) { Platform = SystemNotifier.OSPlatform.Linux }, new EmailSender(),
+            new WebhookSender(new HttpClient(Http)));
         Services = new AppServices(Borg.Detector(wsl), plugins, Store, Secrets,
             new BorgClient(Borg, FakeBorg.WslExecutable) { NativeIsPosix = true }, Ssh, SshKeys, SshKeygen, Vault, Settings, Jobs, Archives, Durations, Dialogs,
             Updates,
             Scheduler,
-            Autostart);
+            Autostart,
+            Notifier);
     }
 
     public KnownHostsFile KnownHosts => new(SshKeys.KnownHostsFile);
@@ -879,4 +891,45 @@ public sealed class FakeAutostart : IAutostart
     public void Enable(string executable) => Executable = executable;
 
     public void Disable() => Executable = null;
+}
+
+/// <summary>Records the programs started; answers with success, or as <see cref="Results"/> says (<c>null</c>: not found).</summary>
+public sealed class RecordingProcesses : IProcessRunner
+{
+    public sealed record Call(string FileName, IReadOnlyList<string> Arguments, IReadOnlyDictionary<string, string?> Environment);
+
+    public List<Call> Calls { get; } = [];
+
+    /// <summary>Program name → its result; missing: exit code 0.</summary>
+    public Dictionary<string, ProcessResult?> Results { get; } = [];
+
+    public Task<ProcessResult?> RunAsync(string fileName, IReadOnlyList<string> arguments, TimeSpan timeout,
+        IReadOnlyDictionary<string, string?>? environment = null, string? standardInput = null, CancellationToken cancellationToken = default,
+        Action<string>? standardErrorLine = null, Action<string>? standardOutputLine = null, string? workingDirectory = null)
+    {
+        lock (Calls)
+            Calls.Add(new Call(fileName, [.. arguments], environment ?? new Dictionary<string, string?>()));
+        return Task.FromResult(Results.TryGetValue(Path.GetFileName(fileName), out var result) ? result : new ProcessResult(0, "", ""));
+    }
+}
+
+/// <summary>Answers HTTP requests with <see cref="Status"/> and records them with their bodies.</summary>
+public sealed class FakeHttpHandler : HttpMessageHandler
+{
+    public sealed record Request(HttpMethod Method, Uri Url, IReadOnlyDictionary<string, string> Headers, string Body);
+
+    public List<Request> Requests { get; } = [];
+
+    public System.Net.HttpStatusCode Status { get; set; } = System.Net.HttpStatusCode.OK;
+
+    public string ResponseBody { get; set; } = "";
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var body = request.Content is null ? "" : await request.Content.ReadAsStringAsync(cancellationToken);
+        var headers = request.Headers.ToDictionary(header => header.Key, header => string.Join(",", header.Value), StringComparer.OrdinalIgnoreCase);
+        lock (Requests)
+            Requests.Add(new Request(request.Method, request.RequestUri!, headers, body));
+        return new HttpResponseMessage(Status) { Content = new StringContent(ResponseBody) };
+    }
 }

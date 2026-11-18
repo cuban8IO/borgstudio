@@ -195,6 +195,15 @@ section gets the new version number.
   a running backup, a failed one or paused schedules; its menu opens the window, shows the next backup, starts a job,
   pauses the schedules and quits. Switching modes removes or restores the system’s entries and the start at login.
 - Only one BorgStudio per user: starting it again brings the running one’s window forward.
+- Notifications (Tools → Notifications): every run – by hand, in the background and scheduled – can be reported as a
+  system notification (Windows toast, macOS notification center, `notify-send` on Linux), by e-mail over SMTP (MailKit)
+  and through an outgoing webhook (BorgStudio’s JSON with all details, or ready-made for ntfy, Discord, Slack and
+  Gotify, with an optional token header). Each channel reports the events chosen for it – failures, skipped runs,
+  warnings, “working again”, every success – and has a Test button. The same problem of a job is reported only once
+  until the job works again (can be switched off); single jobs can be left out in their editor. The SMTP password and
+  the webhook’s token are kept like passphrases (in the vault with a PIN – scheduled runs use their key – otherwise in
+  the system keychain) and travel with an export. Sending problems never fail a backup; they go to
+  `logs/notifications.log`.
 
 **Fixed**
 - BorgStudio no longer crashes at startup when .NET runs without culture data (Linux without ICU).

@@ -26,6 +26,35 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
         var job = services.Jobs.Load().FirstOrDefault(candidate => candidate.Id == jobId)
             ?? throw new ArgumentException($"There is no backup job {jobId}.", nameof(jobId));
 
+        try
+        {
+            var result = await RunJobAsync(job, report, cancellationToken);
+            await NotifyAsync(job, result.Summary);
+            return result;
+        }
+        finally
+        {
+            services.Vault.Lock();
+        }
+    }
+
+    /// <summary>Reports the run through the notification channels; their secrets may be in the vault.</summary>
+    private async Task NotifyAsync(BackupJob job, BackupRunSummary summary)
+    {
+        try
+        {
+            if (services.Vault.State == VaultState.Locked)
+                OpenVault();
+            await new RunNotifications(services).NotifyAsync(job, summary, services.Vault);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            AppLog.Write(RunNotifications.LogFile, $"{job.Name}: {exception}", services.Jobs.DataDirectory);
+        }
+    }
+
+    private async Task<BackupRunResult> RunJobAsync(BackupJob job, IBackupRunReport? report, CancellationToken cancellationToken)
+    {
         var repository = services.RepositoryStore.Load().Repositories.FirstOrDefault(candidate => candidate.Id == job.RepositoryId);
         if (repository is null || Location(repository) is not { } location)
             return NotRun(job, BackupSkipReason.RepositoryMissing);
@@ -55,15 +84,8 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
             ssh = new SshAccess(key.PrivateKey, services.SshKeys.KnownHostsFile);
         }
 
-        try
-        {
-            return await _runner.RunAsync(new BackupRunRequest(borg, location, job, passphrase, ssh, Scheduled: true),
-                report, cancellationToken);
-        }
-        finally
-        {
-            services.Vault.Lock();
-        }
+        return await _runner.RunAsync(new BackupRunRequest(borg, location, job, passphrase, ssh, Scheduled: true),
+            report, cancellationToken);
     }
 
     private (string? Passphrase, BackupSkipReason? Problem) GetPassphrase(RepositoryConfig repository)
