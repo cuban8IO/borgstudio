@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using System;
 using BorgStudio.App.Services;
+using BorgStudio.Core;
 using BorgStudio.Core.Settings;
 using BorgStudio.Core.Updates;
 
@@ -31,7 +32,18 @@ sealed class Program
             return;
         }
 
-        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+        // One BorgStudio per user: a second start brings the first one's window forward.
+        if (SingleInstance.TryClaim(AppPaths.DataDirectory) is null && SingleInstance.ShowExisting(AppPaths.DataDirectory))
+            return;
+
+        try
+        {
+            BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+        }
+        finally
+        {
+            SingleInstance.Current?.Dispose();
+        }
     }
 
     // Avalonia configuration, don't remove; also used by visual designer.

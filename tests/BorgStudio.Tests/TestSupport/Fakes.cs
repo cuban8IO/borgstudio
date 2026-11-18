@@ -531,6 +531,7 @@ public sealed class TestServices : IDisposable
     public AppServices Services { get; }
     public FakeUpdateSource UpdateSource { get; } = new();
     public FakeSystemScheduler Scheduler { get; } = new();
+    public FakeAutostart Autostart { get; } = new();
     public Updater Updates { get; }
 
     /// <summary>The "installed" app the updater replaces.</summary>
@@ -560,7 +561,8 @@ public sealed class TestServices : IDisposable
         Services = new AppServices(Borg.Detector(wsl), plugins, Store, Secrets,
             new BorgClient(Borg, FakeBorg.WslExecutable) { NativeIsPosix = true }, Ssh, SshKeys, SshKeygen, Vault, Settings, Jobs, Archives, Durations, Dialogs,
             Updates,
-            Scheduler);
+            Scheduler,
+            Autostart);
     }
 
     public KnownHostsFile KnownHosts => new(SshKeys.KnownHostsFile);
@@ -865,4 +867,16 @@ public sealed class FakeSystemScheduler : ISystemScheduler
         Executable = executable;
         return Task.CompletedTask;
     }
+}
+
+/// <summary>Remembers whether BorgStudio would start at login, and with what.</summary>
+public sealed class FakeAutostart : IAutostart
+{
+    public string? Executable { get; private set; }
+
+    public bool IsEnabled => Executable is not null;
+
+    public void Enable(string executable) => Executable = executable;
+
+    public void Disable() => Executable = null;
 }

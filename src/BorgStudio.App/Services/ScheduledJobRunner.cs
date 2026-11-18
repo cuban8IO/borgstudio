@@ -21,7 +21,7 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
     public BackupRunner Runner => _runner;
 
     /// <exception cref="ArgumentException">There is no job <paramref name="jobId"/>.</exception>
-    public async Task<BackupRunResult> RunAsync(Guid jobId, CancellationToken cancellationToken = default)
+    public async Task<BackupRunResult> RunAsync(Guid jobId, IBackupRunReport? report = null, CancellationToken cancellationToken = default)
     {
         var job = services.Jobs.Load().FirstOrDefault(candidate => candidate.Id == jobId)
             ?? throw new ArgumentException($"There is no backup job {jobId}.", nameof(jobId));
@@ -58,7 +58,7 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
         try
         {
             return await _runner.RunAsync(new BackupRunRequest(borg, location, job, passphrase, ssh, Scheduled: true),
-                cancellationToken: cancellationToken);
+                report, cancellationToken);
         }
         finally
         {

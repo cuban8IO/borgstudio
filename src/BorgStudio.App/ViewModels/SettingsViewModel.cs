@@ -106,6 +106,35 @@ public sealed partial class SettingsViewModel : ViewModelBase
             _main.UpdateSettings(_main.Settings with { CheckForUpdates = value });
     }
 
+    /// <summary>The system's task scheduler starts the scheduled jobs.</summary>
+    public bool RunWithSystem
+    {
+        get => !_main.IsBackgroundMode;
+        set
+        {
+            if (value)
+                SetScheduleRunner(ScheduleRunner.System);
+        }
+    }
+
+    /// <summary>BorgStudio starts them itself, from the notification area.</summary>
+    public bool RunInBackground
+    {
+        get => _main.IsBackgroundMode;
+        set
+        {
+            if (value)
+                SetScheduleRunner(ScheduleRunner.Background);
+        }
+    }
+
+    private void SetScheduleRunner(ScheduleRunner runner)
+    {
+        _main.SetScheduleRunner(runner);
+        OnPropertyChanged(nameof(RunWithSystem));
+        OnPropertyChanged(nameof(RunInBackground));
+    }
+
     [RelayCommand]
     private Task CheckForUpdatesNowAsync() => Dialogs.ShowUpdateAsync(new UpdateViewModel(_main, Dialogs, known: null));
 

@@ -238,7 +238,7 @@ public sealed class LaunchdScheduler(IProcessRunner runner, string agentsDirecto
             calendar: $"    <key>StartCalendarInterval</key>\n    <array>\n{entries}    </array>\n");
     }
 
-    private static string Plist(string label, IReadOnlyList<string> arguments, bool runAtLoad, string calendar) =>
+    internal static string Plist(string label, IReadOnlyList<string> arguments, bool runAtLoad, string calendar) =>
         $"""
         <?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

@@ -64,6 +64,20 @@ public sealed class ScheduleTests : IDisposable
     }
 
     [Fact]
+    public void A_scheduler_that_looks_now_and_then_sees_each_time_once()
+    {
+        var job = Job(Daily) with { CatchUp = false };
+        var evening = new DateTime(2026, 11, 16, 20, 0, 0);
+        Assert.False(ScheduleCalendar.IsDue(job, evening.AddMinutes(-1), evening.AddSeconds(-1)));
+        Assert.True(ScheduleCalendar.IsDue(job, evening.AddSeconds(-20), evening.AddSeconds(10)));
+        // Seen at the last look already.
+        Assert.False(ScheduleCalendar.IsDue(job, evening.AddSeconds(10), evening.AddSeconds(40)));
+        // Asleep from 19:00 to 23:00: too late without catch-up, made up for with it.
+        Assert.False(ScheduleCalendar.IsDue(job, evening.AddHours(-1), evening.AddHours(3)));
+        Assert.True(ScheduleCalendar.IsDue(job with { CatchUp = true }, evening.AddHours(-1), evening.AddHours(3)));
+    }
+
+    [Fact]
     public void Windows_gets_one_trigger_per_schedule_and_catches_up()
     {
         var xml = WindowsTaskScheduler.TaskXml(Job(Daily, Weekdays, EveryFourHours), @"C:\Tools\Borg Studio\BorgStudio.exe", Monday);

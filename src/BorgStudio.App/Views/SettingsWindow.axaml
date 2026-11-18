@@ -32,6 +32,20 @@
             </StackPanel>
         </Border>
 
+        <!-- Scheduled backups -->
+        <Border Classes="card">
+            <StackPanel Spacing="10">
+                <TextBlock Text="{x:Static res:Strings.SettingsSchedules}" FontSize="16" FontWeight="SemiBold" />
+                <RadioButton GroupName="ScheduleRunner" IsChecked="{Binding RunWithSystem}">
+                    <TextBlock Text="{x:Static res:Strings.SettingsRunnerSystem}" TextWrapping="Wrap" />
+                </RadioButton>
+                <RadioButton GroupName="ScheduleRunner" IsChecked="{Binding RunInBackground}">
+                    <TextBlock Text="{x:Static res:Strings.SettingsRunnerBackground}" TextWrapping="Wrap" />
+                </RadioButton>
+                <TextBlock Text="{x:Static res:Strings.SettingsRunnerHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
+
         <!-- Vault -->
         <Border Classes="card">
             <StackPanel Spacing="10">

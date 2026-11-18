@@ -70,6 +70,7 @@ public partial class MainViewModel
         SelectedJob = RepositoryJobs.FirstOrDefault(item => item.Job.Id == selected) ?? RepositoryJobs.FirstOrDefault();
         OnPropertyChanged(nameof(HasRepositoryJobs));
         NewJobCommand.NotifyCanExecuteChanged();
+        RaiseBackgroundStateChanged();
     }
 
     /// <summary>Replaces all jobs (imports).</summary>
@@ -171,8 +172,22 @@ public partial class MainViewModel
             return;
         if (await GetPassphraseAsync(item) is not { } passphrase)
             return;
+        // A scheduled backup started while the questions were open.
+        if (IsBackupRunning)
+            return;
 
         var borg = Borg!;
+        await RunWithCardAsync(job, (report, cancellationToken) =>
+            Runner.RunAsync(new BackupRunRequest(borg, location, job, passphrase.Value, ssh.Access), report, cancellationToken));
+    }
+
+    /// <summary>
+    /// Runs a backup with its card in the window: progress, the expected total, cancelling. The window's own runs and the
+    /// ones the background scheduler starts.
+    /// </summary>
+    private async Task<BackupRunSummary> RunWithCardAsync(BackupJob job,
+        Func<IBackupRunReport, CancellationToken, Task<BackupRunResult>> start)
+    {
         var run = new BackupRunViewModel(job);
         CurrentBackup = run;
         IsBackupRunning = true;
@@ -191,8 +206,12 @@ public partial class MainViewModel
         BackupRunResult result;
         try
         {
-            result = await Runner.RunAsync(new BackupRunRequest(borg, location, job, passphrase.Value, ssh.Access),
-                new RunReport(this, run), cancellation.Token);
+            result = await start(new RunReport(this, run), cancellation.Token);
+        }
+        catch
+        {
+            IsBackupRunning = false;
+            throw;
         }
         finally
         {
@@ -212,6 +231,7 @@ public partial class MainViewModel
         IsBackupRunning = false;
         if (summary.Outcome != BackupOutcome.Skipped)
             ArchivesChanged(job.RepositoryId);
+        return summary;
     }
 
     /// <summary>Runs backups and clean-ups – the same for the window, the background and scheduled runs.</summary>

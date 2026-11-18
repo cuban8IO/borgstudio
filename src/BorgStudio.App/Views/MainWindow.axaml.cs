@@ -6,6 +6,7 @@ using BorgStudio.App.Resources;
 using BorgStudio.App.Services;
 using BorgStudio.App.ViewModels;
 using BorgStudio.Core;
+using BorgStudio.Core.Backups;
 
 namespace BorgStudio.App.Views;
 
@@ -57,8 +58,43 @@ public partial class MainWindow : Window
             StartAgain(_restartWith);
     }
 
+    /// <summary>Set by "Quit" in the icon's menu: the window closes for good instead of going to the notification area.</summary>
+    private bool _quitting;
+
+    /// <summary>Ends BorgStudio in the background ("Quit" in the icon's menu); a running backup asks first.</summary>
+    public void Quit()
+    {
+        _quitting = true;
+        // The questions before closing need a visible window.
+        if (_viewModel is { IsBackupRunning: true } or { HasMounts: true })
+            ShowFromTray();
+        Close();
+    }
+
+    /// <summary>Brings the window back from the notification area (or forward, for a second start).</summary>
+    public void ShowFromTray()
+    {
+        Show();
+        if (WindowState == WindowState.Minimized)
+            WindowState = WindowState.Normal;
+        Activate();
+    }
+
+    /// <summary>In the background closing only hides the window; the first time a hint says so.</summary>
+    private async Task HideToTrayAsync(MainViewModel viewModel)
+    {
+        if (!viewModel.Settings.TrayHintShown)
+        {
+            await new DialogService(this).ShowMessageAsync(Strings.TrayHintTitle, Strings.TrayHintMessage);
+            viewModel.UpdateSettings(viewModel.Settings with { TrayHintShown = true });
+        }
+        Hide();
+    }
+
     private static void StartAgain(ProcessStartInfo? instead)
     {
+        // The new start must not find this one still holding the single instance.
+        SingleInstance.Current?.Dispose();
         if (instead is not null)
         {
             Process.Start(instead)?.Dispose();
@@ -70,14 +106,21 @@ public partial class MainWindow : Window
         // Started as "dotnet BorgStudio.dll" the dll is the first argument and must stay.
         var arguments = Environment.GetCommandLineArgs();
         var isDotnet = Path.GetFileNameWithoutExtension(path).Equals("dotnet", StringComparison.OrdinalIgnoreCase);
-        foreach (var argument in isDotnet ? arguments : arguments.Skip(1))
+        // Restarted from the window: with the window again.
+        foreach (var argument in (isDotnet ? arguments : arguments.Skip(1)).Where(argument => argument != Autostart.BackgroundArgument))
             start.ArgumentList.Add(argument);
         Process.Start(start)?.Dispose();
     }
 
     protected override void OnClosing(WindowClosingEventArgs e)
     {
-        if (_viewModel is { IsBackupRunning: true } viewModel && !_closeAfterBackup)
+        if (_viewModel is { IsBackgroundMode: true } background && !_quitting && !_restart
+            && e.CloseReason is not (WindowCloseReason.OSShutdown or WindowCloseReason.ApplicationShutdown))
+        {
+            e.Cancel = true;
+            _ = HideToTrayAsync(background);
+        }
+        else if (_viewModel is { IsBackupRunning: true } viewModel && !_closeAfterBackup)
         {
             e.Cancel = true;
             _ = StopBackupAndCloseAsync(viewModel);
@@ -106,6 +149,7 @@ public partial class MainWindow : Window
                 Strings.BackupRunningCloseConfirm))
         {
             _restart = false;
+            _quitting = false;
             return;
         }
 

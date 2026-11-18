@@ -108,4 +108,19 @@ public static class ScheduleCalendar
         var last = job.LastRun?.Started.LocalDateTime;
         return last is null || last < due;
     }
+
+    /// <summary>How late a run may start and still count as on time (the scheduler looks every half minute).</summary>
+    public static readonly TimeSpan OnTime = TimeSpan.FromMinutes(5);
+
+    /// <summary>
+    /// For a scheduler that looks now and then (BorgStudio in the background): whether a scheduled time of the job lies
+    /// after <paramref name="since"/> (the last look) and at or before <paramref name="now"/>. A time long past (the
+    /// computer slept) only counts for jobs that catch up.
+    /// </summary>
+    public static bool IsDue(BackupJob job, DateTime since, DateTime now)
+    {
+        if (Previous(job.Schedules, now) is not { } due || due <= since)
+            return false;
+        return job.CatchUp || now - due <= OnTime;
+    }
 }
