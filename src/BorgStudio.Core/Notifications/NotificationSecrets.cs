@@ -13,6 +13,9 @@ public sealed class NotificationSecrets(Vault vault, ISecretStore keychain)
 
     public const string WebhookHeader = "notify-webhook-header";
 
+    /// <summary>The token the incoming webhook (<see cref="Trigger.TriggerServer"/>) asks for – kept the same way.</summary>
+    public const string TriggerToken = "trigger-token";
+
     /// <summary>Where new secrets go: the vault (if set up) or the keychain.</summary>
     public bool UsesVault => vault.State != VaultState.NotSetUp;
 

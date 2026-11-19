@@ -30,6 +30,9 @@ public sealed record AppSettings
 
     /// <summary>Who gets told about backups, and how.</summary>
     public Notifications.NotificationSettings Notifications { get; init; } = new();
+
+    /// <summary>The incoming webhook that starts jobs (only in background mode).</summary>
+    public Trigger.TriggerSettings Trigger { get; init; } = new();
 }
 
 /// <summary>Who starts scheduled backups.</summary>

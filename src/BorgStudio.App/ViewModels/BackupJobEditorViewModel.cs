@@ -50,6 +50,7 @@ public sealed partial class BackupJobEditorViewModel : ViewModelBase
         CatchUp = job.CatchUp;
         Notify = job.Notify;
         OverdueDays = job.OverdueDays;
+        WebhookTrigger = job.WebhookTrigger;
         Schedules.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasSchedules));
 
         Sources.CollectionChanged += (_, _) => Refresh();
@@ -240,6 +241,10 @@ public sealed partial class BackupJobEditorViewModel : ViewModelBase
     [ObservableProperty]
     public partial decimal? OverdueDays { get; set; } = 0;
 
+    /// <summary>The incoming webhook may start the job (Settings → Webhook).</summary>
+    [ObservableProperty]
+    public partial bool WebhookTrigger { get; set; }
+
     [RelayCommand]
     private void AddSchedule() => Schedules.Add(new ScheduleItemViewModel(new BackupSchedule(), RemoveSchedule));
 
@@ -274,6 +279,7 @@ public sealed partial class BackupJobEditorViewModel : ViewModelBase
             Schedules = schedules,
             CatchUp = CatchUp,
             Notify = Notify,
+            WebhookTrigger = WebhookTrigger,
             OverdueDays = (int)Math.Clamp(OverdueDays ?? 0, 0, 365),
         };
         CloseRequested?.Invoke(this, EventArgs.Empty);

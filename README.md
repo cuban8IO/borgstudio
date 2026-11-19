@@ -219,6 +219,12 @@ section gets the new version number.
   want it, in addition to their single messages; on quiet days only if wanted. With the task scheduler it is an entry of
   its own (`BorgStudio --daily-check`, made up for when the computer was off); in the background BorgStudio runs it
   itself.
+- Incoming webhook (Settings → Incoming webhook; background mode only): `POST /run/<job name or id>` starts a job like a
+  scheduled one – after the one running now, without questions; `?wait=1` answers with the outcome when it is done.
+  `GET /status` lists the running and queued jobs and each job’s last and next run, `POST /cancel` stops the running
+  backup. Every call needs the token (`Authorization: Bearer <token>`; kept like a passphrase, “New token” replaces it),
+  and a job must allow it in its editor. Listens on 127.0.0.1 (port 8473 by default), optionally on all addresses;
+  a small built-in HTTP server, no admin rights needed.
 
 **Fixed**
 - BorgStudio no longer crashes at startup when .NET runs without culture data (Linux without ICU).

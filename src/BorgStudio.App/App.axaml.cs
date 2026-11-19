@@ -80,6 +80,11 @@ public partial class App : Application
         var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
         timer.Tick += (_, _) => viewModel.ScheduleTick();
         timer.Start();
+
+        // The incoming webhook (if switched on, in background mode); it ends with the app.
+        viewModel.ApplyTrigger();
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
+            lifetime.Exit += (_, _) => viewModel.StopTrigger();
     }
 
     /// <summary>The real services – for the window, and for runs without window (scheduled backups).</summary>

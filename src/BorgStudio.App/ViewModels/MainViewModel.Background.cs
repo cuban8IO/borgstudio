@@ -25,7 +25,13 @@ public enum TrayState
 /// </summary>
 public partial class MainViewModel
 {
-    private readonly Queue<Guid> _dueJobs = new();
+    /// <summary>A run waiting its turn: due by a schedule, or asked for by the webhook (runs even while schedules are paused).</summary>
+    private readonly record struct QueuedRun(Guid JobId, bool Triggered);
+
+    private readonly Queue<QueuedRun> _dueJobs = new();
+
+    /// <summary>Who waits for a job's next run to finish (the webhook with ?wait=1).</summary>
+    private readonly Dictionary<Guid, List<TaskCompletionSource<BackupRunSummary?>>> _runWaiters = [];
     private DateTime? _lastScheduleLook;
     private bool _runningDueJobs;
     private Task _dueJobsRun = Task.CompletedTask;
@@ -56,6 +62,8 @@ public partial class MainViewModel
         _lastScheduleLook = Clock();
         ApplySchedules();
         ApplyAutostart();
+        // The webhook only listens in the background.
+        ApplyTrigger();
         OnPropertyChanged(nameof(IsBackgroundMode));
         RaiseBackgroundStateChanged();
     }
@@ -106,11 +114,10 @@ public partial class MainViewModel
             foreach (var job in _jobs.Where(job => job.IsScheduled))
             {
                 var due = since is { } last ? ScheduleCalendar.IsDue(job, last, now) : ScheduleCalendar.IsMissed(job, now);
-                if (due && !_dueJobs.Contains(job.Id))
-                    _dueJobs.Enqueue(job.Id);
+                if (due && !_dueJobs.Any(queued => queued.JobId == job.Id))
+                    _dueJobs.Enqueue(new QueuedRun(job.Id, Triggered: false));
             }
-            if (_dueJobs.Count > 0 && !_runningDueJobs)
-                _dueJobsRun = RunDueJobsAsync();
+            StartDueJobs();
         }
         // The daily check (summary, overdue jobs) – also while the schedules are paused.
         if (_dailyCheckRun.IsCompleted)
@@ -144,27 +151,45 @@ public partial class MainViewModel
         }
     }
 
+    private void StartDueJobs()
+    {
+        if (_dueJobs.Count > 0 && !_runningDueJobs)
+            _dueJobsRun = RunDueJobsAsync();
+    }
+
     private async Task RunDueJobsAsync()
     {
         _runningDueJobs = true;
         try
         {
-            while (_dueJobs.TryDequeue(out var id))
+            while (_dueJobs.TryDequeue(out var queued))
             {
                 // A backup started in the window goes first.
                 while (IsBackupRunning)
                     await Task.WhenAny(BackupFinished, Task.Delay(TimeSpan.FromSeconds(2)));
-                if (_jobs.FirstOrDefault(job => job.Id == id) is not { IsScheduled: true } job || Settings.SchedulesPaused)
-                    continue;
-                var run = RunScheduledAsync(job);
-                _backupTask = run;
-                await run;
+                var job = _jobs.FirstOrDefault(candidate => candidate.Id == queued.JobId);
+                BackupRunSummary? summary = null;
+                if (job is not null && (queued.Triggered || (job.IsScheduled && !Settings.SchedulesPaused)))
+                {
+                    var run = RunScheduledAsync(job);
+                    _backupTask = run;
+                    summary = await run;
+                }
+                FinishWaiters(queued.JobId, summary);
             }
         }
         finally
         {
             _runningDueJobs = false;
         }
+    }
+
+    private void FinishWaiters(Guid jobId, BackupRunSummary? summary)
+    {
+        if (!_runWaiters.Remove(jobId, out var waiters))
+            return;
+        foreach (var waiter in waiters)
+            waiter.TrySetResult(summary);
     }
 
     /// <summary>
@@ -220,7 +245,8 @@ public partial class MainViewModel
         }
     }
 
-    private async Task RunScheduledAsync(BackupJob job)
+    /// <summary>A run without questions, with its card in the window; <c>null</c> if it crashed.</summary>
+    private async Task<BackupRunSummary?> RunScheduledAsync(BackupJob job)
     {
         // The scheduler's own copy of the vault (it opens it with its key itself, if needed).
         var vault = OpenVaultCopy(scheduledAccess: false);
@@ -232,11 +258,13 @@ public partial class MainViewModel
             var summary = await RunWithCardAsync(job, (report, cancellationToken) => runner.RunAsync(job.Id, report, cancellationToken));
             var reason = summary.SkipReason is { } skip ? BorgTexts.SkipReason(skip) : summary.Message;
             ScheduledRun.Log($"{job.Name} (background): {summary.Outcome}{(reason is null ? "" : $" – {reason}")}", _services.Jobs.DataDirectory);
+            return summary;
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             ScheduledRun.Log($"{job.Name} (background): {exception}", _services.Jobs.DataDirectory);
             Notice = BorgTexts.Format(Strings.BackgroundRunFailed, job.Name, exception.Message);
+            return null;
         }
         finally
         {

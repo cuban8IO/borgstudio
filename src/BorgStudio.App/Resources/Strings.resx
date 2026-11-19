@@ -2390,4 +2390,61 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
   <data name="JobEditorOverdueDays" xml:space="preserve">
     <value>days (0 = never)</value>
   </data>
+  <data name="TriggerHeader" xml:space="preserve">
+    <value>Incoming webhook</value>
+  </data>
+  <data name="TriggerIntro" xml:space="preserve">
+    <value>Lets other programs (scripts, home automation) start backup jobs over HTTP, ask for their status or stop the running backup. Only jobs that allow it in their editor, and only with the token.</value>
+  </data>
+  <data name="TriggerNeedsBackground" xml:space="preserve">
+    <value>Only available with “BorgStudio in the background” (above).</value>
+  </data>
+  <data name="TriggerEnabled" xml:space="preserve">
+    <value>Listen for the webhook</value>
+  </data>
+  <data name="TriggerPort" xml:space="preserve">
+    <value>Port</value>
+  </data>
+  <data name="TriggerAllowNetwork" xml:space="preserve">
+    <value>Also reachable from other computers in the network (otherwise only from this computer)</value>
+  </data>
+  <data name="TriggerNetworkWarning" xml:space="preserve">
+    <value>Anyone in the network who knows the token can start backups. The connection is not encrypted (HTTP): use it only in a network you trust, or put an HTTPS proxy in front. Windows may ask once whether to allow BorgStudio through the firewall.</value>
+  </data>
+  <data name="TriggerToken" xml:space="preserve">
+    <value>Token</value>
+  </data>
+  <data name="TriggerCopy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="TriggerNewToken" xml:space="preserve">
+    <value>New token</value>
+  </data>
+  <data name="TriggerUsage" xml:space="preserve">
+    <value>POST /run/&lt;job name or id&gt; starts a job (?wait=1 answers when it is done), GET /status shows what runs and each job's last run, POST /cancel stops the running backup. The token goes in the header “Authorization: Bearer &lt;token&gt;”.</value>
+  </data>
+  <data name="TriggerNoToken" xml:space="preserve">
+    <value>No token can be read: without a key for scheduled runs, unlock BorgStudio once with the PIN.</value>
+  </data>
+  <data name="TriggerAllAddresses" xml:space="preserve">
+    <value>all addresses</value>
+  </data>
+  <data name="TriggerListening" xml:space="preserve">
+    <value>Listening on {0}, port {1}.</value>
+  </data>
+  <data name="TriggerFailed" xml:space="preserve">
+    <value>Port {0} cannot be used: {1}</value>
+  </data>
+  <data name="TriggerTokenCreated" xml:space="preserve">
+    <value>A new token was created – callers with the old one are refused from now on.</value>
+  </data>
+  <data name="TriggerTokenCopied" xml:space="preserve">
+    <value>Token copied.</value>
+  </data>
+  <data name="TriggerExampleCopied" xml:space="preserve">
+    <value>Call copied (with the token).</value>
+  </data>
+  <data name="JobEditorWebhook" xml:space="preserve">
+    <value>May be started by the incoming webhook (Tools → Settings)</value>
+  </data>
 </root>
