@@ -61,6 +61,7 @@ public partial class MainViewModel : ViewModelBase
         InitializeVault();
         LoadRepositories();
         LoadJobs();
+        RefreshStorage();
         // The system's scheduler may be out of step (jobs imported, app moved, entries removed by hand).
         ApplySchedules();
         // The entry follows the app when it moved or was updated.
@@ -85,7 +86,7 @@ public partial class MainViewModel : ViewModelBase
     /// <summary>The borg used for all repository operations; <c>null</c> until found.</summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(TestRepositoryCommand), nameof(ExportKeyCommand), nameof(RunJobCommand), nameof(CleanUpJobCommand),
-        nameof(FreeSpaceCommand), nameof(MountArchiveCommand), nameof(MountRepositoryCommand))]
+        nameof(FreeSpaceCommand), nameof(MeasureStorageCommand), nameof(MountArchiveCommand), nameof(MountRepositoryCommand))]
     public partial BorgInstallation? Borg { get; private set; }
 
     /// <summary>Status bar text, e.g. "borg 1.4.5 · /usr/bin/borg".</summary>

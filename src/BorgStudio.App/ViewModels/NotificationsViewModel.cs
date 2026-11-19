@@ -62,6 +62,9 @@ public sealed partial class NotificationsViewModel : ViewModelBase
         WebhookHeaderValue = ReadSecret(NotificationSecrets.WebhookHeader);
 
         SuppressRepeats = settings.SuppressRepeats;
+        FullBelowOnePercent = settings.StorageFull.BelowOnePercent;
+        FullNextBackupWontFit = settings.StorageFull.NextBackupWontFit;
+        FullBackupFailed = settings.StorageFull.BackupFailed;
     }
 
     /// <summary>The window closes (after saving, or cancelled).</summary>
@@ -179,6 +182,18 @@ public sealed partial class NotificationsViewModel : ViewModelBase
     [ObservableProperty]
     public partial bool SuppressRepeats { get; set; }
 
+    /// <summary>Storage counts as full below 1 % free.</summary>
+    [ObservableProperty]
+    public partial bool FullBelowOnePercent { get; set; }
+
+    /// <summary>… or with less free than the last backups added.</summary>
+    [ObservableProperty]
+    public partial bool FullNextBackupWontFit { get; set; }
+
+    /// <summary>… or after a backup failed for lack of space.</summary>
+    [ObservableProperty]
+    public partial bool FullBackupFailed { get; set; }
+
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(TestSystemCommand), nameof(TestEmailCommand), nameof(TestWebhookCommand), nameof(SaveCommand))]
     public partial bool IsTesting { get; private set; }
@@ -211,6 +226,12 @@ public sealed partial class NotificationsViewModel : ViewModelBase
             HeaderName = WebhookHeaderName.Trim(),
         },
         SuppressRepeats = SuppressRepeats,
+        StorageFull = new Core.Storage.StorageFullCriteria
+        {
+            BelowOnePercent = FullBelowOnePercent,
+            NextBackupWontFit = FullNextBackupWontFit,
+            BackupFailed = FullBackupFailed,
+        },
     };
 
     [RelayCommand(CanExecute = nameof(CanTest))]
@@ -345,5 +366,7 @@ public sealed partial class NotificationsViewModel : ViewModelBase
         new(NotificationEvent.Warnings, Strings.NotifyEventWarnings, channel.Events.Contains(NotificationEvent.Warnings)),
         new(NotificationEvent.Recovered, Strings.NotifyEventRecovered, channel.Events.Contains(NotificationEvent.Recovered)),
         new(NotificationEvent.Succeeded, Strings.NotifyEventSucceeded, channel.Events.Contains(NotificationEvent.Succeeded)),
+        new(NotificationEvent.StorageLow, Strings.NotifyEventStorageLow, channel.Events.Contains(NotificationEvent.StorageLow)),
+        new(NotificationEvent.StorageFull, Strings.NotifyEventStorageFull, channel.Events.Contains(NotificationEvent.StorageFull)),
     ];
 }

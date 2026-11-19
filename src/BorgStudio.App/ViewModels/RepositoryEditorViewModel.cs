@@ -78,6 +78,10 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         Name = existing.Name;
         PassphraseStorage = existing.PassphraseMode == PassphraseMode.None ? PassphraseMode.Vault : existing.PassphraseMode;
         SelectedBorgVersion = BorgVersionOptions.First(option => option.Value == existing.BorgVersion);
+        StorageWarnPercent = existing.StorageWarnPercent;
+        StorageCapacityGigabytes = existing.StorageCapacity is { } capacity
+            ? (capacity / (double)Gigabyte).ToString("0.##", System.Globalization.CultureInfo.CurrentCulture)
+            : "";
         KeyChoice = existing.SshKeyId is null ? SshKeyChoice.Generate : SshKeyChoice.Keep;
         RestrictKey = existing.SshKeyId is null || existing.SshKeyRestricted;
         CreateFields(SelectedProvider.Provider, existing.ProviderValues);
@@ -351,6 +355,26 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
     [ObservableProperty]
     public partial Option<BorgVersionPreference> SelectedBorgVersion { get; set; }
 
+    private const long Gigabyte = 1024L * 1024 * 1024;
+
+    /// <summary>Warn below this share of free space (percent); 0: no warning.</summary>
+    [ObservableProperty]
+    public partial decimal? StorageWarnPercent { get; set; } = RepositoryConfig.DefaultStorageWarnPercent;
+
+    /// <summary>What the repository may take up on its server, in GB (servers BorgStudio cannot ask); empty: unknown.</summary>
+    [ObservableProperty]
+    public partial string StorageCapacityGigabytes { get; set; } = "";
+
+    /// <summary>The capacity typed in; <c>null</c> if empty, <c>-1</c> if it is no number.</summary>
+    private long? StorageCapacity =>
+        StorageCapacityGigabytes.Trim() is { Length: > 0 } text
+            ? double.TryParse(text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.CurrentCulture, out var gigabytes) && gigabytes > 0
+                ? (long)(gigabytes * Gigabyte)
+                : -1
+            : null;
+
+    private int WarnPercent => (int)Math.Clamp(StorageWarnPercent ?? 0, 0, 90);
+
     public ObservableCollection<string> Errors { get; } = [];
 
     [ObservableProperty]
@@ -448,6 +472,8 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         if (string.IsNullOrWhiteSpace(Name))
             problems.Add(Strings.EditorNameRequired);
         problems.AddRange(provider.Validate(values));
+        if (IsSsh && StorageCapacity == -1)
+            problems.Add(Strings.EditorCapacityInvalid);
 
         if (ShowPassphraseConfirmation)
         {
@@ -534,6 +560,8 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             BorgRepositoryId = info.Value.Id,
             SshKeyId = login.KeyId,
             SshKeyRestricted = login.Restricted,
+            StorageWarnPercent = WarnPercent,
+            StorageCapacity = IsSsh ? StorageCapacity : null,
         };
 
         if (repository.PassphraseMode is PassphraseMode.Vault or PassphraseMode.Stored
@@ -555,6 +583,8 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             Name = Name.Trim(),
             ProviderValues = values,
             BorgVersion = SelectedBorgVersion.Value,
+            StorageWarnPercent = WarnPercent,
+            StorageCapacity = IsSsh ? StorageCapacity : null,
         };
 
         SshLogin? login = null;

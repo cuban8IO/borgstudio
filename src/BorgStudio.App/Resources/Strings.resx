@@ -2249,4 +2249,94 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
   <data name="JobEditorNotify" xml:space="preserve">
     <value>Send notifications for this job (see Tools → Notifications)</value>
   </data>
+  <data name="BorgErrorNoSpace" xml:space="preserve">
+    <value>The repository's disk or server is full.</value>
+  </data>
+  <data name="NotifyTitleStorageLow" xml:space="preserve">
+    <value>Storage almost full: {0}</value>
+  </data>
+  <data name="NotifyTitleStorageFull" xml:space="preserve">
+    <value>Storage full: {0}</value>
+  </data>
+  <data name="NotifyStorageFullHint" xml:space="preserve">
+    <value>Further backups may fail. Free space (e.g. keep fewer archives and compact) or move the repository.</value>
+  </data>
+  <data name="NotifyEventStorageLow" xml:space="preserve">
+    <value>Storage almost full</value>
+  </data>
+  <data name="NotifyEventStorageFull" xml:space="preserve">
+    <value>Storage full</value>
+  </data>
+  <data name="NotifyStorageFullLabel" xml:space="preserve">
+    <value>Storage counts as full when:</value>
+  </data>
+  <data name="NotifyFullBelowOnePercent" xml:space="preserve">
+    <value>less than 1 % is free</value>
+  </data>
+  <data name="NotifyFullNextBackup" xml:space="preserve">
+    <value>less is free than the last backup newly stored (the next one would hardly fit)</value>
+  </data>
+  <data name="NotifyFullBackupFailed" xml:space="preserve">
+    <value>a backup failed for lack of space (until a backup works again)</value>
+  </data>
+  <data name="NotifyStorageHint" xml:space="preserve">
+    <value>“Almost full” is below the threshold set for each repository (repository editor → Advanced, 10 % by default). Storage is measured after every backup.</value>
+  </data>
+  <data name="StorageHeader" xml:space="preserve">
+    <value>Storage</value>
+  </data>
+  <data name="StorageMeasure" xml:space="preserve">
+    <value>Measure</value>
+  </data>
+  <data name="StorageMeasuring" xml:space="preserve">
+    <value>Measuring the storage …</value>
+  </data>
+  <data name="StorageNotMeasured" xml:space="preserve">
+    <value>Not measured yet – it is measured after every backup.</value>
+  </data>
+  <data name="StorageUsed" xml:space="preserve">
+    <value>{0} of {1} used · {2} free ({3} %)</value>
+  </data>
+  <data name="StorageRepositoryOnly" xml:space="preserve">
+    <value>The repository takes up {0}.</value>
+  </data>
+  <data name="StorageMeasured" xml:space="preserve">
+    <value>Measured {0} ({1})</value>
+  </data>
+  <data name="StorageSourceDisk" xml:space="preserve">
+    <value>disk</value>
+  </data>
+  <data name="StorageSourceServer" xml:space="preserve">
+    <value>server</value>
+  </data>
+  <data name="StorageSourceCapacity" xml:space="preserve">
+    <value>repository size against the capacity entered</value>
+  </data>
+  <data name="StorageSourceRepository" xml:space="preserve">
+    <value>repository size</value>
+  </data>
+  <data name="StorageCapacityMissing" xml:space="preserve">
+    <value>The SSH key may only run borg, so BorgStudio cannot ask the server for its free space. Enter the storage's capacity (repository editor → Advanced) to see how full it is.</value>
+  </data>
+  <data name="StorageLowText" xml:space="preserve">
+    <value>Less than {0} % free.</value>
+  </data>
+  <data name="StorageFullText" xml:space="preserve">
+    <value>The storage is full – further backups may fail.</value>
+  </data>
+  <data name="EditorStorageWarn" xml:space="preserve">
+    <value>Warn when less is free than</value>
+  </data>
+  <data name="EditorStorageWarnHint" xml:space="preserve">
+    <value>0 = no warning. Shown in the overview and – if switched on – reported as “storage almost full”.</value>
+  </data>
+  <data name="EditorStorageCapacity" xml:space="preserve">
+    <value>Capacity of the storage (optional)</value>
+  </data>
+  <data name="EditorStorageCapacityHint" xml:space="preserve">
+    <value>Only needed when the SSH key may only run borg (the default): BorgStudio then compares the repository's size with this, e.g. 1000 for a storage box with 1 TB.</value>
+  </data>
+  <data name="EditorCapacityInvalid" xml:space="preserve">
+    <value>The capacity must be a number of GB greater than 0.</value>
+  </data>
 </root>

@@ -58,6 +58,17 @@ public sealed record RepositoryConfig
     /// <summary>The key was installed restricted to <c>borg serve</c> for this repository only.</summary>
     public bool SshKeyRestricted { get; init; }
 
+    /// <summary>Below this share of free space (percent) the storage counts as almost full; 0: no warning.</summary>
+    public int StorageWarnPercent { get; init; } = DefaultStorageWarnPercent;
+
+    public const int DefaultStorageWarnPercent = 10;
+
+    /// <summary>
+    /// What the repository may take up on its server (e.g. the size of a storage box), for servers where BorgStudio cannot
+    /// ask the disk (a key restricted to borg serve); <c>null</c>: unknown.
+    /// </summary>
+    public long? StorageCapacity { get; init; }
+
     /// <summary>Older versions: the key file borg logged in with. Moved into the vault, then cleared.</summary>
     [JsonPropertyName("sshKeyFile")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

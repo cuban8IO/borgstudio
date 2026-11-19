@@ -2229,4 +2229,94 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
   <data name="JobEditorNotify" xml:space="preserve">
     <value>Benachrichtigungen für diesen Job senden (siehe Extras → Benachrichtigungen)</value>
   </data>
+  <data name="BorgErrorNoSpace" xml:space="preserve">
+    <value>Der Datenträger bzw. Server des Repositorys ist voll.</value>
+  </data>
+  <data name="NotifyTitleStorageLow" xml:space="preserve">
+    <value>Speicher fast voll: {0}</value>
+  </data>
+  <data name="NotifyTitleStorageFull" xml:space="preserve">
+    <value>Speicher voll: {0}</value>
+  </data>
+  <data name="NotifyStorageFullHint" xml:space="preserve">
+    <value>Weitere Sicherungen können scheitern. Schaffe Platz (z. B. weniger Archive behalten und Speicher freigeben) oder ziehe das Repository um.</value>
+  </data>
+  <data name="NotifyEventStorageLow" xml:space="preserve">
+    <value>Speicher fast voll</value>
+  </data>
+  <data name="NotifyEventStorageFull" xml:space="preserve">
+    <value>Speicher voll</value>
+  </data>
+  <data name="NotifyStorageFullLabel" xml:space="preserve">
+    <value>Der Speicher gilt als voll, wenn:</value>
+  </data>
+  <data name="NotifyFullBelowOnePercent" xml:space="preserve">
+    <value>weniger als 1 % frei ist</value>
+  </data>
+  <data name="NotifyFullNextBackup" xml:space="preserve">
+    <value>weniger frei ist, als die letzte Sicherung neu belegt hat (die nächste passt kaum noch)</value>
+  </data>
+  <data name="NotifyFullBackupFailed" xml:space="preserve">
+    <value>eine Sicherung an fehlendem Platz gescheitert ist (bis wieder eine gelingt)</value>
+  </data>
+  <data name="NotifyStorageHint" xml:space="preserve">
+    <value>„Fast voll“ gilt unter der Schwelle, die pro Repository eingestellt ist (Repository bearbeiten → Erweitert, standardmäßig 10 %). Gemessen wird nach jeder Sicherung.</value>
+  </data>
+  <data name="StorageHeader" xml:space="preserve">
+    <value>Speicher</value>
+  </data>
+  <data name="StorageMeasure" xml:space="preserve">
+    <value>Messen</value>
+  </data>
+  <data name="StorageMeasuring" xml:space="preserve">
+    <value>Speicher wird gemessen …</value>
+  </data>
+  <data name="StorageNotMeasured" xml:space="preserve">
+    <value>Noch nicht gemessen – das geschieht nach jeder Sicherung.</value>
+  </data>
+  <data name="StorageUsed" xml:space="preserve">
+    <value>{0} von {1} belegt · {2} frei ({3} %)</value>
+  </data>
+  <data name="StorageRepositoryOnly" xml:space="preserve">
+    <value>Das Repository belegt {0}.</value>
+  </data>
+  <data name="StorageMeasured" xml:space="preserve">
+    <value>Gemessen {0} ({1})</value>
+  </data>
+  <data name="StorageSourceDisk" xml:space="preserve">
+    <value>Laufwerk</value>
+  </data>
+  <data name="StorageSourceServer" xml:space="preserve">
+    <value>Server</value>
+  </data>
+  <data name="StorageSourceCapacity" xml:space="preserve">
+    <value>Repository-Größe gegen eingetragene Kapazität</value>
+  </data>
+  <data name="StorageSourceRepository" xml:space="preserve">
+    <value>Repository-Größe</value>
+  </data>
+  <data name="StorageCapacityMissing" xml:space="preserve">
+    <value>Der SSH-Schlüssel darf nur borg ausführen, daher kann BorgStudio den Server nicht nach freiem Platz fragen. Trage die Kapazität des Speichers ein (Repository bearbeiten → Erweitert), um zu sehen, wie voll er ist.</value>
+  </data>
+  <data name="StorageLowText" xml:space="preserve">
+    <value>Weniger als {0} % frei.</value>
+  </data>
+  <data name="StorageFullText" xml:space="preserve">
+    <value>Der Speicher ist voll – weitere Sicherungen können scheitern.</value>
+  </data>
+  <data name="EditorStorageWarn" xml:space="preserve">
+    <value>Warnen, wenn weniger frei ist als</value>
+  </data>
+  <data name="EditorStorageWarnHint" xml:space="preserve">
+    <value>0 = keine Warnung. Erscheint in der Übersicht und wird – falls eingeschaltet – als „Speicher fast voll“ gemeldet.</value>
+  </data>
+  <data name="EditorStorageCapacity" xml:space="preserve">
+    <value>Kapazität des Speichers (optional)</value>
+  </data>
+  <data name="EditorStorageCapacityHint" xml:space="preserve">
+    <value>Nur nötig, wenn der SSH-Schlüssel nur borg ausführen darf (Standard): BorgStudio vergleicht dann die Größe des Repositorys damit, z. B. 1000 für eine Storage Box mit 1 TB.</value>
+  </data>
+  <data name="EditorCapacityInvalid" xml:space="preserve">
+    <value>Die Kapazität muss eine Zahl in GB größer als 0 sein.</value>
+  </data>
 </root>

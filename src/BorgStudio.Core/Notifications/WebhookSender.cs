@@ -86,7 +86,7 @@ public sealed class WebhookSender(HttpClient http)
         {
             ["title"] = message.Title,
             ["message"] = message.Body,
-            ["priority"] = message.Event == NotificationEvent.Failed ? 8 : 5,
+            ["priority"] = message.Event is NotificationEvent.Failed or NotificationEvent.StorageFull ? 8 : 5,
         }),
         _ => (url, Json(message)),
     };
@@ -108,11 +108,11 @@ public sealed class WebhookSender(HttpClient http)
             ["topic"] = topic,
             ["title"] = message.Title,
             ["message"] = message.Body,
-            ["priority"] = message.Event == NotificationEvent.Failed ? 4 : 3,
+            ["priority"] = message.Event is NotificationEvent.Failed or NotificationEvent.StorageFull ? 4 : 3,
             ["tags"] = new JsonArray(message.Event switch
             {
-                NotificationEvent.Failed => "x",
-                NotificationEvent.Warnings or NotificationEvent.Skipped => "warning",
+                NotificationEvent.Failed or NotificationEvent.StorageFull => "x",
+                NotificationEvent.Warnings or NotificationEvent.Skipped or NotificationEvent.StorageLow => "warning",
                 _ => "white_check_mark",
             }),
         });
@@ -134,6 +134,16 @@ public sealed class WebhookSender(HttpClient http)
             ["host"] = message.Host,
             ["time"] = message.Time.ToString("O"),
         };
+        if (message.Storage is { } storage)
+        {
+            body["storage"] = new JsonObject
+            {
+                ["total"] = storage.Total,
+                ["free"] = storage.Free,
+                ["repositorySize"] = storage.RepositorySize,
+                ["source"] = storage.Source.ToString(),
+            };
+        }
         if (message.Run is { } run)
         {
             body["run"] = new JsonObject
@@ -162,13 +172,15 @@ public sealed class WebhookSender(HttpClient http)
         NotificationEvent.Failed => "failed",
         NotificationEvent.Skipped => "skipped",
         NotificationEvent.Recovered => "recovered",
+        NotificationEvent.StorageLow => "storage-low",
+        NotificationEvent.StorageFull => "storage-full",
         _ => notificationEvent.ToString().ToLowerInvariant(),
     };
 
     private static int Color(NotificationEvent notificationEvent) => notificationEvent switch
     {
-        NotificationEvent.Failed => 0xD64545,
-        NotificationEvent.Warnings => 0xFF9800,
+        NotificationEvent.Failed or NotificationEvent.StorageFull => 0xD64545,
+        NotificationEvent.Warnings or NotificationEvent.StorageLow => 0xFF9800,
         NotificationEvent.Skipped => 0x9C9C9C,
         _ => 0x01FF95,
     };

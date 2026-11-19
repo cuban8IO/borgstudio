@@ -121,6 +121,8 @@ public partial class MainViewModel
     {
         Settings = settings;
         _services.Settings.Save(settings);
+        // What counts as full may have changed.
+        RefreshStorage();
     }
 
     private void OnVaultStateChanged()

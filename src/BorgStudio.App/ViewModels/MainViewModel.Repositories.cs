@@ -19,7 +19,7 @@ public partial class MainViewModel
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelection))]
     [NotifyCanExecuteChangedFor(nameof(TestRepositoryCommand), nameof(ExportKeyCommand), nameof(EditRepositoryCommand),
-        nameof(RemoveRepositoryCommand), nameof(FreeSpaceCommand))]
+        nameof(RemoveRepositoryCommand), nameof(FreeSpaceCommand), nameof(MeasureStorageCommand))]
     public partial RepositoryItemViewModel? SelectedRepository { get; set; }
 
     public bool HasRepositories => Repositories.Count > 0;
@@ -34,7 +34,7 @@ public partial class MainViewModel
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddRepositoryCommand), nameof(TestRepositoryCommand), nameof(ExportKeyCommand),
         nameof(EditRepositoryCommand), nameof(RemoveRepositoryCommand), nameof(RunJobCommand), nameof(CleanUpJobCommand),
-        nameof(FreeSpaceCommand))]
+        nameof(FreeSpaceCommand), nameof(MeasureStorageCommand))]
     public partial bool IsWorking { get; private set; }
 
     /// <summary>Progress of the running repository operation (overview tab).</summary>
@@ -91,6 +91,7 @@ public partial class MainViewModel
 
         item.Config = result.Repository;
         SaveRepositories();
+        RefreshStorage(item.Config.Id);
         RefreshKeyNames();
     }
 

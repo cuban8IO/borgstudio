@@ -38,6 +38,9 @@ public enum BorgErrorKind
     /// <summary>borg cannot mount here (no FUSE, e.g. borg on Windows itself or without llfuse/pyfuse3).</summary>
     MountUnavailable,
 
+    /// <summary>The repository's disk or server ran out of space.</summary>
+    NoSpace,
+
     Other,
 }
 
@@ -67,7 +70,8 @@ public enum BorgEncryption
 
 /// <summary>From <c>borg info --json</c>.</summary>
 /// <param name="EncryptionMode">e.g. "repokey-blake2", "keyfile-blake2", "none".</param>
-public sealed record BorgRepositoryInfo(string Id, string EncryptionMode, DateTimeOffset? LastModified);
+/// <param name="UniqueCompressedSize">What the repository takes up (borg's unique compressed size of all archives), if known.</param>
+public sealed record BorgRepositoryInfo(string Id, string EncryptionMode, DateTimeOffset? LastModified, long? UniqueCompressedSize = null);
 
 /// <summary>A progress update of <c>borg create</c> (sizes so far).</summary>
 /// <param name="DeduplicatedSize">What actually has to go into the repository (new data, compressed).</param>

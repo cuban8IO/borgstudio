@@ -136,7 +136,7 @@ public sealed class SystemNotifier(IProcessRunner processes, string? iconPath = 
         List<string> arguments = ["--app-name=BorgStudio"];
         if (iconPath is not null)
             arguments.Add($"--icon={iconPath}");
-        if (message.Event is NotificationEvent.Failed)
+        if (message.Event is NotificationEvent.Failed or NotificationEvent.StorageFull)
             arguments.Add("--urgency=critical");
         arguments.AddRange(["--", message.Title, message.Body]);
 

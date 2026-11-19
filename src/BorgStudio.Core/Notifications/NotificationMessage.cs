@@ -19,6 +19,9 @@ public sealed record NotificationMessage(NotificationEvent Event, string Title, 
     /// <summary>The run it is about; <c>null</c> for a test message.</summary>
     public BackupRunSummary? Run { get; init; }
 
+    /// <summary>The storage it is about (storage events).</summary>
+    public Storage.StorageUsage? Storage { get; init; }
+
     /// <summary>Sent with the "Test" button.</summary>
     public bool IsTest { get; init; }
 

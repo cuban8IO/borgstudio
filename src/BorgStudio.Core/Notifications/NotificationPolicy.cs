@@ -58,6 +58,37 @@ public sealed class NotificationPolicy(string stateFile)
         }
     }
 
+    /// <summary>
+    /// The event for a repository's storage level, or <c>null</c> if there is nothing to report: back to normal, or better
+    /// than before (full → almost full). A level that stays is a repeat.
+    /// </summary>
+    public NotificationDecision? DecideStorage(Guid repositoryId, Storage.StorageLevel level)
+    {
+        lock (Gate)
+        {
+            var states = Load();
+            var key = $"storage-{repositoryId:N}";
+            var previous = states.GetValueOrDefault(key);
+            if (level == Storage.StorageLevel.Ok)
+            {
+                if (states.Remove(key))
+                    Save(states);
+                return null;
+            }
+
+            var current = level.ToString();
+            if (current != previous)
+            {
+                states[key] = current;
+                Save(states);
+            }
+            if (level == Storage.StorageLevel.Low && previous == nameof(Storage.StorageLevel.Full))
+                return null;
+            return new NotificationDecision(
+                level == Storage.StorageLevel.Full ? NotificationEvent.StorageFull : NotificationEvent.StorageLow, current == previous);
+        }
+    }
+
     /// <summary>The job was deleted.</summary>
     public void Forget(Guid jobId)
     {
