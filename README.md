@@ -196,7 +196,9 @@ section gets the new version number.
   pauses the schedules and quits. Switching modes removes or restores the system’s entries and the start at login.
 - Only one BorgStudio per user: starting it again brings the running one’s window forward.
 - Notifications (Tools → Notifications): every run – by hand, in the background and scheduled – can be reported as a
-  system notification (Windows toast, macOS notification center, `notify-send` on Linux), by e-mail over SMTP (MailKit)
+  system notification (Windows toast – shown under a “BorgStudio” start menu shortcut that BorgStudio creates and
+  keeps pointing at itself, as Windows requires for apps without package; macOS notification center; `notify-send` on
+  Linux), by e-mail over SMTP (MailKit)
   and through an outgoing webhook (BorgStudio’s JSON with all details, or ready-made for ntfy, Discord, Slack and
   Gotify, with an optional token header). Each channel reports the events chosen for it – failures, skipped runs,
   warnings, “working again”, every success – and has a Test button. The same problem of a job is reported only once

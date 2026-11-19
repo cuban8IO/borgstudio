@@ -10,9 +10,13 @@ namespace BorgStudio.Core.Notifications;
 /// PowerShell, under BorgStudio's name and icon), <c>osascript</c> on macOS, <c>notify-send</c> (or <c>gdbus</c>) on Linux.
 /// </summary>
 /// <param name="iconPath">A PNG shown with the notification (Windows, Linux); <c>null</c>: none.</param>
-public sealed class SystemNotifier(IProcessRunner processes, string? iconPath = null)
+/// <param name="executable">BorgStudio's executable, for the start menu shortcut Windows needs to show toasts.</param>
+public sealed class SystemNotifier(IProcessRunner processes, string? iconPath = null, string? executable = null)
 {
-    /// <summary>The name Windows shows notifications under (registered in HKCU\Software\Classes\AppUserModelId).</summary>
+    /// <summary>
+    /// The id Windows shows notifications under: carried by BorgStudio's start menu shortcut (see
+    /// <see cref="StartMenuShortcut"/>), with name and icon in HKCU\Software\Classes\AppUserModelId.
+    /// </summary>
     public const string AppUserModelId = "net.cuban8io.BorgStudio";
 
     private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(20);
@@ -21,7 +25,7 @@ public sealed class SystemNotifier(IProcessRunner processes, string? iconPath = 
     internal OSPlatform Platform { get; init; } =
         OperatingSystem.IsWindows() ? OSPlatform.Windows : OperatingSystem.IsMacOS() ? OSPlatform.OSX : OSPlatform.Linux;
 
-    /// <summary>Registers BorgStudio's name and icon for toasts (tests leave the registry alone).</summary>
+    /// <summary>Registers BorgStudio for toasts: shortcut, name and icon (tests leave the system alone).</summary>
     internal bool RegisterName { get; init; } = true;
 
     internal enum OSPlatform
@@ -62,7 +66,12 @@ public sealed class SystemNotifier(IProcessRunner processes, string? iconPath = 
     private async Task ToastAsync(NotificationMessage message, CancellationToken cancellationToken)
     {
         if (RegisterName && OperatingSystem.IsWindows())
+        {
             RegisterAppUserModelId();
+            // Windows needs a moment to take in a new shortcut before it shows toasts for it.
+            if (EnsureShortcut())
+                await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
+        }
 
         var powershell = Path.Combine(Environment.SystemDirectory, "WindowsPowerShell", "v1.0", "powershell.exe");
         var script = Convert.ToBase64String(Encoding.Unicode.GetBytes(ToastScript));
@@ -89,7 +98,23 @@ public sealed class SystemNotifier(IProcessRunner processes, string? iconPath = 
         }
         catch (Exception exception) when (exception is UnauthorizedAccessException or IOException or System.Security.SecurityException)
         {
-            // The toast still shows, only without name and icon.
+            // The shortcut gives the name and icon too.
+        }
+    }
+
+    /// <summary>Without a start menu shortcut carrying the id, Windows keeps the toast in its history but never shows it.</summary>
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private bool EnsureShortcut()
+    {
+        if (executable is null)
+            return false;
+        try
+        {
+            return StartMenuShortcut.Ensure(StartMenuShortcut.DefaultPath, executable, AppUserModelId);
+        }
+        catch (Exception exception) when (exception is System.Runtime.InteropServices.COMException or IOException or UnauthorizedAccessException)
+        {
+            throw new NotificationException($"The start menu shortcut Windows needs for notifications could not be created: {exception.Message}", exception);
         }
     }
 

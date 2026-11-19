@@ -106,7 +106,7 @@ public partial class App : Application
             Updater.CreateDefault(AppVersion.Current),
             SystemScheduler.CreateDefault(),
             Autostart.CreateDefault(),
-            Notifier.CreateDefault(NotificationIcon.Ensure(AppPaths.DataDirectory)));
+            Notifier.CreateDefault(NotificationIcon.Ensure(AppPaths.DataDirectory), Environment.ProcessPath));
     }
 
     /// <summary>Reports a finished update, then looks for a new release now and once a day.</summary>

@@ -18,8 +18,9 @@ public sealed record ChannelResult(NotificationChannelKind Channel, string? Erro
 /// <summary>Hands a notification to every channel that reports its event – one failing channel does not stop the others.</summary>
 public sealed class Notifier(SystemNotifier system, EmailSender email, WebhookSender webhook)
 {
-    public static Notifier CreateDefault(string? iconPath) =>
-        new(new SystemNotifier(new ProcessRunner(), iconPath), new EmailSender(), new WebhookSender(SharedHttp));
+    /// <param name="executable">BorgStudio's executable (for the start menu shortcut Windows needs to show toasts).</param>
+    public static Notifier CreateDefault(string? iconPath, string? executable) =>
+        new(new SystemNotifier(new ProcessRunner(), iconPath, executable), new EmailSender(), new WebhookSender(SharedHttp));
 
     private static readonly HttpClient SharedHttp = new();
 

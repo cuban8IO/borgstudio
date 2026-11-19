@@ -73,6 +73,25 @@ public sealed class AutostartTests : IDisposable
         }
     }
 
+    [WindowsFact]
+    [SupportedOSPlatform("windows")]
+    public void Windows_gets_a_start_menu_shortcut_for_toasts()
+    {
+        var path = _directory.Combine("Programs", "BorgStudio.lnk");
+        var executable = _directory.Combine("BorgStudio.exe");
+        File.WriteAllText(executable, "");
+
+        Assert.True(Core.Notifications.StartMenuShortcut.Ensure(path, executable, "net.cuban8io.BorgStudio"));
+        Assert.Equal((executable, "net.cuban8io.BorgStudio"), Core.Notifications.StartMenuShortcut.Read(path));
+        // Up to date: left alone; moved app: rewritten.
+        Assert.False(Core.Notifications.StartMenuShortcut.Ensure(path, executable, "net.cuban8io.BorgStudio"));
+        var moved = _directory.Combine("moved", "BorgStudio.exe");
+        Directory.CreateDirectory(Path.GetDirectoryName(moved)!);
+        File.WriteAllText(moved, "");
+        Assert.True(Core.Notifications.StartMenuShortcut.Ensure(path, moved, "net.cuban8io.BorgStudio"));
+        Assert.Equal(moved, Core.Notifications.StartMenuShortcut.Read(path)!.Value.Target);
+    }
+
     [Fact]
     public async Task A_second_start_asks_the_first_to_show_its_window()
     {
