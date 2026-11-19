@@ -138,10 +138,22 @@ public sealed class TriggerFlowTests : IDisposable
         Assert.Null(main.TriggerPort);
     }
 
+    /// <summary>A port nobody listens on right now (asked from the system, then released).</summary>
+    private static int FreePort()
+    {
+        var listener = new System.Net.Sockets.TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        listener.Stop();
+        return port;
+    }
+
     [Fact]
     public void The_settings_window_switches_the_webhook_and_makes_a_token()
     {
-        _test.Settings.Save(new AppSettings { ScheduleRunner = ScheduleRunner.Background, Trigger = new TriggerSettings { Port = 0 } });
+        // The window keeps ports in 1..65535 (0, "any free port", is for the other tests only): a free one it is.
+        var port = FreePort();
+        _test.Settings.Save(new AppSettings { ScheduleRunner = ScheduleRunner.Background, Trigger = new TriggerSettings { Port = port } });
         var main = _main = new MainViewModel(_test.Services) { SchedulerExecutable = "BorgStudio.exe" };
         var settings = new SettingsViewModel(main, _test.Dialogs);
         Assert.Equal("", settings.TriggerToken);
@@ -150,7 +162,7 @@ public sealed class TriggerFlowTests : IDisposable
 
         Assert.True(_test.Settings.Load().Trigger.Enabled);
         Assert.NotEqual("", settings.TriggerToken);
-        Assert.NotNull(main.TriggerPort);
+        Assert.Equal(port, main.TriggerPort);
         Assert.Contains("/run/<job>", settings.TriggerExample);
 
         settings.TriggerEnabled = false;
