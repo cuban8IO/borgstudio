@@ -159,6 +159,9 @@ public sealed record BackupJob
     /// <summary>Report the job as overdue after this many days without a successful backup; 0: never.</summary>
     public int OverdueDays { get; init; }
 
+    /// <summary>The incoming webhook may start the job (see <see cref="Trigger.TriggerServer"/>).</summary>
+    public bool WebhookTrigger { get; init; }
+
     public BackupRunSummary? LastRun { get; init; }
 }
 

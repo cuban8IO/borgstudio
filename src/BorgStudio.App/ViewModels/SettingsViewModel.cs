@@ -3,6 +3,7 @@ using BorgStudio.App.Resources;
 using BorgStudio.App.Services;
 using BorgStudio.Core.Security;
 using BorgStudio.Core.Settings;
+using BorgStudio.Core.Trigger;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -36,6 +37,13 @@ public sealed partial class SettingsViewModel : ViewModelBase
         VersionText = BorgTexts.Format(Strings.SettingsVersion, main.Updates.CurrentText);
 
         _vault.StateChanged += OnVaultStateChanged;
+
+        var trigger = main.Settings.Trigger;
+        _triggerEnabled = trigger.Enabled;
+        _triggerPort = trigger.Port;
+        _triggerAllowNetwork = trigger.AllowNetwork;
+        _triggerToken = ReadTriggerToken();
+        main.PropertyChanged += OnMainPropertyChanged;
         Refresh();
     }
 
@@ -197,7 +205,133 @@ public sealed partial class SettingsViewModel : ViewModelBase
     }
 
     /// <summary>Called when the window closes.</summary>
-    public void Detach() => _vault.StateChanged -= OnVaultStateChanged;
+    public void Detach()
+    {
+        _vault.StateChanged -= OnVaultStateChanged;
+        _main.PropertyChanged -= OnMainPropertyChanged;
+    }
+
+    // --- Incoming webhook ---
+
+    private bool _triggerEnabled;
+    private decimal? _triggerPort;
+    private bool _triggerAllowNetwork;
+    private string? _triggerToken;
+
+    private void OnMainPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(MainViewModel.TriggerStatus) or nameof(MainViewModel.IsBackgroundMode))
+        {
+            OnPropertyChanged(nameof(TriggerStatus));
+            OnPropertyChanged(nameof(CanUseTrigger));
+        }
+    }
+
+    /// <summary>Only BorgStudio in the background can listen.</summary>
+    public bool CanUseTrigger => _main.IsBackgroundMode;
+
+    public string? TriggerStatus => _main.TriggerStatus;
+
+    public bool TriggerEnabled
+    {
+        get => _triggerEnabled;
+        set
+        {
+            if (!SetProperty(ref _triggerEnabled, value))
+                return;
+            // Switched on the first time: a token to go with it.
+            if (value && _triggerToken is null)
+                CreateTriggerToken();
+            ApplyTriggerSettings();
+        }
+    }
+
+    public decimal? TriggerPort
+    {
+        get => _triggerPort;
+        set
+        {
+            if (SetProperty(ref _triggerPort, value))
+            {
+                ApplyTriggerSettings();
+                OnPropertyChanged(nameof(TriggerExample));
+            }
+        }
+    }
+
+    public bool TriggerAllowNetwork
+    {
+        get => _triggerAllowNetwork;
+        set
+        {
+            if (SetProperty(ref _triggerAllowNetwork, value))
+                ApplyTriggerSettings();
+        }
+    }
+
+    /// <summary>The token (shown in a password box, copyable).</summary>
+    public string TriggerToken => _triggerToken ?? "";
+
+    /// <summary>A call to start a job, for copying.</summary>
+    public string TriggerExample =>
+        $"curl -X POST -H \"Authorization: Bearer <token>\" \"http://localhost:{(int)(_triggerPort ?? TriggerSettings.DefaultPort)}/run/<job>?wait=1\"";
+
+    [ObservableProperty]
+    public partial string? TriggerMessage { get; private set; }
+
+    private void ApplyTriggerSettings()
+    {
+        var port = (int)Math.Clamp(_triggerPort ?? TriggerSettings.DefaultPort, 1, 65535);
+        var trigger = new TriggerSettings { Enabled = _triggerEnabled, Port = port, AllowNetwork = _triggerAllowNetwork };
+        if (trigger == _main.Settings.Trigger)
+            return;
+        _main.UpdateSettings(_main.Settings with { Trigger = trigger });
+        _main.ApplyTrigger();
+    }
+
+    [RelayCommand]
+    private void CreateTriggerToken()
+    {
+        try
+        {
+            _triggerToken = _main.CreateTriggerToken();
+            TriggerMessage = Strings.TriggerTokenCreated;
+        }
+        catch (Exception exception) when (exception is Core.Secrets.SecretStoreException or VaultLockedException)
+        {
+            TriggerMessage = BorgTexts.Format(Strings.NotifySecretFailed, exception.Message);
+        }
+        OnPropertyChanged(nameof(TriggerToken));
+    }
+
+    [RelayCommand]
+    private async Task CopyTriggerTokenAsync()
+    {
+        if (_triggerToken is { } token)
+        {
+            await Dialogs.CopyToClipboardAsync(token);
+            TriggerMessage = Strings.TriggerTokenCopied;
+        }
+    }
+
+    [RelayCommand]
+    private async Task CopyTriggerExampleAsync()
+    {
+        await Dialogs.CopyToClipboardAsync(TriggerExample.Replace("<token>", _triggerToken ?? "<token>", StringComparison.Ordinal));
+        TriggerMessage = Strings.TriggerExampleCopied;
+    }
+
+    private string? ReadTriggerToken()
+    {
+        try
+        {
+            return _main.TriggerToken;
+        }
+        catch (VaultLockedException)
+        {
+            return null;
+        }
+    }
 
     private async Task RunAsync(Action action)
     {

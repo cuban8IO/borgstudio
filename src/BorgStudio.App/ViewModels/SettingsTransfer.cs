@@ -11,7 +11,8 @@ namespace BorgStudio.App.ViewModels;
 /// <summary>Collects everything for an export, and applies an import.</summary>
 public static class SettingsTransfer
 {
-    private static readonly string[] NotificationSecretNames = [NotificationSecrets.SmtpPassword, NotificationSecrets.WebhookHeader];
+    private static readonly string[] NotificationSecretNames =
+        [NotificationSecrets.SmtpPassword, NotificationSecrets.WebhookHeader, NotificationSecrets.TriggerToken];
 
     /// <param name="Problems">What could not be included, e.g. a borg key of an unreachable repository.</param>
     public sealed record ExportResult(ExportContents Contents, IReadOnlyList<string> Problems);

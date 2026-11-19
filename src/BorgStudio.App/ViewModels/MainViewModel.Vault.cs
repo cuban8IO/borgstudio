@@ -138,6 +138,9 @@ public partial class MainViewModel
         _pendingVaultRemovals.Clear();
         _ = MigrateLegacyKeysAsync();
         _ = ShowWarrantyNoticeIfDueAsync();
+        // Without a key for scheduled runs the webhook's token could only be read now.
+        if (Settings.Trigger.Enabled && IsBackgroundMode && _trigger is null)
+            ApplyTrigger();
     }
 
     /// <summary>Shows the names of the repositories' keys (known only while the vault is open).</summary>

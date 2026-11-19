@@ -135,6 +135,9 @@
                         <NumericUpDown Value="{Binding OverdueDays}" Minimum="0" Maximum="365" Increment="1" FormatString="0" Width="120" />
                         <TextBlock Text="{x:Static res:Strings.JobEditorOverdueDays}" VerticalAlignment="Center" />
                     </StackPanel>
+                    <CheckBox IsChecked="{Binding WebhookTrigger}">
+                        <TextBlock Text="{x:Static res:Strings.JobEditorWebhook}" TextWrapping="Wrap" />
+                    </CheckBox>
                 </StackPanel>
 
                 <!-- Clean-up -->
