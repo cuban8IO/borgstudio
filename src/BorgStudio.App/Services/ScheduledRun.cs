@@ -16,12 +16,15 @@ public static class ScheduledRun
     /// <summary>Runs every scheduled job with "catch up" whose last scheduled time passed since its last run.</summary>
     public const string CatchUpArgument = "--catch-up";
 
-    public static bool IsRunCall(IReadOnlyList<string> args) => args.Count > 0 && args[0] is Argument or CatchUpArgument;
+    public static bool IsRunCall(IReadOnlyList<string> args) =>
+        args.Count > 0 && args[0] is Argument or CatchUpArgument or SystemScheduler.DailyCheckArgument;
 
     public static int Run(IReadOnlyList<string> args)
     {
         if (args[0] == CatchUpArgument)
             return CatchUp();
+        if (args[0] == SystemScheduler.DailyCheckArgument)
+            return RunDailyCheck(force: true);
 
         if (args.Count < 2 || !Guid.TryParse(args[1], out var jobId))
         {
@@ -67,11 +70,52 @@ public static class ScheduledRun
             var worst = 0;
             foreach (var job in missed)
                 worst = Math.Max(worst, Run([Argument, job.Id.ToString()]));
-            return worst;
+            // A daily check missed while the computer was off (launchd does not make up for it by itself).
+            return Math.Max(worst, RunDailyCheck(force: false));
         }
         catch (Exception exception)
         {
             Log($"Catching up: {exception}");
+            return 4;
+        }
+    }
+
+    /// <summary>
+    /// <c>--daily-check</c>: overdue jobs and the summary of the day (<paramref name="force"/>: now; otherwise only if missed).
+    /// The vault is opened with the key for scheduled runs, for the channels' secrets.
+    /// </summary>
+    private static int RunDailyCheck(bool force)
+    {
+        try
+        {
+            var services = App.CreateServices(new MainViewModel.NoDialogs());
+            var access = MainViewModel.CreateScheduledAccess(services);
+            try
+            {
+                access.TryUnlock();
+            }
+            catch (Core.Security.SecretBoxException)
+            {
+                // The secrets stay unreadable; channels without secrets still work.
+            }
+            try
+            {
+                var check = new DailyCheck(services);
+                if (force)
+                    check.RunAsync(DateTime.Now, services.Vault).GetAwaiter().GetResult();
+                else if (!check.RunIfDueAsync(DateTime.Now, services.Vault).GetAwaiter().GetResult())
+                    return 0;
+                Log("Daily check done");
+                return 0;
+            }
+            finally
+            {
+                services.Vault.Lock();
+            }
+        }
+        catch (Exception exception)
+        {
+            Log($"Daily check: {exception}");
             return 4;
         }
     }

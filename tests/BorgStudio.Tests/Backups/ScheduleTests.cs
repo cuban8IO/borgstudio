@@ -179,6 +179,40 @@ public sealed class ScheduleTests : IDisposable
         Assert.Empty(Directory.GetFiles(agents));
     }
 
+    [Fact]
+    public async Task The_daily_check_gets_an_entry_of_its_own_in_each_scheduler()
+    {
+        var eight = new TimeOnly(8, 0);
+
+        // Windows: a task "daily-check" that catches up, kept while wanted.
+        var xml = XDocument.Parse(WindowsTaskScheduler.DailyCheckXml(eight, @"C:\BorgStudio.exe", new DateTime(2026, 11, 19, 9, 0, 0)));
+        var ns = xml.Root!.Name.Namespace;
+        Assert.Equal("--daily-check", xml.Descendants(ns + "Arguments").Single().Value);
+        Assert.Equal("true", xml.Descendants(ns + "StartWhenAvailable").Single().Value);
+        Assert.Equal("2026-11-20T08:00:00", xml.Descendants(ns + "StartBoundary").Single().Value);
+        var windows = new Commands { QueryOutput = "\"\\BorgStudio\\daily-check\",\"N/A\",\"Ready\"" };
+        await new WindowsTaskScheduler(windows, _directory.Combine("tasks")).ApplyAsync([], "BorgStudio.exe", eight);
+        Assert.Equal(["/Create", "/TN", @"\BorgStudio\daily-check"], windows.Calls[1].Arguments.Take(3));
+        Assert.Equal(2, windows.Calls.Count);
+        // Not wanted any more: removed.
+        await new WindowsTaskScheduler(windows, _directory.Combine("tasks")).ApplyAsync([], "BorgStudio.exe");
+        Assert.Equal(["/Delete", "/TN", @"\BorgStudio\daily-check", "/F"], windows.Calls[^1].Arguments);
+
+        // systemd: a persistent timer.
+        var units = _directory.Combine("units");
+        await new SystemdScheduler(new Commands(), units).ApplyAsync([], "/opt/BorgStudio/BorgStudio", eight);
+        Assert.Contains("OnCalendar=*-*-* 08:00:00\nPersistent=true", File.ReadAllText(Path.Combine(units, "borgstudio-daily-check.timer")));
+        Assert.Contains("\" --daily-check", File.ReadAllText(Path.Combine(units, "borgstudio-daily-check.service")));
+
+        // launchd: an agent at that time, and the catch-up agent at login.
+        var agents = _directory.Combine("agents");
+        await new LaunchdScheduler(new Commands { IdOutput = "501\n" }, agents).ApplyAsync([], "/Applications/BorgStudio.app/Contents/MacOS/BorgStudio", eight);
+        var plist = File.ReadAllText(Path.Combine(agents, "net.cuban8io.borgstudio.daily-check.plist"));
+        Assert.Contains("<key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer>", plist);
+        Assert.Contains("<string>--daily-check</string>", plist);
+        Assert.True(File.Exists(Path.Combine(agents, "net.cuban8io.borgstudio.catch-up.plist")));
+    }
+
     /// <summary>Records the commands a scheduler runs and answers like the real tools.</summary>
     private sealed class Commands : IProcessRunner
     {

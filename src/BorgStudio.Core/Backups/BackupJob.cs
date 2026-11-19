@@ -156,6 +156,9 @@ public sealed record BackupJob
     /// <summary>The job's runs are reported through the notification channels (see the app's notification settings).</summary>
     public bool Notify { get; init; } = true;
 
+    /// <summary>Report the job as overdue after this many days without a successful backup; 0: never.</summary>
+    public int OverdueDays { get; init; }
+
     public BackupRunSummary? LastRun { get; init; }
 }
 

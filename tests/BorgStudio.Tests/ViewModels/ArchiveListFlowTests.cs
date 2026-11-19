@@ -18,6 +18,9 @@ public sealed class ArchiveListFlowTests : IDisposable
         _repository = Repository("Disk");
         _other = Repository("Stick");
         _test.Store.Save([_repository, _other]);
+        // Local repositories have their folders (the storage is measured on their disk after a backup).
+        Directory.CreateDirectory(_test.Directory.Combine("Disk"));
+        Directory.CreateDirectory(_test.Directory.Combine("Stick"));
     }
 
     public void Dispose() => _test.Dispose();

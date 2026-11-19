@@ -213,6 +213,12 @@ section gets the new version number.
   almost full; as full below 1 % free, with less free than the last backups added, or after a backup failed for lack
   of space (each switchable in Tools → Notifications). Both are new notification events, reported once per level.
   borg’s “No space left on device” and “Insufficient free space” are now recognized as such.
+- Daily check (Tools → Notifications → More, 08:00 by default): reports jobs without a successful backup for longer
+  than the days set in their editor (“overdue”, off by default, once until the job backs up again) and sends a daily
+  summary – the backups since the last check, the storage of each repository, the overdue jobs – to the channels that
+  want it, in addition to their single messages; on quiet days only if wanted. With the task scheduler it is an entry of
+  its own (`BorgStudio --daily-check`, made up for when the computer was off); in the background BorgStudio runs it
+  itself.
 
 **Fixed**
 - BorgStudio no longer crashes at startup when .NET runs without culture data (Linux without ICU).

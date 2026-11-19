@@ -20,19 +20,22 @@ public partial class MainViewModel
     /// <summary>What the system's scheduler starts: this program.</summary>
     internal string? SchedulerExecutable { get; set; } = Environment.ProcessPath;
 
-    private void ApplySchedules() => SchedulesApplied = ApplySchedulesAsync();
+    /// <summary>Brings the system's scheduler in line with the jobs and the daily check (after saving either).</summary>
+    internal void ApplySchedules() => SchedulesApplied = ApplySchedulesAsync();
 
     private async Task ApplySchedulesAsync()
     {
         if (_services.Scheduler is not { } scheduler || SchedulerExecutable is not { } executable)
             return;
 
-        // In the background BorgStudio starts the jobs itself: the system's entries go.
+        // In the background BorgStudio starts the jobs – and the daily check – itself: the system's entries go.
         List<BackupJob> jobs = IsBackgroundMode ? [] : [.. _jobs];
+        var notifications = Settings.Notifications;
+        TimeOnly? dailyCheck = !IsBackgroundMode && notifications.NeedsDailyCheck(_jobs) ? notifications.DailyTime : null;
         await _scheduleGate.WaitAsync();
         try
         {
-            await Task.Run(() => scheduler.ApplyAsync(jobs, executable));
+            await Task.Run(() => scheduler.ApplyAsync(jobs, executable, dailyCheck));
         }
         catch (Exception exception) when (exception is SchedulerException or IOException or UnauthorizedAccessException)
         {

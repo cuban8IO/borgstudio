@@ -40,10 +40,12 @@ public sealed partial class NotificationsViewModel : ViewModelBase
 
         SystemEnabled = settings.System.Enabled;
         SystemEvents = Events(settings.System);
+        SystemDailySummary = settings.System.DailySummary;
 
         var email = settings.Email;
         EmailEnabled = email.Enabled;
         EmailEvents = Events(email);
+        EmailDailySummary = email.DailySummary;
         EmailHost = email.Host;
         EmailPort = email.Port.ToString(CultureInfo.InvariantCulture);
         EmailSecurity = SecurityOptions.First(option => option.Value == email.Security);
@@ -55,6 +57,7 @@ public sealed partial class NotificationsViewModel : ViewModelBase
         var webhook = settings.Webhook;
         WebhookEnabled = webhook.Enabled;
         WebhookEvents = Events(webhook);
+        WebhookDailySummary = webhook.DailySummary;
         WebhookUrl = webhook.Url;
         WebhookFormat = FormatOptions.First(option => option.Value == webhook.Format);
         _suggestedHeader = WebhookSender.SuggestedHeader(webhook.Format);
@@ -65,6 +68,8 @@ public sealed partial class NotificationsViewModel : ViewModelBase
         FullBelowOnePercent = settings.StorageFull.BelowOnePercent;
         FullNextBackupWontFit = settings.StorageFull.NextBackupWontFit;
         FullBackupFailed = settings.StorageFull.BackupFailed;
+        DailyTime = settings.DailyTime.ToTimeSpan();
+        SummaryWhenAllWell = settings.SummaryWhenAllWell;
     }
 
     /// <summary>The window closes (after saving, or cancelled).</summary>
@@ -195,6 +200,23 @@ public sealed partial class NotificationsViewModel : ViewModelBase
     public partial bool FullBackupFailed { get; set; }
 
     [ObservableProperty]
+    public partial bool SystemDailySummary { get; set; }
+
+    [ObservableProperty]
+    public partial bool EmailDailySummary { get; set; }
+
+    [ObservableProperty]
+    public partial bool WebhookDailySummary { get; set; }
+
+    /// <summary>When the daily check runs (summary, overdue jobs).</summary>
+    [ObservableProperty]
+    public partial TimeSpan? DailyTime { get; set; }
+
+    /// <summary>The summary also comes when everything went well.</summary>
+    [ObservableProperty]
+    public partial bool SummaryWhenAllWell { get; set; }
+
+    [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(TestSystemCommand), nameof(TestEmailCommand), nameof(TestWebhookCommand), nameof(SaveCommand))]
     public partial bool IsTesting { get; private set; }
 
@@ -205,11 +227,12 @@ public sealed partial class NotificationsViewModel : ViewModelBase
     /// <summary>The settings as they are in the window now.</summary>
     public NotificationSettings Current => new()
     {
-        System = new SystemNotificationChannel { Enabled = SystemEnabled, Events = Checked(SystemEvents) },
+        System = new SystemNotificationChannel { Enabled = SystemEnabled, Events = Checked(SystemEvents), DailySummary = SystemDailySummary },
         Email = new EmailChannel
         {
             Enabled = EmailEnabled,
             Events = Checked(EmailEvents),
+            DailySummary = EmailDailySummary,
             Host = EmailHost.Trim(),
             Port = int.TryParse(EmailPort.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out var port) ? port : 0,
             Security = EmailSecurity.Value,
@@ -221,11 +244,14 @@ public sealed partial class NotificationsViewModel : ViewModelBase
         {
             Enabled = WebhookEnabled,
             Events = Checked(WebhookEvents),
+            DailySummary = WebhookDailySummary,
             Url = WebhookUrl.Trim(),
             Format = WebhookFormat.Value,
             HeaderName = WebhookHeaderName.Trim(),
         },
         SuppressRepeats = SuppressRepeats,
+        DailyTime = TimeOnly.FromTimeSpan(DailyTime ?? new TimeSpan(8, 0, 0)),
+        SummaryWhenAllWell = SummaryWhenAllWell,
         StorageFull = new Core.Storage.StorageFullCriteria
         {
             BelowOnePercent = FullBelowOnePercent,
@@ -316,6 +342,8 @@ public sealed partial class NotificationsViewModel : ViewModelBase
             return;
 
         _main.UpdateSettings(_main.Settings with { Notifications = settings });
+        // The daily check may have been switched on or off, or moved.
+        _main.ApplySchedules();
         CloseRequested?.Invoke(this, EventArgs.Empty);
     }
 
@@ -368,5 +396,6 @@ public sealed partial class NotificationsViewModel : ViewModelBase
         new(NotificationEvent.Succeeded, Strings.NotifyEventSucceeded, channel.Events.Contains(NotificationEvent.Succeeded)),
         new(NotificationEvent.StorageLow, Strings.NotifyEventStorageLow, channel.Events.Contains(NotificationEvent.StorageLow)),
         new(NotificationEvent.StorageFull, Strings.NotifyEventStorageFull, channel.Events.Contains(NotificationEvent.StorageFull)),
+        new(NotificationEvent.Overdue, Strings.NotifyEventOverdue, channel.Events.Contains(NotificationEvent.Overdue)),
     ];
 }

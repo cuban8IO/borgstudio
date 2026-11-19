@@ -67,6 +67,7 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
+                            <CheckBox IsChecked="{Binding SystemDailySummary}" Content="{x:Static res:Strings.NotifyDailySummary}" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <Button Content="{x:Static res:Strings.NotifyTest}" Command="{Binding TestSystemCommand}" />
@@ -115,6 +116,7 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
+                            <CheckBox IsChecked="{Binding EmailDailySummary}" Content="{x:Static res:Strings.NotifyDailySummary}" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <Button Content="{x:Static res:Strings.NotifyTest}" Command="{Binding TestEmailCommand}" />
@@ -156,6 +158,7 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
+                            <CheckBox IsChecked="{Binding WebhookDailySummary}" Content="{x:Static res:Strings.NotifyDailySummary}" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <Button Content="{x:Static res:Strings.NotifyTest}" Command="{Binding TestWebhookCommand}" />
@@ -172,6 +175,13 @@
                             <TextBlock Text="{x:Static res:Strings.NotifySuppressRepeats}" TextWrapping="Wrap" />
                         </CheckBox>
                         <TextBlock Text="{x:Static res:Strings.NotifyPerJobHint}" Classes="hint" />
+                        <TextBlock Text="{x:Static res:Strings.NotifyDailyTime}" Classes="label" TextWrapping="Wrap" />
+                        <TimePicker SelectedTime="{Binding DailyTime}" ClockIdentifier="24HourClock" MinuteIncrement="5"
+                                    HorizontalAlignment="Left" />
+                        <CheckBox IsChecked="{Binding SummaryWhenAllWell}">
+                            <TextBlock Text="{x:Static res:Strings.NotifySummaryWhenAllWell}" TextWrapping="Wrap" />
+                        </CheckBox>
+                        <TextBlock Text="{x:Static res:Strings.NotifyDailyHint}" Classes="hint" />
                         <TextBlock Text="{x:Static res:Strings.NotifyStorageFullLabel}" Classes="label" />
                         <CheckBox IsChecked="{Binding FullBelowOnePercent}">
                             <TextBlock Text="{x:Static res:Strings.NotifyFullBelowOnePercent}" TextWrapping="Wrap" />

@@ -875,11 +875,16 @@ public sealed class FakeSystemScheduler : ISystemScheduler
     /// <summary>The scheduled jobs of the last update.</summary>
     public IReadOnlyList<BackupJob> Scheduled => Applied.Count == 0 ? [] : [.. Applied[^1].Where(job => job.IsScheduled)];
 
-    public Task ApplyAsync(IReadOnlyList<BackupJob> jobs, string executable, CancellationToken cancellationToken = default)
+    /// <summary>The time of the daily check in the last update; <c>null</c>: none.</summary>
+    public TimeOnly? DailyCheck { get; private set; }
+
+    public Task ApplyAsync(IReadOnlyList<BackupJob> jobs, string executable, TimeOnly? dailyCheck = null,
+        CancellationToken cancellationToken = default)
     {
         if (Error is not null)
             throw new SchedulerException(Error);
         Applied.Add(jobs);
+        DailyCheck = dailyCheck;
         Executable = executable;
         return Task.CompletedTask;
     }

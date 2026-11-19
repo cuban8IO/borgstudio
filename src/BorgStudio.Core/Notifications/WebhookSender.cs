@@ -112,7 +112,7 @@ public sealed class WebhookSender(HttpClient http)
             ["tags"] = new JsonArray(message.Event switch
             {
                 NotificationEvent.Failed or NotificationEvent.StorageFull => "x",
-                NotificationEvent.Warnings or NotificationEvent.Skipped or NotificationEvent.StorageLow => "warning",
+                NotificationEvent.Warnings or NotificationEvent.Skipped or NotificationEvent.StorageLow or NotificationEvent.Overdue => "warning",
                 _ => "white_check_mark",
             }),
         });
@@ -174,13 +174,15 @@ public sealed class WebhookSender(HttpClient http)
         NotificationEvent.Recovered => "recovered",
         NotificationEvent.StorageLow => "storage-low",
         NotificationEvent.StorageFull => "storage-full",
+        NotificationEvent.Overdue => "overdue",
+        NotificationEvent.Summary => "summary",
         _ => notificationEvent.ToString().ToLowerInvariant(),
     };
 
     private static int Color(NotificationEvent notificationEvent) => notificationEvent switch
     {
         NotificationEvent.Failed or NotificationEvent.StorageFull => 0xD64545,
-        NotificationEvent.Warnings or NotificationEvent.StorageLow => 0xFF9800,
+        NotificationEvent.Warnings or NotificationEvent.StorageLow or NotificationEvent.Overdue => 0xFF9800,
         NotificationEvent.Skipped => 0x9C9C9C,
         _ => 0x01FF95,
     };
