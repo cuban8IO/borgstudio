@@ -130,6 +130,11 @@
                     <CheckBox IsChecked="{Binding Notify}">
                         <TextBlock Text="{x:Static res:Strings.JobEditorNotify}" TextWrapping="Wrap" />
                     </CheckBox>
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="28,0,0,0" IsEnabled="{Binding Notify}">
+                        <TextBlock Text="{x:Static res:Strings.JobEditorOverdue}" VerticalAlignment="Center" />
+                        <NumericUpDown Value="{Binding OverdueDays}" Minimum="0" Maximum="365" Increment="1" FormatString="0" Width="120" />
+                        <TextBlock Text="{x:Static res:Strings.JobEditorOverdueDays}" VerticalAlignment="Center" />
+                    </StackPanel>
                 </StackPanel>
 
                 <!-- Clean-up -->

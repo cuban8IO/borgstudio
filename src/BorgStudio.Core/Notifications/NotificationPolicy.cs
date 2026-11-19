@@ -89,16 +89,44 @@ public sealed class NotificationPolicy(string stateFile)
         }
     }
 
+    /// <summary>
+    /// <see cref="NotificationEvent.Overdue"/> for a job that is overdue (a repeat while it stays overdue), <c>null</c>
+    /// once it has backed up again.
+    /// </summary>
+    public NotificationDecision? DecideOverdue(Guid jobId, bool overdue)
+    {
+        lock (Gate)
+        {
+            var states = Load();
+            var key = OverdueKey(jobId);
+            var known = states.ContainsKey(key);
+            if (!overdue)
+            {
+                if (known && states.Remove(key))
+                    Save(states);
+                return null;
+            }
+            if (!known)
+            {
+                states[key] = "overdue";
+                Save(states);
+            }
+            return new NotificationDecision(NotificationEvent.Overdue, known);
+        }
+    }
+
     /// <summary>The job was deleted.</summary>
     public void Forget(Guid jobId)
     {
         lock (Gate)
         {
             var problems = Load();
-            if (problems.Remove(jobId.ToString("N")))
+            if (problems.Remove(jobId.ToString("N")) | problems.Remove(OverdueKey(jobId)))
                 Save(problems);
         }
     }
+
+    private static string OverdueKey(Guid jobId) => $"overdue-{jobId:N}";
 
     private Dictionary<string, string> Load()
     {

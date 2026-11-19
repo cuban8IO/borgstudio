@@ -112,8 +112,36 @@ public partial class MainViewModel
             if (_dueJobs.Count > 0 && !_runningDueJobs)
                 _dueJobsRun = RunDueJobsAsync();
         }
+        // The daily check (summary, overdue jobs) – also while the schedules are paused.
+        if (_dailyCheckRun.IsCompleted)
+            _dailyCheckRun = RunDailyCheckIfDueAsync(now);
         // The next run moves on.
         RaiseBackgroundStateChanged();
+    }
+
+    private Task _dailyCheckRun = Task.CompletedTask;
+
+    /// <summary>The daily check started by the last look (tests wait for it).</summary>
+    internal Task DailyCheckRun => _dailyCheckRun;
+
+    private async Task RunDailyCheckIfDueAsync(DateTime now)
+    {
+        var check = new DailyCheck(_services);
+        if (!Settings.Notifications.NeedsDailyCheck(_jobs) || !check.State.IsDue(Settings.Notifications.DailyTime, now))
+            return;
+        var vault = OpenVaultCopy(scheduledAccess: true);
+        try
+        {
+            await Task.Run(() => check.RunAsync(now, vault));
+        }
+        catch (Exception exception)
+        {
+            AppLog.Write(RunNotifications.LogFile, $"Daily check: {exception}", _services.Jobs.DataDirectory);
+        }
+        finally
+        {
+            vault.Lock();
+        }
     }
 
     private async Task RunDueJobsAsync()

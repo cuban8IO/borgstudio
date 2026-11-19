@@ -2319,4 +2319,55 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
   <data name="EditorCapacityInvalid" xml:space="preserve">
     <value>Die Kapazität muss eine Zahl in GB größer als 0 sein.</value>
   </data>
+  <data name="NotifyEventOverdue" xml:space="preserve">
+    <value>überfälligen Jobs</value>
+  </data>
+  <data name="NotifyTitleOverdue" xml:space="preserve">
+    <value>Länger keine Sicherung: {0}</value>
+  </data>
+  <data name="NotifyDailySummary" xml:space="preserve">
+    <value>Zusätzlich die tägliche Sammelmeldung senden</value>
+  </data>
+  <data name="NotifyDailyTime" xml:space="preserve">
+    <value>Tägliche Prüfung (Sammelmeldung, überfällige Jobs) um</value>
+  </data>
+  <data name="NotifySummaryWhenAllWell" xml:space="preserve">
+    <value>Sammelmeldung auch senden, wenn alles in Ordnung war (als Lebenszeichen)</value>
+  </data>
+  <data name="NotifyDailyHint" xml:space="preserve">
+    <value>Mit der Aufgabenplanung legt BorgStudio dafür eine eigene tägliche Aufgabe an (wird nachgeholt, wenn der Rechner aus war); im Hintergrund erledigt das BorgStudio selbst. Überfällig wird ein Job nach den Tagen, die in seinem Editor eingestellt sind.</value>
+  </data>
+  <data name="SummaryTitleAllWell" xml:space="preserve">
+    <value>Tagesübersicht: alles in Ordnung</value>
+  </data>
+  <data name="SummaryTitleProblems" xml:space="preserve">
+    <value>Tagesübersicht: {0} zum Ansehen</value>
+  </data>
+  <data name="SummaryRunsSince" xml:space="preserve">
+    <value>Sicherungen seit {0}:</value>
+  </data>
+  <data name="SummaryNoRuns" xml:space="preserve">
+    <value>keine</value>
+  </data>
+  <data name="SummaryMoreRuns" xml:space="preserve">
+    <value>… und {0} weitere</value>
+  </data>
+  <data name="SummaryRunSizes" xml:space="preserve">
+    <value>{0} gelesen, {1} neu</value>
+  </data>
+  <data name="SummaryStorage" xml:space="preserve">
+    <value>Speicher:</value>
+  </data>
+  <data name="SummaryOverdue" xml:space="preserve">
+    <value>Überfällig:</value>
+  </data>
+  <data name="SummaryOverdueLine" xml:space="preserve">
+    <value>{0}: keine erfolgreiche Sicherung seit {1} ({2} Tage)</value>
+  </data>
+  <data name="JobEditorOverdue" xml:space="preserve">
+    <value>Melden, wenn es keine erfolgreiche Sicherung gab seit</value>
+  </data>
+  <data name="JobEditorOverdueDays" xml:space="preserve">
+    <value>Tagen (0 = nie)</value>
+  </data>
 </root>

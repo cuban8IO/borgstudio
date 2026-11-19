@@ -15,10 +15,11 @@ public interface ISystemScheduler
 {
     /// <summary>
     /// Brings the system's entries for BorgStudio in line with <paramref name="jobs"/>: one per job with a schedule,
-    /// pointing at <paramref name="executable"/>; entries of jobs without schedule (or deleted ones) go.
+    /// pointing at <paramref name="executable"/>; entries of jobs without schedule (or deleted ones) go. With
+    /// <paramref name="dailyCheck"/>, one more entry runs <c>--daily-check</c> at that time every day (made up for when missed).
     /// </summary>
     /// <exception cref="SchedulerException">The system refused a change.</exception>
-    Task ApplyAsync(IReadOnlyList<BackupJob> jobs, string executable, CancellationToken cancellationToken = default);
+    Task ApplyAsync(IReadOnlyList<BackupJob> jobs, string executable, TimeOnly? dailyCheck = null, CancellationToken cancellationToken = default);
 }
 
 public static class SystemScheduler
@@ -53,6 +54,12 @@ public static class SystemScheduler
     }
 
     internal static string Id(Guid jobId) => jobId.ToString("N");
+
+    /// <summary>The name of the daily check's entry (next to the jobs' ids).</summary>
+    public const string DailyCheckId = "daily-check";
+
+    /// <summary>Starts the daily check (summary of the day, overdue jobs).</summary>
+    public const string DailyCheckArgument = "--daily-check";
 }
 
 /// <summary>Windows Task Scheduler: a task per job in the folder \BorgStudio, registered with schtasks from XML.</summary>
@@ -60,30 +67,46 @@ public sealed class WindowsTaskScheduler(IProcessRunner runner, string workDirec
 {
     public const string Folder = @"\BorgStudio\";
 
-    public async Task ApplyAsync(IReadOnlyList<BackupJob> jobs, string executable, CancellationToken cancellationToken = default)
+    public async Task ApplyAsync(IReadOnlyList<BackupJob> jobs, string executable, TimeOnly? dailyCheck = null,
+        CancellationToken cancellationToken = default)
     {
         var existing = await ListAsync(cancellationToken);
         foreach (var job in jobs.Where(job => job.IsScheduled))
         {
-            Directory.CreateDirectory(workDirectory);
-            var file = Path.Combine(workDirectory, $"{SystemScheduler.Id(job.Id)}.xml");
-            // The format schtasks expects (UTF-16 with byte order mark).
-            await File.WriteAllTextAsync(file, TaskXml(job, executable, DateTime.Now), Encoding.Unicode, cancellationToken);
-            try
-            {
-                await SystemScheduler.RunAsync(runner, "schtasks", ["/Create", "/TN", TaskName(job.Id), "/XML", file, "/F"], cancellationToken);
-            }
-            finally
-            {
-                File.Delete(file);
-            }
+            await RegisterAsync(SystemScheduler.Id(job.Id), TaskXml(job, executable, DateTime.Now), cancellationToken);
             existing.Remove(SystemScheduler.Id(job.Id));
+        }
+        if (dailyCheck is { } time)
+        {
+            await RegisterAsync(SystemScheduler.DailyCheckId, DailyCheckXml(time, executable, DateTime.Now), cancellationToken);
+            existing.Remove(SystemScheduler.DailyCheckId);
         }
         foreach (var leftover in existing)
             await SystemScheduler.RunAsync(runner, "schtasks", ["/Delete", "/TN", Folder + leftover, "/F"], cancellationToken);
     }
 
+    private async Task RegisterAsync(string id, string xml, CancellationToken cancellationToken)
+    {
+        Directory.CreateDirectory(workDirectory);
+        var file = Path.Combine(workDirectory, $"{id}.xml");
+        // The format schtasks expects (UTF-16 with byte order mark).
+        await File.WriteAllTextAsync(file, xml, Encoding.Unicode, cancellationToken);
+        try
+        {
+            await SystemScheduler.RunAsync(runner, "schtasks", ["/Create", "/TN", Folder + id, "/XML", file, "/F"], cancellationToken);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
     public static string TaskName(Guid jobId) => Folder + SystemScheduler.Id(jobId);
+
+    /// <summary>The daily check: every day at <paramref name="time"/>, made up for when the computer was off.</summary>
+    public static string DailyCheckXml(TimeOnly time, string executable, DateTime now) =>
+        TaskXml("BorgStudio: daily check (notifications)", Folder + SystemScheduler.DailyCheckId,
+            [new BackupSchedule { Kind = ScheduleKind.Daily, Time = time }], catchUp: true, SystemScheduler.DailyCheckArgument, executable, now);
 
     /// <summary>The ids of BorgStudio's tasks that exist now.</summary>
     private async Task<HashSet<string>> ListAsync(CancellationToken cancellationToken)
@@ -101,17 +124,21 @@ public sealed class WindowsTaskScheduler(IProcessRunner runner, string workDirec
     }
 
     /// <summary>The task definition: one trigger per schedule; missed runs follow when the computer is back (catch-up).</summary>
-    public static string TaskXml(BackupJob job, string executable, DateTime now)
+    public static string TaskXml(BackupJob job, string executable, DateTime now) =>
+        TaskXml($"BorgStudio: backup job \"{job.Name}\"", TaskName(job.Id), job.Schedules, job.CatchUp, $"--run-job {job.Id}", executable, now);
+
+    private static string TaskXml(string description, string name, IEnumerable<BackupSchedule> schedules, bool catchUp, string arguments,
+        string executable, DateTime now)
     {
         var xml = new StringBuilder();
         xml.AppendLine("""<?xml version="1.0" encoding="UTF-16"?>""");
         xml.AppendLine("""<Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">""");
         xml.AppendLine("  <RegistrationInfo>");
-        xml.AppendLine($"    <Description>{Escape($"BorgStudio: backup job \"{job.Name}\"")}</Description>");
-        xml.AppendLine($"    <URI>{Escape(TaskName(job.Id))}</URI>");
+        xml.AppendLine($"    <Description>{Escape(description)}</Description>");
+        xml.AppendLine($"    <URI>{Escape(name)}</URI>");
         xml.AppendLine("  </RegistrationInfo>");
         xml.AppendLine("  <Triggers>");
-        foreach (var schedule in job.Schedules.Where(schedule => schedule.IsValid))
+        foreach (var schedule in schedules.Where(schedule => schedule.IsValid))
         {
             // The first start after now, so registering never counts as a missed run.
             var start = now.Date + schedule.Time.ToTimeSpan();
@@ -157,7 +184,7 @@ public sealed class WindowsTaskScheduler(IProcessRunner runner, string workDirec
         xml.AppendLine("    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>");
         xml.AppendLine("    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>");
         xml.AppendLine("    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>");
-        xml.AppendLine($"    <StartWhenAvailable>{(job.CatchUp ? "true" : "false")}</StartWhenAvailable>");
+        xml.AppendLine($"    <StartWhenAvailable>{(catchUp ? "true" : "false")}</StartWhenAvailable>");
         xml.AppendLine("    <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>");
         xml.AppendLine("    <IdleSettings>");
         xml.AppendLine("      <StopOnIdleEnd>false</StopOnIdleEnd>");
@@ -172,7 +199,7 @@ public sealed class WindowsTaskScheduler(IProcessRunner runner, string workDirec
         xml.AppendLine("""  <Actions Context="Author">""");
         xml.AppendLine("    <Exec>");
         xml.AppendLine($"      <Command>{Escape(executable)}</Command>");
-        xml.AppendLine($"      <Arguments>--run-job {job.Id}</Arguments>");
+        xml.AppendLine($"      <Arguments>{Escape(arguments)}</Arguments>");
         xml.AppendLine("    </Exec>");
         xml.AppendLine("  </Actions>");
         xml.AppendLine("</Task>");
@@ -192,14 +219,21 @@ public sealed class LaunchdScheduler(IProcessRunner runner, string agentsDirecto
 
     public const string CatchUpLabel = Prefix + "catch-up";
 
-    public async Task ApplyAsync(IReadOnlyList<BackupJob> jobs, string executable, CancellationToken cancellationToken = default)
+    public const string DailyCheckLabel = Prefix + SystemScheduler.DailyCheckId;
+
+    public async Task ApplyAsync(IReadOnlyList<BackupJob> jobs, string executable, TimeOnly? dailyCheck = null,
+        CancellationToken cancellationToken = default)
     {
         Directory.CreateDirectory(agentsDirectory);
         var domain = $"gui/{(await SystemScheduler.RunAsync(runner, "id", ["-u"], cancellationToken)).StandardOutput.Trim()}";
         var wanted = new Dictionary<string, string>();
         foreach (var job in jobs.Where(job => job.IsScheduled))
             wanted[Prefix + SystemScheduler.Id(job.Id)] = JobPlist(job, executable);
-        if (jobs.Any(job => job.IsScheduled && job.CatchUp))
+        if (dailyCheck is { } time)
+            wanted[DailyCheckLabel] = Plist(DailyCheckLabel, [executable, SystemScheduler.DailyCheckArgument], runAtLoad: false,
+                calendar: $"    <key>StartCalendarInterval</key>\n    <dict><key>Hour</key><integer>{time.Hour}</integer><key>Minute</key><integer>{time.Minute}</integer></dict>\n");
+        // At login: what was missed while the Mac was off (the catch-up also makes up for a missed daily check).
+        if (jobs.Any(job => job.IsScheduled && job.CatchUp) || dailyCheck is not null)
             wanted[CatchUpLabel] = Plist(CatchUpLabel, [executable, "--catch-up"], runAtLoad: true, calendar: "");
 
         foreach (var file in Directory.EnumerateFiles(agentsDirectory, Prefix + "*.plist"))
@@ -267,10 +301,14 @@ public sealed class SystemdScheduler(IProcessRunner runner, string unitDirectory
 {
     public const string Prefix = "borgstudio-";
 
-    public async Task ApplyAsync(IReadOnlyList<BackupJob> jobs, string executable, CancellationToken cancellationToken = default)
+    public async Task ApplyAsync(IReadOnlyList<BackupJob> jobs, string executable, TimeOnly? dailyCheck = null,
+        CancellationToken cancellationToken = default)
     {
         Directory.CreateDirectory(unitDirectory);
-        var wanted = jobs.Where(job => job.IsScheduled).ToDictionary(job => Prefix + SystemScheduler.Id(job.Id));
+        var wanted = jobs.Where(job => job.IsScheduled)
+            .ToDictionary(job => Prefix + SystemScheduler.Id(job.Id), job => (Service: Service(job, executable), Timer: Timer(job)));
+        if (dailyCheck is { } time)
+            wanted[Prefix + SystemScheduler.DailyCheckId] = (DailyCheckService(executable), DailyCheckTimer(time));
 
         foreach (var timer in Directory.EnumerateFiles(unitDirectory, Prefix + "*.timer"))
         {
@@ -281,10 +319,10 @@ public sealed class SystemdScheduler(IProcessRunner runner, string unitDirectory
             File.Delete(timer);
             File.Delete(Path.Combine(unitDirectory, unit + ".service"));
         }
-        foreach (var (unit, job) in wanted)
+        foreach (var (unit, files) in wanted)
         {
-            await File.WriteAllTextAsync(Path.Combine(unitDirectory, unit + ".service"), Service(job, executable), cancellationToken);
-            await File.WriteAllTextAsync(Path.Combine(unitDirectory, unit + ".timer"), Timer(job), cancellationToken);
+            await File.WriteAllTextAsync(Path.Combine(unitDirectory, unit + ".service"), files.Service, cancellationToken);
+            await File.WriteAllTextAsync(Path.Combine(unitDirectory, unit + ".timer"), files.Timer, cancellationToken);
         }
 
         await SystemScheduler.RunAsync(runner, "systemctl", ["--user", "daemon-reload"], cancellationToken);
@@ -303,6 +341,29 @@ public sealed class SystemdScheduler(IProcessRunner runner, string unitDirectory
         [Service]
         Type=oneshot
         ExecStart="{executable.Replace("\"", "\\\"", StringComparison.Ordinal)}" --run-job {job.Id}
+
+        """.ReplaceLineEndings("\n");
+
+    public static string DailyCheckService(string executable) => $"""
+        [Unit]
+        Description=BorgStudio daily check (notifications)
+
+        [Service]
+        Type=oneshot
+        ExecStart="{executable.Replace("\"", "\\\"", StringComparison.Ordinal)}" {SystemScheduler.DailyCheckArgument}
+
+        """.ReplaceLineEndings("\n");
+
+    public static string DailyCheckTimer(TimeOnly time) => $"""
+        [Unit]
+        Description=Daily check of BorgStudio
+
+        [Timer]
+        OnCalendar=*-*-* {time.Hour:00}:{time.Minute:00}:00
+        Persistent=true
+
+        [Install]
+        WantedBy=timers.target
 
         """.ReplaceLineEndings("\n");
 

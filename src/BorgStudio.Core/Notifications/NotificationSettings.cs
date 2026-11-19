@@ -26,6 +26,12 @@ public enum NotificationEvent
 
     /// <summary>A repository's storage is full (see <see cref="Storage.StorageFullCriteria"/>).</summary>
     StorageFull,
+
+    /// <summary>A job has not backed up for longer than its <see cref="Backups.BackupJob.OverdueDays"/>.</summary>
+    Overdue,
+
+    /// <summary>The daily summary (sent to channels with <see cref="NotificationChannel.DailySummary"/>).</summary>
+    Summary,
 }
 
 /// <summary>How a channel's messages reach their receiver.</summary>
@@ -37,8 +43,11 @@ public abstract record NotificationChannel
     public List<NotificationEvent> Events { get; init; } =
     [
         NotificationEvent.Failed, NotificationEvent.Skipped, NotificationEvent.Recovered, NotificationEvent.StorageLow,
-        NotificationEvent.StorageFull,
+        NotificationEvent.StorageFull, NotificationEvent.Overdue,
     ];
+
+    /// <summary>Also gets the daily summary (in addition to the single messages).</summary>
+    public bool DailySummary { get; init; }
 
     [JsonIgnore]
     public bool IsConfigured => this switch
@@ -48,7 +57,8 @@ public abstract record NotificationChannel
         _ => true,
     };
 
-    public bool Reports(NotificationEvent notificationEvent) => Enabled && Events.Contains(notificationEvent);
+    public bool Reports(NotificationEvent notificationEvent) =>
+        Enabled && (notificationEvent == NotificationEvent.Summary ? DailySummary : Events.Contains(notificationEvent));
 }
 
 /// <summary>The system's own notifications (Windows notification center, macOS notification center, libnotify).</summary>
@@ -141,9 +151,19 @@ public sealed record NotificationSettings
     /// <summary>When a repository's storage counts as full.</summary>
     public Storage.StorageFullCriteria StorageFull { get; init; } = new();
 
+    /// <summary>When the daily check runs: the summary, and which jobs are overdue.</summary>
+    public TimeOnly DailyTime { get; init; } = new(8, 0);
+
+    /// <summary>The summary also comes when everything went well (a sign of life); otherwise only with something to report.</summary>
+    public bool SummaryWhenAllWell { get; init; } = true;
+
     [JsonIgnore]
     public IEnumerable<NotificationChannel> Channels => [System, Email, Webhook];
 
     [JsonIgnore]
     public bool AnyEnabled => Channels.Any(channel => channel.Enabled);
+
+    /// <summary>Whether a daily check has anything to do: a channel wants the summary, or a job may become overdue.</summary>
+    public bool NeedsDailyCheck(IEnumerable<Backups.BackupJob> jobs) =>
+        AnyEnabled && (Channels.Any(channel => channel.Enabled && channel.DailySummary) || jobs.Any(job => job.Notify && job.OverdueDays > 0));
 }

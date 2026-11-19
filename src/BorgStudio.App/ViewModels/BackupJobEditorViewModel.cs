@@ -49,6 +49,7 @@ public sealed partial class BackupJobEditorViewModel : ViewModelBase
             Schedules.Add(new ScheduleItemViewModel(schedule, RemoveSchedule));
         CatchUp = job.CatchUp;
         Notify = job.Notify;
+        OverdueDays = job.OverdueDays;
         Schedules.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasSchedules));
 
         Sources.CollectionChanged += (_, _) => Refresh();
@@ -235,6 +236,10 @@ public sealed partial class BackupJobEditorViewModel : ViewModelBase
     [ObservableProperty]
     public partial bool Notify { get; set; } = true;
 
+    /// <summary>Report the job after this many days without a successful backup; 0: never.</summary>
+    [ObservableProperty]
+    public partial decimal? OverdueDays { get; set; } = 0;
+
     [RelayCommand]
     private void AddSchedule() => Schedules.Add(new ScheduleItemViewModel(new BackupSchedule(), RemoveSchedule));
 
@@ -269,6 +274,7 @@ public sealed partial class BackupJobEditorViewModel : ViewModelBase
             Schedules = schedules,
             CatchUp = CatchUp,
             Notify = Notify,
+            OverdueDays = (int)Math.Clamp(OverdueDays ?? 0, 0, 365),
         };
         CloseRequested?.Invoke(this, EventArgs.Empty);
     }
