@@ -150,6 +150,9 @@ public sealed record BackupJob
 
     public bool IsScheduled => Schedules.Any(schedule => schedule.IsValid);
 
+    /// <summary>The job's runs are reported through the notification channels (see the app's notification settings).</summary>
+    public bool Notify { get; init; } = true;
+
     public BackupRunSummary? LastRun { get; init; }
 }
 

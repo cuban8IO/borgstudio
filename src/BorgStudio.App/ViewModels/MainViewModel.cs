@@ -2,6 +2,7 @@ using BorgStudio.App.Resources;
 using BorgStudio.App.Services;
 using BorgStudio.Core.Backups;
 using BorgStudio.Core.Borg;
+using BorgStudio.Core.Notifications;
 using BorgStudio.Core.Plugins;
 using BorgStudio.Core.Progress;
 using BorgStudio.Core.Repositories;
@@ -33,7 +34,8 @@ public sealed record AppServices(
     IDialogService Dialogs,
     Updater Updates,
     ISystemScheduler? Scheduler = null,
-    IAutostart? Autostart = null)
+    IAutostart? Autostart = null,
+    Notifier? Notifier = null)
 {
     public SshHostTrust SshTrust => new(Ssh, new KnownHostsFile(SshKeys.KnownHostsFile));
 }

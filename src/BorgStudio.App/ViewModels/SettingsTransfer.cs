@@ -1,4 +1,5 @@
 using BorgStudio.App.Resources;
+using BorgStudio.Core.Notifications;
 using BorgStudio.Core.Repositories;
 using BorgStudio.Core.Secrets;
 using BorgStudio.Core.Security;
@@ -10,6 +11,8 @@ namespace BorgStudio.App.ViewModels;
 /// <summary>Collects everything for an export, and applies an import.</summary>
 public static class SettingsTransfer
 {
+    private static readonly string[] NotificationSecretNames = [NotificationSecrets.SmtpPassword, NotificationSecrets.WebhookHeader];
+
     /// <param name="Problems">What could not be included, e.g. a borg key of an unreachable repository.</param>
     public sealed record ExportResult(ExportContents Contents, IReadOnlyList<string> Problems);
 
@@ -59,6 +62,12 @@ public static class SettingsTransfer
             }
         }
 
+        var secrets = new Dictionary<string, string>();
+        var notificationSecrets = new NotificationSecrets(services.Vault, services.SecretStore);
+        foreach (var name in NotificationSecretNames)
+            if (notificationSecrets.Get(name) is { } secret)
+                secrets[name] = secret;
+
         var contents = new ExportContents
         {
             Created = DateTimeOffset.Now,
@@ -71,6 +80,7 @@ public static class SettingsTransfer
             Settings = main.Settings,
             BorgKeys = borgKeys,
             Jobs = [.. main.AllJobs],
+            Secrets = secrets,
         };
         return new ExportResult(contents, problems);
     }
@@ -143,6 +153,22 @@ public static class SettingsTransfer
         var imported = contents.Repositories.Select(repository => adjusted.GetValueOrDefault(repository.Id) ?? repository).ToList();
         main.ReplaceRepositories(ImportMerge.Merge(current, imported, repository => repository.Id, mode, replace));
         main.ReplaceJobs(ImportMerge.Merge(main.AllJobs.ToList(), contents.Jobs, job => job.Id, mode, replace));
+
+        // The notifications' secrets: with the settings (replace), or where none is stored yet (merge).
+        var notificationSecrets = new NotificationSecrets(vault, services.SecretStore);
+        foreach (var (name, secret) in contents.Secrets.Where(entry => NotificationSecretNames.Contains(entry.Key)))
+        {
+            if (mode == ImportMode.Merge && notificationSecrets.Get(name) is not null)
+                continue;
+            try
+            {
+                notificationSecrets.Set(name, secret);
+            }
+            catch (SecretStoreException exception)
+            {
+                problems.Add(BorgTexts.Format(Strings.KeychainError, exception.Message));
+            }
+        }
 
         // Known hosts and settings.
         var knownHosts = new KnownHostsFile(services.SshKeys.KnownHostsFile);

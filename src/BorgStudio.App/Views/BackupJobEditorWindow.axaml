@@ -127,6 +127,9 @@
                     </CheckBox>
                     <TextBlock Text="{x:Static res:Strings.JobEditorSchedulesHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap"
                                IsVisible="{Binding HasSchedules}" />
+                    <CheckBox IsChecked="{Binding Notify}">
+                        <TextBlock Text="{x:Static res:Strings.JobEditorNotify}" TextWrapping="Wrap" />
+                    </CheckBox>
                 </StackPanel>
 
                 <!-- Clean-up -->

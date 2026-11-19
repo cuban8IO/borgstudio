@@ -10,6 +10,7 @@ using BorgStudio.App.ViewModels;
 using BorgStudio.App.Views;
 using BorgStudio.Core;
 using BorgStudio.Core.Backups;
+using BorgStudio.Core.Notifications;
 using BorgStudio.Core.Borg;
 using BorgStudio.Core.Plugins;
 using BorgStudio.Core.Progress;
@@ -104,7 +105,8 @@ public partial class App : Application
             dialogs,
             Updater.CreateDefault(AppVersion.Current),
             SystemScheduler.CreateDefault(),
-            Autostart.CreateDefault());
+            Autostart.CreateDefault(),
+            Notifier.CreateDefault(NotificationIcon.Ensure(AppPaths.DataDirectory), Environment.ProcessPath));
     }
 
     /// <summary>Reports a finished update, then looks for a new release now and once a day.</summary>

@@ -333,6 +333,35 @@ public sealed class Vault
         }
     }
 
+    // --- Other secrets (e.g. the SMTP password for notifications) ---
+
+    /// <exception cref="VaultLockedException" />
+    public string? GetSecret(string name)
+    {
+        lock (_gate)
+            return Unlocked().Secrets.GetValueOrDefault(name);
+    }
+
+    /// <exception cref="VaultLockedException" />
+    public void SetSecret(string name, string value)
+    {
+        lock (_gate)
+        {
+            Unlocked().Secrets[name] = value;
+            Save();
+        }
+    }
+
+    /// <exception cref="VaultLockedException" />
+    public void RemoveSecret(string name)
+    {
+        lock (_gate)
+        {
+            if (Unlocked().Secrets.Remove(name))
+                Save();
+        }
+    }
+
     // --- Other files under the vault's key ---
 
     /// <summary>
@@ -395,5 +424,8 @@ public sealed class Vault
         public Dictionary<string, string> Passphrases { get; init; } = [];
 
         public List<SshKeyEntry> Keys { get; init; } = [];
+
+        /// <summary>Further secrets by name (see <see cref="Notifications.NotificationSecrets"/>).</summary>
+        public Dictionary<string, string> Secrets { get; init; } = [];
     }
 }

@@ -27,6 +27,9 @@ public sealed record AppSettings
 
     /// <summary>The hint "BorgStudio keeps running in the notification area" was shown (once).</summary>
     public bool TrayHintShown { get; init; }
+
+    /// <summary>Who gets told about backups, and how.</summary>
+    public Notifications.NotificationSettings Notifications { get; init; } = new();
 }
 
 /// <summary>Who starts scheduled backups.</summary>

@@ -3,6 +3,7 @@ using System.Globalization;
 using BorgStudio.App.Resources;
 using BorgStudio.Core.Backups;
 using BorgStudio.Core.Borg;
+using BorgStudio.Core.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -138,6 +139,7 @@ public partial class MainViewModel
         _jobs.RemoveAll(existing => existing.Id == job.Id);
         SaveJobs();
         Runner.History.Remove(job.Id);
+        NotificationPolicy.ForDataDirectory(_services.Jobs.DataDirectory).Forget(job.Id);
         RefreshRepositoryJobs();
     }
 
@@ -177,8 +179,9 @@ public partial class MainViewModel
             return;
 
         var borg = Borg!;
-        await RunWithCardAsync(job, (report, cancellationToken) =>
+        var summary = await RunWithCardAsync(job, (report, cancellationToken) =>
             Runner.RunAsync(new BackupRunRequest(borg, location, job, passphrase.Value, ssh.Access), report, cancellationToken));
+        await NotifyRunAsync(job, summary);
     }
 
     /// <summary>

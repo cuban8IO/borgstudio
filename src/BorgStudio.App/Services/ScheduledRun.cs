@@ -1,4 +1,3 @@
-using System.Globalization;
 using BorgStudio.App.ViewModels;
 using BorgStudio.Core;
 using BorgStudio.Core.Backups;
@@ -16,8 +15,6 @@ public static class ScheduledRun
 
     /// <summary>Runs every scheduled job with "catch up" whose last scheduled time passed since its last run.</summary>
     public const string CatchUpArgument = "--catch-up";
-
-    private const long LogLimit = 1024 * 1024;
 
     public static bool IsRunCall(IReadOnlyList<string> args) => args.Count > 0 && args[0] is Argument or CatchUpArgument;
 
@@ -79,21 +76,6 @@ public static class ScheduledRun
         }
     }
 
-    /// <summary>One line per run in logs/scheduled.log (kept below about 1 MB: the older half moves to .old).</summary>
-    internal static void Log(string text, string? dataDirectory = null)
-    {
-        try
-        {
-            var folder = Path.Combine(dataDirectory ?? AppPaths.DataDirectory, "logs");
-            Directory.CreateDirectory(folder);
-            var file = Path.Combine(folder, "scheduled.log");
-            if (File.Exists(file) && new FileInfo(file).Length > LogLimit)
-                File.Move(file, file + ".old", overwrite: true);
-            File.AppendAllText(file, $"{DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:ss zzz", CultureInfo.InvariantCulture)} {text}{Environment.NewLine}");
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-        {
-            // Logging must never stop a backup.
-        }
-    }
+    /// <summary>One line per run in logs/scheduled.log.</summary>
+    internal static void Log(string text, string? dataDirectory = null) => AppLog.Write("scheduled.log", text, dataDirectory);
 }

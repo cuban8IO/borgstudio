@@ -248,6 +248,14 @@ public partial class MainWindow : Window
             await viewModel.ShowUpdateCommand.ExecuteAsync(null);
     }
 
+    private async void OpenNotifications_Click(object? sender, EventArgs e)
+    {
+        if (DataContext is not MainViewModel { IsLocked: false } viewModel)
+            return;
+
+        await new NotificationsWindow { DataContext = new NotificationsViewModel(viewModel) }.ShowDialog(this);
+    }
+
     private async void OpenSettings_Click(object? sender, EventArgs e)
     {
         if (DataContext is not MainViewModel { IsLocked: false } viewModel)
