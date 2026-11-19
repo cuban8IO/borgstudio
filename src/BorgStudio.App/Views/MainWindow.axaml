@@ -221,6 +221,39 @@
                                                          IsVisible="{Binding SelectedRepository.IsSsh}" />
                                 </Grid>
 
+                                <!-- Storage -->
+                                <Border Classes="card">
+                                    <StackPanel Spacing="6">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Text="{x:Static res:Strings.StorageHeader}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                            <Button Grid.Column="1" Content="{x:Static res:Strings.StorageMeasure}"
+                                                    Command="{Binding MeasureStorageCommand}" />
+                                        </Grid>
+                                        <ProgressBar Minimum="0" Maximum="1" Height="10" Value="{Binding SelectedRepository.StorageUsedFraction}"
+                                                     IsVisible="{Binding SelectedRepository.HasStorageBar}"
+                                                     Classes.low="{Binding SelectedRepository.IsStorageLow}"
+                                                     Classes.full="{Binding SelectedRepository.IsStorageFull}">
+                                            <ProgressBar.Styles>
+                                                <Style Selector="ProgressBar.low">
+                                                    <Setter Property="Foreground" Value="{DynamicResource WarningBorder}" />
+                                                </Style>
+                                                <Style Selector="ProgressBar.full">
+                                                    <Setter Property="Foreground" Value="{DynamicResource ErrorForeground}" />
+                                                </Style>
+                                            </ProgressBar.Styles>
+                                        </ProgressBar>
+                                        <TextBlock Text="{Binding SelectedRepository.StorageText}" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding SelectedRepository.StorageLevelText}" TextWrapping="Wrap"
+                                                   IsVisible="{Binding SelectedRepository.IsStorageLow}" Foreground="{DynamicResource WarningBorder}" />
+                                        <TextBlock Text="{Binding SelectedRepository.StorageLevelText}" TextWrapping="Wrap"
+                                                   IsVisible="{Binding SelectedRepository.IsStorageFull}" Foreground="{DynamicResource ErrorForeground}" />
+                                        <TextBlock Text="{Binding SelectedRepository.StorageHint}" TextWrapping="Wrap" FontSize="12" Opacity="0.8"
+                                                   IsVisible="{Binding SelectedRepository.HasStorageHint}" />
+                                        <TextBlock Text="{Binding SelectedRepository.StorageMeasuredText}" FontSize="12" Opacity="0.6"
+                                                   IsVisible="{Binding SelectedRepository.HasStorage}" />
+                                    </StackPanel>
+                                </Border>
+
                                 <Border IsVisible="{Binding SelectedRepository.IsKeyfile}" Padding="12,10" CornerRadius="6" BorderThickness="1"
                                         Background="{DynamicResource WarningBackground}" BorderBrush="{DynamicResource WarningBorder}">
                                     <TextBlock Text="{x:Static res:Strings.KeyfileWarning}" TextWrapping="Wrap" />

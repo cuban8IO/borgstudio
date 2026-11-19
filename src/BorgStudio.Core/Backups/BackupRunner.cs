@@ -159,6 +159,7 @@ public sealed class BackupRunner(BorgClient borg, BackupJobStore jobs, DurationH
             DeduplicatedSize = last?.DeduplicatedSize ?? 0,
             Files = last?.Files ?? 0,
             Message = cancelled ? null : describe(result.Error),
+            OutOfSpace = result.Error.Kind == BorgErrorKind.NoSpace,
         };
     }
 

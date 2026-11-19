@@ -20,6 +20,12 @@ public enum NotificationEvent
 
     /// <summary>A job works again after a failure, a skipped run or warnings were reported.</summary>
     Recovered,
+
+    /// <summary>A repository's storage has less free space than its warning threshold.</summary>
+    StorageLow,
+
+    /// <summary>A repository's storage is full (see <see cref="Storage.StorageFullCriteria"/>).</summary>
+    StorageFull,
 }
 
 /// <summary>How a channel's messages reach their receiver.</summary>
@@ -28,7 +34,11 @@ public abstract record NotificationChannel
     public bool Enabled { get; init; }
 
     /// <summary>The events this channel reports.</summary>
-    public List<NotificationEvent> Events { get; init; } = [NotificationEvent.Failed, NotificationEvent.Skipped, NotificationEvent.Recovered];
+    public List<NotificationEvent> Events { get; init; } =
+    [
+        NotificationEvent.Failed, NotificationEvent.Skipped, NotificationEvent.Recovered, NotificationEvent.StorageLow,
+        NotificationEvent.StorageFull,
+    ];
 
     [JsonIgnore]
     public bool IsConfigured => this switch
@@ -127,6 +137,9 @@ public sealed record NotificationSettings
     /// then reported as <see cref="NotificationEvent.Recovered"/>.
     /// </summary>
     public bool SuppressRepeats { get; init; } = true;
+
+    /// <summary>When a repository's storage counts as full.</summary>
+    public Storage.StorageFullCriteria StorageFull { get; init; } = new();
 
     [JsonIgnore]
     public IEnumerable<NotificationChannel> Channels => [System, Email, Webhook];

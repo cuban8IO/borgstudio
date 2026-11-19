@@ -100,6 +100,9 @@ public sealed record BackupRunSummary
     /// <summary>Why it was <see cref="BackupOutcome.Skipped"/>.</summary>
     public BackupSkipReason? SkipReason { get; init; }
 
+    /// <summary>The backup failed because the repository's disk or server is full.</summary>
+    public bool OutOfSpace { get; init; }
+
     /// <summary>The clean-up after the backup (prune + compact); <c>null</c> if the job has none or the backup failed.</summary>
     public CleanupSummary? Cleanup { get; init; }
 }

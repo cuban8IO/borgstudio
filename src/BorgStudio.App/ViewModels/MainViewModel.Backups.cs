@@ -35,7 +35,7 @@ public partial class MainViewModel
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(RunJobCommand), nameof(CancelBackupCommand), nameof(DeleteJobCommand), nameof(EditJobCommand),
         nameof(TestRepositoryCommand), nameof(ExportKeyCommand), nameof(RemoveRepositoryCommand), nameof(EditRepositoryCommand),
-        nameof(CleanUpJobCommand), nameof(FreeSpaceCommand))]
+        nameof(CleanUpJobCommand), nameof(FreeSpaceCommand), nameof(MeasureStorageCommand))]
     public partial bool IsBackupRunning { get; private set; }
 
     /// <summary>Completes when the running backup (if any) has ended.</summary>
@@ -91,6 +91,7 @@ public partial class MainViewModel
         RefreshRepositoryJobs();
         _services.Archives.Remove(repositoryId);
         _services.Durations.Remove(repositoryId);
+        StorageStore.Remove(repositoryId);
     }
 
     // --- New / edit / delete ---
@@ -181,7 +182,12 @@ public partial class MainViewModel
         var borg = Borg!;
         var summary = await RunWithCardAsync(job, (report, cancellationToken) =>
             Runner.RunAsync(new BackupRunRequest(borg, location, job, passphrase.Value, ssh.Access), report, cancellationToken));
+        // Turned away (another run is busy): that one measures and reports.
+        if (summary.SkipReason == BackupSkipReason.RepositoryBusy)
+            return;
+        var usage = await MeasureAfterBackupAsync(item.Config, borg, location, passphrase.Value, ssh.Access);
         await NotifyRunAsync(job, summary);
+        await NotifyStorageAsync(item.Config, usage);
     }
 
     /// <summary>
@@ -234,6 +240,8 @@ public partial class MainViewModel
         IsBackupRunning = false;
         if (summary.Outcome != BackupOutcome.Skipped)
             ArchivesChanged(job.RepositoryId);
+        // A scheduled run in the background has measured the storage meanwhile.
+        RefreshStorage(job.RepositoryId);
         return summary;
     }
 

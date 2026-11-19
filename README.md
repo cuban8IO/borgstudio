@@ -206,6 +206,13 @@ section gets the new version number.
   the webhook’s token are kept like passphrases (in the vault with a PIN – scheduled runs use their key – otherwise in
   the system keychain) and travel with an export. Sending problems never fail a backup; they go to
   `logs/notifications.log`.
+- Storage (repository overview → Storage): after every backup – and with "Measure" – BorgStudio measures how full the
+  repository’s storage is and shows it as a bar: the local disk, `df` on the server for SSH keys that may run more than
+  `borg serve`, otherwise the repository’s size from borg against a capacity entered in the repository editor
+  (Advanced; e.g. the size of a storage box). Below a threshold per repository (10 % free by default) it counts as
+  almost full; as full below 1 % free, with less free than the last backups added, or after a backup failed for lack
+  of space (each switchable in Tools → Notifications). Both are new notification events, reported once per level.
+  borg’s “No space left on device” and “Insufficient free space” are now recognized as such.
 
 **Fixed**
 - BorgStudio no longer crashes at startup when .NET runs without culture data (Linux without ICU).

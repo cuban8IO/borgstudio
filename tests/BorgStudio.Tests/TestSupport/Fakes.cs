@@ -45,6 +45,9 @@ public sealed class FakeBorg : IProcessRunner
 
     public string InfoError { get; set; } = "Repository.DoesNotExist";
 
+    /// <summary>What "info" reports the repository takes up (unique compressed size).</summary>
+    public long RepositorySize { get; set; } = 300L * 1024 * 1024 * 1024;
+
     /// <summary>The passphrase "info" accepts (for encrypted repositories).</summary>
     public string? CorrectPassphrase { get; set; }
 
@@ -162,7 +165,8 @@ public sealed class FakeBorg : IProcessRunner
             "info" when EncryptionMode is null => Error(InfoError),
             "info" when EncryptionMode != "none" && CorrectPassphrase is not null && passphrase != CorrectPassphrase
                 => Error("PassphraseWrong"),
-            "info" => Result(0, $$$"""{"encryption": {"mode": "{{{EncryptionMode}}}"}, "repository": {"id": "repo-id-1"}}"""),
+            "info" => Result(0, $$$"""{"encryption": {"mode": "{{{EncryptionMode}}}"}, "repository": {"id": "repo-id-1"}, "cache": {"stats": {"unique_csize": """
+                + RepositorySize.ToString(CultureInfo.InvariantCulture) + "}}}"),
             _ => Result(2, ""),
         };
     }

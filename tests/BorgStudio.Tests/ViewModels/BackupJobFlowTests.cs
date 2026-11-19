@@ -25,6 +25,8 @@ public sealed class BackupJobFlowTests : IDisposable
             EncryptionMode = "none",
         };
         _test.Store.Save([_repository]);
+        // A local repository has its folder (the storage is measured on its disk after a backup).
+        Directory.CreateDirectory(_test.Directory.Combine("repo"));
         Directory.CreateDirectory(Source);
     }
 

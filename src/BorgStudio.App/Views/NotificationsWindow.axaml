@@ -172,6 +172,17 @@
                             <TextBlock Text="{x:Static res:Strings.NotifySuppressRepeats}" TextWrapping="Wrap" />
                         </CheckBox>
                         <TextBlock Text="{x:Static res:Strings.NotifyPerJobHint}" Classes="hint" />
+                        <TextBlock Text="{x:Static res:Strings.NotifyStorageFullLabel}" Classes="label" />
+                        <CheckBox IsChecked="{Binding FullBelowOnePercent}">
+                            <TextBlock Text="{x:Static res:Strings.NotifyFullBelowOnePercent}" TextWrapping="Wrap" />
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding FullNextBackupWontFit}">
+                            <TextBlock Text="{x:Static res:Strings.NotifyFullNextBackup}" TextWrapping="Wrap" />
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding FullBackupFailed}">
+                            <TextBlock Text="{x:Static res:Strings.NotifyFullBackupFailed}" TextWrapping="Wrap" />
+                        </CheckBox>
+                        <TextBlock Text="{x:Static res:Strings.NotifyStorageHint}" Classes="hint" />
                     </StackPanel>
                 </Border>
             </StackPanel>

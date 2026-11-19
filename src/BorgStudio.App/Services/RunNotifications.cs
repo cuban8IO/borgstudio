@@ -3,7 +3,9 @@ using BorgStudio.App.Resources;
 using BorgStudio.App.ViewModels;
 using BorgStudio.Core.Backups;
 using BorgStudio.Core.Notifications;
+using BorgStudio.Core.Repositories;
 using BorgStudio.Core.Security;
+using BorgStudio.Core.Storage;
 
 namespace BorgStudio.App.Services;
 
@@ -38,6 +40,42 @@ public sealed class RunNotifications(AppServices services)
         foreach (var result in results)
             AppLog.Write(LogFile, $"{job.Name}: {decision.Event} → {result.Channel}: {result.Error ?? "sent"}", services.Jobs.DataDirectory);
         return results;
+    }
+
+    /// <summary>
+    /// Reports a repository's storage when it got almost full or full (see <see cref="StorageLevels.Evaluate"/>). Called
+    /// after each run, with the measurement taken then (<c>null</c>: not measured – only a backup that ran out of space counts).
+    /// </summary>
+    public async Task<IReadOnlyList<ChannelResult>> NotifyStorageAsync(RepositoryConfig repository, StorageUsage? usage, Vault vault,
+        CancellationToken cancellationToken = default)
+    {
+        if (services.Notifier is not { } notifier)
+            return [];
+        var settings = services.Settings.Load().Notifications;
+        var level = StorageLevels.Evaluate(usage, repository, services.Jobs.Load(), settings.StorageFull);
+        var decision = Policy.DecideStorage(repository.Id, level);
+        if (decision is null || !settings.AnyEnabled || (decision.IsRepeat && settings.SuppressRepeats))
+            return [];
+
+        var message = ComposeStorage(decision.Event, repository.Name, usage);
+        var secrets = new NotificationSecrets(vault, services.SecretStore);
+        var results = await notifier.SendAsync(settings, message, secrets.Get, cancellationToken);
+        foreach (var result in results)
+            AppLog.Write(LogFile, $"{repository.Name}: {decision.Event} → {result.Channel}: {result.Error ?? "sent"}", services.Jobs.DataDirectory);
+        return results;
+    }
+
+    public static NotificationMessage ComposeStorage(NotificationEvent notificationEvent, string repository, StorageUsage? usage)
+    {
+        var lines = new List<string>();
+        if (usage is not null && BorgTexts.StorageUsage(usage) is { } text)
+            lines.Add(text);
+        if (notificationEvent == NotificationEvent.StorageFull)
+            lines.Add(Strings.NotifyStorageFullHint);
+        lines.Add(BorgTexts.Format(Strings.NotifyLineComputer, Environment.MachineName));
+        var title = BorgTexts.Format(notificationEvent == NotificationEvent.StorageFull ? Strings.NotifyTitleStorageFull : Strings.NotifyTitleStorageLow,
+            repository);
+        return new NotificationMessage(notificationEvent, title, string.Join("\n", lines)) { Repository = repository, Storage = usage };
     }
 
     public static string Title(NotificationEvent notificationEvent, string jobName) => BorgTexts.Format(notificationEvent switch

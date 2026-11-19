@@ -25,6 +25,7 @@ internal static class BorgTexts
             BorgErrorKind.UnsupportedPath => Strings.BorgErrorUnsupportedPath,
             BorgErrorKind.MountNotAllowed => Strings.BorgErrorMountNotAllowed,
             BorgErrorKind.MountUnavailable => Strings.BorgErrorMountUnavailable,
+            BorgErrorKind.NoSpace => Strings.BorgErrorNoSpace,
             _ => Strings.BorgErrorOther,
         };
 
@@ -136,6 +137,15 @@ internal static class BorgTexts
         { Error: { } error } => Format(Strings.CleanupCompactFailed, cleanup.PrunedArchives, error),
         { FreedBytes: { } freed } => Format(Strings.CleanupResult, cleanup.PrunedArchives, Size(freed)),
         _ => Format(Strings.CleanupResultNoSize, cleanup.PrunedArchives),
+    };
+
+    /// <summary>"120 GB von 1,00 TB belegt · 880 GB frei (88 %)", or the repository's size alone; <c>null</c> if nothing is known.</summary>
+    public static string? StorageUsage(Core.Storage.StorageUsage usage) => usage switch
+    {
+        { Total: { } total, Free: { } free, FreeFraction: { } fraction } => Format(Strings.StorageUsed, Size(total - free), Size(total), Size(free),
+            Math.Round(fraction * 100, fraction < 0.1 ? 1 : 0)),
+        { RepositorySize: { } size } => Format(Strings.StorageRepositoryOnly, Size(size)),
+        _ => null,
     };
 
     /// <summary>"512 B", "3,4 MB", "1,25 GB" (binary units, current culture).</summary>
