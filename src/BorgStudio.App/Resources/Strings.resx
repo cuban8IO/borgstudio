@@ -2684,4 +2684,154 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
   <data name="DashFullBy" xml:space="preserve">
     <value>full ~{0}</value>
   </data>
+  <data name="CheckHeader" xml:space="preserve">
+    <value>Integrity check</value>
+  </data>
+  <data name="CheckRun" xml:space="preserve">
+    <value>Check</value>
+  </data>
+  <data name="CheckRunTip" xml:space="preserve">
+    <value>borg check: checks the repository and the archives' metadata</value>
+  </data>
+  <data name="CheckRunFull" xml:space="preserve">
+    <value>Check thoroughly …</value>
+  </data>
+  <data name="CheckRunFullTip" xml:space="preserve">
+    <value>borg check --verify-data: also reads and decrypts all data</value>
+  </data>
+  <data name="Repair" xml:space="preserve">
+    <value>Repair …</value>
+  </data>
+  <data name="RepairTip" xml:space="preserve">
+    <value>borg check --repair: repairs what borg can</value>
+  </data>
+  <data name="CheckFullTitle" xml:space="preserve">
+    <value>Check thoroughly</value>
+  </data>
+  <data name="CheckFullMessageRemote" xml:space="preserve">
+    <value>A thorough check downloads all data of the repository and decrypts it – that takes long and uses your connection.</value>
+  </data>
+  <data name="CheckFullMessageLocal" xml:space="preserve">
+    <value>A thorough check reads all data of the repository and decrypts it – that can take a long time.</value>
+  </data>
+  <data name="CheckFullSize" xml:space="preserve">
+    <value>The repository holds about {0}.</value>
+  </data>
+  <data name="CheckFullSizeUnknown" xml:space="preserve">
+    <value>Its size is not known yet (measuring the storage shows it).</value>
+  </data>
+  <data name="CheckFullConfirm" xml:space="preserve">
+    <value>Check thoroughly</value>
+  </data>
+  <data name="RepairTitle" xml:space="preserve">
+    <value>Repair repository</value>
+  </data>
+  <data name="RepairMessage" xml:space="preserve">
+    <value>borg check --repair tries to repair „{0}“. Damaged data that cannot be saved is removed or replaced with zeros – files in the archives may get lost or broken. If you can, make a copy of the repository first (its folder, or on the server) and look for the cause (disk, memory, connection).</value>
+  </data>
+  <data name="RepairContinue" xml:space="preserve">
+    <value>Continue …</value>
+  </data>
+  <data name="RepairConfirmMessage" xml:space="preserve">
+    <value>Really repair now? This cannot be undone.</value>
+  </data>
+  <data name="RepairConfirm" xml:space="preserve">
+    <value>Repair</value>
+  </data>
+  <data name="CheckBusy" xml:space="preserve">
+    <value>A backup or another check is working on this repository right now. Try again when it has finished.</value>
+  </data>
+  <data name="CheckPhaseSegments" xml:space="preserve">
+    <value>Checking the repository's segments</value>
+  </data>
+  <data name="CheckPhaseData" xml:space="preserve">
+    <value>Reading and decrypting all data</value>
+  </data>
+  <data name="CheckPhaseArchives" xml:space="preserve">
+    <value>Checking the archives</value>
+  </data>
+  <data name="CheckWorking" xml:space="preserve">
+    <value>Checking the repository …</value>
+  </data>
+  <data name="CheckWorkingFull" xml:space="preserve">
+    <value>Checking the repository thoroughly …</value>
+  </data>
+  <data name="CheckWorkingRepair" xml:space="preserve">
+    <value>Repairing the repository …</value>
+  </data>
+  <data name="CheckResultOk" xml:space="preserve">
+    <value>Check finished: no errors found.</value>
+  </data>
+  <data name="CheckResultProblems" xml:space="preserve">
+    <value>Check finished: borg found errors ({0} messages, listed under „Integrity check“).</value>
+  </data>
+  <data name="CheckResultCancelled" xml:space="preserve">
+    <value>Check cancelled.</value>
+  </data>
+  <data name="CheckResultFailed" xml:space="preserve">
+    <value>The check could not run: {0}</value>
+  </data>
+  <data name="CheckStateOk" xml:space="preserve">
+    <value>No errors found</value>
+  </data>
+  <data name="CheckStateProblems" xml:space="preserve">
+    <value>Errors found</value>
+  </data>
+  <data name="CheckStateNever" xml:space="preserve">
+    <value>Not checked yet</value>
+  </data>
+  <data name="CheckLast" xml:space="preserve">
+    <value>Last checked {0} · {1} · duration {2}</value>
+  </data>
+  <data name="CheckNeverHint" xml:space="preserve">
+    <value>A check reads the repository and finds damage early – before you need a restore.</value>
+  </data>
+  <data name="CheckAttemptCancelled" xml:space="preserve">
+    <value>The last attempt ({0}) was cancelled.</value>
+  </data>
+  <data name="CheckAttemptFailed" xml:space="preserve">
+    <value>The last attempt ({0}) failed: {1}</value>
+  </data>
+  <data name="CheckMessagesHeader" xml:space="preserve">
+    <value>Messages from borg ({0})</value>
+  </data>
+  <data name="CheckProblemsHint" xml:space="preserve">
+    <value>Look for the cause first (disk, memory, connection). „Repair“ fixes what borg can – damaged data may get lost doing so.</value>
+  </data>
+  <data name="CheckDepthNormal" xml:space="preserve">
+    <value>normal</value>
+  </data>
+  <data name="CheckDepthFull" xml:space="preserve">
+    <value>thorough</value>
+  </data>
+  <data name="CheckDepthRepair" xml:space="preserve">
+    <value>repair</value>
+  </data>
+  <data name="NotifyEventCheckFailed" xml:space="preserve">
+    <value>Check errors</value>
+  </data>
+  <data name="NotifyTitleCheckFailed" xml:space="preserve">
+    <value>Check found errors: {0}</value>
+  </data>
+  <data name="NotifyTitleCheckRecovered" xml:space="preserve">
+    <value>Check without errors again: {0}</value>
+  </data>
+  <data name="NotifyLineCheck" xml:space="preserve">
+    <value>Checked: {0} · {1} · duration {2}</value>
+  </data>
+  <data name="NotifyLineMoreMessages" xml:space="preserve">
+    <value>… and {0} more messages</value>
+  </data>
+  <data name="NotifyCheckFailedHint" xml:space="preserve">
+    <value>Open the repository in BorgStudio to see all messages and what you can do.</value>
+  </data>
+  <data name="DashCheckProblems" xml:space="preserve">
+    <value>Check found errors</value>
+  </data>
+  <data name="DashChecked" xml:space="preserve">
+    <value>checked {0}</value>
+  </data>
+  <data name="DashNeverChecked" xml:space="preserve">
+    <value>never checked</value>
+  </data>
 </root>

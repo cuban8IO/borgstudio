@@ -35,7 +35,8 @@ public partial class MainViewModel
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(RunJobCommand), nameof(CancelBackupCommand), nameof(DeleteJobCommand), nameof(EditJobCommand),
         nameof(TestRepositoryCommand), nameof(ExportKeyCommand), nameof(RemoveRepositoryCommand), nameof(EditRepositoryCommand),
-        nameof(CleanUpJobCommand), nameof(FreeSpaceCommand), nameof(MeasureStorageCommand))]
+        nameof(CleanUpJobCommand), nameof(FreeSpaceCommand), nameof(MeasureStorageCommand), nameof(CheckRepositoryCommand),
+        nameof(CheckRepositoryFullCommand), nameof(RepairRepositoryCommand))]
     public partial bool IsBackupRunning { get; private set; }
 
     /// <summary>Completes when the running backup (if any) has ended.</summary>
@@ -96,6 +97,8 @@ public partial class MainViewModel
         _services.Archives.Remove(repositoryId);
         _services.Durations.Remove(repositoryId);
         StorageStore.Remove(repositoryId);
+        CheckStore.Remove(repositoryId);
+        NotificationPolicy.ForDataDirectory(_services.Jobs.DataDirectory).ForgetRepository(repositoryId);
     }
 
     // --- New / edit / delete ---

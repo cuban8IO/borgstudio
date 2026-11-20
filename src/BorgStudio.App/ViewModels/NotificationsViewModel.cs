@@ -397,5 +397,6 @@ public sealed partial class NotificationsViewModel : ViewModelBase
         new(NotificationEvent.StorageLow, Strings.NotifyEventStorageLow, channel.Events.Contains(NotificationEvent.StorageLow)),
         new(NotificationEvent.StorageFull, Strings.NotifyEventStorageFull, channel.Events.Contains(NotificationEvent.StorageFull)),
         new(NotificationEvent.Overdue, Strings.NotifyEventOverdue, channel.Events.Contains(NotificationEvent.Overdue)),
+        new(NotificationEvent.CheckFailed, Strings.NotifyEventCheckFailed, channel.Events.Contains(NotificationEvent.CheckFailed)),
     ];
 }

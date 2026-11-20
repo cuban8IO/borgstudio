@@ -425,6 +425,42 @@ public sealed class BorgClientIntegrationTests : IDisposable
         Assert.Equal(BorgErrorKind.PassphraseWrong, wrong.Error?.Kind);
     }
 
+    [BorgFact]
+    public async Task Checks_finds_damage_and_repairs_it()
+    {
+        await _client.InitAsync(Borg, Location(), BorgEncryption.RepokeyBlake2, Passphrase);
+        var source = _directory.Combine("source");
+        Directory.CreateDirectory(source);
+        File.WriteAllBytes(Path.Combine(source, "data.bin"), System.Security.Cryptography.RandomNumberGenerator.GetBytes(2_000_000));
+        Assert.True((await _client.CreateAsync(Borg, Location(), "one", [source], [], Passphrase)).Succeeded);
+
+        var phases = new List<CheckPhase>();
+        var healthy = await _client.CheckAsync(Borg, Location(), Core.Checks.CheckDepth.Full, Passphrase,
+            progress: new SynchronousProgress<BorgCheckProgress>(update => phases.Add(update.Phase)));
+        Assert.True(healthy.Succeeded, healthy.Error?.ToString());
+        Assert.False(healthy.Value!.ProblemsFound);
+        Assert.Equal([CheckPhase.Segments, CheckPhase.Data, CheckPhase.Archives], phases.Distinct());
+
+        // Flip bytes in the middle of the segment that holds the file's data.
+        var segment = new DirectoryInfo(Path.Combine(Location().Url, "data")).EnumerateFiles("*", SearchOption.AllDirectories)
+            .MaxBy(file => file.Length)!;
+        var bytes = File.ReadAllBytes(segment.FullName);
+        bytes[bytes.Length / 2] ^= 0xFF;
+        File.WriteAllBytes(segment.FullName, bytes);
+
+        var damaged = await _client.CheckAsync(Borg, Location(), Core.Checks.CheckDepth.Normal, Passphrase);
+        Assert.True(damaged.Succeeded, damaged.Error?.ToString());
+        Assert.True(damaged.Value!.ProblemsFound);
+        Assert.Contains(damaged.Value.Messages, message => message.Contains("errors found", StringComparison.Ordinal));
+
+        var repaired = await _client.CheckAsync(Borg, Location(), Core.Checks.CheckDepth.Repair, Passphrase);
+        Assert.True(repaired.Succeeded, repaired.Error?.ToString());
+
+        var after = await _client.CheckAsync(Borg, Location(), Core.Checks.CheckDepth.Normal, Passphrase);
+        Assert.True(after.Succeeded, after.Error?.ToString());
+        Assert.False(after.Value!.ProblemsFound, string.Join("\n", after.Value.Messages));
+    }
+
     /// <summary>Calls the progress callback right away (Progress&lt;T&gt; would post it to a thread pool).</summary>
     private sealed class SynchronousProgress<T>(Action<T> report) : IProgress<T>
     {

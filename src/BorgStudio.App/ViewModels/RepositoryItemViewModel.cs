@@ -164,6 +164,51 @@ public sealed partial class RepositoryItemViewModel(RepositoryConfig config, Plu
 
     public bool IsStorageFull => StorageLevel == Core.Storage.StorageLevel.Full;
 
+    // --- Checks ---
+
+    /// <summary>The repository's checks, newest first.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(LastVerdict), nameof(HasCheckProblems), nameof(IsCheckOk), nameof(CheckStateText), nameof(CheckDetailText),
+        nameof(CheckAttemptText), nameof(HasCheckAttempt), nameof(CheckMessages), nameof(HasCheckMessages), nameof(CheckMessagesHeader))]
+    public partial IReadOnlyList<Core.Checks.CheckRecord> Checks { get; set; } = [];
+
+    /// <summary>The last check that ran to its end; <c>null</c> if never checked.</summary>
+    public Core.Checks.CheckRecord? LastVerdict => Checks.FirstOrDefault(record => record.IsVerdict);
+
+    public bool HasCheckProblems => LastVerdict?.Outcome == Core.Checks.CheckOutcome.ProblemsFound;
+
+    public bool IsCheckOk => LastVerdict?.Outcome == Core.Checks.CheckOutcome.Ok;
+
+    /// <summary>"Keine Fehler gefunden", "Fehler gefunden", "Noch nie geprüft".</summary>
+    public string CheckStateText => LastVerdict?.Outcome switch
+    {
+        Core.Checks.CheckOutcome.Ok => Strings.CheckStateOk,
+        Core.Checks.CheckOutcome.ProblemsFound => Strings.CheckStateProblems,
+        _ => Strings.CheckStateNever,
+    };
+
+    /// <summary>"Zuletzt geprüft 20.11.2026 14:03 (normal, 3 Min.)".</summary>
+    public string CheckDetailText => LastVerdict is { } record
+        ? BorgTexts.Format(Strings.CheckLast, record.Started.ToLocalTime().ToString("g", System.Globalization.CultureInfo.CurrentCulture),
+            BorgTexts.CheckDepth(record.Depth), BorgTexts.Duration(record.Duration))
+        : Strings.CheckNeverHint;
+
+    /// <summary>A later attempt that did not get to the end: "Letzter Versuch 21.11.2026 09:12 abgebrochen".</summary>
+    public string CheckAttemptText => Checks.FirstOrDefault() is { IsVerdict: false, Outcome: not Core.Checks.CheckOutcome.Repaired } attempt
+        ? BorgTexts.Format(attempt.Outcome == Core.Checks.CheckOutcome.Cancelled ? Strings.CheckAttemptCancelled : Strings.CheckAttemptFailed,
+            attempt.Started.ToLocalTime().ToString("g", System.Globalization.CultureInfo.CurrentCulture), attempt.Error ?? "")
+        : "";
+
+    public bool HasCheckAttempt => CheckAttemptText.Length > 0;
+
+    /// <summary>What borg reported in the last completed check.</summary>
+    public IReadOnlyList<string> CheckMessages => LastVerdict?.Messages ?? [];
+
+    public bool HasCheckMessages => CheckMessages.Count > 0;
+
+    /// <summary>"Meldungen von borg (12)".</summary>
+    public string CheckMessagesHeader => BorgTexts.Format(Strings.CheckMessagesHeader, CheckMessages.Count);
+
     /// <summary>Name of the key in the vault; <c>null</c> while unknown (locked vault) or if the key is gone.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SshKeyText))]

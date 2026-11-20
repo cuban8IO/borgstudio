@@ -111,6 +111,8 @@ public sealed partial class DashboardRowViewModel
 
         // Each problem with its level; the worst one is told, the others counted.
         var problems = new List<(HealthLevel Level, string Text)>();
+        if (Item.HasCheckProblems)
+            problems.Add((HealthLevel.Critical, Strings.DashCheckProblems));
         if (Item.StorageLevel == StorageLevel.Full)
             problems.Add((HealthLevel.Critical, Strings.DashStorageFull));
         else if (Item.StorageLevel == StorageLevel.Low)
@@ -133,9 +135,10 @@ public sealed partial class DashboardRowViewModel
         }
 
         var lastSuccess = health.Select(entry => entry.Health.LastSuccess).Max();
-        LastBackupText = lastSuccess is { } last
+        LastBackupText = (lastSuccess is { } last
             ? BorgTexts.Format(Strings.DashLastBackup, Ago(now - last))
-            : Strings.DashNeverBackedUp;
+            : Strings.DashNeverBackedUp)
+            + " · " + (Item.LastVerdict is { } check ? BorgTexts.Format(Strings.DashChecked, Ago(now - check.Started)) : Strings.DashNeverChecked);
     }
 
     public RepositoryItemViewModel Item { get; }

@@ -22,6 +22,9 @@ public sealed record NotificationMessage(NotificationEvent Event, string Title, 
     /// <summary>The storage it is about (storage events).</summary>
     public Storage.StorageUsage? Storage { get; init; }
 
+    /// <summary>The check it is about (check events).</summary>
+    public Checks.CheckRecord? Check { get; init; }
+
     /// <summary>Sent with the "Test" button.</summary>
     public bool IsTest { get; init; }
 

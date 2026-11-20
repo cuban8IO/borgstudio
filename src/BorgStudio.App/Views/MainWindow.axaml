@@ -448,6 +448,51 @@
                                     </StackPanel>
                                 </Border>
 
+                                <!-- Integrity check -->
+                                <Border Classes="card">
+                                    <StackPanel Spacing="6">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Text="{x:Static res:Strings.CheckHeader}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                                <Button Content="{x:Static res:Strings.CheckRun}" Command="{Binding CheckRepositoryCommand}"
+                                                        ToolTip.Tip="{x:Static res:Strings.CheckRunTip}" />
+                                                <Button Content="{x:Static res:Strings.CheckRunFull}" Command="{Binding CheckRepositoryFullCommand}"
+                                                        ToolTip.Tip="{x:Static res:Strings.CheckRunFullTip}" />
+                                            </StackPanel>
+                                        </Grid>
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <Panel VerticalAlignment="Center" IsVisible="{Binding SelectedRepository.LastVerdict, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                                <Ellipse Width="10" Height="10" Fill="{DynamicResource ChartOkBrush}"
+                                                         IsVisible="{Binding SelectedRepository.IsCheckOk}" />
+                                                <Ellipse Width="10" Height="10" Fill="{DynamicResource ChartFailBrush}"
+                                                         IsVisible="{Binding SelectedRepository.HasCheckProblems}" />
+                                            </Panel>
+                                            <TextBlock Text="{Binding SelectedRepository.CheckStateText}" FontWeight="SemiBold" />
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding SelectedRepository.CheckDetailText}" TextWrapping="Wrap" FontSize="12" Opacity="0.7" />
+                                        <TextBlock Text="{Binding SelectedRepository.CheckAttemptText}" TextWrapping="Wrap" FontSize="12"
+                                                   IsVisible="{Binding SelectedRepository.HasCheckAttempt}" Foreground="{DynamicResource WarningBorder}" />
+                                        <StackPanel Spacing="8" IsVisible="{Binding SelectedRepository.HasCheckProblems}">
+                                            <TextBlock Text="{x:Static res:Strings.CheckProblemsHint}" TextWrapping="Wrap" />
+                                            <Button Content="{x:Static res:Strings.Repair}" Command="{Binding RepairRepositoryCommand}"
+                                                    ToolTip.Tip="{x:Static res:Strings.RepairTip}" />
+                                        </StackPanel>
+                                        <Expander Header="{Binding SelectedRepository.CheckMessagesHeader}" HorizontalAlignment="Stretch"
+                                                  IsVisible="{Binding SelectedRepository.HasCheckMessages}">
+                                            <ScrollViewer MaxHeight="220">
+                                                <ItemsControl ItemsSource="{Binding SelectedRepository.CheckMessages}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="sys:String">
+                                                            <SelectableTextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="12"
+                                                                                 FontFamily="Cascadia Code, Consolas, Menlo, monospace" Margin="0,0,0,4" />
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </ScrollViewer>
+                                        </Expander>
+                                    </StackPanel>
+                                </Border>
+
                                 <Border IsVisible="{Binding SelectedRepository.IsKeyfile}" Padding="12,10" CornerRadius="6" BorderThickness="1"
                                         Background="{DynamicResource WarningBackground}" BorderBrush="{DynamicResource WarningBorder}">
                                     <TextBlock Text="{x:Static res:Strings.KeyfileWarning}" TextWrapping="Wrap" />

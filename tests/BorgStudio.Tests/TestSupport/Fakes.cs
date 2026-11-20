@@ -139,6 +139,8 @@ public sealed class FakeBorg : IProcessRunner
             return Unmount(mountPoint);
         if (arguments[0] == "compact")
             return CompactAsync(standardErrorLine, cancellationToken);
+        if (arguments[0] == "check")
+            return CheckAsync(arguments, environment, standardErrorLine, cancellationToken);
 
         if (arguments is ["list", ..] && arguments.Contains("--json-lines"))
             return ContentsAsync(arguments, standardOutputLine, cancellationToken);
@@ -358,6 +360,44 @@ public sealed class FakeBorg : IProcessRunner
         standardErrorLine?.Invoke(
             $$"""{"type": "log_message", "time": 0, "message": "compaction freed about {{CompactFreed}} repository space.", "levelname": "INFO", "name": "borg.repository"}""");
         return Result(0, "");
+    }
+
+    /// <summary>The damage "check" finds (logged as errors, exit code 1); "check --repair" repairs it.</summary>
+    public List<string> CheckProblems { get; } = [];
+
+    /// <summary>When set, "check" fails with this message id.</summary>
+    public string? CheckError { get; set; }
+
+    /// <summary>Called after the first progress line of "check" (e.g. to cancel in the middle).</summary>
+    public Action? DuringCheck { get; set; }
+
+    /// <summary>Like borg 1.4: segments, (verify-data: data,) archives – each half-way, then finished.</summary>
+    private Task<ProcessResult?> CheckAsync(IReadOnlyList<string> arguments, IReadOnlyDictionary<string, string?>? environment,
+        Action<string>? standardErrorLine, CancellationToken cancellationToken)
+    {
+        if (CheckError is not null)
+            return Error(CheckError);
+        var repair = arguments.Contains("--repair");
+        if (repair && environment?.GetValueOrDefault("BORG_CHECK_I_KNOW_WHAT_I_AM_DOING") != "YES")
+            return Error("CancelledByUser");
+
+        List<string> phases = ["repository.check", .. arguments.Contains("--verify-data") ? ["check.verify_data"] : Array.Empty<string>(),
+            "check.rebuild_refcounts"];
+        foreach (var phase in phases)
+        {
+            standardErrorLine?.Invoke(
+                $$"""{"message": "Checking 50.0%", "current": 1, "total": 2, "info": null, "operation": 1, "msgid": "{{phase}}", "type": "progress_percent", "finished": false, "time": 0}""");
+            if (phase == phases[0])
+                DuringCheck?.Invoke();
+            cancellationToken.ThrowIfCancellationRequested();
+            standardErrorLine?.Invoke($$"""{"operation": 1, "msgid": "{{phase}}", "type": "progress_percent", "finished": true, "time": 0}""");
+        }
+        foreach (var problem in CheckProblems)
+            standardErrorLine?.Invoke($$"""{"type": "log_message", "time": 0, "message": "{{problem}}", "levelname": "ERROR", "name": "borg.repository"}""");
+        var found = CheckProblems.Count > 0;
+        if (repair)
+            CheckProblems.Clear();
+        return Result(found ? 1 : 0, "");
     }
 
     public static string ArchiveId(string name) =>
