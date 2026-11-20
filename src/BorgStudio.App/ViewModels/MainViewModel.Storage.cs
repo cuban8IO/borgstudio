@@ -13,15 +13,18 @@ public partial class MainViewModel
 {
     private StorageUsageStore StorageStore => StorageUsageStore.ForDataDirectory(_services.Jobs.DataDirectory);
 
-    /// <summary>Shows the last measurement of a repository (or of all) and how full that counts as.</summary>
+    /// <summary>Shows the last measurement of a repository (or of all), how full that counts as, and when it will be full.</summary>
     internal void RefreshStorage(Guid? repositoryId = null)
     {
         var store = StorageStore;
         var criteria = Settings.Notifications.StorageFull;
+        var now = DateTimeOffset.Now;
         foreach (var item in Repositories.Where(item => repositoryId is null || item.Config.Id == repositoryId))
         {
             item.Storage = store.Get(item.Config.Id);
             item.StorageLevel = StorageLevels.Evaluate(item.Storage, item.Config, _jobs, criteria);
+            var runs = _jobs.Where(job => job.RepositoryId == item.Config.Id).SelectMany(job => Runner.History.Get(job.Id));
+            item.Forecast = StorageForecast.Compute(store.History.Get(item.Config.Id), item.Storage, runs, now);
         }
     }
 
@@ -59,9 +62,9 @@ public partial class MainViewModel
 
     /// <summary>After a backup by hand: measures the storage, shows it and returns it for the notifications.</summary>
     private async Task<StorageUsage?> MeasureAfterBackupAsync(RepositoryConfig repository, BorgInstallation borg, RepositoryLocation location,
-        string? passphrase, SshAccess? ssh)
+        string? passphrase, SshAccess? ssh, RepositoryStats? stats)
     {
-        var usage = await Task.Run(() => ScheduledJobRunner.MeasureStorageAsync(_services, repository, borg, location, passphrase, ssh));
+        var usage = await Task.Run(() => ScheduledJobRunner.MeasureStorageAsync(_services, repository, borg, location, passphrase, ssh, stats));
         RefreshStorage(repository.Id);
         return usage;
     }

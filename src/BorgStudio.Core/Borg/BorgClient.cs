@@ -534,7 +534,8 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
             stats.GetProperty("deduplicated_size").GetInt64(),
             stats.GetProperty("nfiles").GetInt64(),
             TimeSpan.FromSeconds(archive.TryGetProperty("duration", out var duration) ? duration.GetDouble() : 0),
-            []);
+            [],
+            Storage.RepositoryStats.FromBorgJson(document.RootElement));
     }
 
     /// <summary>
@@ -975,7 +976,8 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
             repository.GetProperty("id").GetString()!,
             encryption.GetProperty("mode").GetString()!,
             lastModified,
-            size);
+            size,
+            Storage.RepositoryStats.FromBorgJson(document.RootElement));
     }
 
     private static bool IsUrl(string repository) => repository.Contains("://", StringComparison.Ordinal);

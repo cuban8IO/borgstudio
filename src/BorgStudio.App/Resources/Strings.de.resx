@@ -2427,4 +2427,46 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
   <data name="JobEditorWebhook" xml:space="preserve">
     <value>Darf über den eingehenden Webhook gestartet werden (Extras → Einstellungen)</value>
   </data>
+  <data name="StorageLegendRepository" xml:space="preserve">
+    <value>Dieses Repository {0}</value>
+  </data>
+  <data name="StorageLegendOther" xml:space="preserve">
+    <value>Andere Daten {0}</value>
+  </data>
+  <data name="StorageLegendFree" xml:space="preserve">
+    <value>Frei {0} von {1} ({2} %)</value>
+  </data>
+  <data name="StorageRatios" xml:space="preserve">
+    <value>Ersparnis durch Deduplizierung und Kompression: {0} % · Deduplizierung {1} : 1 · Kompression {2} : 1</value>
+  </data>
+  <data name="StorageGrowing" xml:space="preserve">
+    <value>Wächst um etwa {0} pro Woche</value>
+  </data>
+  <data name="StorageNotGrowing" xml:space="preserve">
+    <value>Wächst derzeit nicht.</value>
+  </data>
+  <data name="StorageFullBy" xml:space="preserve">
+    <value>→ voll voraussichtlich {0}</value>
+  </data>
+  <data name="StorageFullIn" xml:space="preserve">
+    <value>→ voll in etwa {0} Tagen</value>
+  </data>
+  <data name="StorageFullRange" xml:space="preserve">
+    <value>(Spanne {0} bis {1})</value>
+  </data>
+  <data name="StorageFullEarliest" xml:space="preserve">
+    <value>(frühestens {0})</value>
+  </data>
+  <data name="StoragePartStart" xml:space="preserve">
+    <value>Anfang {0}</value>
+  </data>
+  <data name="StoragePartMiddle" xml:space="preserve">
+    <value>Mitte {0}</value>
+  </data>
+  <data name="StoragePartEnd" xml:space="preserve">
+    <value>Ende {0}</value>
+  </data>
+  <data name="StorageForecastFromBackups" xml:space="preserve">
+    <value>Geschätzt aus den Sicherungen der letzten 30 Tage, bis genug Messungen vorliegen (eine pro Tag, nach Sicherungen oder mit „Messen“).</value>
+  </data>
 </root>

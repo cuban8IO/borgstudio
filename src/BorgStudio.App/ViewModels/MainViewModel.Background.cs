@@ -255,7 +255,7 @@ public partial class MainViewModel
 
         try
         {
-            var summary = await RunWithCardAsync(job, (report, cancellationToken) => runner.RunAsync(job.Id, report, cancellationToken));
+            var summary = (await RunWithCardAsync(job, (report, cancellationToken) => runner.RunAsync(job.Id, report, cancellationToken))).Summary;
             var reason = summary.SkipReason is { } skip ? BorgTexts.SkipReason(skip) : summary.Message;
             ScheduledRun.Log($"{job.Name} (background): {summary.Outcome}{(reason is null ? "" : $" – {reason}")}", _services.Jobs.DataDirectory);
             return summary;

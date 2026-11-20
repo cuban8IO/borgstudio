@@ -98,19 +98,31 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
             return (result, null);
 
         // How full the storage is now (for the overview and the "almost full" notification).
-        var usage = await MeasureStorageAsync(services, repository, borg, location, passphrase, ssh);
+        var usage = await MeasureStorageAsync(services, repository, borg, location, passphrase, ssh, result.Repository);
         return (result, new MeasuredStorage(repository, usage));
     }
 
-    /// <summary>Measures and keeps the repository's storage; <c>null</c> if that did not work (never fails the run).</summary>
+    /// <summary>
+    /// Measures and keeps the repository's storage, with the statistics borg reported with the backup; <c>null</c> if that
+    /// did not work (never fails the run).
+    /// </summary>
     internal static async Task<StorageUsage?> MeasureStorageAsync(AppServices services, RepositoryConfig repository, BorgInstallation borg,
-        RepositoryLocation location, string? passphrase, SshAccess? ssh, CancellationToken cancellationToken = default)
+        RepositoryLocation location, string? passphrase, SshAccess? ssh, RepositoryStats? stats = null,
+        CancellationToken cancellationToken = default)
     {
         try
         {
+            var store = StorageUsageStore.ForDataDirectory(services.Jobs.DataDirectory);
             var usage = await new StorageProbe(services.BorgClient).MeasureAsync(repository, borg, location, passphrase, ssh, cancellationToken);
             if (usage is not null)
-                StorageUsageStore.ForDataDirectory(services.Jobs.DataDirectory).Set(repository.Id, usage);
+            {
+                usage = stats is null ? usage : usage with { Repository = stats };
+                store.Set(repository.Id, usage);
+            }
+            else if (stats is not null)
+            {
+                store.SetStats(repository.Id, stats);
+            }
             return usage;
         }
         catch (Exception exception) when (exception is not OperationCanceledException)

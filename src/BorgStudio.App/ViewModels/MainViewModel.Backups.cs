@@ -180,12 +180,13 @@ public partial class MainViewModel
             return;
 
         var borg = Borg!;
-        var summary = await RunWithCardAsync(job, (report, cancellationToken) =>
+        var result = await RunWithCardAsync(job, (report, cancellationToken) =>
             Runner.RunAsync(new BackupRunRequest(borg, location, job, passphrase.Value, ssh.Access), report, cancellationToken));
+        var summary = result.Summary;
         // Turned away (another run is busy): that one measures and reports.
         if (summary.SkipReason == BackupSkipReason.RepositoryBusy)
             return;
-        var usage = await MeasureAfterBackupAsync(item.Config, borg, location, passphrase.Value, ssh.Access);
+        var usage = await MeasureAfterBackupAsync(item.Config, borg, location, passphrase.Value, ssh.Access, result.Repository);
         await NotifyRunAsync(job, summary);
         await NotifyStorageAsync(item.Config, usage);
     }
@@ -194,7 +195,7 @@ public partial class MainViewModel
     /// Runs a backup with its card in the window: progress, the expected total, cancelling. The window's own runs and the
     /// ones the background scheduler starts.
     /// </summary>
-    private async Task<BackupRunSummary> RunWithCardAsync(BackupJob job,
+    private async Task<BackupRunResult> RunWithCardAsync(BackupJob job,
         Func<IBackupRunReport, CancellationToken, Task<BackupRunResult>> start)
     {
         var run = new BackupRunViewModel(job);
@@ -242,7 +243,7 @@ public partial class MainViewModel
             ArchivesChanged(job.RepositoryId);
         // A scheduled run in the background has measured the storage meanwhile.
         RefreshStorage(job.RepositoryId);
-        return summary;
+        return result;
     }
 
     /// <summary>Runs backups and clean-ups – the same for the window, the background and scheduled runs.</summary>

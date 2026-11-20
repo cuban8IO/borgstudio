@@ -31,7 +31,8 @@ public sealed record BackupRunRequest(BorgInstallation Borg, RepositoryLocation 
     bool Scheduled = false);
 
 /// <summary>A finished run: its summary (also saved with the job and in its history) and borg's warnings.</summary>
-public sealed record BackupRunResult(BackupRunSummary Summary, IReadOnlyList<string> Warnings);
+/// <param name="Repository">The repository's statistics after the run (borg reports them with the backup; clean-up subtracted).</param>
+public sealed record BackupRunResult(BackupRunSummary Summary, IReadOnlyList<string> Warnings, Storage.RepositoryStats? Repository = null);
 
 /// <summary>
 /// Runs a backup job: <c>borg create</c>, then – if the job keeps only some archives – <c>borg prune</c> and, when
@@ -76,7 +77,11 @@ public sealed class BackupRunner(BorgClient borg, BackupJobStore jobs, DurationH
             summary = summary with { Cleanup = await PruneAndCompactAsync(request, retention, report, cancellationToken) };
 
         Record(job.Id, summary);
-        return new BackupRunResult(summary, created.Value?.Warnings ?? []);
+        // What compact freed is gone from the repository (the archives' totals shrink too, by an unknown amount).
+        var repository = created.Value?.Repository is { } stats && summary.Cleanup?.FreedBytes is { } freed
+            ? stats with { UniqueCompressedSize = Math.Max(0, stats.UniqueCompressedSize - freed) }
+            : created.Value?.Repository;
+        return new BackupRunResult(summary, created.Value?.Warnings ?? [], repository);
     }
 
     /// <summary>A run that did not start, as of now.</summary>

@@ -144,9 +144,43 @@ internal static class BorgTexts
     {
         { Total: { } total, Free: { } free, FreeFraction: { } fraction } => Format(Strings.StorageUsed, Size(total - free), Size(total), Size(free),
             Math.Round(fraction * 100, fraction < 0.1 ? 1 : 0)),
-        { RepositorySize: { } size } => Format(Strings.StorageRepositoryOnly, Size(size)),
+        { RepositoryBytes: { } size } => Format(Strings.StorageRepositoryOnly, Size(size)),
         _ => null,
     };
+
+    /// <summary>
+    /// "Wächst um ~11 GB pro Woche → voll voraussichtlich Mitte März 2027 (Spanne Feb. 2027 bis Mai 2027)"; without a total
+    /// only the growth, without growth "Wächst derzeit nicht."
+    /// </summary>
+    public static string Forecast(Core.Storage.StorageForecast forecast, DateTimeOffset now)
+    {
+        if (!forecast.Growing)
+            return Strings.StorageNotGrowing;
+        var text = Format(Strings.StorageGrowing, Size((long)Math.Round(forecast.BytesPerWeek)));
+        if (forecast.FullAt is not { } at)
+            return text;
+
+        var days = (at - now).TotalDays;
+        text += " " + (days < 21
+            ? Format(Strings.StorageFullIn, Math.Max(1, (int)Math.Round(days)))
+            : Format(Strings.StorageFullBy, PartOfMonth(at.ToLocalTime())));
+        if (forecast.Earliest is { } earliest && forecast.Latest is { } latest && Month(earliest) != Month(latest))
+            text += " " + Format(Strings.StorageFullRange, Month(earliest), Month(latest));
+        else if (forecast.Earliest is { } soonest && forecast.Latest is null)
+            text += " " + Format(Strings.StorageFullEarliest, Month(soonest));
+        return text;
+    }
+
+    /// <summary>"Anfang März 2027", "Mitte März 2027", "Ende März 2027".</summary>
+    private static string PartOfMonth(DateTimeOffset date) => Format(date.Day switch
+    {
+        <= 10 => Strings.StoragePartStart,
+        <= 20 => Strings.StoragePartMiddle,
+        _ => Strings.StoragePartEnd,
+    }, date.ToString("MMMM yyyy", CultureInfo.CurrentCulture));
+
+    /// <summary>"März 2027".</summary>
+    private static string Month(DateTimeOffset date) => date.ToLocalTime().ToString("MMM yyyy", CultureInfo.CurrentCulture);
 
     /// <summary>"512 B", "3,4 MB", "1,25 GB" (binary units, current culture).</summary>
     public static string Size(long bytes)

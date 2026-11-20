@@ -177,6 +177,40 @@ public sealed class StorageFlowTests : IDisposable
     }
 
     [Fact]
+    public async Task The_card_splits_the_disk_and_tells_when_it_will_be_full()
+    {
+        // 10 GB a week for 12 weeks; now 760 of 1000 GB used, 520 GB of it by the repository.
+        var now = DateTimeOffset.Now;
+        for (var week = 0; week <= 12; week++)
+        {
+            Store.Set(_repository.Id, new StorageUsage
+            {
+                Measured = now.AddDays(-84 + week * 7),
+                Source = StorageSource.Disk,
+                Total = 1000 * Gigabyte,
+                Free = (1000 - 640 - week * 10) * Gigabyte,
+                Repository = new RepositoryStats
+                {
+                    TotalSize = 9000 * Gigabyte, TotalCompressedSize = 4500 * Gigabyte, UniqueSize = 900 * Gigabyte, UniqueCompressedSize = 520 * Gigabyte,
+                },
+            });
+        }
+
+        var item = (await StartAsync()).SelectedRepository!;
+
+        Assert.True(item.HasStorageSplit);
+        Assert.Equal([0.52, 0.24], item.StorageSegments.Select(segment => Math.Round(segment.Fraction, 2)));
+        Assert.Equal(BorgTexts.Format(Strings.StorageLegendOther, BorgTexts.Size(240 * Gigabyte)), item.StorageOtherText);
+        Assert.Equal(Core.Storage.ForecastBasis.Trend, item.Forecast!.Basis);
+        Assert.StartsWith(BorgTexts.Format(Strings.StorageGrowing, BorgTexts.Size(10 * Gigabyte)), item.StorageForecastText);
+        Assert.Contains("→", item.StorageForecastText);
+        // 240 GB at 10 GB a week: about 24 weeks – not within 90 days.
+        Assert.False(item.IsForecastSoon);
+        Assert.False(item.HasStorageForecastNote);
+        Assert.Contains("94 %", item.StorageRatiosText);
+    }
+
+    [Fact]
     public void The_notifications_window_keeps_what_counts_as_full()
     {
         var main = new MainViewModel(_test.Services);
