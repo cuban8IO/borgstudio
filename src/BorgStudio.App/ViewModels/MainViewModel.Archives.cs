@@ -20,6 +20,7 @@ public partial class MainViewModel
     public const int OverviewTab = 0;
     public const int JobsTab = 1;
     public const int ArchivesTab = 2;
+    public const int StatisticsTab = 3;
 
     /// <summary>How many of the newest archives get details at a time.</summary>
     public const int ArchiveDetailsPage = 20;
@@ -75,7 +76,11 @@ public partial class MainViewModel
     /// <summary>How many of the newest archives in a row have details.</summary>
     private int LeadingDetails => Archives.TakeWhile(archive => archive.HasDetails).Count();
 
-    partial void OnSelectedDetailsTabChanged(int value) => _ = EnsureArchivesAsync();
+    partial void OnSelectedDetailsTabChanged(int value)
+    {
+        _ = EnsureArchivesAsync();
+        RefreshStatistics();
+    }
 
     partial void OnIsBackupRunningChanged(bool value)
     {
