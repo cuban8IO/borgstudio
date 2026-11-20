@@ -86,6 +86,12 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             : "";
         KeyChoice = existing.SshKeyId is null ? SshKeyChoice.Generate : SshKeyChoice.Keep;
         RestrictKey = existing.SshKeyId is null || existing.SshKeyRestricted;
+        UploadLimit = existing.Limits.UploadMegabytesPerSecond is { } limit ? (decimal)limit : null;
+        LimitUpload = UploadLimit is not null;
+        UploadOnlyBetween = existing.Limits.OnlyBetween;
+        UploadFrom = existing.Limits.From.ToTimeSpan();
+        UploadTo = existing.Limits.To.ToTimeSpan();
+        LowPriority = existing.Limits.LowPriority;
         CheckAfterBackup = existing.Check.AfterBackup;
         CheckIntervalDays = existing.Check.IntervalDays;
         foreach (var schedule in existing.Check.Schedules)
@@ -382,6 +388,37 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
 
     private int WarnPercent => (int)Math.Clamp(StorageWarnPercent ?? 0, 0, 90);
 
+    // --- Limits ---
+
+    /// <summary>Uploads to the server are limited (server repositories only).</summary>
+    [ObservableProperty]
+    public partial bool LimitUpload { get; set; }
+
+    /// <summary>MB/s.</summary>
+    [ObservableProperty]
+    public partial decimal? UploadLimit { get; set; }
+
+    [ObservableProperty]
+    public partial bool UploadOnlyBetween { get; set; }
+
+    [ObservableProperty]
+    public partial TimeSpan? UploadFrom { get; set; } = new TimeSpan(8, 0, 0);
+
+    [ObservableProperty]
+    public partial TimeSpan? UploadTo { get; set; } = new TimeSpan(18, 0, 0);
+
+    [ObservableProperty]
+    public partial bool LowPriority { get; set; }
+
+    private Core.Repositories.TransferLimits Limits => new()
+    {
+        UploadMegabytesPerSecond = IsSsh && LimitUpload && UploadLimit is > 0 and var limit ? (double)limit : null,
+        OnlyBetween = UploadOnlyBetween,
+        From = TimeOnly.FromTimeSpan(UploadFrom is { } from && from >= TimeSpan.Zero && from < TimeSpan.FromDays(1) ? from : new TimeSpan(8, 0, 0)),
+        To = TimeOnly.FromTimeSpan(UploadTo is { } to && to >= TimeSpan.Zero && to < TimeSpan.FromDays(1) ? to : new TimeSpan(18, 0, 0)),
+        LowPriority = LowPriority,
+    };
+
     // --- Checks ---
 
     /// <summary>Check after a backup when the last check is older than <see cref="CheckIntervalDays"/>.</summary>
@@ -602,6 +639,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             StorageWarnPercent = WarnPercent,
             StorageCapacity = IsSsh ? StorageCapacity : null,
             Check = CheckPolicy,
+            Limits = Limits,
         };
 
         if (repository.PassphraseMode is PassphraseMode.Vault or PassphraseMode.Stored
@@ -626,6 +664,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             StorageWarnPercent = WarnPercent,
             StorageCapacity = IsSsh ? StorageCapacity : null,
             Check = CheckPolicy,
+            Limits = Limits,
         };
 
         SshLogin? login = null;

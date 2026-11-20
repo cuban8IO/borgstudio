@@ -3102,4 +3102,28 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
   <data name="JobEditorHooksHint" xml:space="preserve">
     <value>Läuft bei jedem Backup des Jobs – von Hand, geplant und über den Webhook – ohne Zeitlimit. Umgebungsvariablen: BORGSTUDIO_JOB, BORGSTUDIO_REPOSITORY, BORGSTUDIO_SCHEDULED; nach dem Backup zusätzlich BORGSTUDIO_OUTCOME (succeeded, warnings, failed, cancelled) und BORGSTUDIO_ARCHIVE. Die ganze Ausgabe steht in logs/hooks.log im Datenordner.</value>
   </data>
+  <data name="EditorLimits" xml:space="preserve">
+    <value>Begrenzen</value>
+  </data>
+  <data name="EditorUploadLimit" xml:space="preserve">
+    <value>Upload begrenzen auf</value>
+  </data>
+  <data name="EditorUploadOnlyBetween" xml:space="preserve">
+    <value>nur bei Sicherungen mit Start zwischen</value>
+  </data>
+  <data name="EditorUploadAnd" xml:space="preserve">
+    <value>und</value>
+  </data>
+  <data name="EditorUploadLimitHint" xml:space="preserve">
+    <value>borgs --upload-ratelimit: lässt anderen Platz auf der Leitung. Ohne Zeitfenster gilt die Grenze immer; ein Fenster, das vor seinem Beginn endet, geht über Mitternacht (z. B. 22:00–06:00).</value>
+  </data>
+  <data name="EditorUploadLimitLocal" xml:space="preserve">
+    <value>borg kann nur den Upload zu einem Server begrenzen – nicht das Schreiben auf eine Platte oder Netzwerkfreigabe. Dort hilft die niedrige Priorität.</value>
+  </data>
+  <data name="EditorLowPriority" xml:space="preserve">
+    <value>Niedrige Priorität: andere Programme haben Vorrang</value>
+  </data>
+  <data name="EditorLowPriorityHint" xml:space="preserve">
+    <value>borg läuft mit nice (unter Linux und in WSL auch für die Platte). Der Rechner bleibt flüssig, Sicherungen dauern länger. Keine feste Rate.</value>
+  </data>
 </root>

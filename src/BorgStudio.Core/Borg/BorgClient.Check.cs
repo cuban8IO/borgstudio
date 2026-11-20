@@ -1,5 +1,6 @@
 using System.Text.Json;
 using BorgStudio.Core.Checks;
+using BorgStudio.Core.Repositories;
 using BorgStudio.Plugins;
 
 namespace BorgStudio.Core.Borg;
@@ -42,7 +43,7 @@ public sealed partial class BorgClient
     /// </summary>
     public async Task<BorgResult<BorgCheckResult>> CheckAsync(
         BorgInstallation borg, RepositoryLocation location, CheckDepth depth, string? passphrase, SshAccess? ssh = null,
-        IProgress<BorgCheckProgress>? progress = null, CancellationToken cancellationToken = default)
+        IProgress<BorgCheckProgress>? progress = null, CancellationToken cancellationToken = default, BorgThrottle? throttle = null)
     {
         var messages = new List<string>();
         var errors = false;
@@ -70,7 +71,7 @@ public sealed partial class BorgClient
         var result = await RunAsync(borg, location, ssh, ["check"], options, [], passphrase, CreateTimeout, cancellationToken,
             standardErrorLine: OnLine, interruptible: depth != CheckDepth.Repair,
             extraEnvironment: depth == CheckDepth.Repair ? new Dictionary<string, string> { [RepairConfirmation] = "YES" } : null,
-            exitCode: exit => code = exit);
+            exitCode: exit => code = exit, throttle: throttle);
         if (!result.Succeeded)
             return BorgResult<BorgCheckResult>.Failure(result.Error!);
         // borg check exits with 1 ("warning") when it found damage.

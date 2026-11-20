@@ -203,6 +203,32 @@
                             </StackPanel>
                             <TextBlock Text="{x:Static res:Strings.EditorStorageWarnHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
 
+                            <!-- Limits -->
+                            <TextBlock Text="{x:Static res:Strings.EditorLimits}" FontWeight="SemiBold" Margin="0,12,0,0" />
+                            <StackPanel Spacing="6" IsVisible="{Binding IsSsh}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <CheckBox IsChecked="{Binding LimitUpload}" Content="{x:Static res:Strings.EditorUploadLimit}" VerticalAlignment="Center" />
+                                    <NumericUpDown Value="{Binding UploadLimit}" Minimum="0.1" Maximum="10000" Increment="1" FormatString="0.#" Width="120"
+                                                   IsEnabled="{Binding LimitUpload}" />
+                                    <TextBlock Text="MB/s" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <StackPanel Margin="28,0,0,0" Spacing="6" IsEnabled="{Binding LimitUpload}">
+                                    <CheckBox IsChecked="{Binding UploadOnlyBetween}" Content="{x:Static res:Strings.EditorUploadOnlyBetween}" />
+                                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="28,0,0,0" IsEnabled="{Binding UploadOnlyBetween}">
+                                        <TimePicker SelectedTime="{Binding UploadFrom}" ClockIdentifier="24HourClock" MinuteIncrement="15" MinWidth="0" Width="150" />
+                                        <TextBlock Text="{x:Static res:Strings.EditorUploadAnd}" VerticalAlignment="Center" />
+                                        <TimePicker SelectedTime="{Binding UploadTo}" ClockIdentifier="24HourClock" MinuteIncrement="15" MinWidth="0" Width="150" />
+                                    </StackPanel>
+                                </StackPanel>
+                                <TextBlock Text="{x:Static res:Strings.EditorUploadLimitHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <TextBlock Text="{x:Static res:Strings.EditorUploadLimitLocal}" FontSize="12" Opacity="0.7" TextWrapping="Wrap"
+                                       IsVisible="{Binding !IsSsh}" />
+                            <CheckBox IsChecked="{Binding LowPriority}">
+                                <TextBlock Text="{x:Static res:Strings.EditorLowPriority}" TextWrapping="Wrap" />
+                            </CheckBox>
+                            <TextBlock Text="{x:Static res:Strings.EditorLowPriorityHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+
                             <StackPanel Spacing="4" IsVisible="{Binding IsSsh}" Margin="0,10,0,0">
                                 <TextBlock Text="{x:Static res:Strings.EditorStorageCapacity}" TextWrapping="Wrap" />
                                 <StackPanel Orientation="Horizontal" Spacing="8">

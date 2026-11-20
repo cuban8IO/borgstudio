@@ -39,8 +39,9 @@ public interface IBackupRunReport
 
 /// <summary>Everything a run needs that the caller has to find out first (with questions, if it may ask).</summary>
 /// <param name="Scheduled">Started by a schedule: a busy repository then counts as a failed run, recorded with the job.</param>
+/// <param name="Throttle">The repository's limits for this run (upload rate, low priority).</param>
 public sealed record BackupRunRequest(BorgInstallation Borg, RepositoryLocation Location, BackupJob Job, string? Passphrase, SshAccess? Ssh,
-    bool Scheduled = false);
+    bool Scheduled = false, Repositories.BorgThrottle? Throttle = null);
 
 /// <summary>A finished run: its summary (also saved with the job and in its history) and borg's warnings.</summary>
 /// <param name="Repository">The repository's statistics after the run (borg reports them with the backup; clean-up subtracted).</param>
@@ -126,7 +127,7 @@ public sealed class BackupRunner(BorgClient borg, BackupJobStore jobs, DurationH
         var options = new List<string> { "--compression", job.Compression };
         options.AddRange(BackupPatterns.Arguments(job.Exclusions, path => BorgClient.BorgPath(request.Borg, path)));
         var created = await borg.CreateAsync(request.Borg, request.Location, BackupNames.ArchiveName(job.Name), job.Sources, options,
-            request.Passphrase, request.Ssh, tracker, cancellationToken);
+            request.Passphrase, request.Ssh, tracker, cancellationToken, request.Throttle);
 
         var summary = Summarize(created, tracker, started);
         if (summary.Outcome is BackupOutcome.Succeeded or BackupOutcome.Warnings && job.Retention is { HasRules: true } retention)
@@ -226,7 +227,7 @@ public sealed class BackupRunner(BorgClient borg, BackupJobStore jobs, DurationH
 
         var compactKey = DurationHistory.Key(job.RepositoryId, "compact");
         phase.Start(BackupRunPhase.Compacting, durations.Get(compactKey));
-        var compacted = await borg.CompactAsync(request.Borg, request.Location, request.Ssh, phase, cancellationToken);
+        var compacted = await borg.CompactAsync(request.Borg, request.Location, request.Ssh, phase, cancellationToken, request.Throttle);
         if (compacted.Succeeded)
             durations.Record(compactKey, phase.Elapsed);
         return compacted.Succeeded

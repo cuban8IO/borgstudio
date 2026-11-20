@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using BorgStudio.Core.Processes;
+using BorgStudio.Core.Repositories;
 using BorgStudio.Core.Ssh;
 using BorgStudio.Plugins;
 
@@ -143,7 +144,7 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
     public async Task<BorgResult<BorgCreateResult>> CreateAsync(
         BorgInstallation borg, RepositoryLocation location, string archive, IReadOnlyList<string> sources,
         IReadOnlyList<string> options, string? passphrase, SshAccess? ssh = null,
-        IProgress<BorgCreateProgress>? progress = null, CancellationToken cancellationToken = default)
+        IProgress<BorgCreateProgress>? progress = null, CancellationToken cancellationToken = default, BorgThrottle? throttle = null)
     {
         var paths = new List<string>();
         foreach (var source in sources)
@@ -163,7 +164,7 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         }
 
         var result = await RunAsync(borg, location, ssh, ["create"], ["--progress", "--json", .. options], paths,
-            passphrase, CreateTimeout, cancellationToken, archive, OnLine, interruptible: true);
+            passphrase, CreateTimeout, cancellationToken, archive, OnLine, interruptible: true, throttle: throttle);
         if (!result.Succeeded)
             return BorgResult<BorgCreateResult>.Failure(result.Error!);
 
@@ -222,7 +223,7 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
     public async Task<BorgResult<BorgExtractResult>> ExtractAsync(
         BorgInstallation borg, RepositoryLocation location, string archive, IReadOnlyList<string> paths, string targetDirectory,
         int stripComponents, string? passphrase, SshAccess? ssh = null, IProgress<BorgExtractProgress>? progress = null,
-        CancellationToken cancellationToken = default, bool dryRun = false)
+        CancellationToken cancellationToken = default, bool dryRun = false, BorgThrottle? throttle = null)
     {
         if (borg.Runtime == BorgRuntime.Wsl && ToWslPath(targetDirectory) is null)
             return BorgResult<BorgExtractResult>.Failure(new BorgError(BorgErrorKind.UnsupportedPath, targetDirectory));
@@ -248,7 +249,7 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
             options.AddRange(["--strip-components", stripComponents.ToString(CultureInfo.InvariantCulture)]);
         // "pp:" – path prefixes, taken literally (names may contain *, [ or ?).
         var result = await RunAsync(borg, location, ssh, ["extract"], options, [.. paths.Select(path => "pp:" + path)], passphrase,
-            CreateTimeout, cancellationToken, archive, OnLine, interruptible: true, workingDirectory: targetDirectory);
+            CreateTimeout, cancellationToken, archive, OnLine, interruptible: true, workingDirectory: targetDirectory, throttle: throttle);
         return result.Succeeded
             ? BorgResult<BorgExtractResult>.Success(new BorgExtractResult(warnings))
             : BorgResult<BorgExtractResult>.Failure(result.Error!);
@@ -344,7 +345,7 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
     /// </summary>
     public async Task<BorgResult<BorgCompactResult>> CompactAsync(
         BorgInstallation borg, RepositoryLocation location, SshAccess? ssh = null, IProgress<double>? progress = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default, BorgThrottle? throttle = null)
     {
         long? freed = null;
         void OnLine(string line)
@@ -357,7 +358,7 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
 
         // --info: borg tells how much it freed only at info level.
         var result = await RunAsync(borg, location, ssh, ["compact"], ["--info", "--progress"], [], null, CreateTimeout,
-            cancellationToken, standardErrorLine: OnLine, interruptible: true);
+            cancellationToken, standardErrorLine: OnLine, interruptible: true, throttle: throttle);
         return result.Succeeded
             ? BorgResult<BorgCompactResult>.Success(new BorgCompactResult(freed))
             : BorgResult<BorgCompactResult>.Failure(result.Error!);
@@ -662,7 +663,7 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         string? passphrase, TimeSpan timeout, CancellationToken cancellationToken,
         string? archive = null, Action<string>? standardErrorLine = null, bool interruptible = false,
         Action<string>? standardOutputLine = null, string? workingDirectory = null,
-        IReadOnlyDictionary<string, string>? extraEnvironment = null, Action<int>? exitCode = null)
+        IReadOnlyDictionary<string, string>? extraEnvironment = null, Action<int>? exitCode = null, BorgThrottle? throttle = null)
     {
         var wsl = borg.Runtime == BorgRuntime.Wsl;
         if (wsl && wslExecutable is null)
@@ -678,7 +679,8 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         if (archive is not null)
             repository += "::" + archive;
 
-        List<string> arguments = [.. command, "--log-json", .. location.BorgArguments, .. options, repository, .. trailing];
+        List<string> limit = throttle?.UploadKibibytesPerSecond is { } rate ? ["--upload-ratelimit", rate.ToString(CultureInfo.InvariantCulture)] : [];
+        List<string> arguments = [.. command, "--log-json", .. location.BorgArguments, .. limit, .. options, repository, .. trailing];
 
         var environment = new Dictionary<string, string?>
         {
@@ -705,7 +707,7 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         try
         {
             return await RunBorgAsync(borg, location, arguments, environment, sshFiles, timeout, cancellationToken,
-                standardErrorLine, interruptible, standardOutputLine, workingDirectory, exitCode);
+                standardErrorLine, interruptible, standardOutputLine, workingDirectory, exitCode, throttle?.LowPriority == true);
         }
         finally
         {
@@ -717,17 +719,19 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
     private async Task<BorgResult<string>> RunBorgAsync(BorgInstallation borg, RepositoryLocation location,
         List<string> arguments, Dictionary<string, string?> environment, SshFiles? sshFiles, TimeSpan timeout,
         CancellationToken cancellationToken, Action<string>? standardErrorLine, bool interruptible,
-        Action<string>? standardOutputLine = null, string? workingDirectory = null, Action<int>? exitCode = null)
+        Action<string>? standardOutputLine = null, string? workingDirectory = null, Action<int>? exitCode = null, bool lowPriority = false)
     {
         var wsl = borg.Runtime == BorgRuntime.Wsl;
         // Signals need a POSIX system: natively on Linux/macOS, or inside WSL.
         interruptible &= wsl || !OperatingSystem.IsWindows();
+        // Low priority: nice (Linux derives the disk priority from it, too); it execs borg, so the process id stays borg's.
+        List<string> program = lowPriority && (wsl || NativeIsPosix) ? ["nice", "-n", "10", borg.Path] : [borg.Path];
 
         string fileName;
         if (wsl)
         {
             fileName = wslExecutable!;
-            arguments.InsertRange(0, interruptible ? ["-e", "sh", "-c", PidWrapper, borg.Path] : ["-e", borg.Path]);
+            arguments.InsertRange(0, interruptible ? ["-e", "sh", "-c", PidWrapper, .. program] : ["-e", .. program]);
             // WSL only passes on the Windows environment variables listed in WSLENV.
             var existing = Environment.GetEnvironmentVariable("WSLENV");
             environment["WSLENV"] = string.Join(':', new[] { existing }.Where(value => !string.IsNullOrEmpty(value)).Concat(ForwardedVariables));
@@ -735,11 +739,12 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         else if (interruptible)
         {
             fileName = "sh";
-            arguments.InsertRange(0, ["-c", PidWrapper, borg.Path]);
+            arguments.InsertRange(0, ["-c", PidWrapper, .. program]);
         }
         else
         {
-            fileName = borg.Path;
+            fileName = program[0];
+            arguments.InsertRange(0, program.Skip(1));
         }
 
         // Cancelling an interruptible call: SIGINT first, a hard stop only after the grace period.
