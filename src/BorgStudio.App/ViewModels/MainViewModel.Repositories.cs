@@ -17,9 +17,9 @@ public partial class MainViewModel
     public ObservableCollection<RepositoryItemViewModel> Repositories { get; } = [];
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasSelection))]
+    [NotifyPropertyChangedFor(nameof(HasSelection), nameof(ListedRepository), nameof(ShowsRepository))]
     [NotifyCanExecuteChangedFor(nameof(TestRepositoryCommand), nameof(ExportKeyCommand), nameof(EditRepositoryCommand),
-        nameof(RemoveRepositoryCommand), nameof(FreeSpaceCommand))]
+        nameof(RemoveRepositoryCommand), nameof(FreeSpaceCommand), nameof(MeasureStorageCommand))]
     public partial RepositoryItemViewModel? SelectedRepository { get; set; }
 
     public bool HasRepositories => Repositories.Count > 0;
@@ -34,7 +34,7 @@ public partial class MainViewModel
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddRepositoryCommand), nameof(TestRepositoryCommand), nameof(ExportKeyCommand),
         nameof(EditRepositoryCommand), nameof(RemoveRepositoryCommand), nameof(RunJobCommand), nameof(CleanUpJobCommand),
-        nameof(FreeSpaceCommand))]
+        nameof(FreeSpaceCommand), nameof(MeasureStorageCommand))]
     public partial bool IsWorking { get; private set; }
 
     /// <summary>Progress of the running repository operation (overview tab).</summary>
@@ -48,7 +48,11 @@ public partial class MainViewModel
         if (result.BrokenFileBackup is not null)
             StoreWarning = BorgTexts.Format(Strings.StoreBrokenWarning, result.BrokenFileBackup);
 
-        Repositories.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasRepositories));
+        Repositories.CollectionChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(HasRepositories));
+            OnPropertyChanged(nameof(ShowsOverview));
+        };
         SelectedRepository = Repositories.FirstOrDefault();
     }
 
@@ -91,6 +95,7 @@ public partial class MainViewModel
 
         item.Config = result.Repository;
         SaveRepositories();
+        RefreshStorage(item.Config.Id);
         RefreshKeyNames();
     }
 

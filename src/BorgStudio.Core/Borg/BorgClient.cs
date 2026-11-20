@@ -534,7 +534,8 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
             stats.GetProperty("deduplicated_size").GetInt64(),
             stats.GetProperty("nfiles").GetInt64(),
             TimeSpan.FromSeconds(archive.TryGetProperty("duration", out var duration) ? duration.GetDouble() : 0),
-            []);
+            [],
+            Storage.RepositoryStats.FromBorgJson(document.RootElement));
     }
 
     /// <summary>
@@ -759,13 +760,7 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
     private async Task<BorgError?> DiagnoseSshAsync(
         SshEndpoint endpoint, SshFiles sshFiles, bool wsl, CancellationToken cancellationToken)
     {
-        List<string> arguments =
-        [
-            "-o", "BatchMode=yes", "-o", "IdentitiesOnly=yes", "-o", "StrictHostKeyChecking=yes",
-            "-o", $"UserKnownHostsFile={sshFiles.KnownHostsFile}", "-i", sshFiles.PrivateKeyFile,
-            "-o", "ConnectTimeout=15", "-p", endpoint.Port.ToString(CultureInfo.InvariantCulture),
-            $"{endpoint.User}@{endpoint.Host}", "exit",
-        ];
+        var arguments = SshArguments(endpoint, sshFiles, "exit");
         if (wsl)
             arguments.InsertRange(0, ["-e", "ssh"]);
 
@@ -786,6 +781,46 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         if (output.Contains("Permission denied", StringComparison.Ordinal))
             return new BorgError(BorgErrorKind.SshAuthenticationFailed, output);
         return null;
+    }
+
+    /// <summary>A plain ssh login with the repository's key and BorgStudio's known hosts, running <paramref name="command"/>.</summary>
+    private static List<string> SshArguments(SshEndpoint endpoint, SshFiles sshFiles, string command) =>
+    [
+        "-o", "BatchMode=yes", "-o", "IdentitiesOnly=yes", "-o", "StrictHostKeyChecking=yes",
+        "-o", $"UserKnownHostsFile={sshFiles.KnownHostsFile}", "-i", sshFiles.PrivateKeyFile,
+        "-o", "ConnectTimeout=15", "-p", endpoint.Port.ToString(CultureInfo.InvariantCulture),
+        $"{endpoint.User}@{endpoint.Host}", command,
+    ];
+
+    /// <summary>
+    /// Runs a command on the repository's server – not through borg – with the same login borg uses (inside WSL for borg
+    /// in WSL). <c>null</c> if ssh could not be started or did not answer in time. A key restricted to <c>borg serve</c>
+    /// runs borg instead of the command: the caller has to recognize the output.
+    /// </summary>
+    public async Task<ProcessResult?> RunSshCommandAsync(BorgInstallation borg, RepositoryLocation location, SshAccess ssh, string command,
+        CancellationToken cancellationToken = default)
+    {
+        if (location.Ssh is not { } endpoint)
+            throw new ArgumentException("Not an SSH repository.", nameof(location));
+        var wsl = borg.Runtime == BorgRuntime.Wsl;
+        var sshFiles = wsl ? await CopySshFilesIntoWslAsync(ssh, cancellationToken) : WriteSshFiles(ssh);
+        if (sshFiles is null)
+            return null;
+        try
+        {
+            var arguments = SshArguments(endpoint, sshFiles, command);
+            if (wsl)
+                arguments.InsertRange(0, ["-e", "ssh"]);
+            return await processRunner.RunAsync(wsl ? wslExecutable! : "ssh", arguments, CopyTimeout, cancellationToken: cancellationToken);
+        }
+        catch (TimeoutException)
+        {
+            return null;
+        }
+        finally
+        {
+            await DeleteKeyFileAsync(sshFiles, wsl);
+        }
     }
 
     /// <summary>Writes the key to a temporary file next to known_hosts (private permissions).</summary>
@@ -897,8 +932,14 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         var mountUnavailable = allText.Any(text => text.Contains("no FUSE support", StringComparison.OrdinalIgnoreCase)
             || text.Contains("fusermount: not found", StringComparison.Ordinal) || text.Contains("/dev/fuse", StringComparison.Ordinal));
 
+        // Locally an OSError (errno 28), on a server borg's own check before committing.
+        var noSpace = allText.Any(text => text.Contains("No space left on device", StringComparison.Ordinal)
+            || text.Contains("Errno 28", StringComparison.Ordinal))
+            || messageId?.Contains("InsufficientFreeSpace", StringComparison.Ordinal) == true;
+
         var kind = messageId switch
         {
+            _ when noSpace => BorgErrorKind.NoSpace,
             _ when mountNotAllowed => BorgErrorKind.MountNotAllowed,
             _ when mountUnavailable => BorgErrorKind.MountUnavailable,
             _ when sshHostKeyFailed => BorgErrorKind.SshHostKeyFailed,
@@ -926,10 +967,17 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
             && DateTimeOffset.TryParse(modified.GetString(), CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var parsed))
             lastModified = parsed;
 
+        long? size = null;
+        if (document.RootElement.TryGetProperty("cache", out var cache) && cache.TryGetProperty("stats", out var stats)
+            && stats.TryGetProperty("unique_csize", out var unique) && unique.TryGetInt64(out var bytes))
+            size = bytes;
+
         return new BorgRepositoryInfo(
             repository.GetProperty("id").GetString()!,
             encryption.GetProperty("mode").GetString()!,
-            lastModified);
+            lastModified,
+            size,
+            Storage.RepositoryStats.FromBorgJson(document.RootElement));
     }
 
     private static bool IsUrl(string repository) => repository.Contains("://", StringComparison.Ordinal);

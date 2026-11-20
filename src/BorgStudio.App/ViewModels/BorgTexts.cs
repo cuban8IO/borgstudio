@@ -25,6 +25,7 @@ internal static class BorgTexts
             BorgErrorKind.UnsupportedPath => Strings.BorgErrorUnsupportedPath,
             BorgErrorKind.MountNotAllowed => Strings.BorgErrorMountNotAllowed,
             BorgErrorKind.MountUnavailable => Strings.BorgErrorMountUnavailable,
+            BorgErrorKind.NoSpace => Strings.BorgErrorNoSpace,
             _ => Strings.BorgErrorOther,
         };
 
@@ -49,11 +50,43 @@ internal static class BorgTexts
         _ => Strings.VaultStatusNotSetUp,
     };
 
+    /// <summary>"Täglich 20:00 · Mo, Fr 12:30 · alle 4 Std. ab 08:00".</summary>
+    public static string Schedules(IEnumerable<Core.Backups.BackupSchedule> schedules) =>
+        string.Join(" · ", schedules.Where(schedule => schedule.IsValid).Select(Schedule));
+
+    public static string Schedule(Core.Backups.BackupSchedule schedule)
+    {
+        var time = schedule.Time.ToString("t", CultureInfo.CurrentCulture);
+        return schedule.Kind switch
+        {
+            Core.Backups.ScheduleKind.Weekdays => Format(Strings.ScheduleOnDays,
+                string.Join(", ", schedule.Days.Distinct().OrderBy(day => ((int)day + 6) % 7)
+                    .Select(day => CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(day))), time),
+            Core.Backups.ScheduleKind.EveryHours => Format(Strings.ScheduleEveryHours, schedule.Hours, time),
+            _ => Format(Strings.ScheduleDaily, time),
+        };
+    }
+
+    /// <summary>Why a run did not start.</summary>
+    public static string SkipReason(Core.Backups.BackupSkipReason reason) => reason switch
+    {
+        Core.Backups.BackupSkipReason.RepositoryBusy => Strings.SkipRepositoryBusy,
+        Core.Backups.BackupSkipReason.PassphraseAsked => Strings.SkipPassphraseAsked,
+        Core.Backups.BackupSkipReason.PassphraseMissing => Strings.SkipPassphraseMissing,
+        Core.Backups.BackupSkipReason.ScheduledAccessMissing => Strings.SkipScheduledAccessMissing,
+        Core.Backups.BackupSkipReason.TargetMissing => Strings.SkipTargetMissing,
+        Core.Backups.BackupSkipReason.BorgMissing => Strings.SkipBorgMissing,
+        Core.Backups.BackupSkipReason.RepositoryMissing => Strings.SkipRepositoryMissing,
+        Core.Backups.BackupSkipReason.SshKeyMissing => Strings.SkipSshKeyMissing,
+        _ => Strings.SkipHostUnknown,
+    };
+
     public static string BackupOutcome(Core.Backups.BackupOutcome outcome) => outcome switch
     {
         Core.Backups.BackupOutcome.Succeeded => Strings.OutcomeSucceeded,
         Core.Backups.BackupOutcome.Warnings => Strings.OutcomeWarnings,
         Core.Backups.BackupOutcome.Cancelled => Strings.OutcomeCancelled,
+        Core.Backups.BackupOutcome.Skipped => Strings.OutcomeSkipped,
         _ => Strings.OutcomeFailed,
     };
 
@@ -105,6 +138,49 @@ internal static class BorgTexts
         { FreedBytes: { } freed } => Format(Strings.CleanupResult, cleanup.PrunedArchives, Size(freed)),
         _ => Format(Strings.CleanupResultNoSize, cleanup.PrunedArchives),
     };
+
+    /// <summary>"120 GB von 1,00 TB belegt · 880 GB frei (88 %)", or the repository's size alone; <c>null</c> if nothing is known.</summary>
+    public static string? StorageUsage(Core.Storage.StorageUsage usage) => usage switch
+    {
+        { Total: { } total, Free: { } free, FreeFraction: { } fraction } => Format(Strings.StorageUsed, Size(total - free), Size(total), Size(free),
+            Math.Round(fraction * 100, fraction < 0.1 ? 1 : 0)),
+        { RepositoryBytes: { } size } => Format(Strings.StorageRepositoryOnly, Size(size)),
+        _ => null,
+    };
+
+    /// <summary>
+    /// "Wächst um ~11 GB pro Woche → voll voraussichtlich Mitte März 2027 (Spanne Feb. 2027 bis Mai 2027)"; without a total
+    /// only the growth, without growth "Wächst derzeit nicht."
+    /// </summary>
+    public static string Forecast(Core.Storage.StorageForecast forecast, DateTimeOffset now)
+    {
+        if (!forecast.Growing)
+            return Strings.StorageNotGrowing;
+        var text = Format(Strings.StorageGrowing, Size((long)Math.Round(forecast.BytesPerWeek)));
+        if (forecast.FullAt is not { } at)
+            return text;
+
+        var days = (at - now).TotalDays;
+        text += " " + (days < 21
+            ? Format(Strings.StorageFullIn, Math.Max(1, (int)Math.Round(days)))
+            : Format(Strings.StorageFullBy, PartOfMonth(at.ToLocalTime())));
+        if (forecast.Earliest is { } earliest && forecast.Latest is { } latest && Month(earliest) != Month(latest))
+            text += " " + Format(Strings.StorageFullRange, Month(earliest), Month(latest));
+        else if (forecast.Earliest is { } soonest && forecast.Latest is null)
+            text += " " + Format(Strings.StorageFullEarliest, Month(soonest));
+        return text;
+    }
+
+    /// <summary>"Anfang März 2027", "Mitte März 2027", "Ende März 2027".</summary>
+    private static string PartOfMonth(DateTimeOffset date) => Format(date.Day switch
+    {
+        <= 10 => Strings.StoragePartStart,
+        <= 20 => Strings.StoragePartMiddle,
+        _ => Strings.StoragePartEnd,
+    }, date.ToString("MMMM yyyy", CultureInfo.CurrentCulture));
+
+    /// <summary>"März 2027".</summary>
+    private static string Month(DateTimeOffset date) => date.ToLocalTime().ToString("MMM yyyy", CultureInfo.CurrentCulture);
 
     /// <summary>"512 B", "3,4 MB", "1,25 GB" (binary units, current culture).</summary>
     public static string Size(long bytes)

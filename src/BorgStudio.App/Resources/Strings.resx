@@ -1876,4 +1876,812 @@ A backup is only as good as its restore: try restoring files from your backups n
   <data name="AboutThirdParty" xml:space="preserve">
     <value>Third-party licenses</value>
   </data>
+  <data name="OutcomeSkipped" xml:space="preserve">
+    <value>Skipped</value>
+  </data>
+  <data name="BackupSkippedBusy" xml:space="preserve">
+    <value>Not started: another run (e.g. a scheduled backup) is working on this repository right now. Try again when it has finished.</value>
+  </data>
+  <data name="SkipRepositoryBusy" xml:space="preserve">
+    <value>Another run was working on this repository.</value>
+  </data>
+  <data name="SkipPassphraseAsked" xml:space="preserve">
+    <value>The repository asks for its passphrase every time, so it cannot be backed up on a schedule. Store the passphrase (Edit repository).</value>
+  </data>
+  <data name="SkipPassphraseMissing" xml:space="preserve">
+    <value>The stored passphrase is missing (e.g. after resetting the vault). Enter it again under Edit repository.</value>
+  </data>
+  <data name="SkipScheduledAccessMissing" xml:space="preserve">
+    <value>The vault is protected by a PIN and scheduled backups may not open it. Set up the schedule again to allow it.</value>
+  </data>
+  <data name="SkipTargetMissing" xml:space="preserve">
+    <value>The repository's folder was not found – is the disk connected?</value>
+  </data>
+  <data name="SkipBorgMissing" xml:space="preserve">
+    <value>BorgBackup was not found.</value>
+  </data>
+  <data name="SkipRepositoryMissing" xml:space="preserve">
+    <value>The job's repository is no longer set up.</value>
+  </data>
+  <data name="SkipSshKeyMissing" xml:space="preserve">
+    <value>The SSH key for the server is missing.</value>
+  </data>
+  <data name="SkipHostUnknown" xml:space="preserve">
+    <value>The server was never confirmed. Run the backup once by hand to confirm it.</value>
+  </data>
+  <data name="ScheduleApplyFailed" xml:space="preserve">
+    <value>The schedules could not be passed to the system's task scheduler: {0}</value>
+  </data>
+  <data name="ScheduleAccessTitle" xml:space="preserve">
+    <value>Allow scheduled backups</value>
+  </data>
+  <data name="ScheduleAccessMessage" xml:space="preserve">
+    <value>Your passphrases and SSH keys are in the PIN-protected vault. So that scheduled backups can run without you typing the PIN, BorgStudio keeps the vault's key in the system keychain, for scheduled runs only.
+
+Anyone logged in as you can then open the vault. BorgStudio itself stays locked by the PIN. Changing the PIN takes the key along; resetting the vault removes it.</value>
+  </data>
+  <data name="ScheduleAccessMessageFile" xml:space="preserve">
+    <value>Your passphrases and SSH keys are in the PIN-protected vault. So that scheduled backups can run without you typing the PIN, BorgStudio keeps the vault's key in a file only your user may read – this system has no keychain.
+
+Anyone logged in as you can then open the vault. BorgStudio itself stays locked by the PIN.</value>
+  </data>
+  <data name="ScheduleAccessConfirm" xml:space="preserve">
+    <value>Allow</value>
+  </data>
+  <data name="ScheduleAccessLater" xml:space="preserve">
+    <value>Not now</value>
+  </data>
+  <data name="ScheduleAccessFailed" xml:space="preserve">
+    <value>Scheduled backups could not be allowed: {0}</value>
+  </data>
+  <data name="SchedulePassphraseTitle" xml:space="preserve">
+    <value>Store the passphrase</value>
+  </data>
+  <data name="SchedulePassphraseMessage" xml:space="preserve">
+    <value>"{0}" asks for its passphrase every time, so scheduled backups cannot run. Store the passphrase now?</value>
+  </data>
+  <data name="SchedulePassphraseConfirm" xml:space="preserve">
+    <value>Store</value>
+  </data>
+  <data name="JobNotScheduled" xml:space="preserve">
+    <value>Only by hand</value>
+  </data>
+  <data name="JobSchedule" xml:space="preserve">
+    <value>{0} · next run: {1}</value>
+  </data>
+  <data name="ScheduleDaily" xml:space="preserve">
+    <value>Daily {0}</value>
+  </data>
+  <data name="ScheduleOnDays" xml:space="preserve">
+    <value>{0} {1}</value>
+  </data>
+  <data name="ScheduleEveryHours" xml:space="preserve">
+    <value>Every {0} h from {1}</value>
+  </data>
+  <data name="JobEditorSchedules" xml:space="preserve">
+    <value>Schedule</value>
+  </data>
+  <data name="JobEditorSchedulesHint" xml:space="preserve">
+    <value>The system's task scheduler starts the backup, also while BorgStudio is closed (as long as you are logged in).</value>
+  </data>
+  <data name="JobEditorAddSchedule" xml:space="preserve">
+    <value>Add schedule</value>
+  </data>
+  <data name="JobEditorRemoveSchedule" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="JobEditorCatchUp" xml:space="preserve">
+    <value>Make up for missed times once at the next start</value>
+  </data>
+  <data name="JobEditorScheduleDaily" xml:space="preserve">
+    <value>Daily</value>
+  </data>
+  <data name="JobEditorScheduleWeekdays" xml:space="preserve">
+    <value>On weekdays</value>
+  </data>
+  <data name="JobEditorScheduleEveryHours" xml:space="preserve">
+    <value>Every … hours</value>
+  </data>
+  <data name="JobEditorScheduleAt" xml:space="preserve">
+    <value>at</value>
+  </data>
+  <data name="JobEditorScheduleFrom" xml:space="preserve">
+    <value>from</value>
+  </data>
+  <data name="JobEditorScheduleHours" xml:space="preserve">
+    <value>hours</value>
+  </data>
+  <data name="JobEditorScheduleDaysRequired" xml:space="preserve">
+    <value>Pick at least one weekday for each weekday schedule.</value>
+  </data>
+  <data name="AutostartFailed" xml:space="preserve">
+    <value>Starting BorgStudio at login could not be set up: {0}</value>
+  </data>
+  <data name="BackgroundRunFailed" xml:space="preserve">
+    <value>The scheduled backup "{0}" could not run: {1}</value>
+  </data>
+  <data name="TrayOpen" xml:space="preserve">
+    <value>Open BorgStudio</value>
+  </data>
+  <data name="TrayRunJob" xml:space="preserve">
+    <value>Back up now</value>
+  </data>
+  <data name="TrayNoJobs" xml:space="preserve">
+    <value>No backup jobs</value>
+  </data>
+  <data name="TrayNext" xml:space="preserve">
+    <value>Next: {0}, {1}</value>
+  </data>
+  <data name="TrayNothingScheduled" xml:space="preserve">
+    <value>No backup scheduled</value>
+  </data>
+  <data name="TrayPause" xml:space="preserve">
+    <value>Pause schedules</value>
+  </data>
+  <data name="TrayPaused" xml:space="preserve">
+    <value>Schedules paused</value>
+  </data>
+  <data name="TrayRunning" xml:space="preserve">
+    <value>Backing up: {0}</value>
+  </data>
+  <data name="TrayFailed" xml:space="preserve">
+    <value>The last backup of "{0}" failed</value>
+  </data>
+  <data name="TrayQuit" xml:space="preserve">
+    <value>Quit BorgStudio</value>
+  </data>
+  <data name="TrayHintTitle" xml:space="preserve">
+    <value>BorgStudio keeps running</value>
+  </data>
+  <data name="TrayHintMessage" xml:space="preserve">
+    <value>BorgStudio keeps running in the notification area so that scheduled backups can start. Click its icon to open the window again; to quit BorgStudio, choose "Quit BorgStudio" in the icon's menu.</value>
+  </data>
+  <data name="SettingsSchedules" xml:space="preserve">
+    <value>Scheduled backups</value>
+  </data>
+  <data name="SettingsRunnerSystem" xml:space="preserve">
+    <value>System task scheduler – runs even when BorgStudio is closed</value>
+  </data>
+  <data name="SettingsRunnerBackground" xml:space="preserve">
+    <value>BorgStudio in the background – icon in the notification area, starts at login</value>
+  </data>
+  <data name="SettingsRunnerHint" xml:space="preserve">
+    <value>In the background, closing the window keeps BorgStudio running in the notification area, and backups show their progress in the window. On Linux the desktop needs a notification area (on GNOME: the AppIndicator extension).</value>
+  </data>
+  <data name="NotifyTitleSucceeded" xml:space="preserve">
+    <value>Backup succeeded: {0}</value>
+  </data>
+  <data name="NotifyTitleWarnings" xml:space="preserve">
+    <value>Backup finished with warnings: {0}</value>
+  </data>
+  <data name="NotifyTitleFailed" xml:space="preserve">
+    <value>Backup failed: {0}</value>
+  </data>
+  <data name="NotifyTitleSkipped" xml:space="preserve">
+    <value>Backup skipped: {0}</value>
+  </data>
+  <data name="NotifyTitleRecovered" xml:space="preserve">
+    <value>Backup works again: {0}</value>
+  </data>
+  <data name="NotifyLineRepository" xml:space="preserve">
+    <value>Repository: {0}</value>
+  </data>
+  <data name="NotifyLineStarted" xml:space="preserve">
+    <value>Started: {0} · duration {1}</value>
+  </data>
+  <data name="NotifyLineReason" xml:space="preserve">
+    <value>Reason: {0}</value>
+  </data>
+  <data name="NotifyLineArchive" xml:space="preserve">
+    <value>Archive: {0}</value>
+  </data>
+  <data name="NotifyLineSizes" xml:space="preserve">
+    <value>Read: {0} · newly stored: {1} · {2} files</value>
+  </data>
+  <data name="NotifyLineWarning" xml:space="preserve">
+    <value>Warning: {0}</value>
+  </data>
+  <data name="NotifyLineCleanup" xml:space="preserve">
+    <value>Clean-up: {0}</value>
+  </data>
+  <data name="NotifyLineComputer" xml:space="preserve">
+    <value>Computer: {0}</value>
+  </data>
+  <data name="NotifyTestTitle" xml:space="preserve">
+    <value>Test message from BorgStudio</value>
+  </data>
+  <data name="NotifyTestBody" xml:space="preserve">
+    <value>If you can read this, the channel “{0}” works.</value>
+  </data>
+  <data name="MenuNotifications" xml:space="preserve">
+    <value>Notifications…</value>
+  </data>
+  <data name="NotifyTitle" xml:space="preserve">
+    <value>Notifications</value>
+  </data>
+  <data name="NotifyIntro" xml:space="preserve">
+    <value>BorgStudio can tell you how your backups went – those started by hand, in the background and by the task scheduler. Choose for each channel what it reports.</value>
+  </data>
+  <data name="NotifyChannelSystem" xml:space="preserve">
+    <value>System notification</value>
+  </data>
+  <data name="NotifyChannelEmail" xml:space="preserve">
+    <value>E-mail</value>
+  </data>
+  <data name="NotifyChannelWebhook" xml:space="preserve">
+    <value>Webhook</value>
+  </data>
+  <data name="NotifySystemHint" xml:space="preserve">
+    <value>Shown in the system's notification center (Windows, macOS; on Linux with notify-send).</value>
+  </data>
+  <data name="NotifyEventsLabel" xml:space="preserve">
+    <value>Report:</value>
+  </data>
+  <data name="NotifyEventFailed" xml:space="preserve">
+    <value>Failures</value>
+  </data>
+  <data name="NotifyEventSkipped" xml:space="preserve">
+    <value>Skipped runs</value>
+  </data>
+  <data name="NotifyEventWarnings" xml:space="preserve">
+    <value>Warnings</value>
+  </data>
+  <data name="NotifyEventRecovered" xml:space="preserve">
+    <value>Working again</value>
+  </data>
+  <data name="NotifyEventSucceeded" xml:space="preserve">
+    <value>Every success</value>
+  </data>
+  <data name="NotifyTest" xml:space="preserve">
+    <value>Test</value>
+  </data>
+  <data name="NotifyTesting" xml:space="preserve">
+    <value>Sending …</value>
+  </data>
+  <data name="NotifyTestSent" xml:space="preserve">
+    <value>Sent – check that it arrived.</value>
+  </data>
+  <data name="NotifyTestFailed" xml:space="preserve">
+    <value>Failed: {0}</value>
+  </data>
+  <data name="NotifyUnavailable" xml:space="preserve">
+    <value>Notifications are not available here.</value>
+  </data>
+  <data name="NotifySmtpServer" xml:space="preserve">
+    <value>SMTP server</value>
+  </data>
+  <data name="NotifySmtpPort" xml:space="preserve">
+    <value>Port</value>
+  </data>
+  <data name="NotifySmtpSecurity" xml:space="preserve">
+    <value>Encryption</value>
+  </data>
+  <data name="NotifySecurityAuto" xml:space="preserve">
+    <value>Automatic (recommended)</value>
+  </data>
+  <data name="NotifySecurityNone" xml:space="preserve">
+    <value>None (local network only)</value>
+  </data>
+  <data name="NotifySmtpUser" xml:space="preserve">
+    <value>User name (empty: no login)</value>
+  </data>
+  <data name="NotifySmtpPassword" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="NotifySmtpFrom" xml:space="preserve">
+    <value>Sender</value>
+  </data>
+  <data name="NotifySmtpTo" xml:space="preserve">
+    <value>Recipients (separated by commas)</value>
+  </data>
+  <data name="NotifySecretsVault" xml:space="preserve">
+    <value>The password and the webhook's token are kept in the PIN-protected vault.</value>
+  </data>
+  <data name="NotifySecretsKeychain" xml:space="preserve">
+    <value>The password and the webhook's token are kept in the system keychain.</value>
+  </data>
+  <data name="NotifySecretsNowhere" xml:space="preserve">
+    <value>There is no safe place for a password here: set up a PIN (Tools → Settings) to use one.</value>
+  </data>
+  <data name="NotifyWebhookFormat" xml:space="preserve">
+    <value>Format</value>
+  </data>
+  <data name="NotifyWebhookUrl" xml:space="preserve">
+    <value>URL</value>
+  </data>
+  <data name="NotifyFormatJson" xml:space="preserve">
+    <value>JSON (all details)</value>
+  </data>
+  <data name="NotifyUrlHintJson" xml:space="preserve">
+    <value>BorgStudio posts a JSON object with the event, the job and the run's details – for scripts and home automation.</value>
+  </data>
+  <data name="NotifyUrlHintNtfy" xml:space="preserve">
+    <value>The topic's URL, e.g. https://ntfy.sh/my-backups. For a protected topic: header Authorization, value “Bearer &lt;token&gt;”.</value>
+  </data>
+  <data name="NotifyUrlHintDiscord" xml:space="preserve">
+    <value>The channel's webhook URL (channel settings → Integrations → Webhooks).</value>
+  </data>
+  <data name="NotifyUrlHintSlack" xml:space="preserve">
+    <value>The URL of an incoming webhook of your Slack app.</value>
+  </data>
+  <data name="NotifyUrlHintGotify" xml:space="preserve">
+    <value>Your server's /message URL, e.g. https://gotify.example.com/message; the app token goes in the header X-Gotify-Key.</value>
+  </data>
+  <data name="NotifyWebhookHeader" xml:space="preserve">
+    <value>Extra header (optional)</value>
+  </data>
+  <data name="NotifyWebhookHeaderValue" xml:space="preserve">
+    <value>Value (token)</value>
+  </data>
+  <data name="NotifyWebhookHeaderHint" xml:space="preserve">
+    <value>For receivers that want a token, e.g. Authorization: Bearer …; the value is kept like a password.</value>
+  </data>
+  <data name="NotifyExtras" xml:space="preserve">
+    <value>More</value>
+  </data>
+  <data name="NotifySuppressRepeats" xml:space="preserve">
+    <value>Report the same problem of a job only once – until it works again (then “working again” is reported)</value>
+  </data>
+  <data name="NotifyPerJobHint" xml:space="preserve">
+    <value>Single jobs can be left out in their editor (“Send notifications for this job”).</value>
+  </data>
+  <data name="NotifyErrorIn" xml:space="preserve">
+    <value>{0}: {1}</value>
+  </data>
+  <data name="NotifyErrorHost" xml:space="preserve">
+    <value>The SMTP server is missing.</value>
+  </data>
+  <data name="NotifyErrorPort" xml:space="preserve">
+    <value>The port must be a number from 1 to 65535.</value>
+  </data>
+  <data name="NotifyErrorFrom" xml:space="preserve">
+    <value>The sender is missing.</value>
+  </data>
+  <data name="NotifyErrorTo" xml:space="preserve">
+    <value>At least one recipient is needed.</value>
+  </data>
+  <data name="NotifyErrorUrl" xml:space="preserve">
+    <value>The URL must start with http:// or https://.</value>
+  </data>
+  <data name="NotifySecretFailed" xml:space="preserve">
+    <value>The password could not be saved: {0}</value>
+  </data>
+  <data name="JobEditorNotify" xml:space="preserve">
+    <value>Send notifications for this job (see Tools → Notifications)</value>
+  </data>
+  <data name="BorgErrorNoSpace" xml:space="preserve">
+    <value>The repository's disk or server is full.</value>
+  </data>
+  <data name="NotifyTitleStorageLow" xml:space="preserve">
+    <value>Storage almost full: {0}</value>
+  </data>
+  <data name="NotifyTitleStorageFull" xml:space="preserve">
+    <value>Storage full: {0}</value>
+  </data>
+  <data name="NotifyStorageFullHint" xml:space="preserve">
+    <value>Further backups may fail. Free space (e.g. keep fewer archives and compact) or move the repository.</value>
+  </data>
+  <data name="NotifyEventStorageLow" xml:space="preserve">
+    <value>Storage almost full</value>
+  </data>
+  <data name="NotifyEventStorageFull" xml:space="preserve">
+    <value>Storage full</value>
+  </data>
+  <data name="NotifyStorageFullLabel" xml:space="preserve">
+    <value>Storage counts as full when:</value>
+  </data>
+  <data name="NotifyFullBelowOnePercent" xml:space="preserve">
+    <value>less than 1 % is free</value>
+  </data>
+  <data name="NotifyFullNextBackup" xml:space="preserve">
+    <value>less is free than the last backup newly stored (the next one would hardly fit)</value>
+  </data>
+  <data name="NotifyFullBackupFailed" xml:space="preserve">
+    <value>a backup failed for lack of space (until a backup works again)</value>
+  </data>
+  <data name="NotifyStorageHint" xml:space="preserve">
+    <value>“Almost full” is below the threshold set for each repository (repository editor → Advanced, 10 % by default). Storage is measured after every backup.</value>
+  </data>
+  <data name="StorageHeader" xml:space="preserve">
+    <value>Storage</value>
+  </data>
+  <data name="StorageMeasure" xml:space="preserve">
+    <value>Measure</value>
+  </data>
+  <data name="StorageMeasuring" xml:space="preserve">
+    <value>Measuring the storage …</value>
+  </data>
+  <data name="StorageNotMeasured" xml:space="preserve">
+    <value>Not measured yet – it is measured after every backup.</value>
+  </data>
+  <data name="StorageUsed" xml:space="preserve">
+    <value>{0} of {1} used · {2} free ({3} %)</value>
+  </data>
+  <data name="StorageRepositoryOnly" xml:space="preserve">
+    <value>The repository takes up {0}.</value>
+  </data>
+  <data name="StorageMeasured" xml:space="preserve">
+    <value>Measured {0} ({1})</value>
+  </data>
+  <data name="StorageSourceDisk" xml:space="preserve">
+    <value>disk</value>
+  </data>
+  <data name="StorageSourceServer" xml:space="preserve">
+    <value>server</value>
+  </data>
+  <data name="StorageSourceCapacity" xml:space="preserve">
+    <value>repository size against the capacity entered</value>
+  </data>
+  <data name="StorageSourceRepository" xml:space="preserve">
+    <value>repository size</value>
+  </data>
+  <data name="StorageCapacityMissing" xml:space="preserve">
+    <value>The SSH key may only run borg, so BorgStudio cannot ask the server for its free space. Enter the storage's capacity (repository editor → Advanced) to see how full it is.</value>
+  </data>
+  <data name="StorageLowText" xml:space="preserve">
+    <value>Less than {0} % free.</value>
+  </data>
+  <data name="StorageFullText" xml:space="preserve">
+    <value>The storage is full – further backups may fail.</value>
+  </data>
+  <data name="EditorStorageWarn" xml:space="preserve">
+    <value>Warn when less is free than</value>
+  </data>
+  <data name="EditorStorageWarnHint" xml:space="preserve">
+    <value>0 = no warning. Shown in the overview and – if switched on – reported as “storage almost full”.</value>
+  </data>
+  <data name="EditorStorageCapacity" xml:space="preserve">
+    <value>Capacity of the storage (optional)</value>
+  </data>
+  <data name="EditorStorageCapacityHint" xml:space="preserve">
+    <value>Only needed when the SSH key may only run borg (the default): BorgStudio then compares the repository's size with this, e.g. 1000 for a storage box with 1 TB.</value>
+  </data>
+  <data name="EditorCapacityInvalid" xml:space="preserve">
+    <value>The capacity must be a number of GB greater than 0.</value>
+  </data>
+  <data name="NotifyEventOverdue" xml:space="preserve">
+    <value>Overdue jobs</value>
+  </data>
+  <data name="NotifyTitleOverdue" xml:space="preserve">
+    <value>No backup for a while: {0}</value>
+  </data>
+  <data name="NotifyDailySummary" xml:space="preserve">
+    <value>Also send the daily summary</value>
+  </data>
+  <data name="NotifyDailyTime" xml:space="preserve">
+    <value>Daily check (summary, overdue jobs) at</value>
+  </data>
+  <data name="NotifySummaryWhenAllWell" xml:space="preserve">
+    <value>Send the summary also when everything went well (as a sign of life)</value>
+  </data>
+  <data name="NotifyDailyHint" xml:space="preserve">
+    <value>With the task scheduler, BorgStudio adds its own daily task for this (made up for when the computer was off); in the background, BorgStudio does it itself. Jobs become overdue after the number of days set in their editor.</value>
+  </data>
+  <data name="SummaryTitleAllWell" xml:space="preserve">
+    <value>Daily summary: all well</value>
+  </data>
+  <data name="SummaryTitleProblems" xml:space="preserve">
+    <value>Daily summary: {0} to look at</value>
+  </data>
+  <data name="SummaryRunsSince" xml:space="preserve">
+    <value>Backups since {0}:</value>
+  </data>
+  <data name="SummaryNoRuns" xml:space="preserve">
+    <value>none</value>
+  </data>
+  <data name="SummaryMoreRuns" xml:space="preserve">
+    <value>… and {0} more</value>
+  </data>
+  <data name="SummaryRunSizes" xml:space="preserve">
+    <value>{0} read, {1} new</value>
+  </data>
+  <data name="SummaryStorage" xml:space="preserve">
+    <value>Storage:</value>
+  </data>
+  <data name="SummaryOverdue" xml:space="preserve">
+    <value>Overdue:</value>
+  </data>
+  <data name="SummaryOverdueLine" xml:space="preserve">
+    <value>{0}: no successful backup since {1} ({2} days)</value>
+  </data>
+  <data name="JobEditorOverdue" xml:space="preserve">
+    <value>Report when there was no successful backup for</value>
+  </data>
+  <data name="JobEditorOverdueDays" xml:space="preserve">
+    <value>days (0 = never)</value>
+  </data>
+  <data name="TriggerHeader" xml:space="preserve">
+    <value>Incoming webhook</value>
+  </data>
+  <data name="TriggerIntro" xml:space="preserve">
+    <value>Lets other programs (scripts, home automation) start backup jobs over HTTP, ask for their status or stop the running backup. Only jobs that allow it in their editor, and only with the token.</value>
+  </data>
+  <data name="TriggerNeedsBackground" xml:space="preserve">
+    <value>Only available with “BorgStudio in the background” (above).</value>
+  </data>
+  <data name="TriggerEnabled" xml:space="preserve">
+    <value>Listen for the webhook</value>
+  </data>
+  <data name="TriggerPort" xml:space="preserve">
+    <value>Port</value>
+  </data>
+  <data name="TriggerAllowNetwork" xml:space="preserve">
+    <value>Also reachable from other computers in the network (otherwise only from this computer)</value>
+  </data>
+  <data name="TriggerNetworkWarning" xml:space="preserve">
+    <value>Anyone in the network who knows the token can start backups. The connection is not encrypted (HTTP): use it only in a network you trust, or put an HTTPS proxy in front. Windows may ask once whether to allow BorgStudio through the firewall.</value>
+  </data>
+  <data name="TriggerToken" xml:space="preserve">
+    <value>Token</value>
+  </data>
+  <data name="TriggerCopy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="TriggerNewToken" xml:space="preserve">
+    <value>New token</value>
+  </data>
+  <data name="TriggerUsage" xml:space="preserve">
+    <value>POST /run/&lt;job name or id&gt; starts a job (?wait=1 answers when it is done), GET /status shows what runs and each job's last run, POST /cancel stops the running backup. The token goes in the header “Authorization: Bearer &lt;token&gt;”.</value>
+  </data>
+  <data name="TriggerNoToken" xml:space="preserve">
+    <value>No token can be read: without a key for scheduled runs, unlock BorgStudio once with the PIN.</value>
+  </data>
+  <data name="TriggerAllAddresses" xml:space="preserve">
+    <value>all addresses</value>
+  </data>
+  <data name="TriggerListening" xml:space="preserve">
+    <value>Listening on {0}, port {1}.</value>
+  </data>
+  <data name="TriggerFailed" xml:space="preserve">
+    <value>Port {0} cannot be used: {1}</value>
+  </data>
+  <data name="TriggerTokenCreated" xml:space="preserve">
+    <value>A new token was created – callers with the old one are refused from now on.</value>
+  </data>
+  <data name="TriggerTokenCopied" xml:space="preserve">
+    <value>Token copied.</value>
+  </data>
+  <data name="TriggerExampleCopied" xml:space="preserve">
+    <value>Call copied (with the token).</value>
+  </data>
+  <data name="JobEditorWebhook" xml:space="preserve">
+    <value>May be started by the incoming webhook (Tools → Settings)</value>
+  </data>
+  <data name="StorageLegendRepository" xml:space="preserve">
+    <value>This repository {0}</value>
+  </data>
+  <data name="StorageLegendOther" xml:space="preserve">
+    <value>Other data {0}</value>
+  </data>
+  <data name="StorageLegendFree" xml:space="preserve">
+    <value>Free {0} of {1} ({2} %)</value>
+  </data>
+  <data name="StorageRatios" xml:space="preserve">
+    <value>Saved by deduplication and compression: {0} % · deduplication {1} : 1 · compression {2} : 1</value>
+  </data>
+  <data name="StorageGrowing" xml:space="preserve">
+    <value>Grows by about {0} a week</value>
+  </data>
+  <data name="StorageNotGrowing" xml:space="preserve">
+    <value>Does not grow at the moment.</value>
+  </data>
+  <data name="StorageFullBy" xml:space="preserve">
+    <value>→ full probably {0}</value>
+  </data>
+  <data name="StorageFullIn" xml:space="preserve">
+    <value>→ full in about {0} days</value>
+  </data>
+  <data name="StorageFullRange" xml:space="preserve">
+    <value>(between {0} and {1})</value>
+  </data>
+  <data name="StorageFullEarliest" xml:space="preserve">
+    <value>(at the earliest {0})</value>
+  </data>
+  <data name="StoragePartStart" xml:space="preserve">
+    <value>early {0}</value>
+  </data>
+  <data name="StoragePartMiddle" xml:space="preserve">
+    <value>mid {0}</value>
+  </data>
+  <data name="StoragePartEnd" xml:space="preserve">
+    <value>late {0}</value>
+  </data>
+  <data name="StorageForecastFromBackups" xml:space="preserve">
+    <value>Estimated from the backups of the last 30 days until there are enough measurements (one a day, after backups or with “Measure”).</value>
+  </data>
+  <data name="TabStatistics" xml:space="preserve">
+    <value>Statistics</value>
+  </data>
+  <data name="ChartForecast" xml:space="preserve">
+    <value>forecast</value>
+  </data>
+  <data name="StatsAllJobs" xml:space="preserve">
+    <value>All jobs</value>
+  </data>
+  <data name="StatsCapacity" xml:space="preserve">
+    <value>Capacity</value>
+  </data>
+  <data name="StatsDiskSize" xml:space="preserve">
+    <value>Disk size</value>
+  </data>
+  <data name="StatsStorageTitle" xml:space="preserve">
+    <value>Storage over time</value>
+  </data>
+  <data name="StatsStorageEmpty" xml:space="preserve">
+    <value>The chart starts with the second measurement: storage is measured after every backup (once a day is kept) and with “Measure” in the overview.</value>
+  </data>
+  <data name="StatsSavingsTitle" xml:space="preserve">
+    <value>What deduplication and compression save</value>
+  </data>
+  <data name="StatsOriginal" xml:space="preserve">
+    <value>All archives, original</value>
+  </data>
+  <data name="StatsArchivesFormat" xml:space="preserve">
+    <value>{0} archives</value>
+  </data>
+  <data name="StatsStored" xml:space="preserve">
+    <value>Stored in the repository</value>
+  </data>
+  <data name="StatsSavedFormat" xml:space="preserve">
+    <value>{0} saved</value>
+  </data>
+  <data name="StatsDeduplication" xml:space="preserve">
+    <value>Deduplication</value>
+  </data>
+  <data name="StatsCompression" xml:space="preserve">
+    <value>Compression</value>
+  </data>
+  <data name="StatsBackupsTitle" xml:space="preserve">
+    <value>Backups</value>
+  </data>
+  <data name="StatsSuccessRate" xml:space="preserve">
+    <value>Success rate (30 days)</value>
+  </data>
+  <data name="StatsSuccessDetail" xml:space="preserve">
+    <value>{0} of {1} runs</value>
+  </data>
+  <data name="StatsLastSuccess" xml:space="preserve">
+    <value>Last successful backup</value>
+  </data>
+  <data name="StatsAverageDuration" xml:space="preserve">
+    <value>Average duration</value>
+  </data>
+  <data name="StatsAverageNew" xml:space="preserve">
+    <value>Newly stored per backup</value>
+  </data>
+  <data name="StatsWeekFormat" xml:space="preserve">
+    <value>{0} in the last 7 days</value>
+  </data>
+  <data name="StatsColumnsTitle" xml:space="preserve">
+    <value>What each of the last backups newly stored (deduplicated) – red: failed, yellow: with warnings</value>
+  </data>
+  <data name="StatsColumnTip" xml:space="preserve">
+    <value>{0} new, {1}</value>
+  </data>
+  <data name="StatsNoRuns" xml:space="preserve">
+    <value>No backups yet.</value>
+  </data>
+  <data name="StatsNever" xml:space="preserve">
+    <value>never</value>
+  </data>
+  <data name="StatsAgoMinutes" xml:space="preserve">
+    <value>{0} min ago</value>
+  </data>
+  <data name="StatsAgoHours" xml:space="preserve">
+    <value>{0} h ago</value>
+  </data>
+  <data name="StatsAgoDays" xml:space="preserve">
+    <value>{0} days ago</value>
+  </data>
+  <data name="StatsActivityTitle" xml:space="preserve">
+    <value>Activity (12 weeks)</value>
+  </data>
+  <data name="StatsNoBackup" xml:space="preserve">
+    <value>no backup</value>
+  </data>
+  <data name="StatsDayTip" xml:space="preserve">
+    <value>{0} of {1} backups worked</value>
+  </data>
+  <data name="StatsLegendOk" xml:space="preserve">
+    <value>all worked</value>
+  </data>
+  <data name="StatsLegendWarnings" xml:space="preserve">
+    <value>with warnings</value>
+  </data>
+  <data name="StatsLegendFailed" xml:space="preserve">
+    <value>failed or skipped</value>
+  </data>
+  <data name="StatsLegendNone" xml:space="preserve">
+    <value>none</value>
+  </data>
+  <data name="DashTitle" xml:space="preserve">
+    <value>All repositories</value>
+  </data>
+  <data name="DashEntrySub" xml:space="preserve">
+    <value>Overview and state</value>
+  </data>
+  <data name="DashStored" xml:space="preserve">
+    <value>Stored in total</value>
+  </data>
+  <data name="DashRepositories" xml:space="preserve">
+    <value>{0} repositories</value>
+  </data>
+  <data name="DashSavings" xml:space="preserve">
+    <value>Saved by deduplication and compression</value>
+  </data>
+  <data name="DashNoStats" xml:space="preserve">
+    <value>after the next backups</value>
+  </data>
+  <data name="DashEarliestFull" xml:space="preserve">
+    <value>Full first</value>
+  </data>
+  <data name="DashNotForeseeable" xml:space="preserve">
+    <value>not foreseeable</value>
+  </data>
+  <data name="DashToday" xml:space="preserve">
+    <value>today</value>
+  </data>
+  <data name="DashDays" xml:space="preserve">
+    <value>~{0} days</value>
+  </data>
+  <data name="DashWeeks" xml:space="preserve">
+    <value>~{0} wk.</value>
+  </data>
+  <data name="DashMonths" xml:space="preserve">
+    <value>~{0} mo.</value>
+  </data>
+  <data name="DashYears" xml:space="preserve">
+    <value>~{0} yr.</value>
+  </data>
+  <data name="DashRepositoriesTitle" xml:space="preserve">
+    <value>Repositories – problems first</value>
+  </data>
+  <data name="DashOpenTip" xml:space="preserve">
+    <value>Open the repository</value>
+  </data>
+  <data name="DashActivityTitle" xml:space="preserve">
+    <value>Activity of all jobs (12 weeks)</value>
+  </data>
+  <data name="DashStorageFull" xml:space="preserve">
+    <value>Storage full</value>
+  </data>
+  <data name="DashStorageLow" xml:space="preserve">
+    <value>Storage almost full</value>
+  </data>
+  <data name="DashReasonNever" xml:space="preserve">
+    <value>{0}: never backed up yet</value>
+  </data>
+  <data name="DashReasonFailed" xml:space="preserve">
+    <value>{0}: last run failed</value>
+  </data>
+  <data name="DashReasonMissed" xml:space="preserve">
+    <value>{0}: last scheduled backup missing</value>
+  </data>
+  <data name="DashReasonMissedTwice" xml:space="preserve">
+    <value>{0}: the last two scheduled backups are missing</value>
+  </data>
+  <data name="DashReasonOverdue" xml:space="preserve">
+    <value>{0}: no successful backup for {1} days</value>
+  </data>
+  <data name="DashMoreProblems" xml:space="preserve">
+    <value>{0} (+{1} more)</value>
+  </data>
+  <data name="DashNoJobs" xml:space="preserve">
+    <value>No backup jobs yet</value>
+  </data>
+  <data name="DashAllWell" xml:space="preserve">
+    <value>All well</value>
+  </data>
+  <data name="DashByHandOnly" xml:space="preserve">
+    <value>Backed up by hand only</value>
+  </data>
+  <data name="DashLastBackup" xml:space="preserve">
+    <value>Last backup {0}</value>
+  </data>
+  <data name="DashNeverBackedUp" xml:space="preserve">
+    <value>Never backed up</value>
+  </data>
+  <data name="DashFullBy" xml:space="preserve">
+    <value>full ~{0}</value>
+  </data>
 </root>

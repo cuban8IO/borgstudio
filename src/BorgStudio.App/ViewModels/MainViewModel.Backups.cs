@@ -3,6 +3,7 @@ using System.Globalization;
 using BorgStudio.App.Resources;
 using BorgStudio.Core.Backups;
 using BorgStudio.Core.Borg;
+using BorgStudio.Core.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -34,7 +35,7 @@ public partial class MainViewModel
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(RunJobCommand), nameof(CancelBackupCommand), nameof(DeleteJobCommand), nameof(EditJobCommand),
         nameof(TestRepositoryCommand), nameof(ExportKeyCommand), nameof(RemoveRepositoryCommand), nameof(EditRepositoryCommand),
-        nameof(CleanUpJobCommand), nameof(FreeSpaceCommand))]
+        nameof(CleanUpJobCommand), nameof(FreeSpaceCommand), nameof(MeasureStorageCommand))]
     public partial bool IsBackupRunning { get; private set; }
 
     /// <summary>Completes when the running backup (if any) has ended.</summary>
@@ -48,12 +49,20 @@ public partial class MainViewModel
         RefreshRepositoryJobs();
     }
 
-    private void SaveJobs() => _services.Jobs.Save(_jobs);
+    private void SaveJobs()
+    {
+        _services.Jobs.Save(_jobs);
+        ApplySchedules();
+    }
 
     partial void OnSelectedRepositoryChanged(RepositoryItemViewModel? value)
     {
         RefreshRepositoryJobs();
         ResetArchives();
+        RefreshStatistics();
+        // Another repository chosen (added, removed, opened from the tray): it is shown, not the overview.
+        if (value is not null)
+            IsOverviewShown = false;
     }
 
     private void RefreshRepositoryJobs()
@@ -66,6 +75,7 @@ public partial class MainViewModel
         SelectedJob = RepositoryJobs.FirstOrDefault(item => item.Job.Id == selected) ?? RepositoryJobs.FirstOrDefault();
         OnPropertyChanged(nameof(HasRepositoryJobs));
         NewJobCommand.NotifyCanExecuteChanged();
+        RaiseBackgroundStateChanged();
     }
 
     /// <summary>Replaces all jobs (imports).</summary>
@@ -85,6 +95,7 @@ public partial class MainViewModel
         RefreshRepositoryJobs();
         _services.Archives.Remove(repositoryId);
         _services.Durations.Remove(repositoryId);
+        StorageStore.Remove(repositoryId);
     }
 
     // --- New / edit / delete ---
@@ -97,6 +108,7 @@ public partial class MainViewModel
         if (editor.Result is not { } job)
             return;
 
+        await PrepareScheduleAsync(job);
         _jobs.Add(job);
         SaveJobs();
         RefreshRepositoryJobs();
@@ -113,6 +125,8 @@ public partial class MainViewModel
         if (editor.Result is not { } job)
             return;
 
+        if (!SelectedJob!.Job.IsScheduled)
+            await PrepareScheduleAsync(job);
         _jobs[_jobs.FindIndex(existing => existing.Id == job.Id)] = job;
         SaveJobs();
         RefreshRepositoryJobs();
@@ -129,6 +143,8 @@ public partial class MainViewModel
 
         _jobs.RemoveAll(existing => existing.Id == job.Id);
         SaveJobs();
+        Runner.History.Remove(job.Id);
+        NotificationPolicy.ForDataDirectory(_services.Jobs.DataDirectory).Forget(job.Id);
         RefreshRepositoryJobs();
     }
 
@@ -163,8 +179,29 @@ public partial class MainViewModel
             return;
         if (await GetPassphraseAsync(item) is not { } passphrase)
             return;
+        // A scheduled backup started while the questions were open.
+        if (IsBackupRunning)
+            return;
 
         var borg = Borg!;
+        var result = await RunWithCardAsync(job, (report, cancellationToken) =>
+            Runner.RunAsync(new BackupRunRequest(borg, location, job, passphrase.Value, ssh.Access), report, cancellationToken));
+        var summary = result.Summary;
+        // Turned away (another run is busy): that one measures and reports.
+        if (summary.SkipReason == BackupSkipReason.RepositoryBusy)
+            return;
+        var usage = await MeasureAfterBackupAsync(item.Config, borg, location, passphrase.Value, ssh.Access, result.Repository);
+        await NotifyRunAsync(job, summary);
+        await NotifyStorageAsync(item.Config, usage);
+    }
+
+    /// <summary>
+    /// Runs a backup with its card in the window: progress, the expected total, cancelling. The window's own runs and the
+    /// ones the background scheduler starts.
+    /// </summary>
+    private async Task<BackupRunResult> RunWithCardAsync(BackupJob job,
+        Func<IBackupRunReport, CancellationToken, Task<BackupRunResult>> start)
+    {
         var run = new BackupRunViewModel(job);
         CurrentBackup = run;
         IsBackupRunning = true;
@@ -179,27 +216,16 @@ public partial class MainViewModel
         else
             _ = EstimateAsync(run, job, ticker.Token);
 
-        var options = new List<string> { "--compression", job.Compression };
-        options.AddRange(BackupPatterns.Arguments(job.Exclusions, path => BorgClient.BorgPath(borg, path)));
-        var archive = $"{ArchivePrefix(job.Name)}-{{hostname}}-{{now:%Y-%m-%dT%H:%M:%S}}";
-        var progress = new ViewModelProgress<BorgCreateProgress>(this, run.Report);
-
-        BorgResult<BorgCreateResult> result;
-        BackupRunSummary summary;
+        // borg create, then the job's clean-up; the runner records the outcome with the job and in its history.
+        BackupRunResult result;
         try
         {
-            result = await _services.BorgClient.CreateAsync(borg, location, archive, job.Sources, options, passphrase.Value,
-                ssh.Access, progress, cancellation.Token);
-            summary = Summarize(run, result);
-
-            // A new archive: the job's old ones may go now.
-            if (summary.Outcome is BackupOutcome.Succeeded or BackupOutcome.Warnings && job.Retention is { HasRules: true } retention)
-            {
-                summary = summary with
-                {
-                    Cleanup = await PruneAndCompactAsync(run, job, retention, borg, location, ssh.Access, passphrase.Value, cancellation.Token),
-                };
-            }
+            result = await start(new RunReport(this, run), cancellation.Token);
+        }
+        catch
+        {
+            IsBackupRunning = false;
+            throw;
         }
         finally
         {
@@ -207,64 +233,33 @@ public partial class MainViewModel
             _backupCancellation = null;
         }
 
-        run.Finish(summary, result.Value?.Warnings ?? []);
+        var summary = result.Summary;
+        run.Finish(summary, result.Warnings);
         var index = _jobs.FindIndex(existing => existing.Id == job.Id);
-        if (index >= 0)
+        // A run turned away (another one is busy) leaves the job's last run to that one.
+        if (index >= 0 && summary.Outcome != BackupOutcome.Skipped)
         {
             _jobs[index] = _jobs[index] with { LastRun = summary };
-            SaveJobs();
             RefreshRepositoryJobs();
         }
         IsBackupRunning = false;
-        ArchivesChanged(job.RepositoryId);
+        if (summary.Outcome != BackupOutcome.Skipped)
+            ArchivesChanged(job.RepositoryId);
+        // A scheduled run in the background has measured the storage meanwhile.
+        RefreshStorage(job.RepositoryId);
+        return result;
     }
 
-    private static BackupRunSummary Summarize(BackupRunViewModel run, BorgResult<BorgCreateResult> result)
-    {
-        if (result.Value is { } created)
-        {
-            return new BackupRunSummary
-            {
-                Started = run.Started,
-                Duration = run.Elapsed,
-                Outcome = created.Warnings.Count > 0 ? BackupOutcome.Warnings : BackupOutcome.Succeeded,
-                ArchiveName = created.ArchiveName,
-                OriginalSize = created.OriginalSize,
-                CompressedSize = created.CompressedSize,
-                DeduplicatedSize = created.DeduplicatedSize,
-                Files = created.Files,
-                Message = created.Warnings.FirstOrDefault(),
-            };
-        }
+    /// <summary>Runs backups and clean-ups – the same for the window, the background and scheduled runs.</summary>
+    internal BackupRunner Runner => _runner ??= new BackupRunner(_services.BorgClient, _services.Jobs, _services.Durations, BorgTexts.Describe);
 
-        var cancelled = result.Error!.Kind == BorgErrorKind.Cancelled;
-        return new BackupRunSummary
-        {
-            Started = run.Started,
-            Duration = run.Elapsed,
-            Outcome = cancelled ? BackupOutcome.Cancelled : BackupOutcome.Failed,
-            OriginalSize = run.OriginalSize,
-            DeduplicatedSize = run.DeduplicatedSize,
-            Files = run.Files,
-            Message = cancelled ? null : BorgTexts.Describe(result.Error),
-        };
-    }
+    private BackupRunner? _runner;
 
-    /// <summary>"Dokumente & Fotos" → "Dokumente-Fotos": safe in an archive name and for later per-job clean-ups.</summary>
-    public static string ArchivePrefix(string jobName)
-    {
-        var safe = new string(jobName.Trim().Select(c => char.IsLetterOrDigit(c) || c is '_' or '.' ? c : '-').ToArray());
-        while (safe.Contains("--", StringComparison.Ordinal))
-            safe = safe.Replace("--", "-", StringComparison.Ordinal);
-        safe = safe.Trim('-');
-        return safe.Length > 0 ? safe : "backup";
-    }
+    /// <summary>"Dokumente & Fotos" → "Dokumente-Fotos" (see <see cref="BackupNames.ArchivePrefix"/>).</summary>
+    public static string ArchivePrefix(string jobName) => BackupNames.ArchivePrefix(jobName);
 
-    /// <summary>
-    /// The archives this computer created for the job – "Documents-{hostname}-*" – which is what its clean-up looks at.
-    /// With the host name a job "Documents-Old" (or another computer backing up into the same repository) stays out.
-    /// </summary>
-    public static string ArchiveGlob(string jobName) => $"{ArchivePrefix(jobName)}-{{hostname}}-*";
+    /// <summary>The archives this computer created for the job (see <see cref="BackupNames.ArchiveGlob"/>).</summary>
+    public static string ArchiveGlob(string jobName) => BackupNames.ArchiveGlob(jobName);
 
     private async Task TickAsync(BackupRunViewModel run, CancellationToken cancellationToken)
     {
@@ -291,6 +286,22 @@ public partial class MainViewModel
         catch (OperationCanceledException)
         {
         }
+    }
+
+    /// <summary>Shows what the runner reports in the run's card (on the view model's thread).</summary>
+    private sealed class RunReport(MainViewModel owner, BackupRunViewModel run) : IBackupRunReport
+    {
+        public void Created(BorgCreateProgress progress) => owner.OnViewModelThread(() => run.Report(progress));
+
+        public void PhaseStarted(BackupRunPhase phase, TimeSpan? expected) => owner.OnViewModelThread(() => run.StartPhase(
+            phase switch
+            {
+                BackupRunPhase.Pruning => RunPhase.Pruning,
+                BackupRunPhase.Compacting => RunPhase.Compacting,
+                _ => RunPhase.Backup,
+            }, expected));
+
+        public void PhaseProgress(double fraction) => owner.OnViewModelThread(() => run.ReportPhase(fraction));
     }
 
     /// <summary>Hands progress to the view model's thread (borg reports on a background thread).</summary>
@@ -330,4 +341,12 @@ public sealed class BackupJobItemViewModel(BackupJob job)
         : Strings.JobRetentionNone;
 
     public bool HasRetention => Job.Retention is { HasRules: true };
+
+    public bool IsScheduled => Job.IsScheduled;
+
+    /// <summary>"Täglich 20:00 · Mo, Di 12:30 · nächster Lauf: Mo., 17.11. 20:00".</summary>
+    public string ScheduleText => !Job.IsScheduled ? Strings.JobNotScheduled
+        : ScheduleCalendar.Next(Job.Schedules, DateTime.Now) is { } next
+            ? BorgTexts.Format(Strings.JobSchedule, BorgTexts.Schedules(Job.Schedules), $"{next.ToString("ddd", CultureInfo.CurrentCulture)} {next.ToString("g", CultureInfo.CurrentCulture)}")
+            : BorgTexts.Schedules(Job.Schedules);
 }

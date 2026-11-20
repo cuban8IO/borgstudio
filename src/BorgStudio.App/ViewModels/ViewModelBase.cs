@@ -19,4 +19,24 @@ public abstract class ViewModelBase : ObservableObject
         else
             _uiContext.Post(_ => action(), null);
     }
+
+    /// <summary>Runs <paramref name="work"/> on the UI thread and hands back its result – for calls from other threads.</summary>
+    protected Task<T> OnViewModelThreadAsync<T>(Func<T> work)
+    {
+        if (_uiContext is null || SynchronizationContext.Current == _uiContext)
+            return Task.FromResult(work());
+        var result = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _uiContext.Post(_ =>
+        {
+            try
+            {
+                result.SetResult(work());
+            }
+            catch (Exception exception)
+            {
+                result.SetException(exception);
+            }
+        }, null);
+        return result.Task;
+    }
 }

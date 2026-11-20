@@ -13,6 +13,13 @@ The **[product page](https://borgstudio.cuban8io.net/)** shows what it does, the
   existing ones; borg runs natively or, on Windows, inside WSL.
 - **Backup jobs** with source folders, exclusions and compression; live progress with upload speed and remaining
   time; cancelling keeps a checkpoint.
+- **Schedules**: daily, on chosen weekdays or every few hours – started by the system's task scheduler (also while
+  BorgStudio is closed) or by BorgStudio itself in the background (notification area, start at login); missed times
+  are made up for. Other programs can start jobs through an incoming webhook.
+- **Notifications** by system notification, e-mail and webhook (ntfy, Discord, Slack, Gotify, JSON) – failures,
+  warnings, full storage, overdue jobs, and a daily summary.
+- **Statistics**: an overview of all repositories (state, storage, success rate), and per repository the storage over
+  time with a forecast of when it will be full, what each backup newly stored and the activity of the last weeks.
 - **Cleaning up** old archives per job (daily, weekly, monthly, yearly …) with a preview, and freeing space.
 - **Archives**: list with size and own share, a browser with folder tree and search, search across all archives and
   the versions of a file.
@@ -22,8 +29,6 @@ The **[product page](https://borgstudio.cuban8io.net/)** shows what it does, the
 - **Security**: app lock with a PIN and an encrypted vault for passphrases and SSH keys, or the system keychain;
   export and import of all settings in one encrypted file.
 - **Updates** from within the app, checked against the release's checksums; UI in English and German.
-
-Scheduled backups are planned for a later version.
 
 ## No warranty
 
@@ -41,7 +46,8 @@ updater yet: download 0.2.0 once by hand and replace the old files.
 
 [BorgBackup](https://www.borgbackup.org/) 1.2 or newer (1.4 recommended) must be installed separately.
 BorgStudio finds it on `PATH` and in the usual install locations (e.g. Homebrew); on Windows it also
-looks for borg inside WSL. borg 2 is still in beta and not supported yet. The UI is available in English and German:
+looks for borg inside WSL. borg 2 is still in beta and not supported yet. On Linux, .NET needs ICU (`libicu`), which
+desktop distributions have installed. The UI is available in English and German:
 it follows the system language (English if that is neither) or the choice under Tools → Settings.
 
 ## Your data
@@ -64,6 +70,16 @@ it follows the system language (English if that is neither) or the choice under 
   (`<id>.json`) otherwise; safe to delete.
 - **Backup jobs:** `jobs.json` in the data folder – per job the repository, the source folders, what to leave out,
   the compression and the outcome of the last run. Archives are named `<job>-<computer>-<date and time>`.
+- **Run history:** `history/<job>.json` in the data folder – the last 100 runs of each job (outcome, sizes, clean-up);
+  removed with the job. `locks/` holds one lock file per repository while a backup runs, so two BorgStudio runs never
+  work on the same repository at once.
+- **Schedules:** kept with the jobs in `jobs.json`; the system’s task scheduler gets one entry per scheduled job
+  (Windows: Task Scheduler folder `\BorgStudio`, macOS: `~/Library/LaunchAgents/net.cuban8io.borgstudio.*.plist`,
+  Linux: `~/.config/systemd/user/borgstudio-*.timer`). Removing a job or its schedules removes the entry.
+- **Scheduled runs:** `logs/scheduled.log` gets one line per run started without window (`BorgStudio --run-job <job>`).
+  With a PIN, scheduled runs open the vault with its key kept in the system keychain (entry `scheduled-access`) – or,
+  without a keychain, in `scheduled-access.key`, readable only by the user. It follows PIN changes and goes when the
+  vault is reset.
 - **Moving to another computer:** Tools → Export settings writes everything – repositories, stored passphrases
   (vault and keychain), SSH keys, known servers, settings and, if wanted, the borg keys of the repositories – into one
   `.borgstudio` file, encrypted with a password of its own (at least 12 characters; Argon2id + AES-256-GCM). Tools →
@@ -153,9 +169,85 @@ section gets the new version number.
 
 ## Changelog
 
-### Unreleased
+### 0.4.0 – 2026-11-20
 
-Nothing yet.
+**Changed**
+- Backups run through one shared runner (`BackupRunner`) – the groundwork for scheduled backups. Each run is kept in
+  the job’s history (last 100 runs). While a backup works on a repository, another one for the same repository is
+  turned away with a clear message instead of failing on borg’s lock, and a job’s last run recorded by another
+  BorgStudio process is no longer overwritten when the app saves its jobs.
+
+**Added**
+- Backups without window: `BorgStudio --run-job <job id>` runs one job as a schedule will start it (exit code 0 backed
+  up, 1 failed, 2 skipped, 3 unknown job). Nothing is asked: what is missing ends the run with its reason, recorded with
+  the job – disk not connected, repository busy, passphrase missing, vault not open for scheduled runs, server never
+  confirmed. These count as failures; a repository that asks for its passphrase every time is skipped.
+- Schedules (backup job editor → Schedule): any number per job – daily at a time, on chosen weekdays, or every 1–12
+  hours from a time – and "make up for missed times once at the next start". The job list shows the schedules and the
+  next run. BorgStudio keeps the system’s task scheduler in step whenever the jobs are saved and at startup: a task
+  `\BorgStudio\<job>` in the Windows Task Scheduler, a LaunchAgent per job on macOS (plus one that catches up at
+  login, `BorgStudio --catch-up`), a systemd user timer per job on Linux (`Persistent=true`). The first schedule of a
+  job offers to store a passphrase that is asked every time and, with a PIN, asks whether scheduled runs may open the
+  vault.
+- Key for scheduled runs (`ScheduledAccess`): lets them open the PIN-protected vault through the system keychain, or a
+  file only the user can read where there is none. Set up with the first schedule (next step).
+- Background mode (Settings → Scheduled backups → "BorgStudio in the background"): instead of the system’s task
+  scheduler, BorgStudio runs the schedules itself. It starts at login without window (`--background`: a `Run` entry in
+  the registry on Windows, a LaunchAgent on macOS, `~/.config/autostart/borgstudio.desktop` on Linux), stays in the
+  notification area, and closing the window only hides it (a hint says so the first time). Scheduled backups run in the
+  app, one after the other, with their progress in the window; missed times are made up for once at startup. The
+  vault stays locked for the window – the scheduler opens its own copy with the key for scheduled runs. The icon shows
+  a running backup, a failed one or paused schedules; its menu opens the window, shows the next backup, starts a job,
+  pauses the schedules and quits. Switching modes removes or restores the system’s entries and the start at login.
+- Only one BorgStudio per user: starting it again brings the running one’s window forward.
+- Notifications (Tools → Notifications): every run – by hand, in the background and scheduled – can be reported as a
+  system notification (Windows toast – shown under a “BorgStudio” start menu shortcut that BorgStudio creates and
+  keeps pointing at itself, as Windows requires for apps without package; macOS notification center; `notify-send` on
+  Linux), by e-mail over SMTP (MailKit)
+  and through an outgoing webhook (BorgStudio’s JSON with all details, or ready-made for ntfy, Discord, Slack and
+  Gotify, with an optional token header). Each channel reports the events chosen for it – failures, skipped runs,
+  warnings, “working again”, every success – and has a Test button. The same problem of a job is reported only once
+  until the job works again (can be switched off); single jobs can be left out in their editor. The SMTP password and
+  the webhook’s token are kept like passphrases (in the vault with a PIN – scheduled runs use their key – otherwise in
+  the system keychain) and travel with an export. Sending problems never fail a backup; they go to
+  `logs/notifications.log`.
+- Storage (repository overview → Storage): after every backup – and with "Measure" – BorgStudio measures how full the
+  repository’s storage is and shows it as a bar: the local disk, `df` on the server for SSH keys that may run more than
+  `borg serve`, otherwise the repository’s size from borg against a capacity entered in the repository editor
+  (Advanced; e.g. the size of a storage box). Below a threshold per repository (10 % free by default) it counts as
+  almost full; as full below 1 % free, with less free than the last backups added, or after a backup failed for lack
+  of space (each switchable in Tools → Notifications). Both are new notification events, reported once per level.
+  borg’s “No space left on device” and “Insufficient free space” are now recognized as such.
+- Daily check (Tools → Notifications → More, 08:00 by default): reports jobs without a successful backup for longer
+  than the days set in their editor (“overdue”, off by default, once until the job backs up again) and sends a daily
+  summary – the backups since the last check, the storage of each repository, the overdue jobs – to the channels that
+  want it, in addition to their single messages; on quiet days only if wanted. With the task scheduler it is an entry of
+  its own (`BorgStudio --daily-check`, made up for when the computer was off); in the background BorgStudio runs it
+  itself.
+- Incoming webhook (Settings → Incoming webhook; background mode only): `POST /run/<job name or id>` starts a job like a
+  scheduled one – after the one running now, without questions; `?wait=1` answers with the outcome when it is done.
+  `GET /status` lists the running and queued jobs and each job’s last and next run, `POST /cancel` stops the running
+  backup. Every call needs the token (`Authorization: Bearer <token>`; kept like a passphrase, “New token” replaces it),
+  and a job must allow it in its editor. Listens on 127.0.0.1 (port 8473 by default), optionally on all addresses;
+  a small built-in HTTP server, no admin rights needed.
+- Storage history and forecast (repository overview → Storage): every measurement is kept (the last one a day, two years),
+  together with borg’s repository statistics, which come with every backup. The bar splits the disk into this repository,
+  other data and free space; below it: how fast the storage grows and when it will probably be full (linear trend of the
+  last 90 days, with a range; before there are enough measurements, estimated from what the backups of the last 30 days
+  added minus what clean-ups freed), and what deduplication and compression save.
+- Statistics tab per repository: the storage over time with the forecast as a dashed line up to the disk size or capacity;
+  what deduplication and compression save (original size, stored, ratios); the backups – success rate (30 days), last
+  successful backup, average duration and newly stored data, and a column per backup (red failed, yellow warnings), for all
+  jobs or one; and the activity of the last 12 weeks as a calendar. Hovering a chart shows its values. The charts are
+  BorgStudio’s own controls, no chart library.
+- Overview of all repositories (“All repositories” above the list; the app starts there): what all repositories take up
+  and save, the success rate of 30 days, which storage fills up first and when; each repository with its storage bar and
+  its state, problems first – judged by the schedules (a missed or failed scheduled backup is a warning, two missed ones
+  or a job’s overdue days critical; jobs started by hand only by failures), plus almost full or full storage; and the
+  activity of all jobs. Clicking a repository opens it.
+
+**Fixed**
+- BorgStudio no longer crashes at startup when .NET runs without culture data (Linux without ICU).
 
 ### 0.3.0 – 2026-11-17
 

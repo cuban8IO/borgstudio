@@ -1,0 +1,202 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:BorgStudio.App.ViewModels"
+        xmlns:res="using:BorgStudio.App.Resources"
+        xmlns:sys="using:System"
+        x:Class="BorgStudio.App.Views.NotificationsWindow"
+        x:DataType="vm:NotificationsViewModel"
+        Title="{x:Static res:Strings.NotifyTitle}"
+        Width="640" Height="700" MinWidth="520" MinHeight="480"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+    <Window.Styles>
+        <Style Selector="TextBlock.hint">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Opacity" Value="0.7" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="TextBlock.result">
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.label">
+            <Setter Property="Margin" Value="0,4,0,0" />
+        </Style>
+    </Window.Styles>
+
+    <DockPanel Margin="20">
+
+        <StackPanel DockPanel.Dock="Bottom" Spacing="8" Margin="0,12,0,0">
+            <ItemsControl ItemsSource="{Binding Errors}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="sys:String">
+                        <TextBlock Text="{Binding}" TextWrapping="Wrap" Foreground="{DynamicResource ErrorForeground}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                <Button Content="{x:Static res:Strings.Cancel}" Command="{Binding CancelCommand}" IsCancel="True" />
+                <Button Content="{x:Static res:Strings.EditorSave}" Command="{Binding SaveCommand}" Classes="accent" IsDefault="True" />
+            </StackPanel>
+        </StackPanel>
+
+        <ScrollViewer>
+            <StackPanel Spacing="16" Margin="0,0,12,0">
+
+                <TextBlock Text="{x:Static res:Strings.NotifyIntro}" TextWrapping="Wrap" Opacity="0.8" />
+
+                <!-- System notification -->
+                <Border Classes="card">
+                    <StackPanel Spacing="8">
+                        <CheckBox IsChecked="{Binding SystemEnabled}">
+                            <TextBlock Text="{x:Static res:Strings.NotifyChannelSystem}" FontSize="16" FontWeight="SemiBold" />
+                        </CheckBox>
+                        <StackPanel Spacing="8" IsEnabled="{Binding SystemEnabled}">
+                            <TextBlock Text="{x:Static res:Strings.NotifySystemHint}" Classes="hint" />
+                            <TextBlock Text="{x:Static res:Strings.NotifyEventsLabel}" Classes="label" />
+                            <ItemsControl ItemsSource="{Binding SystemEvents}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:NotificationEventOption">
+                                        <CheckBox Content="{Binding Label}" IsChecked="{Binding IsChecked}" Margin="0,0,16,0" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <CheckBox IsChecked="{Binding SystemDailySummary}" Content="{x:Static res:Strings.NotifyDailySummary}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Button Content="{x:Static res:Strings.NotifyTest}" Command="{Binding TestSystemCommand}" />
+                            <TextBlock Text="{Binding SystemTestResult}" Classes="result" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- E-mail -->
+                <Border Classes="card">
+                    <StackPanel Spacing="8">
+                        <CheckBox IsChecked="{Binding EmailEnabled}">
+                            <TextBlock Text="{x:Static res:Strings.NotifyChannelEmail}" FontSize="16" FontWeight="SemiBold" />
+                        </CheckBox>
+                        <StackPanel Spacing="6" IsEnabled="{Binding EmailEnabled}">
+                            <Grid ColumnDefinitions="*,12,100" RowDefinitions="Auto,Auto">
+                                <TextBlock Text="{x:Static res:Strings.NotifySmtpServer}" />
+                                <TextBlock Grid.Column="2" Text="{x:Static res:Strings.NotifySmtpPort}" />
+                                <TextBox Grid.Row="1" Text="{Binding EmailHost}" PlaceholderText="smtp.example.com" Margin="0,4,0,0" />
+                                <TextBox Grid.Row="1" Grid.Column="2" Text="{Binding EmailPort}" Margin="0,4,0,0" />
+                            </Grid>
+                            <TextBlock Text="{x:Static res:Strings.NotifySmtpSecurity}" Classes="label" />
+                            <ComboBox ItemsSource="{Binding SecurityOptions}" SelectedItem="{Binding EmailSecurity}" MinWidth="200" />
+                            <Grid ColumnDefinitions="*,12,*" RowDefinitions="Auto,Auto">
+                                <TextBlock Text="{x:Static res:Strings.NotifySmtpUser}" Classes="label" />
+                                <TextBlock Grid.Column="2" Text="{x:Static res:Strings.NotifySmtpPassword}" Classes="label" />
+                                <TextBox Grid.Row="1" Text="{Binding EmailUserName}" Margin="0,4,0,0" />
+                                <TextBox Grid.Row="1" Grid.Column="2" Text="{Binding EmailPassword}" PasswordChar="●"
+                                         IsEnabled="{Binding CanStoreSecrets}" Margin="0,4,0,0" />
+                            </Grid>
+                            <TextBlock Text="{Binding SecretsHint}" Classes="hint" />
+                            <TextBlock Text="{x:Static res:Strings.NotifySmtpFrom}" Classes="label" />
+                            <TextBox Text="{Binding EmailFrom}" PlaceholderText="BorgStudio &lt;backup@example.com&gt;" />
+                            <TextBlock Text="{x:Static res:Strings.NotifySmtpTo}" Classes="label" />
+                            <TextBox Text="{Binding EmailTo}" PlaceholderText="me@example.com, admin@example.com" />
+                            <TextBlock Text="{x:Static res:Strings.NotifyEventsLabel}" Classes="label" />
+                            <ItemsControl ItemsSource="{Binding EmailEvents}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:NotificationEventOption">
+                                        <CheckBox Content="{Binding Label}" IsChecked="{Binding IsChecked}" Margin="0,0,16,0" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <CheckBox IsChecked="{Binding EmailDailySummary}" Content="{x:Static res:Strings.NotifyDailySummary}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Button Content="{x:Static res:Strings.NotifyTest}" Command="{Binding TestEmailCommand}" />
+                            <TextBlock Text="{Binding EmailTestResult}" Classes="result" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Webhook -->
+                <Border Classes="card">
+                    <StackPanel Spacing="8">
+                        <CheckBox IsChecked="{Binding WebhookEnabled}">
+                            <TextBlock Text="{x:Static res:Strings.NotifyChannelWebhook}" FontSize="16" FontWeight="SemiBold" />
+                        </CheckBox>
+                        <StackPanel Spacing="6" IsEnabled="{Binding WebhookEnabled}">
+                            <TextBlock Text="{x:Static res:Strings.NotifyWebhookFormat}" />
+                            <ComboBox ItemsSource="{Binding FormatOptions}" SelectedItem="{Binding WebhookFormat}" MinWidth="200" />
+                            <TextBlock Text="{x:Static res:Strings.NotifyWebhookUrl}" Classes="label" />
+                            <TextBox Text="{Binding WebhookUrl}" PlaceholderText="https://" />
+                            <TextBlock Text="{Binding WebhookUrlHint}" Classes="hint" />
+                            <Grid ColumnDefinitions="*,12,*" RowDefinitions="Auto,Auto">
+                                <TextBlock Text="{x:Static res:Strings.NotifyWebhookHeader}" Classes="label" />
+                                <TextBlock Grid.Column="2" Text="{x:Static res:Strings.NotifyWebhookHeaderValue}" Classes="label" />
+                                <TextBox Grid.Row="1" Text="{Binding WebhookHeaderName}" Margin="0,4,0,0" />
+                                <TextBox Grid.Row="1" Grid.Column="2" Text="{Binding WebhookHeaderValue}" PasswordChar="●"
+                                         IsEnabled="{Binding CanStoreSecrets}" Margin="0,4,0,0" />
+                            </Grid>
+                            <TextBlock Text="{x:Static res:Strings.NotifyWebhookHeaderHint}" Classes="hint" />
+                            <TextBlock Text="{x:Static res:Strings.NotifyEventsLabel}" Classes="label" />
+                            <ItemsControl ItemsSource="{Binding WebhookEvents}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:NotificationEventOption">
+                                        <CheckBox Content="{Binding Label}" IsChecked="{Binding IsChecked}" Margin="0,0,16,0" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <CheckBox IsChecked="{Binding WebhookDailySummary}" Content="{x:Static res:Strings.NotifyDailySummary}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Button Content="{x:Static res:Strings.NotifyTest}" Command="{Binding TestWebhookCommand}" />
+                            <TextBlock Text="{Binding WebhookTestResult}" Classes="result" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Extras -->
+                <Border Classes="card">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="{x:Static res:Strings.NotifyExtras}" FontSize="16" FontWeight="SemiBold" />
+                        <CheckBox IsChecked="{Binding SuppressRepeats}">
+                            <TextBlock Text="{x:Static res:Strings.NotifySuppressRepeats}" TextWrapping="Wrap" />
+                        </CheckBox>
+                        <TextBlock Text="{x:Static res:Strings.NotifyPerJobHint}" Classes="hint" />
+                        <TextBlock Text="{x:Static res:Strings.NotifyDailyTime}" Classes="label" TextWrapping="Wrap" />
+                        <TimePicker SelectedTime="{Binding DailyTime}" ClockIdentifier="24HourClock" MinuteIncrement="5"
+                                    HorizontalAlignment="Left" />
+                        <CheckBox IsChecked="{Binding SummaryWhenAllWell}">
+                            <TextBlock Text="{x:Static res:Strings.NotifySummaryWhenAllWell}" TextWrapping="Wrap" />
+                        </CheckBox>
+                        <TextBlock Text="{x:Static res:Strings.NotifyDailyHint}" Classes="hint" />
+                        <TextBlock Text="{x:Static res:Strings.NotifyStorageFullLabel}" Classes="label" />
+                        <CheckBox IsChecked="{Binding FullBelowOnePercent}">
+                            <TextBlock Text="{x:Static res:Strings.NotifyFullBelowOnePercent}" TextWrapping="Wrap" />
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding FullNextBackupWontFit}">
+                            <TextBlock Text="{x:Static res:Strings.NotifyFullNextBackup}" TextWrapping="Wrap" />
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding FullBackupFailed}">
+                            <TextBlock Text="{x:Static res:Strings.NotifyFullBackupFailed}" TextWrapping="Wrap" />
+                        </CheckBox>
+                        <TextBlock Text="{x:Static res:Strings.NotifyStorageHint}" Classes="hint" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+
+</Window>

@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:BorgStudio.App.ViewModels"
         xmlns:views="using:BorgStudio.App.Views"
+        xmlns:controls="using:BorgStudio.App.Controls"
         xmlns:res="using:BorgStudio.App.Resources"
         xmlns:sys="using:System"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -25,6 +26,7 @@
             <NativeMenuItem Header="{x:Static res:Strings.MenuTools}">
                 <NativeMenu>
                     <NativeMenuItem Header="{x:Static res:Strings.MenuSettings}" Click="OpenSettings_Click" />
+                    <NativeMenuItem Header="{x:Static res:Strings.MenuNotifications}" Click="OpenNotifications_Click" />
                     <NativeMenuItem Header="{x:Static res:Strings.MenuKeys}" Click="OpenKeys_Click" />
                     <NativeMenuItemSeparator />
                     <NativeMenuItem Header="{x:Static res:Strings.MenuExport}" Click="OpenExport_Click" />
@@ -163,7 +165,28 @@
                 <Button DockPanel.Dock="Bottom" Content="{x:Static res:Strings.AddRepository}"
                         Command="{Binding AddRepositoryCommand}" HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Center" Margin="0,8,0,0" />
-                <ListBox ItemsSource="{Binding Repositories}" SelectedItem="{Binding SelectedRepository}">
+                <!-- The overview of all repositories, above the list -->
+                <Button DockPanel.Dock="Top" Command="{Binding ShowOverviewCommand}" IsVisible="{Binding HasRepositories}"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Margin="0,0,0,6" Padding="12,8"
+                        Classes="overviewEntry" Classes.selected="{Binding IsOverviewShown}">
+                    <Button.Styles>
+                        <Style Selector="Button.overviewEntry">
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="BorderThickness" Value="3,0,0,0" />
+                            <Setter Property="BorderBrush" Value="Transparent" />
+                            <Setter Property="CornerRadius" Value="4" />
+                        </Style>
+                        <Style Selector="Button.overviewEntry.selected">
+                            <Setter Property="Background" Value="{DynamicResource SelectionBackground}" />
+                            <Setter Property="BorderBrush" Value="{DynamicResource BpGreenBrush}" />
+                        </Style>
+                    </Button.Styles>
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="{x:Static res:Strings.DashTitle}" FontWeight="SemiBold" />
+                        <TextBlock Text="{x:Static res:Strings.DashEntrySub}" FontSize="12" Opacity="0.7" />
+                    </StackPanel>
+                </Button>
+                <ListBox ItemsSource="{Binding Repositories}" SelectedItem="{Binding ListedRepository}">
                     <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="vm:RepositoryItemViewModel">
                             <StackPanel Spacing="2" Margin="2,4">
@@ -184,8 +207,149 @@
                         Classes="accent" HorizontalAlignment="Center" Margin="0,8,0,0" />
             </StackPanel>
 
+            <!-- The overview of all repositories -->
+            <ScrollViewer Grid.Column="1" IsVisible="{Binding ShowsOverview}">
+                <StackPanel Spacing="14" Margin="16,4,24,16" DataContext="{Binding Dashboard}" x:DataType="vm:DashboardViewModel">
+                    <StackPanel.Styles>
+                        <Style Selector="Border.tile">
+                            <Setter Property="Background" Value="{DynamicResource BpSurface2Brush}" />
+                            <Setter Property="CornerRadius" Value="6" />
+                            <Setter Property="Padding" Value="12,8" />
+                            <Setter Property="Margin" Value="0,0,10,10" />
+                            <Setter Property="MinWidth" Value="170" />
+                        </Style>
+                        <Style Selector="TextBlock.tileLabel">
+                            <Setter Property="FontSize" Value="12" />
+                            <Setter Property="Opacity" Value="0.7" />
+                        </Style>
+                        <Style Selector="TextBlock.tileValue">
+                            <Setter Property="FontSize" Value="22" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                        </Style>
+                        <Style Selector="TextBlock.tileSub">
+                            <Setter Property="FontSize" Value="11" />
+                            <Setter Property="Opacity" Value="0.6" />
+                        </Style>
+                        <Style Selector="Ellipse.dot">
+                            <Setter Property="Width" Value="10" />
+                            <Setter Property="Height" Value="10" />
+                            <Setter Property="VerticalAlignment" Value="Center" />
+                        </Style>
+                        <Style Selector="Border.swatch">
+                            <Setter Property="Width" Value="10" />
+                            <Setter Property="Height" Value="10" />
+                            <Setter Property="CornerRadius" Value="2" />
+                            <Setter Property="VerticalAlignment" Value="Center" />
+                            <Setter Property="Margin" Value="0,0,5,0" />
+                        </Style>
+                    </StackPanel.Styles>
+
+                    <TextBlock Text="{x:Static res:Strings.DashTitle}" FontSize="22" FontWeight="SemiBold" />
+
+                    <!-- Key figures -->
+                    <WrapPanel>
+                        <Border Classes="tile">
+                            <StackPanel>
+                                <TextBlock Classes="tileLabel" Text="{x:Static res:Strings.DashStored}" />
+                                <TextBlock Classes="tileValue" Text="{Binding StoredText}" />
+                                <TextBlock Classes="tileSub" Text="{Binding RepositoriesText}" />
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="tile">
+                            <StackPanel>
+                                <TextBlock Classes="tileLabel" Text="{x:Static res:Strings.DashSavings}" />
+                                <TextBlock Classes="tileValue" Text="{Binding SavingsText}" />
+                                <TextBlock Classes="tileSub" Text="{Binding SavingsDetailText}" />
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="tile">
+                            <StackPanel>
+                                <TextBlock Classes="tileLabel" Text="{x:Static res:Strings.StatsSuccessRate}" />
+                                <TextBlock Classes="tileValue" Text="{Binding SuccessRateText}" />
+                                <TextBlock Classes="tileSub" Text="{Binding SuccessDetailText}" />
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="tile">
+                            <StackPanel>
+                                <TextBlock Classes="tileLabel" Text="{x:Static res:Strings.DashEarliestFull}" />
+                                <TextBlock Classes="tileValue" Text="{Binding EarliestFullText}" Classes.soon="{Binding IsFullSoon}">
+                                    <TextBlock.Styles>
+                                        <Style Selector="TextBlock.soon">
+                                            <Setter Property="Foreground" Value="{DynamicResource WarningBorder}" />
+                                        </Style>
+                                    </TextBlock.Styles>
+                                </TextBlock>
+                                <TextBlock Classes="tileSub" Text="{Binding EarliestFullDetailText}" />
+                            </StackPanel>
+                        </Border>
+                    </WrapPanel>
+
+                    <!-- Repositories, problems first -->
+                    <Border Classes="card">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="{x:Static res:Strings.DashRepositoriesTitle}" FontWeight="SemiBold" Margin="0,0,0,4" />
+                            <ItemsControl ItemsSource="{Binding Rows}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:DashboardRowViewModel">
+                                        <Button Command="{Binding OpenCommand}" Background="Transparent" Padding="8,8"
+                                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                                ToolTip.Tip="{x:Static res:Strings.DashOpenTip}">
+                                            <Grid ColumnDefinitions="Auto,*,240" ColumnSpacing="12">
+                                                <Panel VerticalAlignment="Top" Margin="0,5,0,0">
+                                                    <Ellipse Classes="dot" Fill="{DynamicResource ChartFailBrush}" IsVisible="{Binding IsCritical}" />
+                                                    <Ellipse Classes="dot" Fill="{DynamicResource ChartWarnBrush}" IsVisible="{Binding IsWarning}" />
+                                                    <Ellipse Classes="dot" Fill="{DynamicResource ChartOkBrush}" IsVisible="{Binding IsOk}" />
+                                                    <Ellipse Classes="dot" Fill="{DynamicResource ChartTrackBrush}" IsVisible="{Binding IsInfo}" />
+                                                </Panel>
+                                                <StackPanel Grid.Column="1" Spacing="2">
+                                                    <TextBlock Text="{Binding Item.Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Text="{Binding HealthText}" FontSize="12" TextWrapping="Wrap" Opacity="0.85" />
+                                                    <TextBlock Text="{Binding LastBackupText}" FontSize="12" Opacity="0.6" />
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="2" Spacing="4" VerticalAlignment="Center">
+                                                    <controls:StackedBar Segments="{Binding Item.StorageSegments}" Height="10"
+                                                                         IsVisible="{Binding Item.HasStorageBar}" />
+                                                    <TextBlock Text="{Binding StorageText}" FontSize="12" TextWrapping="Wrap" />
+                                                    <TextBlock Text="{Binding FullText}" FontSize="12" Opacity="0.7" IsVisible="{Binding HasFullText}" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Activity of all jobs -->
+                    <Border Classes="card">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="{x:Static res:Strings.DashActivityTitle}" FontWeight="SemiBold" />
+                            <controls:ActivityCalendar Days="{Binding Days}" HorizontalAlignment="Left" />
+                            <StackPanel Orientation="Horizontal" Spacing="14">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Classes="swatch" Background="{DynamicResource ChartOkBrush}" />
+                                    <TextBlock Text="{x:Static res:Strings.StatsLegendOk}" FontSize="12" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Classes="swatch" Background="{DynamicResource ChartWarnBrush}" />
+                                    <TextBlock Text="{x:Static res:Strings.StatsLegendWarnings}" FontSize="12" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Classes="swatch" Background="{DynamicResource ChartFailBrush}" />
+                                    <TextBlock Text="{x:Static res:Strings.StatsLegendFailed}" FontSize="12" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Classes="swatch" Background="{DynamicResource ChartTrackBrush}" />
+                                    <TextBlock Text="{x:Static res:Strings.StatsLegendNone}" FontSize="12" />
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
             <!-- Details of the selected repository, in tabs -->
-            <DockPanel Grid.Column="1" IsVisible="{Binding HasSelection}" Margin="16,4,24,16">
+            <DockPanel Grid.Column="1" IsVisible="{Binding ShowsRepository}" Margin="16,4,24,16">
                 <StackPanel DockPanel.Dock="Top" Spacing="2" Margin="0,0,0,6">
                     <TextBlock Text="{Binding SelectedRepository.Name}" FontSize="22" FontWeight="SemiBold" TextWrapping="Wrap" />
                     <TextBlock Text="{Binding SelectedRepository.ProviderName}" Opacity="0.7" />
@@ -219,6 +383,70 @@
                                     <SelectableTextBlock Grid.Row="4" Grid.Column="1" Text="{Binding SelectedRepository.SshKeyText}"
                                                          IsVisible="{Binding SelectedRepository.IsSsh}" />
                                 </Grid>
+
+                                <!-- Storage -->
+                                <Border Classes="card">
+                                    <StackPanel Spacing="6">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Text="{x:Static res:Strings.StorageHeader}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                            <Button Grid.Column="1" Content="{x:Static res:Strings.StorageMeasure}"
+                                                    Command="{Binding MeasureStorageCommand}" />
+                                        </Grid>
+                                        <controls:StackedBar Segments="{Binding SelectedRepository.StorageSegments}" Height="12" Margin="0,2,0,0"
+                                                             IsVisible="{Binding SelectedRepository.HasStorageBar}" />
+                                        <!-- Legend: the repository, other data on the same disk, free space. -->
+                                        <WrapPanel IsVisible="{Binding SelectedRepository.HasStorageBar}">
+                                            <WrapPanel.Styles>
+                                                <Style Selector="StackPanel.legend">
+                                                    <Setter Property="Orientation" Value="Horizontal" />
+                                                    <Setter Property="Spacing" Value="6" />
+                                                    <Setter Property="Margin" Value="0,0,18,2" />
+                                                </Style>
+                                                <Style Selector="Border.swatch">
+                                                    <Setter Property="Width" Value="10" />
+                                                    <Setter Property="Height" Value="10" />
+                                                    <Setter Property="CornerRadius" Value="2" />
+                                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                                </Style>
+                                            </WrapPanel.Styles>
+                                            <StackPanel Classes="legend">
+                                                <Border Classes="swatch" Background="{DynamicResource ChartSeriesBrush}" />
+                                                <TextBlock Text="{Binding SelectedRepository.StorageRepositoryText}" FontSize="12" />
+                                            </StackPanel>
+                                            <StackPanel Classes="legend" IsVisible="{Binding SelectedRepository.HasStorageSplit}">
+                                                <Border Classes="swatch" Background="{DynamicResource ChartForecastBrush}" />
+                                                <TextBlock Text="{Binding SelectedRepository.StorageOtherText}" FontSize="12" />
+                                            </StackPanel>
+                                            <StackPanel Classes="legend">
+                                                <Border Classes="swatch" Background="{DynamicResource ChartTrackBrush}" BorderBrush="{DynamicResource BpLineBrush}" BorderThickness="1" />
+                                                <TextBlock Text="{Binding SelectedRepository.StorageFreeText}" FontSize="12" />
+                                            </StackPanel>
+                                        </WrapPanel>
+                                        <TextBlock Text="{Binding SelectedRepository.StorageText}" TextWrapping="Wrap"
+                                                   IsVisible="{Binding !SelectedRepository.HasStorageBar}" />
+                                        <TextBlock Text="{Binding SelectedRepository.StorageForecastText}" TextWrapping="Wrap"
+                                                   IsVisible="{Binding SelectedRepository.HasStorageForecast}"
+                                                   Classes.soon="{Binding SelectedRepository.IsForecastSoon}">
+                                            <TextBlock.Styles>
+                                                <Style Selector="TextBlock.soon">
+                                                    <Setter Property="Foreground" Value="{DynamicResource WarningBorder}" />
+                                                </Style>
+                                            </TextBlock.Styles>
+                                        </TextBlock>
+                                        <TextBlock Text="{Binding SelectedRepository.StorageForecastNote}" TextWrapping="Wrap" FontSize="12" Opacity="0.7"
+                                                   IsVisible="{Binding SelectedRepository.HasStorageForecastNote}" />
+                                        <TextBlock Text="{Binding SelectedRepository.StorageRatiosText}" TextWrapping="Wrap" FontSize="12" Opacity="0.8"
+                                                   IsVisible="{Binding SelectedRepository.HasStorageRatios}" />
+                                        <TextBlock Text="{Binding SelectedRepository.StorageLevelText}" TextWrapping="Wrap"
+                                                   IsVisible="{Binding SelectedRepository.IsStorageLow}" Foreground="{DynamicResource WarningBorder}" />
+                                        <TextBlock Text="{Binding SelectedRepository.StorageLevelText}" TextWrapping="Wrap"
+                                                   IsVisible="{Binding SelectedRepository.IsStorageFull}" Foreground="{DynamicResource ErrorForeground}" />
+                                        <TextBlock Text="{Binding SelectedRepository.StorageHint}" TextWrapping="Wrap" FontSize="12" Opacity="0.8"
+                                                   IsVisible="{Binding SelectedRepository.HasStorageHint}" />
+                                        <TextBlock Text="{Binding SelectedRepository.StorageMeasuredText}" FontSize="12" Opacity="0.6"
+                                                   IsVisible="{Binding SelectedRepository.HasStorage}" />
+                                    </StackPanel>
+                                </Border>
 
                                 <Border IsVisible="{Binding SelectedRepository.IsKeyfile}" Padding="12,10" CornerRadius="6" BorderThickness="1"
                                         Background="{DynamicResource WarningBackground}" BorderBrush="{DynamicResource WarningBorder}">
@@ -327,6 +555,8 @@
                                                 <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                                                 <TextBlock Text="{Binding SourcesText}" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis" />
                                                 <TextBlock Text="{Binding RetentionText}" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding ScheduleText}" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis"
+                                                           ToolTip.Tip="{Binding ScheduleText}" />
                                                 <TextBlock Text="{Binding LastRunText}" FontSize="12" Opacity="0.85" TextWrapping="Wrap"
                                                            Classes.failed="{Binding LastRunFailed}" Classes.warned="{Binding LastRunWarned}">
                                                     <TextBlock.Styles>
@@ -430,6 +660,161 @@
                                 </ListBox.ItemTemplate>
                             </ListBox>
                         </DockPanel>
+                    </TabItem>
+
+                    <TabItem Header="{x:Static res:Strings.TabStatistics}">
+                        <ScrollViewer>
+                            <StackPanel Spacing="14" Margin="0,12,12,0" DataContext="{Binding Statistics}" x:DataType="vm:RepositoryStatisticsViewModel">
+                                <StackPanel.Styles>
+                                    <Style Selector="Border.tile">
+                                        <Setter Property="Background" Value="{DynamicResource BpSurface2Brush}" />
+                                        <Setter Property="CornerRadius" Value="6" />
+                                        <Setter Property="Padding" Value="12,8" />
+                                        <Setter Property="Margin" Value="0,0,10,10" />
+                                        <Setter Property="MinWidth" Value="150" />
+                                    </Style>
+                                    <Style Selector="TextBlock.tileLabel">
+                                        <Setter Property="FontSize" Value="12" />
+                                        <Setter Property="Opacity" Value="0.7" />
+                                    </Style>
+                                    <Style Selector="TextBlock.tileValue">
+                                        <Setter Property="FontSize" Value="20" />
+                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                    </Style>
+                                    <Style Selector="TextBlock.tileSub">
+                                        <Setter Property="FontSize" Value="11" />
+                                        <Setter Property="Opacity" Value="0.6" />
+                                    </Style>
+                                    <Style Selector="TextBlock.cardTitle">
+                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                    </Style>
+                                </StackPanel.Styles>
+
+                                <!-- Storage over time -->
+                                <Border Classes="card">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Classes="cardTitle" Text="{x:Static res:Strings.StatsStorageTitle}" />
+                                        <controls:StorageChart Height="200" Points="{Binding StoragePoints}" Projection="{Binding Projection}"
+                                                               Limit="{Binding Limit}" LimitLabel="{Binding LimitLabel}"
+                                                               IsVisible="{Binding HasStorageChart}" />
+                                        <TextBlock Text="{x:Static res:Strings.StatsStorageEmpty}" TextWrapping="Wrap" Opacity="0.7"
+                                                   IsVisible="{Binding !HasStorageChart}" />
+                                        <TextBlock Text="{Binding ForecastText}" TextWrapping="Wrap" IsVisible="{Binding HasForecast}" />
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- What deduplication and compression save -->
+                                <Border Classes="card" IsVisible="{Binding HasStats}">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Classes="cardTitle" Text="{x:Static res:Strings.StatsSavingsTitle}" />
+                                        <WrapPanel>
+                                            <Border Classes="tile">
+                                                <StackPanel>
+                                                    <TextBlock Classes="tileLabel" Text="{x:Static res:Strings.StatsOriginal}" />
+                                                    <TextBlock Classes="tileValue" Text="{Binding OriginalText}" />
+                                                    <TextBlock Classes="tileSub" Text="{Binding ArchivesText}" />
+                                                </StackPanel>
+                                            </Border>
+                                            <Border Classes="tile">
+                                                <StackPanel>
+                                                    <TextBlock Classes="tileLabel" Text="{x:Static res:Strings.StatsStored}" />
+                                                    <TextBlock Classes="tileValue" Text="{Binding StoredText}" />
+                                                    <TextBlock Classes="tileSub" Text="{Binding SavingsText, StringFormat={x:Static res:Strings.StatsSavedFormat}}" />
+                                                </StackPanel>
+                                            </Border>
+                                            <Border Classes="tile">
+                                                <StackPanel>
+                                                    <TextBlock Classes="tileLabel" Text="{x:Static res:Strings.StatsDeduplication}" />
+                                                    <TextBlock Classes="tileValue" Text="{Binding DeduplicationText}" />
+                                                </StackPanel>
+                                            </Border>
+                                            <Border Classes="tile">
+                                                <StackPanel>
+                                                    <TextBlock Classes="tileLabel" Text="{x:Static res:Strings.StatsCompression}" />
+                                                    <TextBlock Classes="tileValue" Text="{Binding CompressionText}" />
+                                                </StackPanel>
+                                            </Border>
+                                        </WrapPanel>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Backups -->
+                                <Border Classes="card">
+                                    <StackPanel Spacing="8">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Classes="cardTitle" Text="{x:Static res:Strings.StatsBackupsTitle}" VerticalAlignment="Center" />
+                                            <ComboBox Grid.Column="1" ItemsSource="{Binding JobOptions}" SelectedItem="{Binding SelectedJob}" MinWidth="180" />
+                                        </Grid>
+                                        <WrapPanel>
+                                            <Border Classes="tile">
+                                                <StackPanel>
+                                                    <TextBlock Classes="tileLabel" Text="{x:Static res:Strings.StatsSuccessRate}" />
+                                                    <TextBlock Classes="tileValue" Text="{Binding SuccessRateText}" />
+                                                    <TextBlock Classes="tileSub" Text="{Binding SuccessDetailText}" />
+                                                </StackPanel>
+                                            </Border>
+                                            <Border Classes="tile">
+                                                <StackPanel>
+                                                    <TextBlock Classes="tileLabel" Text="{x:Static res:Strings.StatsLastSuccess}" />
+                                                    <TextBlock Classes="tileValue" Text="{Binding LastSuccessText}" />
+                                                </StackPanel>
+                                            </Border>
+                                            <Border Classes="tile">
+                                                <StackPanel>
+                                                    <TextBlock Classes="tileLabel" Text="{x:Static res:Strings.StatsAverageDuration}" />
+                                                    <TextBlock Classes="tileValue" Text="{Binding AverageDurationText}" />
+                                                </StackPanel>
+                                            </Border>
+                                            <Border Classes="tile">
+                                                <StackPanel>
+                                                    <TextBlock Classes="tileLabel" Text="{x:Static res:Strings.StatsAverageNew}" />
+                                                    <TextBlock Classes="tileValue" Text="{Binding AverageNewText}" />
+                                                    <TextBlock Classes="tileSub" Text="{Binding NewPerWeekText, StringFormat={x:Static res:Strings.StatsWeekFormat}}" />
+                                                </StackPanel>
+                                            </Border>
+                                        </WrapPanel>
+                                        <TextBlock Text="{x:Static res:Strings.StatsColumnsTitle}" FontSize="12" Opacity="0.7" IsVisible="{Binding HasColumns}" />
+                                        <controls:ColumnChart Height="170" Columns="{Binding Columns}" IsVisible="{Binding HasColumns}" />
+                                        <TextBlock Text="{x:Static res:Strings.StatsNoRuns}" Opacity="0.7" IsVisible="{Binding !HasColumns}" />
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Activity -->
+                                <Border Classes="card">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Classes="cardTitle" Text="{x:Static res:Strings.StatsActivityTitle}" />
+                                        <controls:ActivityCalendar Days="{Binding Days}" HorizontalAlignment="Left" />
+                                        <StackPanel Orientation="Horizontal" Spacing="14">
+                                            <StackPanel.Styles>
+                                                <Style Selector="Border.swatch">
+                                                    <Setter Property="Width" Value="10" />
+                                                    <Setter Property="Height" Value="10" />
+                                                    <Setter Property="CornerRadius" Value="2" />
+                                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                                    <Setter Property="Margin" Value="0,0,5,0" />
+                                                </Style>
+                                            </StackPanel.Styles>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Border Classes="swatch" Background="{DynamicResource ChartOkBrush}" />
+                                                <TextBlock Text="{x:Static res:Strings.StatsLegendOk}" FontSize="12" />
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Border Classes="swatch" Background="{DynamicResource ChartWarnBrush}" />
+                                                <TextBlock Text="{x:Static res:Strings.StatsLegendWarnings}" FontSize="12" />
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Border Classes="swatch" Background="{DynamicResource ChartFailBrush}" />
+                                                <TextBlock Text="{x:Static res:Strings.StatsLegendFailed}" FontSize="12" />
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Border Classes="swatch" Background="{DynamicResource ChartTrackBrush}" />
+                                                <TextBlock Text="{x:Static res:Strings.StatsLegendNone}" FontSize="12" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
                     </TabItem>
                 </TabControl>
             </DockPanel>

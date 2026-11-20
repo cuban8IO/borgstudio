@@ -3,6 +3,7 @@ using BorgStudio.App.Services;
 using BorgStudio.App.ViewModels;
 using BorgStudio.Core.Backups;
 using BorgStudio.Core.Borg;
+using BorgStudio.Core.Notifications;
 using BorgStudio.Core.Plugins;
 using BorgStudio.Core.Processes;
 using BorgStudio.Core.Progress;
@@ -43,6 +44,9 @@ public sealed class FakeBorg : IProcessRunner
     public string? EncryptionMode { get; set; } = "repokey-blake2";
 
     public string InfoError { get; set; } = "Repository.DoesNotExist";
+
+    /// <summary>What "info" reports the repository takes up (unique compressed size).</summary>
+    public long RepositorySize { get; set; } = 300L * 1024 * 1024 * 1024;
 
     /// <summary>The passphrase "info" accepts (for encrypted repositories).</summary>
     public string? CorrectPassphrase { get; set; }
@@ -161,7 +165,8 @@ public sealed class FakeBorg : IProcessRunner
             "info" when EncryptionMode is null => Error(InfoError),
             "info" when EncryptionMode != "none" && CorrectPassphrase is not null && passphrase != CorrectPassphrase
                 => Error("PassphraseWrong"),
-            "info" => Result(0, $$$"""{"encryption": {"mode": "{{{EncryptionMode}}}"}, "repository": {"id": "repo-id-1"}}"""),
+            "info" => Result(0, $$$"""{"encryption": {"mode": "{{{EncryptionMode}}}"}, "repository": {"id": "repo-id-1"}, "cache": {"stats": {"unique_csize": """
+                + RepositorySize.ToString(CultureInfo.InvariantCulture) + "}}}"),
             _ => Result(2, ""),
         };
     }
@@ -530,7 +535,17 @@ public sealed class TestServices : IDisposable
     public DurationHistory Durations { get; }
     public AppServices Services { get; }
     public FakeUpdateSource UpdateSource { get; } = new();
+    public FakeSystemScheduler Scheduler { get; } = new();
+    public FakeAutostart Autostart { get; } = new();
     public Updater Updates { get; }
+
+    /// <summary>The programs system notifications start (notify-send: the notifier pretends to be on Linux).</summary>
+    public RecordingProcesses NotifyProcesses { get; } = new();
+
+    /// <summary>What webhooks post.</summary>
+    public FakeHttpHandler Http { get; } = new();
+
+    public Notifier Notifier { get; }
 
     /// <summary>The "installed" app the updater replaces.</summary>
     public string AppFolder => Directory.Combine("app");
@@ -556,9 +571,14 @@ public sealed class TestServices : IDisposable
         {
             Rid = "win-x64",
         };
+        Notifier = new Notifier(new SystemNotifier(NotifyProcesses) { Platform = SystemNotifier.OSPlatform.Linux }, new EmailSender(),
+            new WebhookSender(new HttpClient(Http)));
         Services = new AppServices(Borg.Detector(wsl), plugins, Store, Secrets,
             new BorgClient(Borg, FakeBorg.WslExecutable) { NativeIsPosix = true }, Ssh, SshKeys, SshKeygen, Vault, Settings, Jobs, Archives, Durations, Dialogs,
-            Updates);
+            Updates,
+            Scheduler,
+            Autostart,
+            Notifier);
     }
 
     public KnownHostsFile KnownHosts => new(SshKeys.KnownHostsFile);
@@ -841,4 +861,84 @@ public sealed class FakeUpdateSource : IUpdateSource
         Files.TryGetValue(url, out var bytes)
             ? Task.FromResult(System.Text.Encoding.UTF8.GetString(bytes))
             : Task.FromException<string>(new HttpRequestException("404 " + url));
+}
+
+/// <summary>The system's scheduler: remembers what it was told last.</summary>
+public sealed class FakeSystemScheduler : ISystemScheduler
+{
+    public List<IReadOnlyList<BackupJob>> Applied { get; } = [];
+
+    public string? Executable { get; private set; }
+
+    public string? Error { get; set; }
+
+    /// <summary>The scheduled jobs of the last update.</summary>
+    public IReadOnlyList<BackupJob> Scheduled => Applied.Count == 0 ? [] : [.. Applied[^1].Where(job => job.IsScheduled)];
+
+    /// <summary>The time of the daily check in the last update; <c>null</c>: none.</summary>
+    public TimeOnly? DailyCheck { get; private set; }
+
+    public Task ApplyAsync(IReadOnlyList<BackupJob> jobs, string executable, TimeOnly? dailyCheck = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (Error is not null)
+            throw new SchedulerException(Error);
+        Applied.Add(jobs);
+        DailyCheck = dailyCheck;
+        Executable = executable;
+        return Task.CompletedTask;
+    }
+}
+
+/// <summary>Remembers whether BorgStudio would start at login, and with what.</summary>
+public sealed class FakeAutostart : IAutostart
+{
+    public string? Executable { get; private set; }
+
+    public bool IsEnabled => Executable is not null;
+
+    public void Enable(string executable) => Executable = executable;
+
+    public void Disable() => Executable = null;
+}
+
+/// <summary>Records the programs started; answers with success, or as <see cref="Results"/> says (<c>null</c>: not found).</summary>
+public sealed class RecordingProcesses : IProcessRunner
+{
+    public sealed record Call(string FileName, IReadOnlyList<string> Arguments, IReadOnlyDictionary<string, string?> Environment);
+
+    public List<Call> Calls { get; } = [];
+
+    /// <summary>Program name → its result; missing: exit code 0.</summary>
+    public Dictionary<string, ProcessResult?> Results { get; } = [];
+
+    public Task<ProcessResult?> RunAsync(string fileName, IReadOnlyList<string> arguments, TimeSpan timeout,
+        IReadOnlyDictionary<string, string?>? environment = null, string? standardInput = null, CancellationToken cancellationToken = default,
+        Action<string>? standardErrorLine = null, Action<string>? standardOutputLine = null, string? workingDirectory = null)
+    {
+        lock (Calls)
+            Calls.Add(new Call(fileName, [.. arguments], environment ?? new Dictionary<string, string?>()));
+        return Task.FromResult(Results.TryGetValue(Path.GetFileName(fileName), out var result) ? result : new ProcessResult(0, "", ""));
+    }
+}
+
+/// <summary>Answers HTTP requests with <see cref="Status"/> and records them with their bodies.</summary>
+public sealed class FakeHttpHandler : HttpMessageHandler
+{
+    public sealed record Request(HttpMethod Method, Uri Url, IReadOnlyDictionary<string, string> Headers, string Body);
+
+    public List<Request> Requests { get; } = [];
+
+    public System.Net.HttpStatusCode Status { get; set; } = System.Net.HttpStatusCode.OK;
+
+    public string ResponseBody { get; set; } = "";
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var body = request.Content is null ? "" : await request.Content.ReadAsStringAsync(cancellationToken);
+        var headers = request.Headers.ToDictionary(header => header.Key, header => string.Join(",", header.Value), StringComparer.OrdinalIgnoreCase);
+        lock (Requests)
+            Requests.Add(new Request(request.Method, request.RequestUri!, headers, body));
+        return new HttpResponseMessage(Status) { Content = new StringContent(ResponseBody) };
+    }
 }

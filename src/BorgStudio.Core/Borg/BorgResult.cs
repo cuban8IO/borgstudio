@@ -38,6 +38,9 @@ public enum BorgErrorKind
     /// <summary>borg cannot mount here (no FUSE, e.g. borg on Windows itself or without llfuse/pyfuse3).</summary>
     MountUnavailable,
 
+    /// <summary>The repository's disk or server ran out of space.</summary>
+    NoSpace,
+
     Other,
 }
 
@@ -67,7 +70,10 @@ public enum BorgEncryption
 
 /// <summary>From <c>borg info --json</c>.</summary>
 /// <param name="EncryptionMode">e.g. "repokey-blake2", "keyfile-blake2", "none".</param>
-public sealed record BorgRepositoryInfo(string Id, string EncryptionMode, DateTimeOffset? LastModified);
+/// <param name="UniqueCompressedSize">What the repository takes up (borg's unique compressed size of all archives), if known.</param>
+/// <param name="Stats">borg's statistics over all archives, if it reported them.</param>
+public sealed record BorgRepositoryInfo(string Id, string EncryptionMode, DateTimeOffset? LastModified, long? UniqueCompressedSize = null,
+    Storage.RepositoryStats? Stats = null);
 
 /// <summary>A progress update of <c>borg create</c> (sizes so far).</summary>
 /// <param name="DeduplicatedSize">What actually has to go into the repository (new data, compressed).</param>
@@ -76,8 +82,9 @@ public sealed record BorgCreateProgress(long OriginalSize, long CompressedSize, 
 
 /// <summary>The outcome of <c>borg create</c>.</summary>
 /// <param name="Warnings">What borg warned about, e.g. files it could not read.</param>
+/// <param name="Repository">The repository's statistics after the backup (borg reports them with --json).</param>
 public sealed record BorgCreateResult(string ArchiveName, long OriginalSize, long CompressedSize, long DeduplicatedSize, long Files,
-    TimeSpan Duration, IReadOnlyList<string> Warnings);
+    TimeSpan Duration, IReadOnlyList<string> Warnings, Storage.RepositoryStats? Repository = null);
 
 /// <summary>An archive in a repository.</summary>
 /// <param name="Duration">How long creating it took; <c>null</c> until details are loaded.</param>

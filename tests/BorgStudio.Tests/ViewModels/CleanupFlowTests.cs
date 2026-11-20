@@ -26,6 +26,8 @@ public sealed class CleanupFlowTests : IDisposable
             EncryptionMode = "repokey-blake2",
         };
         _test.Store.Save([_repository]);
+        // A local repository has its folder (the storage is measured on its disk after a backup).
+        Directory.CreateDirectory(_test.Directory.Combine("repo"));
         Directory.CreateDirectory(Source);
 
         // Three older archives of the job, one of another job whose name starts the same.

@@ -2,6 +2,7 @@ using BorgStudio.App.Resources;
 using BorgStudio.App.Services;
 using BorgStudio.Core.Backups;
 using BorgStudio.Core.Borg;
+using BorgStudio.Core.Notifications;
 using BorgStudio.Core.Plugins;
 using BorgStudio.Core.Progress;
 using BorgStudio.Core.Repositories;
@@ -31,7 +32,10 @@ public sealed record AppServices(
     ArchiveCache Archives,
     DurationHistory Durations,
     IDialogService Dialogs,
-    Updater Updates)
+    Updater Updates,
+    ISystemScheduler? Scheduler = null,
+    IAutostart? Autostart = null,
+    Notifier? Notifier = null)
 {
     public SshHostTrust SshTrust => new(Ssh, new KnownHostsFile(SshKeys.KnownHostsFile));
 }
@@ -52,13 +56,28 @@ public partial class MainViewModel : ViewModelBase
     public MainViewModel(AppServices services)
     {
         _services = services;
+        // Created right away: it follows PIN changes and vault resets from now on.
+        ScheduledAccess = CreateScheduledAccess(services);
         InitializeVault();
         LoadRepositories();
         LoadJobs();
+        RefreshStorage();
+        // The app starts with the overview of all repositories.
+        IsOverviewShown = HasRepositories;
+        // The system's scheduler may be out of step (jobs imported, app moved, entries removed by hand).
+        ApplySchedules();
+        // The entry follows the app when it moved or was updated.
+        ApplyAutostart();
         RefreshKeyNames();
     }
 
     public PluginCatalog Plugins => _services.Plugins;
+
+    /// <summary>The key that lets scheduled runs open the vault.</summary>
+    public ScheduledAccess ScheduledAccess { get; }
+
+    public static ScheduledAccess CreateScheduledAccess(AppServices services) =>
+        new(services.Vault, services.SecretStore, Path.Combine(services.Jobs.DataDirectory, "scheduled-access.key"));
 
     /// <summary>For the windows opened from the main window (settings, keys).</summary>
     public AppServices Services => _services;
@@ -69,7 +88,7 @@ public partial class MainViewModel : ViewModelBase
     /// <summary>The borg used for all repository operations; <c>null</c> until found.</summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(TestRepositoryCommand), nameof(ExportKeyCommand), nameof(RunJobCommand), nameof(CleanUpJobCommand),
-        nameof(FreeSpaceCommand), nameof(MountArchiveCommand), nameof(MountRepositoryCommand))]
+        nameof(FreeSpaceCommand), nameof(MeasureStorageCommand), nameof(MountArchiveCommand), nameof(MountRepositoryCommand))]
     public partial BorgInstallation? Borg { get; private set; }
 
     /// <summary>Status bar text, e.g. "borg 1.4.5 · /usr/bin/borg".</summary>
@@ -143,7 +162,8 @@ public partial class MainViewModel : ViewModelBase
     }
 
     /// <summary>For the designer, which has no windows to show dialogs in.</summary>
-    private sealed class NoDialogs : IDialogService
+    /// <summary>Answers no question (designer, and runs without window).</summary>
+    internal sealed class NoDialogs : IDialogService
     {
         public Task<bool> ConfirmAsync(string title, string message, string confirmText, string? cancelText = null) => Task.FromResult(false);
         public Task ShowMessageAsync(string title, string message, string? buttonText = null) => Task.CompletedTask;

@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using System;
 using BorgStudio.App.Services;
+using BorgStudio.Core;
 using BorgStudio.Core.Settings;
 using BorgStudio.Core.Updates;
 
@@ -23,7 +24,26 @@ sealed class Program
 
         // Texts are bound once when the windows load, so the language is set before anything else.
         AppLanguages.Apply(SettingsStore.CreateDefault().Load().Language);
-        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+
+        // Started by a schedule: one backup job, no window.
+        if (ScheduledRun.IsRunCall(args))
+        {
+            Environment.ExitCode = ScheduledRun.Run(args);
+            return;
+        }
+
+        // One BorgStudio per user: a second start brings the first one's window forward.
+        if (SingleInstance.TryClaim(AppPaths.DataDirectory) is null && SingleInstance.ShowExisting(AppPaths.DataDirectory))
+            return;
+
+        try
+        {
+            BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+        }
+        finally
+        {
+            SingleInstance.Current?.Dispose();
+        }
     }
 
     // Avalonia configuration, don't remove; also used by visual designer.

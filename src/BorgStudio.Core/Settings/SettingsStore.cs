@@ -18,6 +18,32 @@ public sealed record AppSettings
 
     /// <summary>The "no warranty" notice was shown (once, at the first start; after an update from an older version too).</summary>
     public bool WarrantyNoticeShown { get; init; }
+
+    /// <summary>Who starts scheduled backups: the system's task scheduler, or BorgStudio itself in the background.</summary>
+    public ScheduleRunner ScheduleRunner { get; init; } = ScheduleRunner.System;
+
+    /// <summary>In the background: the schedules start nothing until switched on again.</summary>
+    public bool SchedulesPaused { get; init; }
+
+    /// <summary>The hint "BorgStudio keeps running in the notification area" was shown (once).</summary>
+    public bool TrayHintShown { get; init; }
+
+    /// <summary>Who gets told about backups, and how.</summary>
+    public Notifications.NotificationSettings Notifications { get; init; } = new();
+
+    /// <summary>The incoming webhook that starts jobs (only in background mode).</summary>
+    public Trigger.TriggerSettings Trigger { get; init; } = new();
+}
+
+/// <summary>Who starts scheduled backups.</summary>
+[System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ScheduleRunner>))]
+public enum ScheduleRunner
+{
+    /// <summary>Windows Task Scheduler, launchd, systemd: runs even when BorgStudio is closed.</summary>
+    System,
+
+    /// <summary>BorgStudio itself, running in the notification area and started at login.</summary>
+    Background,
 }
 
 /// <summary>Keeps <see cref="AppSettings"/> in settings.json; a missing or unreadable file means defaults.</summary>
