@@ -63,6 +63,17 @@ internal static class BorgTexts
                 string.Join(", ", schedule.Days.Distinct().OrderBy(day => ((int)day + 6) % 7)
                     .Select(day => CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(day))), time),
             Core.Backups.ScheduleKind.EveryHours => Format(Strings.ScheduleEveryHours, schedule.Hours, time),
+            Core.Backups.ScheduleKind.MonthlyWeekday => Format(Strings.ScheduleMonthlyWeekdayText, schedule.Week switch
+            {
+                1 => Strings.ScheduleWeekFirst,
+                2 => Strings.ScheduleWeekSecond,
+                3 => Strings.ScheduleWeekThird,
+                4 => Strings.ScheduleWeekFourth,
+                _ => Strings.ScheduleWeekLast,
+            }, CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(schedule.Weekday), time),
+            Core.Backups.ScheduleKind.MonthlyDay => Format(Strings.ScheduleMonthlyDayText,
+                schedule.DayOfMonth == Core.Backups.BackupSchedule.Last ? Strings.ScheduleLastDayOfMonth : Format(Strings.ScheduleDayOfMonth, schedule.DayOfMonth),
+                time),
             _ => Format(Strings.ScheduleDaily, time),
         };
     }

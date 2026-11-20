@@ -2898,4 +2898,10 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
   <data name="DashCheckOverdue" xml:space="preserve">
     <value>Prüfung überfällig</value>
   </data>
+  <data name="ScheduleMonthlyWeekdayText" xml:space="preserve">
+    <value>Monatlich am {0} {1}, {2}</value>
+  </data>
+  <data name="ScheduleMonthlyDayText" xml:space="preserve">
+    <value>Monatlich am {0}, {1}</value>
+  </data>
 </root>

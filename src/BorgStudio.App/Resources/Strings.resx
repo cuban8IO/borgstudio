@@ -2918,4 +2918,10 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
   <data name="DashCheckOverdue" xml:space="preserve">
     <value>Check overdue</value>
   </data>
+  <data name="ScheduleMonthlyWeekdayText" xml:space="preserve">
+    <value>Monthly on the {0} {1}, {2}</value>
+  </data>
+  <data name="ScheduleMonthlyDayText" xml:space="preserve">
+    <value>Monthly on {0}, {1}</value>
+  </data>
 </root>
