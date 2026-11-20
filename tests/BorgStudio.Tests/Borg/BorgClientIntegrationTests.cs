@@ -461,6 +461,40 @@ public sealed class BorgClientIntegrationTests : IDisposable
         Assert.False(after.Value!.ProblemsFound, string.Join("\n", after.Value.Messages));
     }
 
+    [BorgFact]
+    public async Task Restores_a_sample_on_trial_and_finds_a_changed_file()
+    {
+        await _client.InitAsync(Borg, Location(), BorgEncryption.RepokeyBlake2, Passphrase);
+        var source = _directory.Combine("source");
+        Directory.CreateDirectory(Path.Combine(source, "sub"));
+        for (var number = 0; number < 5; number++)
+            File.WriteAllText(Path.Combine(source, "sub", $"file {number}.txt"), new string((char)('a' + number), 1000 + number));
+        Assert.True((await _client.CreateAsync(Borg, Location(), "trial", [source], [], Passphrase)).Succeeded);
+        var temporary = _directory.Combine("temp");
+        Directory.CreateDirectory(temporary);
+        var tester = new Core.Checks.RestoreTester(_client);
+        var settings = new Core.Checks.RestoreTestSettings { Enabled = true };
+
+        var good = await tester.RunAsync(Borg, Location(), "trial", Passphrase, null, Core.Checks.RestoreTestMode.Compare, 10, settings, temporary);
+
+        Assert.Equal(Core.Checks.RestoreTestOutcome.Ok, good.Outcome);
+        Assert.Equal(5, good.Files.Count);
+        Assert.Equal(5, good.Compared);
+        Assert.Empty(Directory.GetFileSystemEntries(temporary));
+
+        // The same size and time, other content: the backup no longer matches its "unchanged" source.
+        var changed = Path.Combine(source, "sub", "file 2.txt");
+        var time = File.GetLastWriteTimeUtc(changed);
+        File.WriteAllText(changed, new string('z', 1002));
+        File.SetLastWriteTimeUtc(changed, time);
+        var bad = await tester.RunAsync(Borg, Location(), "trial", Passphrase, null, Core.Checks.RestoreTestMode.Compare, 10, settings, temporary);
+        Assert.Equal(Core.Checks.RestoreTestOutcome.Failed, bad.Outcome);
+        Assert.EndsWith("file 2.txt", Assert.Single(bad.Problems).Path);
+
+        var whole = await tester.RunAsync(Borg, Location(), "trial", Passphrase, null, Core.Checks.RestoreTestMode.WholeArchive, 0, settings, temporary);
+        Assert.Equal(Core.Checks.RestoreTestOutcome.Ok, whole.Outcome);
+    }
+
     /// <summary>Calls the progress callback right away (Progress&lt;T&gt; would post it to a thread pool).</summary>
     private sealed class SynchronousProgress<T>(Action<T> report) : IProgress<T>
     {

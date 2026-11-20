@@ -162,6 +162,12 @@ public sealed record BackupJob
     /// <summary>The incoming webhook may start the job (see <see cref="Trigger.TriggerServer"/>).</summary>
     public bool WebhookTrigger { get; init; }
 
+    /// <summary>How the job's newest archive is restored on trial with the repository's automatic checks.</summary>
+    public Checks.RestoreTestMode RestoreTest { get; init; } = Checks.RestoreTestMode.Off;
+
+    /// <summary>How many files a sample restores (<see cref="Checks.RestoreTestMode.Read"/>, <see cref="Checks.RestoreTestMode.Compare"/>).</summary>
+    public int RestoreTestFiles { get; init; } = 20;
+
     public BackupRunSummary? LastRun { get; init; }
 }
 

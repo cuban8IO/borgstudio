@@ -155,6 +155,19 @@ public sealed class WebhookSender(HttpClient http)
                 ["messages"] = new JsonArray([.. check.Messages.Take(20).Select(text => (JsonNode?)JsonValue.Create(text))]),
             };
         }
+        if (message.RestoreTest is { } test)
+        {
+            body["restoreTest"] = new JsonObject
+            {
+                ["outcome"] = test.Outcome.ToString(),
+                ["mode"] = test.Mode.ToString(),
+                ["archive"] = test.Archive,
+                ["files"] = test.Files.Count,
+                ["compared"] = test.Compared,
+                ["problems"] = new JsonArray([.. test.Problems.Take(20).Select(file => (JsonNode?)JsonValue.Create(file.Path))]),
+                ["error"] = test.Error,
+            };
+        }
         if (message.Run is { } run)
         {
             body["run"] = new JsonObject

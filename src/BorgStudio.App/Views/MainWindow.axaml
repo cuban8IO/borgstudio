@@ -538,6 +538,8 @@
                                 <Button Content="{x:Static res:Strings.JobRun}" Command="{Binding RunJobCommand}" Classes="accent" />
                                 <Button Content="{x:Static res:Strings.JobCleanUp}" Command="{Binding CleanUpJobCommand}"
                                         ToolTip.Tip="{x:Static res:Strings.JobCleanUpTip}" />
+                                <Button Content="{x:Static res:Strings.JobTestRestore}" Command="{Binding TestRestoreCommand}"
+                                        ToolTip.Tip="{x:Static res:Strings.JobTestRestoreTip}" />
                                 <Button Content="{x:Static res:Strings.JobNew}" Command="{Binding NewJobCommand}" />
                                 <Button Content="{x:Static res:Strings.Edit}" Command="{Binding EditJobCommand}" />
                                 <Button Content="{x:Static res:Strings.Delete}" Command="{Binding DeleteJobCommand}" />
@@ -605,6 +607,18 @@
                                                 <TextBlock Text="{Binding RetentionText}" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis" />
                                                 <TextBlock Text="{Binding ScheduleText}" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis"
                                                            ToolTip.Tip="{Binding ScheduleText}" />
+                                                <TextBlock Text="{Binding RestoreTestText}" FontSize="12" Opacity="0.85" TextWrapping="Wrap"
+                                                           IsVisible="{Binding HasRestoreTest}" Classes.failed="{Binding RestoreTestFailed}"
+                                                           Classes.warned="{Binding RestoreTestNotRun}">
+                                                    <TextBlock.Styles>
+                                                        <Style Selector="TextBlock.failed">
+                                                            <Setter Property="Foreground" Value="{DynamicResource ErrorForeground}" />
+                                                        </Style>
+                                                        <Style Selector="TextBlock.warned">
+                                                            <Setter Property="Foreground" Value="{DynamicResource WarningBorder}" />
+                                                        </Style>
+                                                    </TextBlock.Styles>
+                                                </TextBlock>
                                                 <TextBlock Text="{Binding LastRunText}" FontSize="12" Opacity="0.85" TextWrapping="Wrap"
                                                            Classes.failed="{Binding LastRunFailed}" Classes.warned="{Binding LastRunWarned}">
                                                     <TextBlock.Styles>

@@ -250,6 +250,7 @@ public sealed class FakeBorg : IProcessRunner
             .Where(entry => prefixes.Count == 0 || prefixes.Any(prefix => entry.Path == prefix || entry.Path.StartsWith(prefix + "/", StringComparison.Ordinal)))
             .ToList();
         var total = files.Sum(file => file.Size);
+        var dryRun = list.Contains("--dry-run");
         standardErrorLine?.Invoke("""{"message": "Calculating total archive size for the progress indicator (might take long for large archives)", "current": 0, "total": 0, "info": null, "operation": 1, "msgid": "extract", "type": "progress_percent", "finished": false, "time": 0}""");
         long done = 0;
         foreach (var file in files)
@@ -257,8 +258,14 @@ public sealed class FakeBorg : IProcessRunner
             cancellationToken.ThrowIfCancellationRequested();
             var segments = file.Path.Split('/').Skip(strip).ToArray();
             var destination = Path.Combine([workingDirectory ?? ".", .. segments]);
-            Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
-            File.WriteAllText(destination, "restored");
+            if (!dryRun)
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+                if (ExtractedContent is { } content)
+                    File.WriteAllBytes(destination, content(file.Path, file.Size));
+                else
+                    File.WriteAllText(destination, "restored");
+            }
             done += file.Size;
             standardErrorLine?.Invoke(System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object>
             {
@@ -361,6 +368,9 @@ public sealed class FakeBorg : IProcessRunner
             $$"""{"type": "log_message", "time": 0, "message": "compaction freed about {{CompactFreed}} repository space.", "levelname": "INFO", "name": "borg.repository"}""");
         return Result(0, "");
     }
+
+    /// <summary>What "extract" writes for a file (path in the archive, size); unset: the text "restored".</summary>
+    public Func<string, long, byte[]>? ExtractedContent { get; set; }
 
     /// <summary>The damage "check" finds (logged as errors, exit code 1); "check --repair" repairs it.</summary>
     public List<string> CheckProblems { get; } = [];

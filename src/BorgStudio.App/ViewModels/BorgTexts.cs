@@ -219,6 +219,46 @@ internal static class BorgTexts
         _ => Strings.CheckDepthNormal,
     };
 
+    /// <summary>"Erfolgreich", "Fehlgeschlagen", "Nicht gelaufen", "Abgebrochen".</summary>
+    public static string RestoreTestOutcome(Core.Checks.RestoreTestOutcome outcome) => outcome switch
+    {
+        Core.Checks.RestoreTestOutcome.Ok => Strings.RestoreTestOk,
+        Core.Checks.RestoreTestOutcome.Failed => Strings.RestoreTestFailed,
+        Core.Checks.RestoreTestOutcome.NotRun => Strings.RestoreTestNotRun,
+        _ => Strings.OutcomeCancelled,
+    };
+
+    /// <summary>"Test-Wiederherstellung 20.11.2026 14:03: erfolgreich – 20 Dateien (84 MB), 14 verglichen".</summary>
+    public static string RestoreTest(Core.Checks.RestoreTestRecord record)
+    {
+        var when = record.Started.ToLocalTime().ToString("g", CultureInfo.CurrentCulture);
+        var what = record.Mode == Core.Checks.RestoreTestMode.WholeArchive
+            ? Strings.RestoreTestWholeArchive
+            : Format(record.Mode == Core.Checks.RestoreTestMode.Compare ? Strings.RestoreTestFilesCompared : Strings.RestoreTestFiles,
+                record.Files.Count, Size(record.Bytes), record.Compared);
+        return record.Outcome is Core.Checks.RestoreTestOutcome.Ok or Core.Checks.RestoreTestOutcome.Failed
+            ? Format(Strings.RestoreTestLine, when, RestoreTestOutcome(record.Outcome), what)
+            : Format(Strings.RestoreTestLineShort, when, RestoreTestOutcome(record.Outcome));
+    }
+
+    /// <summary>The test in a few lines: what was restored, which files had problems, why it could not run.</summary>
+    public static string RestoreTestDetails(Core.Checks.RestoreTestRecord record)
+    {
+        var lines = new List<string> { RestoreTest(record) };
+        lines.AddRange(record.Problems.Take(10).Select(RestoredFile));
+        if (record.Error is { } error)
+            lines.Add(error);
+        return string.Join("\n", lines);
+    }
+
+    /// <summary>"Weicht ab: home/me/a.txt".</summary>
+    public static string RestoredFile(Core.Checks.RestoredFile file) => Format(file.Result switch
+    {
+        Core.Checks.RestoredFileResult.Different => Strings.RestoredFileDifferent,
+        Core.Checks.RestoredFileResult.Missing => Strings.RestoredFileMissing,
+        _ => "{0}",
+    }, file.Path);
+
     /// <summary>"0:42", "12:05", "1:02:03".</summary>
     public static string Duration(TimeSpan duration) =>
         duration.TotalHours >= 1

@@ -23,7 +23,7 @@ public partial class MainViewModel
     public bool HasRepositoryJobs => RepositoryJobs.Count > 0;
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(EditJobCommand), nameof(DeleteJobCommand), nameof(RunJobCommand), nameof(CleanUpJobCommand))]
+    [NotifyCanExecuteChangedFor(nameof(EditJobCommand), nameof(DeleteJobCommand), nameof(RunJobCommand), nameof(CleanUpJobCommand), nameof(TestRestoreCommand))]
     public partial BackupJobItemViewModel? SelectedJob { get; set; }
 
     /// <summary>The running backup, or the last one (with its outcome) until the next starts.</summary>
@@ -36,7 +36,7 @@ public partial class MainViewModel
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(RunJobCommand), nameof(CancelBackupCommand), nameof(DeleteJobCommand), nameof(EditJobCommand),
         nameof(TestRepositoryCommand), nameof(ExportKeyCommand), nameof(RemoveRepositoryCommand), nameof(EditRepositoryCommand),
-        nameof(CleanUpJobCommand), nameof(FreeSpaceCommand), nameof(MeasureStorageCommand), nameof(CheckRepositoryCommand),
+        nameof(CleanUpJobCommand), nameof(TestRestoreCommand), nameof(FreeSpaceCommand), nameof(MeasureStorageCommand), nameof(CheckRepositoryCommand),
         nameof(CheckRepositoryFullCommand), nameof(RepairRepositoryCommand))]
     public partial bool IsBackupRunning { get; private set; }
 
@@ -73,7 +73,7 @@ public partial class MainViewModel
         RepositoryJobs.Clear();
         if (SelectedRepository is { } repository)
             foreach (var job in _jobs.Where(job => job.RepositoryId == repository.Config.Id))
-                RepositoryJobs.Add(new BackupJobItemViewModel(job));
+                RepositoryJobs.Add(new BackupJobItemViewModel(job, RestoreTestStore.Get(job.Id).FirstOrDefault()));
         SelectedJob = RepositoryJobs.FirstOrDefault(item => item.Job.Id == selected) ?? RepositoryJobs.FirstOrDefault();
         OnPropertyChanged(nameof(HasRepositoryJobs));
         NewJobCommand.NotifyCanExecuteChanged();
@@ -148,6 +148,7 @@ public partial class MainViewModel
         _jobs.RemoveAll(existing => existing.Id == job.Id);
         SaveJobs();
         Runner.History.Remove(job.Id);
+        RestoreTestStore.Remove(job.Id);
         NotificationPolicy.ForDataDirectory(_services.Jobs.DataDirectory).Forget(job.Id);
         RefreshRepositoryJobs();
     }
@@ -189,13 +190,14 @@ public partial class MainViewModel
 
         var borg = Borg!;
         Core.Checks.CheckRecord? check = null;
+        var checks = new RepositoryChecks(_services);
         var result = await RunWithCardAsync(job, async (report, cancellationToken) =>
         {
             var backup = await Runner.RunAsync(new BackupRunRequest(borg, location, job, passphrase.Value, ssh.Access), report, cancellationToken);
-            // Checked after the backup, if the repository's policy says one is due.
+            // Checked after the backup, if the repository's policy says one is due (with the jobs' restore tests).
             if (backup.Summary.Outcome is BackupOutcome.Succeeded or BackupOutcome.Warnings)
-                check = await new RepositoryChecks(_services).CheckAfterBackupAsync(item.Config,
-                    new UnattendedAccess(borg, location, passphrase.Value, ssh.Access), report, cancellationToken);
+                check = await checks.CheckAfterBackupAsync(item.Config, new UnattendedAccess(borg, location, passphrase.Value, ssh.Access), report,
+                    cancellationToken);
             return backup;
         });
         var summary = result.Summary;
@@ -207,6 +209,8 @@ public partial class MainViewModel
         await NotifyStorageAsync(item.Config, usage);
         if (check is not null)
             await NotifyCheckAsync(item.Config, check);
+        foreach (var (tested, test) in checks.LastRestoreTests)
+            await NotifyRestoreTestAsync(tested, item.Name, test);
     }
 
     /// <summary>
@@ -314,6 +318,7 @@ public partial class MainViewModel
                 BackupRunPhase.Pruning => RunPhase.Pruning,
                 BackupRunPhase.Compacting => RunPhase.Compacting,
                 BackupRunPhase.Checking => RunPhase.Checking,
+                BackupRunPhase.RestoreTesting => RunPhase.RestoreTesting,
                 _ => RunPhase.Backup,
             }, expected));
 
@@ -328,9 +333,21 @@ public partial class MainViewModel
 }
 
 /// <summary>A job in the "Backup jobs" tab.</summary>
-public sealed class BackupJobItemViewModel(BackupJob job)
+public sealed class BackupJobItemViewModel(BackupJob job, Core.Checks.RestoreTestRecord? lastRestoreTest = null)
 {
     public BackupJob Job { get; } = job;
+
+    /// <summary>The job's last restore test; <c>null</c> if it never had one.</summary>
+    public Core.Checks.RestoreTestRecord? LastRestoreTest { get; } = lastRestoreTest;
+
+    /// <summary>"Test-Wiederherstellung 20.11.2026 14:03: erfolgreich – 20 Dateien (84 MB), 14 verglichen".</summary>
+    public string RestoreTestText => LastRestoreTest is { } test ? BorgTexts.RestoreTest(test) : "";
+
+    public bool HasRestoreTest => LastRestoreTest is not null;
+
+    public bool RestoreTestFailed => LastRestoreTest?.Outcome == Core.Checks.RestoreTestOutcome.Failed;
+
+    public bool RestoreTestNotRun => LastRestoreTest?.Outcome == Core.Checks.RestoreTestOutcome.NotRun;
 
     public string Name => Job.Name;
 

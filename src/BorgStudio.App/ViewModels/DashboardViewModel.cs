@@ -8,7 +8,9 @@ using CommunityToolkit.Mvvm.Input;
 namespace BorgStudio.App.ViewModels;
 
 /// <summary>A repository with its jobs and their runs (newest first), for the overview.</summary>
-public sealed record DashboardRepository(RepositoryItemViewModel Item, IReadOnlyList<(BackupJob Job, IReadOnlyList<BackupRunSummary> Runs)> Jobs);
+/// <param name="RestoreTests">Each job's last restore test, if it had one.</param>
+public sealed record DashboardRepository(RepositoryItemViewModel Item, IReadOnlyList<(BackupJob Job, IReadOnlyList<BackupRunSummary> Runs)> Jobs,
+    IReadOnlyDictionary<Guid, Core.Checks.RestoreTestRecord>? RestoreTests = null);
 
 /// <summary>
 /// "Alle Repositories": what all repositories take up and save, how reliable the backups are, which storage fills up
@@ -127,6 +129,18 @@ public sealed partial class DashboardRowViewModel
             problems.Add((HealthLevel.Critical, Strings.DashStorageFull));
         else if (Item.StorageLevel == StorageLevel.Low)
             problems.Add((HealthLevel.Warning, Strings.DashStorageLow));
+        foreach (var (job, _) in repository.Jobs)
+        {
+            switch (repository.RestoreTests?.GetValueOrDefault(job.Id))
+            {
+                case { Outcome: Core.Checks.RestoreTestOutcome.Failed }:
+                    problems.Add((HealthLevel.Critical, BorgTexts.Format(Strings.DashRestoreTestFailed, job.Name)));
+                    break;
+                case { Outcome: Core.Checks.RestoreTestOutcome.NotRun, Automatic: true }:
+                    problems.Add((HealthLevel.Warning, BorgTexts.Format(Strings.DashRestoreTestNotRun, job.Name)));
+                    break;
+            }
+        }
         foreach (var (job, state) in health.Where(entry => entry.Health.Level is HealthLevel.Warning or HealthLevel.Critical))
             problems.Add((state.Level, BorgTexts.Format(Reason(state, now), job.Name, state.LastSuccess is { } at ? (int)(now - at).TotalDays : 0)));
 

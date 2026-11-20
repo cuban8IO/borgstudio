@@ -88,7 +88,7 @@ public partial class MainViewModel : ViewModelBase
 
     /// <summary>The borg used for all repository operations; <c>null</c> until found.</summary>
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(TestRepositoryCommand), nameof(ExportKeyCommand), nameof(RunJobCommand), nameof(CleanUpJobCommand),
+    [NotifyCanExecuteChangedFor(nameof(TestRepositoryCommand), nameof(ExportKeyCommand), nameof(RunJobCommand), nameof(CleanUpJobCommand), nameof(TestRestoreCommand),
         nameof(FreeSpaceCommand), nameof(MeasureStorageCommand), nameof(MountArchiveCommand), nameof(MountRepositoryCommand))]
     public partial BorgInstallation? Borg { get; private set; }
 
