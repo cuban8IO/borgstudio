@@ -235,6 +235,11 @@ section gets the new version number.
   successful backup, average duration and newly stored data, and a column per backup (red failed, yellow warnings), for all
   jobs or one; and the activity of the last 12 weeks as a calendar. Hovering a chart shows its values. The charts are
   BorgStudio’s own controls, no chart library.
+- Overview of all repositories (“All repositories” above the list; the app starts there): what all repositories take up
+  and save, the success rate of 30 days, which storage fills up first and when; each repository with its storage bar and
+  its state, problems first – judged by the schedules (a missed or failed scheduled backup is a warning, two missed ones
+  or a job’s overdue days critical; jobs started by hand only by failures), plus almost full or full storage; and the
+  activity of all jobs. Clicking a repository opens it.
 
 **Fixed**
 - BorgStudio no longer crashes at startup when .NET runs without culture data (Linux without ICU).

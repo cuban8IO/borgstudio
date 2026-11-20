@@ -2594,4 +2594,94 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
   <data name="StatsLegendNone" xml:space="preserve">
     <value>none</value>
   </data>
+  <data name="DashTitle" xml:space="preserve">
+    <value>All repositories</value>
+  </data>
+  <data name="DashEntrySub" xml:space="preserve">
+    <value>Overview and state</value>
+  </data>
+  <data name="DashStored" xml:space="preserve">
+    <value>Stored in total</value>
+  </data>
+  <data name="DashRepositories" xml:space="preserve">
+    <value>{0} repositories</value>
+  </data>
+  <data name="DashSavings" xml:space="preserve">
+    <value>Saved by deduplication and compression</value>
+  </data>
+  <data name="DashNoStats" xml:space="preserve">
+    <value>after the next backups</value>
+  </data>
+  <data name="DashEarliestFull" xml:space="preserve">
+    <value>Full first</value>
+  </data>
+  <data name="DashNotForeseeable" xml:space="preserve">
+    <value>not foreseeable</value>
+  </data>
+  <data name="DashToday" xml:space="preserve">
+    <value>today</value>
+  </data>
+  <data name="DashDays" xml:space="preserve">
+    <value>~{0} days</value>
+  </data>
+  <data name="DashWeeks" xml:space="preserve">
+    <value>~{0} wk.</value>
+  </data>
+  <data name="DashMonths" xml:space="preserve">
+    <value>~{0} mo.</value>
+  </data>
+  <data name="DashYears" xml:space="preserve">
+    <value>~{0} yr.</value>
+  </data>
+  <data name="DashRepositoriesTitle" xml:space="preserve">
+    <value>Repositories – problems first</value>
+  </data>
+  <data name="DashOpenTip" xml:space="preserve">
+    <value>Open the repository</value>
+  </data>
+  <data name="DashActivityTitle" xml:space="preserve">
+    <value>Activity of all jobs (12 weeks)</value>
+  </data>
+  <data name="DashStorageFull" xml:space="preserve">
+    <value>Storage full</value>
+  </data>
+  <data name="DashStorageLow" xml:space="preserve">
+    <value>Storage almost full</value>
+  </data>
+  <data name="DashReasonNever" xml:space="preserve">
+    <value>{0}: never backed up yet</value>
+  </data>
+  <data name="DashReasonFailed" xml:space="preserve">
+    <value>{0}: last run failed</value>
+  </data>
+  <data name="DashReasonMissed" xml:space="preserve">
+    <value>{0}: last scheduled backup missing</value>
+  </data>
+  <data name="DashReasonMissedTwice" xml:space="preserve">
+    <value>{0}: the last two scheduled backups are missing</value>
+  </data>
+  <data name="DashReasonOverdue" xml:space="preserve">
+    <value>{0}: no successful backup for {1} days</value>
+  </data>
+  <data name="DashMoreProblems" xml:space="preserve">
+    <value>{0} (+{1} more)</value>
+  </data>
+  <data name="DashNoJobs" xml:space="preserve">
+    <value>No backup jobs yet</value>
+  </data>
+  <data name="DashAllWell" xml:space="preserve">
+    <value>All well</value>
+  </data>
+  <data name="DashByHandOnly" xml:space="preserve">
+    <value>Backed up by hand only</value>
+  </data>
+  <data name="DashLastBackup" xml:space="preserve">
+    <value>Last backup {0}</value>
+  </data>
+  <data name="DashNeverBackedUp" xml:space="preserve">
+    <value>Never backed up</value>
+  </data>
+  <data name="DashFullBy" xml:space="preserve">
+    <value>full ~{0}</value>
+  </data>
 </root>

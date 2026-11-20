@@ -62,6 +62,8 @@ public partial class MainViewModel : ViewModelBase
         LoadRepositories();
         LoadJobs();
         RefreshStorage();
+        // The app starts with the overview of all repositories.
+        IsOverviewShown = HasRepositories;
         // The system's scheduler may be out of step (jobs imported, app moved, entries removed by hand).
         ApplySchedules();
         // The entry follows the app when it moved or was updated.

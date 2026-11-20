@@ -26,8 +26,9 @@ public partial class MainViewModel
             var runs = _jobs.Where(job => job.RepositoryId == item.Config.Id).SelectMany(job => Runner.History.Get(job.Id));
             item.Forecast = StorageForecast.Compute(store.History.Get(item.Config.Id), item.Storage, runs, now);
         }
-        // A measurement or a run changes the statistics too.
+        // A measurement or a run changes the statistics and the overview too.
         RefreshStatistics();
+        RefreshDashboard();
     }
 
     /// <summary>The statistics of the selected repository; built while their tab is open.</summary>
