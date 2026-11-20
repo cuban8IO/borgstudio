@@ -2593,7 +2593,7 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
     <value>nach den nächsten Sicherungen</value>
   </data>
   <data name="DashEarliestFull" xml:space="preserve">
-    <value>Frühestens voll</value>
+    <value>Speicher zuerst voll</value>
   </data>
   <data name="DashNotForeseeable" xml:space="preserve">
     <value>nicht absehbar</value>
@@ -2614,7 +2614,7 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
     <value>~{0} J.</value>
   </data>
   <data name="DashRepositoriesTitle" xml:space="preserve">
-    <value>Repositories – Probleme zuerst</value>
+    <value>Zustand der Repositories</value>
   </data>
   <data name="DashOpenTip" xml:space="preserve">
     <value>Repository öffnen</value>

@@ -2613,7 +2613,7 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
     <value>after the next backups</value>
   </data>
   <data name="DashEarliestFull" xml:space="preserve">
-    <value>Full first</value>
+    <value>Storage full first</value>
   </data>
   <data name="DashNotForeseeable" xml:space="preserve">
     <value>not foreseeable</value>
@@ -2634,7 +2634,7 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
     <value>~{0} yr.</value>
   </data>
   <data name="DashRepositoriesTitle" xml:space="preserve">
-    <value>Repositories – problems first</value>
+    <value>Repository status</value>
   </data>
   <data name="DashOpenTip" xml:space="preserve">
     <value>Open the repository</value>
