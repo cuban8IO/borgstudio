@@ -613,6 +613,9 @@ public sealed class TestServices : IDisposable
     /// <summary>The programs system notifications start (notify-send: the notifier pretends to be on Linux).</summary>
     public RecordingProcesses NotifyProcesses { get; } = new();
 
+    /// <summary>What the conditions of scheduled runs find (battery, connection, target).</summary>
+    public FakeSystemState SystemState { get; } = new();
+
     /// <summary>What the jobs' commands start (nothing really runs; results by program name).</summary>
     public RecordingProcesses HookProcesses { get; } = new();
 
@@ -653,7 +656,8 @@ public sealed class TestServices : IDisposable
             Scheduler,
             Autostart,
             Notifier,
-            new HookRunner(HookProcesses, FakeBorg.WslExecutable));
+            new HookRunner(HookProcesses, FakeBorg.WslExecutable),
+            SystemState);
     }
 
     public KnownHostsFile KnownHosts => new(SshKeys.KnownHostsFile);
@@ -1020,4 +1024,36 @@ public sealed class FakeHttpHandler : HttpMessageHandler
             Requests.Add(new Request(request.Method, request.RequestUri!, headers, body));
         return new HttpResponseMessage(Status) { Content = new StringContent(ResponseBody) };
     }
+}
+
+/// <summary>The computer's state for the conditions of scheduled runs, as a test sets it.</summary>
+public sealed class FakeSystemState : ISystemState
+{
+    public bool? OnBattery { get; set; } = false;
+
+    public bool? Metered { get; set; } = false;
+
+    public bool? Wired { get; set; } = true;
+
+    public bool Reachable { get; set; } = true;
+
+    /// <summary>Whether a location counts as reached over the network; by default servers only.</summary>
+    public Func<BorgStudio.Plugins.RepositoryLocation, bool> NetworkTarget { get; set; } = location => location.Ssh is not null;
+
+    public int Looks { get; private set; }
+
+    public Task<bool?> IsOnBatteryAsync(CancellationToken cancellationToken = default)
+    {
+        Looks++;
+        return Task.FromResult(OnBattery);
+    }
+
+    public Task<bool?> IsMeteredAsync(CancellationToken cancellationToken = default) => Task.FromResult(Metered);
+
+    public Task<bool?> IsWiredAsync(CancellationToken cancellationToken = default) => Task.FromResult(Wired);
+
+    public Task<bool> IsReachableAsync(BorgStudio.Plugins.RepositoryLocation location, CancellationToken cancellationToken = default) =>
+        Task.FromResult(Reachable);
+
+    public bool IsNetworkTarget(BorgStudio.Plugins.RepositoryLocation location) => NetworkTarget(location);
 }

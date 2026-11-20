@@ -33,6 +33,9 @@ public partial class MainViewModel
     /// <summary>Repositories whose scheduled check is due (run after the due jobs).</summary>
     private readonly Queue<Guid> _dueChecks = new();
 
+    /// <summary>Scheduled runs a condition of their job holds back: when to look again, and until when.</summary>
+    private readonly Dictionary<Guid, (DateTime RetryAt, DateTime Deadline)> _conditionWaits = [];
+
     /// <summary>Who waits for a job's next run to finish (the webhook with ?wait=1).</summary>
     private readonly Dictionary<Guid, List<TaskCompletionSource<BackupRunSummary?>>> _runWaiters = [];
     private DateTime? _lastScheduleLook;
@@ -117,6 +120,11 @@ public partial class MainViewModel
             foreach (var job in _jobs.Where(job => job.IsScheduled))
             {
                 var due = since is { } last ? ScheduleCalendar.IsDue(job, last, now) : ScheduleCalendar.IsMissed(job, now);
+                // Due again while held back: the new time replaces the old wait.
+                if (due)
+                    _conditionWaits.Remove(job.Id);
+                if (_conditionWaits.TryGetValue(job.Id, out var held) && held.RetryAt <= now)
+                    due = true;
                 if (due && !_dueJobs.Any(queued => queued.JobId == job.Id))
                     _dueJobs.Enqueue(new QueuedRun(job.Id, Triggered: false));
             }
@@ -229,7 +237,12 @@ public partial class MainViewModel
                 await Task.WhenAny(BackupFinished, Task.Delay(TimeSpan.FromSeconds(2)));
             var job = _jobs.FirstOrDefault(candidate => candidate.Id == queued.JobId);
             BackupRunSummary? summary = null;
-            if (job is not null && (queued.Triggered || (job.IsScheduled && !Settings.SchedulesPaused)))
+            // A scheduled run waits while a condition of its job holds it back (the webhook's runs start right away).
+            if (job is not null && !queued.Triggered && job.IsScheduled && !Settings.SchedulesPaused && await HeldBackAsync(job) is { } held)
+            {
+                summary = held;
+            }
+            else if (job is not null && (queued.Triggered || (job.IsScheduled && !Settings.SchedulesPaused)))
             {
                 var run = RunScheduledAsync(job);
                 _backupTask = run;
@@ -237,6 +250,43 @@ public partial class MainViewModel
             }
             FinishWaiters(queued.JobId, summary);
         }
+    }
+
+    /// <summary>
+    /// Whether a condition holds the scheduled run of <paramref name="job"/> back: then it is looked at again in
+    /// <see cref="RunConditions.RetryInterval"/> – until the job's next time, when it is recorded as skipped (that summary
+    /// is returned). <c>null</c>: it may run now.
+    /// </summary>
+    private async Task<BackupRunSummary?> HeldBackAsync(BackupJob job)
+    {
+        var services = _services with { Vault = OpenVaultCopy(scheduledAccess: false) };
+        var runner = new ScheduledJobRunner(services, new ScheduledAccess(services.Vault, _services.SecretStore, ScheduledAccess.FallbackFile));
+        if (await Task.Run(() => runner.CheckConditionsAsync(job)) is not { } reason)
+        {
+            _conditionWaits.Remove(job.Id);
+            services.Vault.Lock();
+            return null;
+        }
+
+        var now = Clock();
+        var deadline = _conditionWaits.TryGetValue(job.Id, out var waiting) ? waiting.Deadline : ScheduleCalendar.Next(job.Schedules, now) ?? now.AddDays(1);
+        if (now + RunConditions.RetryInterval < deadline)
+        {
+            if (!_conditionWaits.ContainsKey(job.Id))
+                ScheduledRun.Log($"{job.Name} (background): waiting – {BorgTexts.SkipReason(reason)}", _services.Jobs.DataDirectory);
+            _conditionWaits[job.Id] = (now + RunConditions.RetryInterval, deadline);
+            services.Vault.Lock();
+            return new BackupRunSummary { Started = DateTimeOffset.Now, Duration = TimeSpan.Zero, Outcome = BackupOutcome.Skipped, SkipReason = reason };
+        }
+
+        _conditionWaits.Remove(job.Id);
+        var skipped = (await Task.Run(() => runner.SkipAsync(job, reason))).Summary;
+        ScheduledRun.Log($"{job.Name} (background): {skipped.Outcome} – {BorgTexts.SkipReason(reason)}", _services.Jobs.DataDirectory);
+        var index = _jobs.FindIndex(existing => existing.Id == job.Id);
+        if (index >= 0)
+            _jobs[index] = _jobs[index] with { LastRun = skipped };
+        RefreshRepositoryJobs();
+        return skipped;
     }
 
     private void FinishWaiters(Guid jobId, BackupRunSummary? summary)

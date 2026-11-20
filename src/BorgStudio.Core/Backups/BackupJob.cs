@@ -73,6 +73,25 @@ public enum BackupSkipReason
 
     /// <summary>The server's host key was never confirmed: that needs the window.</summary>
     HostUnknown,
+
+    /// <summary>A condition of the job: the computer ran on its battery.</summary>
+    OnBattery,
+
+    /// <summary>A condition of the job: the connection was metered.</summary>
+    MeteredConnection,
+
+    /// <summary>A condition of the job: there was no wired connection (Wi-Fi only).</summary>
+    NotWired,
+
+    /// <summary>A condition of the job: the server did not answer or the folder was not there.</summary>
+    TargetUnreachable,
+}
+
+public static class BackupSkipReasons
+{
+    /// <summary>A scheduled run held back by a condition of its job (not a failure; it was tried again for a while).</summary>
+    public static bool IsCondition(this BackupSkipReason reason) =>
+        reason is BackupSkipReason.OnBattery or BackupSkipReason.MeteredConnection or BackupSkipReason.NotWired or BackupSkipReason.TargetUnreachable;
 }
 
 /// <summary>The last run of a job, kept to show it and to estimate the next run.</summary>
@@ -170,6 +189,9 @@ public sealed record BackupJob
 
     /// <summary>Commands before and after the backup.</summary>
     public JobHooks Hooks { get; init; } = new();
+
+    /// <summary>When a scheduled run may start (battery, connection, target).</summary>
+    public RunConditions Conditions { get; init; } = new();
 
     /// <summary>How the job's newest archive is restored on trial with the repository's automatic checks.</summary>
     public Checks.RestoreTestMode RestoreTest { get; init; } = Checks.RestoreTestMode.Off;
