@@ -13,6 +13,13 @@ The **[product page](https://borgstudio.cuban8io.net/)** shows what it does, the
   existing ones; borg runs natively or, on Windows, inside WSL.
 - **Backup jobs** with source folders, exclusions and compression; live progress with upload speed and remaining
   time; cancelling keeps a checkpoint.
+- **Schedules**: daily, on chosen weekdays or every few hours – started by the system's task scheduler (also while
+  BorgStudio is closed) or by BorgStudio itself in the background (notification area, start at login); missed times
+  are made up for. Other programs can start jobs through an incoming webhook.
+- **Notifications** by system notification, e-mail and webhook (ntfy, Discord, Slack, Gotify, JSON) – failures,
+  warnings, full storage, overdue jobs, and a daily summary.
+- **Statistics**: an overview of all repositories (state, storage, success rate), and per repository the storage over
+  time with a forecast of when it will be full, what each backup newly stored and the activity of the last weeks.
 - **Cleaning up** old archives per job (daily, weekly, monthly, yearly …) with a preview, and freeing space.
 - **Archives**: list with size and own share, a browser with folder tree and search, search across all archives and
   the versions of a file.
@@ -22,8 +29,6 @@ The **[product page](https://borgstudio.cuban8io.net/)** shows what it does, the
 - **Security**: app lock with a PIN and an encrypted vault for passphrases and SSH keys, or the system keychain;
   export and import of all settings in one encrypted file.
 - **Updates** from within the app, checked against the release's checksums; UI in English and German.
-
-Scheduled backups are planned for a later version.
 
 ## No warranty
 
@@ -164,7 +169,7 @@ section gets the new version number.
 
 ## Changelog
 
-### Unreleased
+### 0.4.0 – 2026-11-20
 
 **Changed**
 - Backups run through one shared runner (`BackupRunner`) – the groundwork for scheduled backups. Each run is kept in
