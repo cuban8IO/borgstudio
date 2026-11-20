@@ -918,12 +918,16 @@ public sealed class FakeSystemScheduler : ISystemScheduler
     /// <summary>The time of the daily check in the last update; <c>null</c>: none.</summary>
     public TimeOnly? DailyCheck { get; private set; }
 
+    /// <summary>The repositories with check schedules in the last update.</summary>
+    public IReadOnlyList<RepositoryConfig> ScheduledChecks { get; private set; } = [];
+
     public Task ApplyAsync(IReadOnlyList<BackupJob> jobs, string executable, TimeOnly? dailyCheck = null,
-        CancellationToken cancellationToken = default)
+        IReadOnlyList<RepositoryConfig>? repositories = null, CancellationToken cancellationToken = default)
     {
         if (Error is not null)
             throw new SchedulerException(Error);
         Applied.Add(jobs);
+        ScheduledChecks = [.. (repositories ?? []).Where(repository => repository.Check.IsScheduled)];
         DailyCheck = dailyCheck;
         Executable = executable;
         return Task.CompletedTask;

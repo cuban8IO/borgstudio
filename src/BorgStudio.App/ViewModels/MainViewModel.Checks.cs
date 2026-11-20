@@ -96,39 +96,20 @@ public partial class MainViewModel
             depth == CheckDepth.Repair ? null : cancellation.Cancel);
         var duration = DateTimeOffset.Now - started;
 
-        var record = result switch
-        {
-            { Value: { } checkResult } => new CheckRecord(started, duration, depth,
-                depth == CheckDepth.Repair ? CheckOutcome.Repaired : checkResult.ProblemsFound ? CheckOutcome.ProblemsFound : CheckOutcome.Ok)
-            {
-                Messages = checkResult.Messages,
-            },
-            { Error.Kind: BorgErrorKind.Cancelled } => new CheckRecord(started, duration, depth, CheckOutcome.Cancelled),
-            _ => new CheckRecord(started, duration, depth, CheckOutcome.Failed) { Error = BorgTexts.Describe(result.Error!) },
-        };
+        var record = RepositoryChecks.ToRecord(depth, started, duration, result);
         CheckStore.Add(item.Config.Id, record);
         RefreshChecks(item.Config.Id);
         return record;
     }
 
     /// <summary>The whole check as one bar: each phase gets the share it usually takes.</summary>
-    private void ReportCheck(CheckDepth depth, BorgCheckProgress update)
-    {
-        var (start, share) = (depth, update.Phase) switch
-        {
-            (CheckDepth.Full, CheckPhase.Segments) => (0.0, 0.2),
-            (CheckDepth.Full, CheckPhase.Data) => (0.2, 0.7),
-            (CheckDepth.Full, _) => (0.9, 0.1),
-            (_, CheckPhase.Segments) => (0.0, 0.6),
-            _ => (0.6, 0.4),
-        };
-        Work.Report(start + share * update.Fraction, 1, update.Phase switch
+    private void ReportCheck(CheckDepth depth, BorgCheckProgress update) =>
+        Work.Report(RepositoryChecks.Overall(depth, update), 1, update.Phase switch
         {
             CheckPhase.Segments => Strings.CheckPhaseSegments,
             CheckPhase.Data => Strings.CheckPhaseData,
             _ => Strings.CheckPhaseArchives,
         });
-    }
 
     private static string WorkingText(CheckDepth depth) => depth switch
     {

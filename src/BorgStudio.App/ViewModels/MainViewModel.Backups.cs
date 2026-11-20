@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using BorgStudio.App.Resources;
+using BorgStudio.App.Services;
 using BorgStudio.Core.Backups;
 using BorgStudio.Core.Borg;
 using BorgStudio.Core.Notifications;
@@ -187,8 +188,16 @@ public partial class MainViewModel
             return;
 
         var borg = Borg!;
-        var result = await RunWithCardAsync(job, (report, cancellationToken) =>
-            Runner.RunAsync(new BackupRunRequest(borg, location, job, passphrase.Value, ssh.Access), report, cancellationToken));
+        Core.Checks.CheckRecord? check = null;
+        var result = await RunWithCardAsync(job, async (report, cancellationToken) =>
+        {
+            var backup = await Runner.RunAsync(new BackupRunRequest(borg, location, job, passphrase.Value, ssh.Access), report, cancellationToken);
+            // Checked after the backup, if the repository's policy says one is due.
+            if (backup.Summary.Outcome is BackupOutcome.Succeeded or BackupOutcome.Warnings)
+                check = await new RepositoryChecks(_services).CheckAfterBackupAsync(item.Config,
+                    new UnattendedAccess(borg, location, passphrase.Value, ssh.Access), report, cancellationToken);
+            return backup;
+        });
         var summary = result.Summary;
         // Turned away (another run is busy): that one measures and reports.
         if (summary.SkipReason == BackupSkipReason.RepositoryBusy)
@@ -196,6 +205,8 @@ public partial class MainViewModel
         var usage = await MeasureAfterBackupAsync(item.Config, borg, location, passphrase.Value, ssh.Access, result.Repository);
         await NotifyRunAsync(job, summary);
         await NotifyStorageAsync(item.Config, usage);
+        if (check is not null)
+            await NotifyCheckAsync(item.Config, check);
     }
 
     /// <summary>
@@ -248,7 +259,8 @@ public partial class MainViewModel
         IsBackupRunning = false;
         if (summary.Outcome != BackupOutcome.Skipped)
             ArchivesChanged(job.RepositoryId);
-        // A scheduled run in the background has measured the storage meanwhile.
+        // A scheduled run in the background has measured the storage meanwhile (and may have checked the repository).
+        RefreshChecks(job.RepositoryId);
         RefreshStorage(job.RepositoryId);
         return result;
     }
@@ -301,6 +313,7 @@ public partial class MainViewModel
             {
                 BackupRunPhase.Pruning => RunPhase.Pruning,
                 BackupRunPhase.Compacting => RunPhase.Compacting,
+                BackupRunPhase.Checking => RunPhase.Checking,
                 _ => RunPhase.Backup,
             }, expected));
 

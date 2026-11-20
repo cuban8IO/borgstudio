@@ -10,6 +10,9 @@ public enum BackupRunPhase
     Backup,
     Pruning,
     Compacting,
+
+    /// <summary>Checking the repository after the backup (<c>borg check</c>, when due).</summary>
+    Checking,
 }
 
 /// <summary>Follows a run while it works; called on background threads.</summary>

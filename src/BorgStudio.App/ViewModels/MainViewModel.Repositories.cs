@@ -76,6 +76,11 @@ public partial class MainViewModel
         SaveRepositories();
         SelectedRepository = item;
         item.ShowResult(result.Created ? Strings.RepositoryCreated : Strings.RepositoryConnected, isError: false);
+        if (item.Config.Check.IsScheduled)
+        {
+            await PrepareUnattendedAsync(item.Config.Id);
+            ApplySchedules();
+        }
 
         if (result.Created && item.IsEncrypted
             && await _services.Dialogs.ConfirmAsync(Strings.BackupKeyTitle,
@@ -95,8 +100,15 @@ public partial class MainViewModel
         if (editor.Result is not { } result)
             return;
 
+        var before = item.Config;
         item.Config = result.Repository;
         SaveRepositories();
+        if (!before.Check.IsScheduled && item.Config.Check.IsScheduled)
+            await PrepareUnattendedAsync(item.Config.Id);
+        // The check's entry in the system's scheduler follows its times (and the name in its description).
+        if (before.Check.IsScheduled || item.Config.Check.IsScheduled)
+            ApplySchedules();
+        RefreshChecks(item.Config.Id);
         RefreshStorage(item.Config.Id);
         RefreshKeyNames();
     }
@@ -123,6 +135,8 @@ public partial class MainViewModel
         Repositories.Remove(item);
         SaveRepositories();
         RemoveJobsOf(item.Config.Id);
+        if (item.Config.Check.IsScheduled)
+            ApplySchedules();
         SelectedRepository = Repositories.Count == 0 ? null : Repositories[Math.Min(index, Repositories.Count - 1)];
 
         await OfferToDeleteUnusedKeyAsync(item.Config.SshKeyId);

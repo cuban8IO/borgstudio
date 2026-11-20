@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using BorgStudio.App.Resources;
 using BorgStudio.App.Services;
+using BorgStudio.Core.Backups;
 using BorgStudio.Core.Borg;
 using BorgStudio.Core.Progress;
 using BorgStudio.Core.Repositories;
@@ -54,6 +55,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         _borg = borg;
         _existing = existing;
         _otherRepositories = otherRepositories ?? [];
+        CheckSchedules.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasCheckSchedules));
         _id = existing?.Id ?? Guid.NewGuid();
         _passphrases = new PassphraseStore(services);
         Dialogs = services.Dialogs;
@@ -84,6 +86,11 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             : "";
         KeyChoice = existing.SshKeyId is null ? SshKeyChoice.Generate : SshKeyChoice.Keep;
         RestrictKey = existing.SshKeyId is null || existing.SshKeyRestricted;
+        CheckAfterBackup = existing.Check.AfterBackup;
+        CheckIntervalDays = existing.Check.IntervalDays;
+        foreach (var schedule in existing.Check.Schedules)
+            CheckSchedules.Add(new ScheduleItemViewModel(schedule, RemoveCheckSchedule));
+        CheckCatchUp = existing.Check.CatchUp;
         CreateFields(SelectedProvider.Provider, existing.ProviderValues);
         Page = EditorPage.Details;
         RefreshKeys();
@@ -375,6 +382,38 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
 
     private int WarnPercent => (int)Math.Clamp(StorageWarnPercent ?? 0, 0, 90);
 
+    // --- Checks ---
+
+    /// <summary>Check after a backup when the last check is older than <see cref="CheckIntervalDays"/>.</summary>
+    [ObservableProperty]
+    public partial bool CheckAfterBackup { get; set; }
+
+    [ObservableProperty]
+    public partial decimal? CheckIntervalDays { get; set; } = new Core.Checks.CheckPolicy().IntervalDays;
+
+    /// <summary>When the repository is checked by itself, besides after backups.</summary>
+    public ObservableCollection<ScheduleItemViewModel> CheckSchedules { get; } = [];
+
+    public bool HasCheckSchedules => CheckSchedules.Count > 0;
+
+    [ObservableProperty]
+    public partial bool CheckCatchUp { get; set; } = true;
+
+    [RelayCommand]
+    private void AddCheckSchedule() =>
+        CheckSchedules.Add(new ScheduleItemViewModel(new BackupSchedule { Kind = ScheduleKind.MonthlyWeekday, Time = new TimeOnly(3, 0) },
+            RemoveCheckSchedule));
+
+    private void RemoveCheckSchedule(ScheduleItemViewModel schedule) => CheckSchedules.Remove(schedule);
+
+    private Core.Checks.CheckPolicy CheckPolicy => new()
+    {
+        AfterBackup = CheckAfterBackup,
+        IntervalDays = (int)Math.Clamp(CheckIntervalDays ?? 30, 1, 365),
+        Schedules = [.. CheckSchedules.Select(schedule => schedule.ToSchedule())],
+        CatchUp = CheckCatchUp,
+    };
+
     public ObservableCollection<string> Errors { get; } = [];
 
     [ObservableProperty]
@@ -562,6 +601,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             SshKeyRestricted = login.Restricted,
             StorageWarnPercent = WarnPercent,
             StorageCapacity = IsSsh ? StorageCapacity : null,
+            Check = CheckPolicy,
         };
 
         if (repository.PassphraseMode is PassphraseMode.Vault or PassphraseMode.Stored
@@ -585,6 +625,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             BorgVersion = SelectedBorgVersion.Value,
             StorageWarnPercent = WarnPercent,
             StorageCapacity = IsSsh ? StorageCapacity : null,
+            Check = CheckPolicy,
         };
 
         SshLogin? login = null;

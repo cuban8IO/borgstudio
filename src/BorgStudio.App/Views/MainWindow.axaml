@@ -472,6 +472,9 @@
                                         <TextBlock Text="{Binding SelectedRepository.CheckDetailText}" TextWrapping="Wrap" FontSize="12" Opacity="0.7" />
                                         <TextBlock Text="{Binding SelectedRepository.CheckAttemptText}" TextWrapping="Wrap" FontSize="12"
                                                    IsVisible="{Binding SelectedRepository.HasCheckAttempt}" Foreground="{DynamicResource WarningBorder}" />
+                                        <TextBlock Text="{Binding SelectedRepository.CheckHealthText}" TextWrapping="Wrap"
+                                                   IsVisible="{Binding SelectedRepository.HasCheckHealthText}" Foreground="{DynamicResource WarningBorder}" />
+                                        <TextBlock Text="{Binding SelectedRepository.CheckPlanText}" TextWrapping="Wrap" FontSize="12" Opacity="0.7" />
                                         <StackPanel Spacing="8" IsVisible="{Binding SelectedRepository.HasCheckProblems}">
                                             <TextBlock Text="{x:Static res:Strings.CheckProblemsHint}" TextWrapping="Wrap" />
                                             <Button Content="{x:Static res:Strings.Repair}" Command="{Binding RepairRepositoryCommand}"

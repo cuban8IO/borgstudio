@@ -111,8 +111,18 @@ public sealed partial class DashboardRowViewModel
 
         // Each problem with its level; the worst one is told, the others counted.
         var problems = new List<(HealthLevel Level, string Text)>();
-        if (Item.HasCheckProblems)
-            problems.Add((HealthLevel.Critical, Strings.DashCheckProblems));
+        switch (Item.CheckHealth)
+        {
+            case (_, Core.Checks.CheckHealthReason.Damaged):
+                problems.Add((HealthLevel.Critical, Strings.DashCheckProblems));
+                break;
+            case (_, Core.Checks.CheckHealthReason.NotRun):
+                problems.Add((HealthLevel.Warning, Strings.DashCheckNotRun));
+                break;
+            case (_, Core.Checks.CheckHealthReason.Overdue):
+                problems.Add((HealthLevel.Warning, Strings.DashCheckOverdue));
+                break;
+        }
         if (Item.StorageLevel == StorageLevel.Full)
             problems.Add((HealthLevel.Critical, Strings.DashStorageFull));
         else if (Item.StorageLevel == StorageLevel.Low)

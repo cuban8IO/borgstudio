@@ -2834,4 +2834,88 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
   <data name="DashNeverChecked" xml:space="preserve">
     <value>never checked</value>
   </data>
+  <data name="NotifyTitleCheckNotRun" xml:space="preserve">
+    <value>Check could not run: {0}</value>
+  </data>
+  <data name="NotifyCheckNotRunHint" xml:space="preserve">
+    <value>BorgStudio tries again at the next time. Until then the repository's state is not known.</value>
+  </data>
+  <data name="ScheduleMonthlyWeekday" xml:space="preserve">
+    <value>Monthly (weekday)</value>
+  </data>
+  <data name="ScheduleMonthlyDay" xml:space="preserve">
+    <value>Monthly (date)</value>
+  </data>
+  <data name="ScheduleOnWeekday" xml:space="preserve">
+    <value>on the</value>
+  </data>
+  <data name="ScheduleOnDay" xml:space="preserve">
+    <value>on</value>
+  </data>
+  <data name="ScheduleWeekFirst" xml:space="preserve">
+    <value>first</value>
+  </data>
+  <data name="ScheduleWeekSecond" xml:space="preserve">
+    <value>second</value>
+  </data>
+  <data name="ScheduleWeekThird" xml:space="preserve">
+    <value>third</value>
+  </data>
+  <data name="ScheduleWeekFourth" xml:space="preserve">
+    <value>fourth</value>
+  </data>
+  <data name="ScheduleWeekLast" xml:space="preserve">
+    <value>last</value>
+  </data>
+  <data name="ScheduleDayOfMonth" xml:space="preserve">
+    <value>day {0}</value>
+  </data>
+  <data name="ScheduleLastDayOfMonth" xml:space="preserve">
+    <value>the last day</value>
+  </data>
+  <data name="EditorChecks" xml:space="preserve">
+    <value>Integrity check</value>
+  </data>
+  <data name="EditorChecksIntro" xml:space="preserve">
+    <value>Checks by themselves are normal checks (repository and archive metadata). A thorough check runs only when you start it.</value>
+  </data>
+  <data name="EditorCheckAfterBackup" xml:space="preserve">
+    <value>Check after a backup to this repository</value>
+  </data>
+  <data name="EditorCheckInterval" xml:space="preserve">
+    <value>if not checked for</value>
+  </data>
+  <data name="EditorCheckIntervalDays" xml:space="preserve">
+    <value>days</value>
+  </data>
+  <data name="EditorCheckSchedules" xml:space="preserve">
+    <value>Also check at set times:</value>
+  </data>
+  <data name="EditorCheckSchedulesHint" xml:space="preserve">
+    <value>The system's task scheduler starts the check, also while BorgStudio is closed (as long as you are logged in). A check waits for a backup on the repository to finish.</value>
+  </data>
+  <data name="CheckPlan" xml:space="preserve">
+    <value>Automatically: {0}</value>
+  </data>
+  <data name="CheckPlanNone" xml:space="preserve">
+    <value>Not checked automatically – set it up under „Edit“ → „Integrity check“.</value>
+  </data>
+  <data name="CheckPlanAfterBackup" xml:space="preserve">
+    <value>after a backup, if not checked for {0} days</value>
+  </data>
+  <data name="CheckPlanScheduled" xml:space="preserve">
+    <value>by schedule, next {0}</value>
+  </data>
+  <data name="CheckHealthNotRun" xml:space="preserve">
+    <value>The last automatic check could not run.</value>
+  </data>
+  <data name="CheckHealthOverdue" xml:space="preserve">
+    <value>The check is overdue.</value>
+  </data>
+  <data name="DashCheckNotRun" xml:space="preserve">
+    <value>Check could not run</value>
+  </data>
+  <data name="DashCheckOverdue" xml:space="preserve">
+    <value>Check overdue</value>
+  </data>
 </root>
