@@ -597,6 +597,9 @@ public sealed class TestServices : IDisposable
     /// <summary>The programs system notifications start (notify-send: the notifier pretends to be on Linux).</summary>
     public RecordingProcesses NotifyProcesses { get; } = new();
 
+    /// <summary>What the jobs' commands start (nothing really runs; results by program name).</summary>
+    public RecordingProcesses HookProcesses { get; } = new();
+
     /// <summary>What webhooks post.</summary>
     public FakeHttpHandler Http { get; } = new();
 
@@ -633,7 +636,8 @@ public sealed class TestServices : IDisposable
             Updates,
             Scheduler,
             Autostart,
-            Notifier);
+            Notifier,
+            new HookRunner(HookProcesses, FakeBorg.WslExecutable));
     }
 
     public KnownHostsFile KnownHosts => new(SshKeys.KnownHostsFile);

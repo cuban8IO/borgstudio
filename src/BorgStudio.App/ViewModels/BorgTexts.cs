@@ -259,6 +259,19 @@ internal static class BorgTexts
         _ => "{0}",
     }, file.Path);
 
+    /// <summary>"Befehl vor dem Backup fehlgeschlagen (Exit-Code 3): pg_dump: connection refused".</summary>
+    public static string HookProblem(Core.Backups.HookProblem problem)
+    {
+        var stage = problem.Stage == Core.Backups.HookStage.Before ? Strings.HookStageBefore : Strings.HookStageAfter;
+        var text = problem switch
+        {
+            { ExitCode: { } code } => Format(Strings.HookFailedExit, stage, code),
+            { Error: { } program } => Format(Strings.HookNotStarted, stage, program),
+            _ => Format(Strings.HookStopped, stage),
+        };
+        return problem.Output.Count > 0 ? text + ": " + problem.Output[^1] : text;
+    }
+
     /// <summary>"0:42", "12:05", "1:02:03".</summary>
     public static string Duration(TimeSpan duration) =>
         duration.TotalHours >= 1

@@ -3068,4 +3068,58 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
   <data name="BreakLockThisComputer" xml:space="preserve">
     <value>That is this computer: borg clears locks of ended processes there by itself, so the process probably still runs (perhaps hung). Release the lock only after ending it.</value>
   </data>
+  <data name="HookBeforeWorking" xml:space="preserve">
+    <value>Running the command before the backup …</value>
+  </data>
+  <data name="HookAfterWorking" xml:space="preserve">
+    <value>Running the command after the backup …</value>
+  </data>
+  <data name="HookStageBefore" xml:space="preserve">
+    <value>Command before the backup</value>
+  </data>
+  <data name="HookStageAfter" xml:space="preserve">
+    <value>Command after the backup</value>
+  </data>
+  <data name="HookFailedExit" xml:space="preserve">
+    <value>{0} failed (exit code {1})</value>
+  </data>
+  <data name="HookNotStarted" xml:space="preserve">
+    <value>{0} could not be started ({1} not found)</value>
+  </data>
+  <data name="HookStopped" xml:space="preserve">
+    <value>{0} was stopped</value>
+  </data>
+  <data name="HookShellPowerShell" xml:space="preserve">
+    <value>PowerShell</value>
+  </data>
+  <data name="HookShellCmd" xml:space="preserve">
+    <value>Command prompt (cmd)</value>
+  </data>
+  <data name="HookShellWsl" xml:space="preserve">
+    <value>WSL (sh)</value>
+  </data>
+  <data name="JobEditorHooks" xml:space="preserve">
+    <value>Commands</value>
+  </data>
+  <data name="JobEditorHookShell" xml:space="preserve">
+    <value>Run in</value>
+  </data>
+  <data name="JobEditorHookBefore" xml:space="preserve">
+    <value>Before the backup (e.g. a database dump):</value>
+  </data>
+  <data name="JobEditorHookContinue" xml:space="preserve">
+    <value>Back up anyway if this command fails (with a warning)</value>
+  </data>
+  <data name="JobEditorHookAfter" xml:space="preserve">
+    <value>After the backup (e.g. starting a service again):</value>
+  </data>
+  <data name="JobEditorHookAfterSuccess" xml:space="preserve">
+    <value>Only after a backup that worked</value>
+  </data>
+  <data name="JobEditorHookAfterAlways" xml:space="preserve">
+    <value>Always, also after a failed or stopped backup</value>
+  </data>
+  <data name="JobEditorHooksHint" xml:space="preserve">
+    <value>Runs with every backup of the job – by hand, scheduled and through the webhook – without time limit. Environment variables: BORGSTUDIO_JOB, BORGSTUDIO_REPOSITORY, BORGSTUDIO_SCHEDULED; after the backup also BORGSTUDIO_OUTCOME (succeeded, warnings, failed, cancelled) and BORGSTUDIO_ARCHIVE. The whole output goes to logs/hooks.log in the data folder.</value>
+  </data>
 </root>

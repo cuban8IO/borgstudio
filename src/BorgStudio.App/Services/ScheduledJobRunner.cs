@@ -17,7 +17,8 @@ namespace BorgStudio.App.Services;
 /// </summary>
 public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess access)
 {
-    private readonly BackupRunner _runner = new(services.BorgClient, services.Jobs, services.Durations, BorgTexts.Describe);
+    private readonly BackupRunner _runner = new(services.BorgClient, services.Jobs, services.Durations, BorgTexts.Describe,
+        hooks: services.Hooks, describeHook: BorgTexts.HookProblem);
 
     public BackupRunner Runner => _runner;
 

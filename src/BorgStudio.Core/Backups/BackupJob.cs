@@ -106,6 +106,9 @@ public sealed record BackupRunSummary
     /// <summary>The backup failed because borg found the repository locked (by another borg, or a lock left behind).</summary>
     public bool RepositoryLocked { get; init; }
 
+    /// <summary>A command of the job that did not work (before: the run failed or warned; after: it warned).</summary>
+    public HookProblem? Hook { get; init; }
+
     /// <summary>The clean-up after the backup (prune + compact); <c>null</c> if the job has none or the backup failed.</summary>
     public CleanupSummary? Cleanup { get; init; }
 }
@@ -164,6 +167,9 @@ public sealed record BackupJob
 
     /// <summary>The incoming webhook may start the job (see <see cref="Trigger.TriggerServer"/>).</summary>
     public bool WebhookTrigger { get; init; }
+
+    /// <summary>Commands before and after the backup.</summary>
+    public JobHooks Hooks { get; init; } = new();
 
     /// <summary>How the job's newest archive is restored on trial with the repository's automatic checks.</summary>
     public Checks.RestoreTestMode RestoreTest { get; init; } = Checks.RestoreTestMode.Off;

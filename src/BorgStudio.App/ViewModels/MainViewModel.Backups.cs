@@ -279,7 +279,8 @@ public partial class MainViewModel
     }
 
     /// <summary>Runs backups and clean-ups – the same for the window, the background and scheduled runs.</summary>
-    internal BackupRunner Runner => _runner ??= new BackupRunner(_services.BorgClient, _services.Jobs, _services.Durations, BorgTexts.Describe);
+    internal BackupRunner Runner => _runner ??= new BackupRunner(_services.BorgClient, _services.Jobs, _services.Durations, BorgTexts.Describe,
+        hooks: _services.Hooks, describeHook: BorgTexts.HookProblem);
 
     private BackupRunner? _runner;
 
@@ -328,6 +329,8 @@ public partial class MainViewModel
                 BackupRunPhase.Compacting => RunPhase.Compacting,
                 BackupRunPhase.Checking => RunPhase.Checking,
                 BackupRunPhase.RestoreTesting => RunPhase.RestoreTesting,
+                BackupRunPhase.HookBefore => RunPhase.HookBefore,
+                BackupRunPhase.HookAfter => RunPhase.HookAfter,
                 _ => RunPhase.Backup,
             }, expected));
 

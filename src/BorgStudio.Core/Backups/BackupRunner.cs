@@ -16,6 +16,12 @@ public enum BackupRunPhase
 
     /// <summary>Restoring the job's newest archive on trial (with the check).</summary>
     RestoreTesting,
+
+    /// <summary>The job's command before the backup.</summary>
+    HookBefore,
+
+    /// <summary>The job's command after the backup.</summary>
+    HookAfter,
 }
 
 /// <summary>Follows a run while it works; called on background threads.</summary>
@@ -47,10 +53,21 @@ public sealed record BackupRunResult(BackupRunSummary Summary, IReadOnlyList<str
 /// repository, the others are turned away (<see cref="BackupSkipReason.RepositoryBusy"/>).
 /// </summary>
 /// <param name="describe">Turns a borg error into the text kept with the run (localized by the app).</param>
+/// <param name="hooks">Runs the jobs' commands (a real shell unless a test says otherwise).</param>
+/// <param name="describeHook">Turns a failed command into the text kept with the run (localized by the app).</param>
 public sealed class BackupRunner(BorgClient borg, BackupJobStore jobs, DurationHistory durations, Func<BorgError, string> describe,
-    TimeProvider? time = null)
+    TimeProvider? time = null, HookRunner? hooks = null, Func<HookProblem, string>? describeHook = null)
 {
     private readonly TimeProvider _time = time ?? TimeProvider.System;
+
+    private readonly HookRunner _hooks = hooks ?? new HookRunner();
+
+    private string HookLog => Path.Combine(jobs.DataDirectory, "logs", "hooks.log");
+
+    private string DescribeHook(HookProblem problem) => describeHook?.Invoke(problem)
+        ?? $"Command {problem.Stage.ToString().ToLowerInvariant()} the backup failed"
+           + (problem.ExitCode is { } code ? $" (exit code {code})" : problem.Error is { } error ? $" ({error})" : "")
+           + (problem.Output.Count > 0 ? ": " + problem.Output[^1] : ".");
 
     public BackupRunHistory History { get; } = new(Path.Combine(jobs.DataDirectory, "history"));
 
@@ -72,6 +89,39 @@ public sealed class BackupRunner(BorgClient borg, BackupJobStore jobs, DurationH
             return new BackupRunResult(notRun, []);
         }
 
+        // The command before the backup (e.g. a database dump).
+        HookProblem? beforeProblem = null;
+        if (job.Hooks.HasBefore)
+        {
+            report?.PhaseStarted(BackupRunPhase.HookBefore, null);
+            var before = await _hooks.RunAsync(job.Hooks.EffectiveShell, job.Hooks.Before, Variables(request, null, null), HookLog,
+                $"{job.Name}: before", cancellationToken);
+            if (before.Cancelled)
+            {
+                var stopped = new BackupRunSummary { Started = started, Duration = _time.GetUtcNow() - started, Outcome = BackupOutcome.Cancelled };
+                Record(job.Id, stopped);
+                return new BackupRunResult(stopped, []);
+            }
+            if (!before.Succeeded)
+            {
+                beforeProblem = new HookProblem(HookStage.Before, before.ExitCode, before.Output, before.Error);
+                if (!job.Hooks.ContinueOnBeforeFailure)
+                {
+                    var failed = new BackupRunSummary
+                    {
+                        Started = started,
+                        Duration = _time.GetUtcNow() - started,
+                        Outcome = BackupOutcome.Failed,
+                        Message = DescribeHook(beforeProblem),
+                        Hook = beforeProblem,
+                    };
+                    failed = await RunAfterAsync(request, failed, report);
+                    Record(job.Id, failed);
+                    return new BackupRunResult(failed, []);
+                }
+            }
+        }
+
         var tracker = new Tracker(report);
         var options = new List<string> { "--compression", job.Compression };
         options.AddRange(BackupPatterns.Arguments(job.Exclusions, path => BorgClient.BorgPath(request.Borg, path)));
@@ -81,6 +131,10 @@ public sealed class BackupRunner(BorgClient borg, BackupJobStore jobs, DurationH
         var summary = Summarize(created, tracker, started);
         if (summary.Outcome is BackupOutcome.Succeeded or BackupOutcome.Warnings && job.Retention is { HasRules: true } retention)
             summary = summary with { Cleanup = await PruneAndCompactAsync(request, retention, report, cancellationToken) };
+        // The command before failed, the backup went ahead: a warning.
+        if (beforeProblem is not null && summary.Outcome is BackupOutcome.Succeeded or BackupOutcome.Warnings)
+            summary = summary with { Outcome = BackupOutcome.Warnings, Message = DescribeHook(beforeProblem), Hook = beforeProblem };
+        summary = await RunAfterAsync(request, summary, report);
 
         Record(job.Id, summary);
         // What compact freed is gone from the repository (the archives' totals shrink too, by an unknown amount).
@@ -88,6 +142,51 @@ public sealed class BackupRunner(BorgClient borg, BackupJobStore jobs, DurationH
             ? stats with { UniqueCompressedSize = Math.Max(0, stats.UniqueCompressedSize - freed) }
             : created.Value?.Repository;
         return new BackupRunResult(summary, created.Value?.Warnings ?? [], repository);
+    }
+
+    /// <summary>
+    /// The command after the backup, if the job has one and – unless it runs always – the backup worked. It runs to its end
+    /// even if the run was stopped (it may have to start a service again). A failure makes a successful run a warning.
+    /// </summary>
+    private async Task<BackupRunSummary> RunAfterAsync(BackupRunRequest request, BackupRunSummary summary, IBackupRunReport? report)
+    {
+        var job = request.Job;
+        var worked = summary.Outcome is BackupOutcome.Succeeded or BackupOutcome.Warnings;
+        if (!job.Hooks.HasAfter || !(worked || job.Hooks.AfterAlways))
+            return summary;
+
+        report?.PhaseStarted(BackupRunPhase.HookAfter, null);
+        var after = await _hooks.RunAsync(job.Hooks.EffectiveShell, job.Hooks.After, Variables(request, summary.Outcome, summary.ArchiveName),
+            HookLog, $"{job.Name}: after ({summary.Outcome})", CancellationToken.None);
+        if (after.Succeeded)
+            return summary with { Duration = _time.GetUtcNow() - summary.Started };
+
+        var problem = new HookProblem(HookStage.After, after.ExitCode, after.Output, after.Error);
+        return summary with
+        {
+            Duration = _time.GetUtcNow() - summary.Started,
+            Outcome = worked ? BackupOutcome.Warnings : summary.Outcome,
+            // A failure before keeps its place; otherwise the command after is what to tell.
+            Message = summary.Hook is null && (worked || summary.Message is null) ? DescribeHook(problem) : summary.Message,
+            Hook = summary.Hook ?? problem,
+        };
+    }
+
+    /// <summary>What the commands learn about the run (BORGSTUDIO_*).</summary>
+    private static Dictionary<string, string> Variables(BackupRunRequest request, BackupOutcome? outcome, string? archive)
+    {
+        var variables = new Dictionary<string, string>
+        {
+            ["BORGSTUDIO_JOB"] = request.Job.Name,
+            ["BORGSTUDIO_JOB_ID"] = request.Job.Id.ToString(),
+            ["BORGSTUDIO_REPOSITORY"] = request.Location.Url,
+            ["BORGSTUDIO_SCHEDULED"] = request.Scheduled ? "1" : "0",
+        };
+        if (outcome is { } done)
+            variables["BORGSTUDIO_OUTCOME"] = done.ToString().ToLowerInvariant();
+        if (archive is not null)
+            variables["BORGSTUDIO_ARCHIVE"] = archive;
+        return variables;
     }
 
     /// <summary>A run that did not start, as of now.</summary>
