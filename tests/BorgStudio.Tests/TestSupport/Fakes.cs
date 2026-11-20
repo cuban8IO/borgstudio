@@ -163,6 +163,8 @@ public sealed class FakeBorg : IProcessRunner
         return arguments[0] switch
         {
             "init" => Result(0, ""),
+            "break-lock" when BreakLockError is not null => Error(BreakLockError),
+            "break-lock" => Result(0, ""),
             "key" => Result(0, ""),
             "info" when EncryptionMode is null => Error(InfoError),
             "info" when EncryptionMode != "none" && CorrectPassphrase is not null && passphrase != CorrectPassphrase
@@ -368,6 +370,9 @@ public sealed class FakeBorg : IProcessRunner
             $$"""{"type": "log_message", "time": 0, "message": "compaction freed about {{CompactFreed}} repository space.", "levelname": "INFO", "name": "borg.repository"}""");
         return Result(0, "");
     }
+
+    /// <summary>When set, "break-lock" fails with this message id.</summary>
+    public string? BreakLockError { get; set; }
 
     /// <summary>What "extract" writes for a file (path in the archive, size); unset: the text "restored".</summary>
     public Func<string, long, byte[]>? ExtractedContent { get; set; }

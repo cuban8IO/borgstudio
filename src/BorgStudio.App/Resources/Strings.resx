@@ -375,7 +375,7 @@
     <value>There already is a repository or other data at this location.</value>
   </data>
   <data name="BorgErrorLocked" xml:space="preserve">
-    <value>The repository is locked – another borg process is using it.</value>
+    <value>The repository is locked – another borg process is using it. If the lock was left behind (e.g. after a crash), „Release lock …“ in the repository's overview removes it.</value>
   </data>
   <data name="BorgErrorConnectionFailed" xml:space="preserve">
     <value>The connection to the repository failed.</value>
@@ -3028,5 +3028,44 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
   </data>
   <data name="SettingsRestoreTestSizeOnly" xml:space="preserve">
     <value>size only (compares more, but also reports files changed since at the same size)</value>
+  </data>
+  <data name="BreakLock" xml:space="preserve">
+    <value>Release lock …</value>
+  </data>
+  <data name="BreakLockTip" xml:space="preserve">
+    <value>borg break-lock: removes a lock left behind (after a crash or a connection that broke off)</value>
+  </data>
+  <data name="BreakLockTitle" xml:space="preserve">
+    <value>Release lock</value>
+  </data>
+  <data name="BreakLockMessage" xml:space="preserve">
+    <value>borg found „{0}“ locked. Release the lock only if no borg works on the repository any more – not on this computer, nor on another one using the same repository. If a borg still writes to it, releasing the lock can damage the repository.</value>
+  </data>
+  <data name="BreakLockConfirm" xml:space="preserve">
+    <value>Release lock</value>
+  </data>
+  <data name="BreakLockBusy" xml:space="preserve">
+    <value>BorgStudio itself is working on this repository right now (a backup or check). Wait until it has finished.</value>
+  </data>
+  <data name="BreakLockWorking" xml:space="preserve">
+    <value>Releasing the lock …</value>
+  </data>
+  <data name="BreakLockDone" xml:space="preserve">
+    <value>Lock released. Start what failed again.</value>
+  </data>
+  <data name="BreakLockHolderExclusive" xml:space="preserve">
+    <value>{0} (process {1}, writing)</value>
+  </data>
+  <data name="BreakLockHolderShared" xml:space="preserve">
+    <value>{0} (process {1}, reading)</value>
+  </data>
+  <data name="BreakLockHeldSince" xml:space="preserve">
+    <value>Locked by {0} since {1}.</value>
+  </data>
+  <data name="BreakLockHeld" xml:space="preserve">
+    <value>Locked by {0}.</value>
+  </data>
+  <data name="BreakLockThisComputer" xml:space="preserve">
+    <value>That is this computer: borg clears locks of ended processes there by itself, so the process probably still runs (perhaps hung). Release the lock only after ending it.</value>
   </data>
 </root>
