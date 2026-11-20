@@ -61,8 +61,8 @@
         <p class="small muted" data-i18n="hero.platforms">Windows · macOS · Linux — free, portable, no account.</p>
       </div>
       <figure class="hero-shot">
-        <img class="shot" data-shot="main-archives" src="images/en/main-archives.png" width="1180" height="720"
-             alt="BorgStudio showing the archives of a repository">
+        <img class="shot" data-shot="dashboard" src="images/en/dashboard.png" width="1180" height="820"
+             alt="BorgStudio's overview of all repositories">
       </figure>
     </div>
   </section>
@@ -114,15 +114,42 @@
 
       <div class="feature">
         <div class="feature-text">
-          <h3 data-i18n="feat.1.title">Backup jobs with live progress</h3>
-          <p data-i18n="feat.1.text">Pick folders, leave out caches, build output and recycle bins with one click, choose the compression. While borg runs you see the upload speed and the remaining time; cancelling keeps a checkpoint.</p>
+          <h3 data-i18n="feat.1.title">Backup jobs – by hand or on a schedule</h3>
+          <p data-i18n="feat.1.text">Pick folders, leave out caches, build output and recycle bins with one click, choose the compression. Run a job with live progress, or let it run daily, on chosen weekdays or every few hours – through the system's task scheduler, or by BorgStudio itself in the notification area.</p>
           <ul class="ticks">
-            <li data-i18n="feat.1.a">Several jobs per repository</li>
+            <li data-i18n="feat.1.a">Several jobs per repository, several schedules per job</li>
             <li data-i18n="feat.1.b">Old archives cleaned up automatically (daily, weekly, monthly …)</li>
-            <li data-i18n="feat.1.c">Files that could not be read are listed, not hidden</li>
+            <li data-i18n="feat.1.c">Missed times are made up for once the computer is back</li>
+            <li data-i18n="feat.1.d">Files that could not be read are listed, not hidden</li>
           </ul>
         </div>
-        <img class="shot" data-shot="job-editor" src="images/en/job-editor.png" width="640" height="720" alt="The backup job editor" loading="lazy">
+        <img class="shot" data-shot="job-editor" src="images/en/job-editor.png" width="640" height="1020" alt="The backup job editor with its schedules" loading="lazy">
+      </div>
+
+      <div class="feature reverse">
+        <div class="feature-text">
+          <h3 data-i18n="feat.7.title">See how full your storage gets – and when</h3>
+          <p data-i18n="feat.7.text">An overview of all repositories shows what they take up and save, how reliable the backups are and which storage fills up first. Per repository: the storage over time with a forecast of the day it will be full, what each backup newly stored, and the activity of the last weeks.</p>
+          <ul class="ticks">
+            <li data-i18n="feat.7.a">Forecast from the storage trend, with a range</li>
+            <li data-i18n="feat.7.b">Problems first: missed or failed scheduled backups, full storage</li>
+            <li data-i18n="feat.7.c">What deduplication and compression save, at a glance</li>
+          </ul>
+        </div>
+        <img class="shot" data-shot="statistics" src="images/en/statistics.png" width="1180" height="1180" alt="The statistics of a repository" loading="lazy">
+      </div>
+
+      <div class="feature">
+        <div class="feature-text">
+          <h3 data-i18n="feat.8.title">Told when something needs you</h3>
+          <p data-i18n="feat.8.text">A system notification, an e-mail or a webhook (ntfy, Discord, Slack, Gotify or JSON) when a backup fails, the storage gets full or a job has not backed up for days – and a daily summary if you like. Other programs can start jobs through an incoming webhook.</p>
+          <ul class="ticks">
+            <li data-i18n="feat.8.a">Each channel with its own events and a test button</li>
+            <li data-i18n="feat.8.b">The same problem only once, until it is solved</li>
+            <li data-i18n="feat.8.c">Passwords and tokens kept in the vault or the system keychain</li>
+          </ul>
+        </div>
+        <img class="shot" data-shot="notifications" src="images/en/notifications.png" width="640" height="1000" alt="The notification settings" loading="lazy">
       </div>
 
       <div class="feature reverse">
@@ -162,7 +189,7 @@
           <h3 data-i18n="feat.6.title">Locked, encrypted, up to date</h3>
           <p data-i18n="feat.6.text">An app lock with a PIN, an encrypted vault for passphrases and SSH keys, English or German, and updates from within the app – checked against the release's checksums before they are installed.</p>
         </div>
-        <img class="shot" data-shot="settings" src="images/en/settings.png" width="560" height="646" alt="The settings window" loading="lazy">
+        <img class="shot" data-shot="settings" src="images/en/settings.png" width="580" height="860" alt="The settings window" loading="lazy">
       </div>
     </div>
   </section>
@@ -299,7 +326,7 @@
       </details>
       <details>
         <summary data-i18n="faq.5.q">Are scheduled backups possible?</summary>
-        <p data-i18n="faq.5.a">Not yet – they are the next big feature. Until then, start backups with one click.</p>
+        <p data-i18n="faq.5.a">Yes. Each job can have several schedules – daily, on chosen weekdays or every few hours. The system's task scheduler starts them even while BorgStudio is closed, or BorgStudio runs them itself from the notification area. Missed times are made up for, and BorgStudio can tell you when something goes wrong.</p>
       </details>
       <details>
         <summary data-i18n="faq.7.q">Is there a warranty?</summary>
