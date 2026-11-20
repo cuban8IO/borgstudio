@@ -37,7 +37,7 @@ public partial class MainViewModel
     [NotifyCanExecuteChangedFor(nameof(RunJobCommand), nameof(CancelBackupCommand), nameof(DeleteJobCommand), nameof(EditJobCommand),
         nameof(TestRepositoryCommand), nameof(ExportKeyCommand), nameof(RemoveRepositoryCommand), nameof(EditRepositoryCommand),
         nameof(CleanUpJobCommand), nameof(TestRestoreCommand), nameof(FreeSpaceCommand), nameof(MeasureStorageCommand), nameof(CheckRepositoryCommand),
-        nameof(CheckRepositoryFullCommand), nameof(RepairRepositoryCommand))]
+        nameof(CheckRepositoryFullCommand), nameof(RepairRepositoryCommand), nameof(BreakLockCommand))]
     public partial bool IsBackupRunning { get; private set; }
 
     /// <summary>Completes when the running backup (if any) has ended.</summary>
@@ -263,6 +263,15 @@ public partial class MainViewModel
         IsBackupRunning = false;
         if (summary.Outcome != BackupOutcome.Skipped)
             ArchivesChanged(job.RepositoryId);
+        if (Repositories.FirstOrDefault(repository => repository.Config.Id == job.RepositoryId) is { } runItem
+            && summary.Outcome is not (BackupOutcome.Skipped or BackupOutcome.Cancelled))
+        {
+            if (summary.RepositoryLocked)
+                runItem.LockedSince = DateTimeOffset.Now;
+            else if (summary.Outcome != BackupOutcome.Failed)
+                runItem.LockedSince = null;
+            BreakLockCommand.NotifyCanExecuteChanged();
+        }
         // A scheduled run in the background has measured the storage meanwhile (and may have checked the repository).
         RefreshChecks(job.RepositoryId);
         RefreshStorage(job.RepositoryId);

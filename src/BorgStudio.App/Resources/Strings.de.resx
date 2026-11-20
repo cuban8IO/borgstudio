@@ -358,7 +358,7 @@
     <value>An diesem Ort gibt es bereits ein Repository oder andere Daten.</value>
   </data>
   <data name="BorgErrorLocked" xml:space="preserve">
-    <value>Das Repository ist gesperrt – ein anderer borg-Prozess verwendet es.</value>
+    <value>Das Repository ist gesperrt – ein anderer borg-Prozess verwendet es. Ist die Sperre zurückgeblieben (z. B. nach einem Absturz), kannst du sie in der Übersicht des Repositorys mit „Sperre lösen …“ entfernen.</value>
   </data>
   <data name="BorgErrorConnectionFailed" xml:space="preserve">
     <value>Die Verbindung zum Repository ist fehlgeschlagen.</value>
@@ -3008,5 +3008,44 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
   </data>
   <data name="SettingsRestoreTestSizeOnly" xml:space="preserve">
     <value>nur Größe (vergleicht mehr, meldet aber auch Dateien, die sich seitdem bei gleicher Größe geändert haben)</value>
+  </data>
+  <data name="BreakLock" xml:space="preserve">
+    <value>Sperre lösen …</value>
+  </data>
+  <data name="BreakLockTip" xml:space="preserve">
+    <value>borg break-lock: entfernt eine zurückgebliebene Sperre (nach einem Absturz oder einer abgebrochenen Verbindung)</value>
+  </data>
+  <data name="BreakLockTitle" xml:space="preserve">
+    <value>Sperre lösen</value>
+  </data>
+  <data name="BreakLockMessage" xml:space="preserve">
+    <value>borg hat „{0}“ als gesperrt gemeldet. Löse die Sperre nur, wenn sicher kein borg mehr mit dem Repository arbeitet – weder auf diesem noch auf einem anderen Rechner, der dasselbe Repository nutzt. Schreibt noch ein borg hinein, kann das Lösen der Sperre das Repository beschädigen.</value>
+  </data>
+  <data name="BreakLockConfirm" xml:space="preserve">
+    <value>Sperre lösen</value>
+  </data>
+  <data name="BreakLockBusy" xml:space="preserve">
+    <value>BorgStudio arbeitet gerade selbst mit diesem Repository (Sicherung oder Prüfung). Warte, bis das fertig ist.</value>
+  </data>
+  <data name="BreakLockWorking" xml:space="preserve">
+    <value>Sperre wird gelöst …</value>
+  </data>
+  <data name="BreakLockDone" xml:space="preserve">
+    <value>Sperre gelöst. Starte den abgebrochenen Vorgang neu.</value>
+  </data>
+  <data name="BreakLockHolderExclusive" xml:space="preserve">
+    <value>{0} (Prozess {1}, schreibend)</value>
+  </data>
+  <data name="BreakLockHolderShared" xml:space="preserve">
+    <value>{0} (Prozess {1}, lesend)</value>
+  </data>
+  <data name="BreakLockHeldSince" xml:space="preserve">
+    <value>Gesperrt von {0} seit {1}.</value>
+  </data>
+  <data name="BreakLockHeld" xml:space="preserve">
+    <value>Gesperrt von {0}.</value>
+  </data>
+  <data name="BreakLockThisComputer" xml:space="preserve">
+    <value>Das ist dieser Rechner: Dort räumt borg Sperren beendeter Prozesse selbst auf, der Prozess läuft also vermutlich noch (vielleicht hängt er). Löse die Sperre erst, wenn er beendet ist.</value>
   </data>
 </root>

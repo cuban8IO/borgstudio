@@ -21,8 +21,12 @@ public partial class MainViewModel
     {
         var store = CheckStore;
         foreach (var item in Repositories.Where(item => repositoryId is null || item.Config.Id == repositoryId))
+        {
             item.Checks = store.Get(item.Config.Id);
+            NoteLockFromRuns(item);
+        }
         RepairRepositoryCommand.NotifyCanExecuteChanged();
+        BreakLockCommand.NotifyCanExecuteChanged();
     }
 
     [RelayCommand(CanExecute = nameof(CanRunBorg))]

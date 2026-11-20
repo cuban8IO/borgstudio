@@ -212,6 +212,8 @@ public partial class MainViewModel
                 _services.Durations.Record(listKey, ArchivesProgress.Elapsed);
             if (SelectedRepository?.Config.Id != repositoryId)
                 return; // the user moved on
+            NoteLock(SelectedRepository, listed.Error);
+            BreakLockCommand.NotifyCanExecuteChanged();
             if (!listed.Succeeded)
             {
                 ArchivesError = BorgTexts.Describe(listed.Error!);

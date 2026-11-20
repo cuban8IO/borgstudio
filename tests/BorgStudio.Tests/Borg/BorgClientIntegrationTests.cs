@@ -495,6 +495,26 @@ public sealed class BorgClientIntegrationTests : IDisposable
         Assert.Equal(Core.Checks.RestoreTestOutcome.Ok, whole.Outcome);
     }
 
+    [BorgFact]
+    public async Task Releases_a_lock_another_computer_left_behind()
+    {
+        await _client.InitAsync(Borg, Location(), BorgEncryption.RepokeyBlake2, Passphrase);
+        // What a crashed borg on another computer leaves: its lock folder and roster entry (borg cannot tell it is stale).
+        Directory.CreateDirectory(Path.Combine(Location().Url, "lock.exclusive"));
+        File.WriteAllText(Path.Combine(Location().Url, "lock.exclusive", "other-computer@123456789.4711-0"), "");
+        File.WriteAllText(Path.Combine(Location().Url, "lock.roster"), """{"exclusive": [["other-computer@123456789", 4711, 0]]}""");
+
+        var locked = await _client.ListArchivesAsync(Borg, Location(), Passphrase);
+        Assert.Equal(BorgErrorKind.Locked, locked.Error?.Kind);
+        Assert.Equal("other-computer", Assert.Single(RepositoryLockInfo.Read(Location().Url)!.Holders).Host);
+
+        var released = await _client.BreakLockAsync(Borg, Location());
+
+        Assert.True(released.Succeeded, released.Error?.ToString());
+        Assert.Null(RepositoryLockInfo.Read(Location().Url));
+        Assert.True((await _client.ListArchivesAsync(Borg, Location(), Passphrase)).Succeeded);
+    }
+
     /// <summary>Calls the progress callback right away (Progress&lt;T&gt; would post it to a thread pool).</summary>
     private sealed class SynchronousProgress<T>(Action<T> report) : IProgress<T>
     {

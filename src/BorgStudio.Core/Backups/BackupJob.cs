@@ -103,6 +103,9 @@ public sealed record BackupRunSummary
     /// <summary>The backup failed because the repository's disk or server is full.</summary>
     public bool OutOfSpace { get; init; }
 
+    /// <summary>The backup failed because borg found the repository locked (by another borg, or a lock left behind).</summary>
+    public bool RepositoryLocked { get; init; }
+
     /// <summary>The clean-up after the backup (prune + compact); <c>null</c> if the job has none or the backup failed.</summary>
     public CleanupSummary? Cleanup { get; init; }
 }

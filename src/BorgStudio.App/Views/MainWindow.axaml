@@ -511,6 +511,8 @@
                                     <Button Content="{x:Static res:Strings.ExportKey}" Command="{Binding ExportKeyCommand}" />
                                     <Button Content="{x:Static res:Strings.FreeSpace}" Command="{Binding FreeSpaceCommand}"
                                             ToolTip.Tip="{x:Static res:Strings.FreeSpaceTip}" />
+                                    <Button Content="{x:Static res:Strings.BreakLock}" Command="{Binding BreakLockCommand}"
+                                            ToolTip.Tip="{x:Static res:Strings.BreakLockTip}" IsVisible="{Binding SelectedRepository.IsLocked}" />
                                     <Button Content="{x:Static res:Strings.Edit}" Command="{Binding EditRepositoryCommand}" />
                                     <Button Content="{x:Static res:Strings.Remove}" Command="{Binding RemoveRepositoryCommand}" />
                                 </WrapPanel>

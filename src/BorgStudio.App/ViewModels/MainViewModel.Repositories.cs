@@ -20,7 +20,7 @@ public partial class MainViewModel
     [NotifyPropertyChangedFor(nameof(HasSelection), nameof(ListedRepository), nameof(ShowsRepository))]
     [NotifyCanExecuteChangedFor(nameof(TestRepositoryCommand), nameof(ExportKeyCommand), nameof(EditRepositoryCommand),
         nameof(RemoveRepositoryCommand), nameof(FreeSpaceCommand), nameof(MeasureStorageCommand), nameof(CheckRepositoryCommand),
-        nameof(CheckRepositoryFullCommand), nameof(RepairRepositoryCommand))]
+        nameof(CheckRepositoryFullCommand), nameof(RepairRepositoryCommand), nameof(BreakLockCommand))]
     public partial RepositoryItemViewModel? SelectedRepository { get; set; }
 
     public bool HasRepositories => Repositories.Count > 0;
@@ -36,7 +36,7 @@ public partial class MainViewModel
     [NotifyCanExecuteChangedFor(nameof(AddRepositoryCommand), nameof(TestRepositoryCommand), nameof(ExportKeyCommand),
         nameof(EditRepositoryCommand), nameof(RemoveRepositoryCommand), nameof(RunJobCommand), nameof(CleanUpJobCommand), nameof(TestRestoreCommand),
         nameof(FreeSpaceCommand), nameof(MeasureStorageCommand), nameof(CheckRepositoryCommand), nameof(CheckRepositoryFullCommand),
-        nameof(RepairRepositoryCommand))]
+        nameof(RepairRepositoryCommand), nameof(BreakLockCommand))]
     public partial bool IsWorking { get; private set; }
 
     /// <summary>Progress of the running repository operation (overview tab).</summary>
@@ -326,6 +326,7 @@ public partial class MainViewModel
             var result = await Task.Run(work);
             if (result.Succeeded)
                 _services.Durations.Record(key, Work.Elapsed);
+            NoteLock(item, result.Error);
             return result;
         }
         finally

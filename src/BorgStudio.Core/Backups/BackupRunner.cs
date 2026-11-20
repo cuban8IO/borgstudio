@@ -171,6 +171,7 @@ public sealed class BackupRunner(BorgClient borg, BackupJobStore jobs, DurationH
             Files = last?.Files ?? 0,
             Message = cancelled ? null : describe(result.Error),
             OutOfSpace = result.Error.Kind == BorgErrorKind.NoSpace,
+            RepositoryLocked = result.Error.Kind == BorgErrorKind.Locked,
         };
     }
 

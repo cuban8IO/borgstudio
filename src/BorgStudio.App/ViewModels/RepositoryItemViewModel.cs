@@ -255,6 +255,14 @@ public sealed partial class RepositoryItemViewModel(RepositoryConfig config, Plu
         _ => SshKeyName,
     };
 
+    /// <summary>Since when borg reports the repository locked; <c>null</c> once it got through again.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsLocked))]
+    public partial DateTimeOffset? LockedSince { get; set; }
+
+    /// <summary>borg found the repository locked: "Sperre lösen …" is offered.</summary>
+    public bool IsLocked => LockedSince is not null;
+
     /// <summary>Outcome of the last action on this repository (test, key export, ...).</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasResult), nameof(HasSuccess), nameof(HasError))]
