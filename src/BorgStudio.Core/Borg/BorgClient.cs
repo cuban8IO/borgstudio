@@ -86,7 +86,7 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
     private static readonly string[] ForwardedVariables =
     [
         "BORG_PASSPHRASE", "BORG_DISPLAY_PASSPHRASE", "BORG_RSH",
-        "BORG_RELOCATED_REPO_ACCESS_IS_OK", "BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK",
+        "BORG_RELOCATED_REPO_ACCESS_IS_OK", "BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK", RepairConfirmation,
     ];
 
     public static BorgClient CreateDefault() => new(
@@ -622,7 +622,8 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         IReadOnlyList<string> command, IReadOnlyList<string> options, IReadOnlyList<string> trailing,
         string? passphrase, TimeSpan timeout, CancellationToken cancellationToken,
         string? archive = null, Action<string>? standardErrorLine = null, bool interruptible = false,
-        Action<string>? standardOutputLine = null, string? workingDirectory = null)
+        Action<string>? standardOutputLine = null, string? workingDirectory = null,
+        IReadOnlyDictionary<string, string>? extraEnvironment = null, Action<int>? exitCode = null)
     {
         var wsl = borg.Runtime == BorgRuntime.Wsl;
         if (wsl && wslExecutable is null)
@@ -650,6 +651,8 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
             ["BORG_RELOCATED_REPO_ACCESS_IS_OK"] = "yes",
             ["BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK"] = "yes",
         };
+        foreach (var (name, value) in extraEnvironment ?? new Dictionary<string, string>())
+            environment[name] = value;
 
         SshFiles? sshFiles = null;
         if (location.Ssh is not null && ssh is not null)
@@ -663,7 +666,7 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         try
         {
             return await RunBorgAsync(borg, location, arguments, environment, sshFiles, timeout, cancellationToken,
-                standardErrorLine, interruptible, standardOutputLine, workingDirectory);
+                standardErrorLine, interruptible, standardOutputLine, workingDirectory, exitCode);
         }
         finally
         {
@@ -675,7 +678,7 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
     private async Task<BorgResult<string>> RunBorgAsync(BorgInstallation borg, RepositoryLocation location,
         List<string> arguments, Dictionary<string, string?> environment, SshFiles? sshFiles, TimeSpan timeout,
         CancellationToken cancellationToken, Action<string>? standardErrorLine, bool interruptible,
-        Action<string>? standardOutputLine = null, string? workingDirectory = null)
+        Action<string>? standardOutputLine = null, string? workingDirectory = null, Action<int>? exitCode = null)
     {
         var wsl = borg.Runtime == BorgRuntime.Wsl;
         // Signals need a POSIX system: natively on Linux/macOS, or inside WSL.
@@ -742,6 +745,7 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         if (result is null)
             return BorgResult<string>.Failure(new BorgError(BorgErrorKind.NotStartable, fileName));
 
+        exitCode?.Invoke(result.ExitCode);
         // 0 = success, 1 = success with warnings, everything else is an error.
         if (result.ExitCode is 0 or 1)
             return BorgResult<string>.Success(result.StandardOutput);

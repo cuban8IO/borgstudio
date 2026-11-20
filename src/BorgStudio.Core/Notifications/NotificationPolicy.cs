@@ -115,6 +115,50 @@ public sealed class NotificationPolicy(string stateFile)
         }
     }
 
+    /// <summary>
+    /// The event for a check that ran to its end: <see cref="NotificationEvent.CheckFailed"/> when it found damage (a
+    /// repeat while the damage stays), <see cref="NotificationEvent.Recovered"/> for the first check without damage after
+    /// that; <c>null</c> otherwise (a check that could not run tells nothing about the repository).
+    /// </summary>
+    public NotificationDecision? DecideCheck(Guid repositoryId, Checks.CheckOutcome outcome)
+    {
+        if (outcome is not (Checks.CheckOutcome.Ok or Checks.CheckOutcome.ProblemsFound))
+            return null;
+        lock (Gate)
+        {
+            var states = Load();
+            var key = CheckKey(repositoryId);
+            var known = states.ContainsKey(key);
+            if (outcome == Checks.CheckOutcome.Ok)
+            {
+                if (!known)
+                    return null;
+                states.Remove(key);
+                Save(states);
+                return new NotificationDecision(NotificationEvent.Recovered, false);
+            }
+            if (!known)
+            {
+                states[key] = "damaged";
+                Save(states);
+            }
+            return new NotificationDecision(NotificationEvent.CheckFailed, known);
+        }
+    }
+
+    /// <summary>The repository was removed.</summary>
+    public void ForgetRepository(Guid repositoryId)
+    {
+        lock (Gate)
+        {
+            var states = Load();
+            if (states.Remove(CheckKey(repositoryId)) | states.Remove($"storage-{repositoryId:N}"))
+                Save(states);
+        }
+    }
+
+    private static string CheckKey(Guid repositoryId) => $"check-{repositoryId:N}";
+
     /// <summary>The job was deleted.</summary>
     public void Forget(Guid jobId)
     {

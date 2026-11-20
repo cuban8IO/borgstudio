@@ -65,6 +65,45 @@ public sealed class RunNotifications(AppServices services)
         return results;
     }
 
+    /// <summary>Reports a check that found damage, and the first one without damage after that.</summary>
+    public async Task<IReadOnlyList<ChannelResult>> NotifyCheckAsync(RepositoryConfig repository, Core.Checks.CheckRecord record, Vault vault,
+        CancellationToken cancellationToken = default)
+    {
+        if (services.Notifier is not { } notifier)
+            return [];
+        var decision = Policy.DecideCheck(repository.Id, record.Outcome);
+        var settings = services.Settings.Load().Notifications;
+        if (decision is null || !settings.AnyEnabled || (decision.IsRepeat && settings.SuppressRepeats))
+            return [];
+
+        var message = ComposeCheck(decision.Event, repository.Name, record);
+        var secrets = new NotificationSecrets(vault, services.SecretStore);
+        var results = await notifier.SendAsync(settings, message, secrets.Get, cancellationToken);
+        foreach (var result in results)
+            AppLog.Write(LogFile, $"{repository.Name}: {decision.Event} → {result.Channel}: {result.Error ?? "sent"}", services.Jobs.DataDirectory);
+        return results;
+    }
+
+    public static NotificationMessage ComposeCheck(NotificationEvent notificationEvent, string repository, Core.Checks.CheckRecord record)
+    {
+        var lines = new List<string>
+        {
+            BorgTexts.Format(Strings.NotifyLineCheck, record.Started.ToLocalTime().ToString("g", CultureInfo.CurrentCulture),
+                BorgTexts.CheckDepth(record.Depth), BorgTexts.Duration(record.Duration)),
+        };
+        if (notificationEvent == NotificationEvent.CheckFailed)
+        {
+            lines.AddRange(record.Messages.Take(5));
+            if (record.Messages.Count > 5)
+                lines.Add(BorgTexts.Format(Strings.NotifyLineMoreMessages, record.Messages.Count - 5));
+            lines.Add(Strings.NotifyCheckFailedHint);
+        }
+        lines.Add(BorgTexts.Format(Strings.NotifyLineComputer, Environment.MachineName));
+        var title = BorgTexts.Format(notificationEvent == NotificationEvent.CheckFailed ? Strings.NotifyTitleCheckFailed : Strings.NotifyTitleCheckRecovered,
+            repository);
+        return new NotificationMessage(notificationEvent, title, string.Join("\n", lines)) { Repository = repository, Check = record };
+    }
+
     public static NotificationMessage ComposeStorage(NotificationEvent notificationEvent, string repository, StorageUsage? usage)
     {
         var lines = new List<string>();

@@ -200,6 +200,14 @@ internal static class BorgTexts
     /// <summary>"3,4 MB/s".</summary>
     public static string Rate(double bytesPerSecond) => Size((long)bytesPerSecond) + "/s";
 
+    /// <summary>"normal", "gründlich", "Reparatur".</summary>
+    public static string CheckDepth(Core.Checks.CheckDepth depth) => depth switch
+    {
+        Core.Checks.CheckDepth.Full => Strings.CheckDepthFull,
+        Core.Checks.CheckDepth.Repair => Strings.CheckDepthRepair,
+        _ => Strings.CheckDepthNormal,
+    };
+
     /// <summary>"0:42", "12:05", "1:02:03".</summary>
     public static string Duration(TimeSpan duration) =>
         duration.TotalHours >= 1

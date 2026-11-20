@@ -61,6 +61,7 @@ public partial class MainViewModel : ViewModelBase
         InitializeVault();
         LoadRepositories();
         LoadJobs();
+        RefreshChecks();
         RefreshStorage();
         // The app starts with the overview of all repositories.
         IsOverviewShown = HasRepositories;

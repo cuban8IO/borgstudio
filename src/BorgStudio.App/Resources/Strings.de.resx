@@ -2593,7 +2593,7 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
     <value>nach den nächsten Sicherungen</value>
   </data>
   <data name="DashEarliestFull" xml:space="preserve">
-    <value>Frühestens voll</value>
+    <value>Speicher zuerst voll</value>
   </data>
   <data name="DashNotForeseeable" xml:space="preserve">
     <value>nicht absehbar</value>
@@ -2614,7 +2614,7 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
     <value>~{0} J.</value>
   </data>
   <data name="DashRepositoriesTitle" xml:space="preserve">
-    <value>Repositories – Probleme zuerst</value>
+    <value>Zustand der Repositories</value>
   </data>
   <data name="DashOpenTip" xml:space="preserve">
     <value>Repository öffnen</value>
@@ -2663,5 +2663,155 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
   </data>
   <data name="DashFullBy" xml:space="preserve">
     <value>voll ~{0}</value>
+  </data>
+  <data name="CheckHeader" xml:space="preserve">
+    <value>Integritätsprüfung</value>
+  </data>
+  <data name="CheckRun" xml:space="preserve">
+    <value>Prüfen</value>
+  </data>
+  <data name="CheckRunTip" xml:space="preserve">
+    <value>borg check: prüft das Repository und die Metadaten der Archive</value>
+  </data>
+  <data name="CheckRunFull" xml:space="preserve">
+    <value>Gründlich prüfen …</value>
+  </data>
+  <data name="CheckRunFullTip" xml:space="preserve">
+    <value>borg check --verify-data: liest und entschlüsselt zusätzlich alle Daten</value>
+  </data>
+  <data name="Repair" xml:space="preserve">
+    <value>Reparieren …</value>
+  </data>
+  <data name="RepairTip" xml:space="preserve">
+    <value>borg check --repair: repariert, was borg reparieren kann</value>
+  </data>
+  <data name="CheckFullTitle" xml:space="preserve">
+    <value>Gründlich prüfen</value>
+  </data>
+  <data name="CheckFullMessageRemote" xml:space="preserve">
+    <value>Eine gründliche Prüfung lädt alle Daten des Repositorys herunter und entschlüsselt sie – das dauert lange und belastet die Verbindung.</value>
+  </data>
+  <data name="CheckFullMessageLocal" xml:space="preserve">
+    <value>Eine gründliche Prüfung liest alle Daten des Repositorys und entschlüsselt sie – das kann lange dauern.</value>
+  </data>
+  <data name="CheckFullSize" xml:space="preserve">
+    <value>Das Repository umfasst etwa {0}.</value>
+  </data>
+  <data name="CheckFullSizeUnknown" xml:space="preserve">
+    <value>Seine Größe ist noch nicht bekannt („Messen“ beim Speicher zeigt sie).</value>
+  </data>
+  <data name="CheckFullConfirm" xml:space="preserve">
+    <value>Gründlich prüfen</value>
+  </data>
+  <data name="RepairTitle" xml:space="preserve">
+    <value>Repository reparieren</value>
+  </data>
+  <data name="RepairMessage" xml:space="preserve">
+    <value>borg check --repair versucht, „{0}“ zu reparieren. Beschädigte Daten, die sich nicht retten lassen, werden entfernt oder durch Nullen ersetzt – Dateien in den Archiven können dabei verloren gehen oder unbrauchbar werden. Lege nach Möglichkeit vorher eine Kopie des Repositorys an (seinen Ordner oder auf dem Server) und suche die Ursache (Festplatte, Arbeitsspeicher, Verbindung).</value>
+  </data>
+  <data name="RepairContinue" xml:space="preserve">
+    <value>Weiter …</value>
+  </data>
+  <data name="RepairConfirmMessage" xml:space="preserve">
+    <value>Wirklich jetzt reparieren? Das lässt sich nicht rückgängig machen.</value>
+  </data>
+  <data name="RepairConfirm" xml:space="preserve">
+    <value>Reparieren</value>
+  </data>
+  <data name="CheckBusy" xml:space="preserve">
+    <value>Gerade arbeitet eine Sicherung oder eine andere Prüfung mit diesem Repository. Versuche es noch einmal, wenn sie fertig ist.</value>
+  </data>
+  <data name="CheckPhaseSegments" xml:space="preserve">
+    <value>Segmente des Repositorys werden geprüft</value>
+  </data>
+  <data name="CheckPhaseData" xml:space="preserve">
+    <value>Alle Daten werden gelesen und entschlüsselt</value>
+  </data>
+  <data name="CheckPhaseArchives" xml:space="preserve">
+    <value>Archive werden geprüft</value>
+  </data>
+  <data name="CheckWorking" xml:space="preserve">
+    <value>Repository wird geprüft …</value>
+  </data>
+  <data name="CheckWorkingFull" xml:space="preserve">
+    <value>Repository wird gründlich geprüft …</value>
+  </data>
+  <data name="CheckWorkingRepair" xml:space="preserve">
+    <value>Repository wird repariert …</value>
+  </data>
+  <data name="CheckResultOk" xml:space="preserve">
+    <value>Prüfung beendet: keine Fehler gefunden.</value>
+  </data>
+  <data name="CheckResultProblems" xml:space="preserve">
+    <value>Prüfung beendet: borg hat Fehler gefunden ({0} Meldungen, siehe „Integritätsprüfung“).</value>
+  </data>
+  <data name="CheckResultCancelled" xml:space="preserve">
+    <value>Prüfung abgebrochen.</value>
+  </data>
+  <data name="CheckResultFailed" xml:space="preserve">
+    <value>Die Prüfung konnte nicht laufen: {0}</value>
+  </data>
+  <data name="CheckStateOk" xml:space="preserve">
+    <value>Keine Fehler gefunden</value>
+  </data>
+  <data name="CheckStateProblems" xml:space="preserve">
+    <value>Fehler gefunden</value>
+  </data>
+  <data name="CheckStateNever" xml:space="preserve">
+    <value>Noch nie geprüft</value>
+  </data>
+  <data name="CheckLast" xml:space="preserve">
+    <value>Zuletzt geprüft {0} · {1} · Dauer {2}</value>
+  </data>
+  <data name="CheckNeverHint" xml:space="preserve">
+    <value>Eine Prüfung liest das Repository und findet Schäden früh – bevor du eine Wiederherstellung brauchst.</value>
+  </data>
+  <data name="CheckAttemptCancelled" xml:space="preserve">
+    <value>Der letzte Versuch ({0}) wurde abgebrochen.</value>
+  </data>
+  <data name="CheckAttemptFailed" xml:space="preserve">
+    <value>Der letzte Versuch ({0}) ist gescheitert: {1}</value>
+  </data>
+  <data name="CheckMessagesHeader" xml:space="preserve">
+    <value>Meldungen von borg ({0})</value>
+  </data>
+  <data name="CheckProblemsHint" xml:space="preserve">
+    <value>Suche zuerst die Ursache (Festplatte, Arbeitsspeicher, Verbindung). „Reparieren“ behebt, was borg beheben kann – beschädigte Daten können dabei verloren gehen.</value>
+  </data>
+  <data name="CheckDepthNormal" xml:space="preserve">
+    <value>normal</value>
+  </data>
+  <data name="CheckDepthFull" xml:space="preserve">
+    <value>gründlich</value>
+  </data>
+  <data name="CheckDepthRepair" xml:space="preserve">
+    <value>Reparatur</value>
+  </data>
+  <data name="NotifyEventCheckFailed" xml:space="preserve">
+    <value>Fehlern bei der Prüfung</value>
+  </data>
+  <data name="NotifyTitleCheckFailed" xml:space="preserve">
+    <value>Prüfung hat Fehler gefunden: {0}</value>
+  </data>
+  <data name="NotifyTitleCheckRecovered" xml:space="preserve">
+    <value>Prüfung wieder ohne Fehler: {0}</value>
+  </data>
+  <data name="NotifyLineCheck" xml:space="preserve">
+    <value>Geprüft: {0} · {1} · Dauer {2}</value>
+  </data>
+  <data name="NotifyLineMoreMessages" xml:space="preserve">
+    <value>… und {0} weitere Meldungen</value>
+  </data>
+  <data name="NotifyCheckFailedHint" xml:space="preserve">
+    <value>Öffne das Repository in BorgStudio, um alle Meldungen und die Möglichkeiten zu sehen.</value>
+  </data>
+  <data name="DashCheckProblems" xml:space="preserve">
+    <value>Prüfung hat Fehler gefunden</value>
+  </data>
+  <data name="DashChecked" xml:space="preserve">
+    <value>geprüft {0}</value>
+  </data>
+  <data name="DashNeverChecked" xml:space="preserve">
+    <value>nie geprüft</value>
   </data>
 </root>

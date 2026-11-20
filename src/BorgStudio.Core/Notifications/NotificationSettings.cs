@@ -32,19 +32,40 @@ public enum NotificationEvent
 
     /// <summary>The daily summary (sent to channels with <see cref="NotificationChannel.DailySummary"/>).</summary>
     Summary,
+
+    /// <summary>Checking a repository found damage.</summary>
+    CheckFailed,
 }
 
 /// <summary>How a channel's messages reach their receiver.</summary>
-public abstract record NotificationChannel
+public abstract record NotificationChannel : IJsonOnDeserializing, IJsonOnDeserialized
 {
+    /// <summary>Raised with each event added later, so channels saved before get it (see <see cref="EventsRevision"/>).</summary>
+    public const int CurrentEventsRevision = 1;
+
     public bool Enabled { get; init; }
 
     /// <summary>The events this channel reports.</summary>
     public List<NotificationEvent> Events { get; init; } =
     [
         NotificationEvent.Failed, NotificationEvent.Skipped, NotificationEvent.Recovered, NotificationEvent.StorageLow,
-        NotificationEvent.StorageFull, NotificationEvent.Overdue,
+        NotificationEvent.StorageFull, NotificationEvent.Overdue, NotificationEvent.CheckFailed,
     ];
+
+    /// <summary>
+    /// Which events existed when the channel was saved (0: before it was kept). Events added since are switched on
+    /// when loading if the channel reports failures – new problems should not go unreported.
+    /// </summary>
+    public int EventsRevision { get; set; } = CurrentEventsRevision;
+
+    void IJsonOnDeserializing.OnDeserializing() => EventsRevision = 0;
+
+    void IJsonOnDeserialized.OnDeserialized()
+    {
+        if (EventsRevision < 1 && Events.Contains(NotificationEvent.Failed) && !Events.Contains(NotificationEvent.CheckFailed))
+            Events.Add(NotificationEvent.CheckFailed);
+        EventsRevision = CurrentEventsRevision;
+    }
 
     /// <summary>Also gets the daily summary (in addition to the single messages).</summary>
     public bool DailySummary { get; init; }
