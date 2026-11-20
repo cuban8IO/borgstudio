@@ -195,13 +195,16 @@ public sealed partial class RepositoryStatisticsViewModel : ObservableObject
         return (points, [last, new ChartPoint(end, value)]);
     }
 
-    /// <summary>The days of the last weeks with the worst outcome of each (all jobs).</summary>
-    private static IReadOnlyList<CalendarDay> Calendar(RepositoryStatisticsData data)
+    private static IReadOnlyList<CalendarDay> Calendar(RepositoryStatisticsData data) => Calendar(data.Runs, data.Now);
+
+    /// <summary>The days of the last weeks with the worst outcome of each (all the given jobs).</summary>
+    internal static IReadOnlyList<CalendarDay> Calendar(IEnumerable<(BackupJob Job, IReadOnlyList<BackupRunSummary> Runs)> jobs,
+        DateTimeOffset now)
     {
-        var today = DateOnly.FromDateTime(data.Now.ToLocalTime().Date);
+        var today = DateOnly.FromDateTime(now.ToLocalTime().Date);
         var mondayThisWeek = today.AddDays(-(((int)today.DayOfWeek + 6) % 7));
         var first = mondayThisWeek.AddDays(-7 * (CalendarWeeks - 1));
-        var byDay = data.Runs.SelectMany(entry => entry.Runs.Select(run => (entry.Job, Run: run)))
+        var byDay = jobs.SelectMany(entry => entry.Runs.Select(run => (entry.Job, Run: run)))
             .Where(entry => entry.Run.Outcome != BackupOutcome.Cancelled)
             .GroupBy(entry => DateOnly.FromDateTime(entry.Run.Started.ToLocalTime().Date))
             .ToDictionary(group => group.Key, group => group.ToList());

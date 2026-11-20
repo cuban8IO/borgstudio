@@ -60,6 +60,9 @@ public partial class MainViewModel
         RefreshRepositoryJobs();
         ResetArchives();
         RefreshStatistics();
+        // Another repository chosen (added, removed, opened from the tray): it is shown, not the overview.
+        if (value is not null)
+            IsOverviewShown = false;
     }
 
     private void RefreshRepositoryJobs()

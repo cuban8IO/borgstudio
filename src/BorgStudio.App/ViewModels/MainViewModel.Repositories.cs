@@ -17,7 +17,7 @@ public partial class MainViewModel
     public ObservableCollection<RepositoryItemViewModel> Repositories { get; } = [];
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasSelection))]
+    [NotifyPropertyChangedFor(nameof(HasSelection), nameof(ListedRepository), nameof(ShowsRepository))]
     [NotifyCanExecuteChangedFor(nameof(TestRepositoryCommand), nameof(ExportKeyCommand), nameof(EditRepositoryCommand),
         nameof(RemoveRepositoryCommand), nameof(FreeSpaceCommand), nameof(MeasureStorageCommand))]
     public partial RepositoryItemViewModel? SelectedRepository { get; set; }
@@ -48,7 +48,11 @@ public partial class MainViewModel
         if (result.BrokenFileBackup is not null)
             StoreWarning = BorgTexts.Format(Strings.StoreBrokenWarning, result.BrokenFileBackup);
 
-        Repositories.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasRepositories));
+        Repositories.CollectionChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(HasRepositories));
+            OnPropertyChanged(nameof(ShowsOverview));
+        };
         SelectedRepository = Repositories.FirstOrDefault();
     }
 
