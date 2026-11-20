@@ -53,6 +53,15 @@
             <SolidColorBrush x:Key="CardBorder" Color="{StaticResource BpLine}" />
             <SolidColorBrush x:Key="ErrorForeground" Color="{StaticResource BpRed}" />
             <SolidColorBrush x:Key="SuccessForeground" Color="{StaticResource BpGreen}" />
+            <!-- Charts: the repository (series), the forecast, the limit; status cells; recessive track and grid. -->
+            <SolidColorBrush x:Key="ChartSeriesBrush" Color="#3987E5" />
+            <SolidColorBrush x:Key="ChartForecastBrush" Color="#EDA100" />
+            <SolidColorBrush x:Key="ChartLimitBrush" Color="#D03B3B" />
+            <SolidColorBrush x:Key="ChartTrackBrush" Color="#2D2D2D" />
+            <SolidColorBrush x:Key="ChartGridBrush" Color="#2C2C2A" />
+            <SolidColorBrush x:Key="ChartOkBrush" Color="#0CA30C" />
+            <SolidColorBrush x:Key="ChartWarnBrush" Color="#FAB219" />
+            <SolidColorBrush x:Key="ChartFailBrush" Color="#D03B3B" />
             <!-- Selected list entry: a light green tint plus a green bar on the left. -->
             <SolidColorBrush x:Key="SelectionBackground" Color="#2401FF95" />
             <SolidColorBrush x:Key="SelectionHoverBackground" Color="#3301FF95" />

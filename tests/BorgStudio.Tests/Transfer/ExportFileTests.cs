@@ -54,7 +54,8 @@ public sealed class ExportFileTests : IDisposable
 
         var text = File.ReadAllText(FilePath);
         Assert.Contains("borgstudio-export", text);
-        foreach (var secret in new[] { "the repository passphrase", "NAS", "nas.local", "OPENSSH", "BORG_KEY" })
+        // Only what Base64 cannot produce by chance: "NAS" alone turns up in random cipher text now and then.
+        foreach (var secret in new[] { "the repository passphrase", "\"NAS\"", "nas.local", "OPENSSH", "BORG_KEY" })
             Assert.DoesNotContain(secret, text);
 
         var read = ExportFile.Read(FilePath, Password);

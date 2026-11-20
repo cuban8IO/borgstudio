@@ -225,6 +225,11 @@ section gets the new version number.
   backup. Every call needs the token (`Authorization: Bearer <token>`; kept like a passphrase, “New token” replaces it),
   and a job must allow it in its editor. Listens on 127.0.0.1 (port 8473 by default), optionally on all addresses;
   a small built-in HTTP server, no admin rights needed.
+- Storage history and forecast (repository overview → Storage): every measurement is kept (the last one a day, two years),
+  together with borg’s repository statistics, which come with every backup. The bar splits the disk into this repository,
+  other data and free space; below it: how fast the storage grows and when it will probably be full (linear trend of the
+  last 90 days, with a range; before there are enough measurements, estimated from what the backups of the last 30 days
+  added minus what clean-ups freed), and what deduplication and compression save.
 
 **Fixed**
 - BorgStudio no longer crashes at startup when .NET runs without culture data (Linux without ICU).

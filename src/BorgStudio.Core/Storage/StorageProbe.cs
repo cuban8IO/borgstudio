@@ -49,7 +49,8 @@ public sealed partial class StorageProbe(BorgClient borg, TimeProvider? time = n
         var info = await borg.InfoAsync(installation, location, passphrase, ssh, cancellationToken);
         if (!info.Succeeded)
             return BorgResult<StorageUsage>.Failure(info.Error!);
-        if (info.Value!.UniqueCompressedSize is not { } size)
+        var stats = info.Value!.Stats;
+        if (info.Value.UniqueCompressedSize is not { } size)
             return BorgResult<StorageUsage>.Failure(new BorgError(BorgErrorKind.Other, "borg info reported no repository size."));
         return BorgResult<StorageUsage>.Success(repository.StorageCapacity is { } capacity and > 0
             ? new StorageUsage
@@ -59,8 +60,9 @@ public sealed partial class StorageProbe(BorgClient borg, TimeProvider? time = n
                 Total = capacity,
                 Free = Math.Max(0, capacity - size),
                 RepositorySize = size,
+                Repository = stats,
             }
-            : new StorageUsage { Measured = _time.GetUtcNow(), Source = StorageSource.RepositoryOnly, RepositorySize = size });
+            : new StorageUsage { Measured = _time.GetUtcNow(), Source = StorageSource.RepositoryOnly, RepositorySize = size, Repository = stats });
     }
 
     private async Task<(long Total, long Free)?> ServerSpaceAsync(BorgInstallation installation, RepositoryLocation location,

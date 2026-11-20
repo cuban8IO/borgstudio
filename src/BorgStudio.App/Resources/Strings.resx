@@ -2447,4 +2447,46 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
   <data name="JobEditorWebhook" xml:space="preserve">
     <value>May be started by the incoming webhook (Tools → Settings)</value>
   </data>
+  <data name="StorageLegendRepository" xml:space="preserve">
+    <value>This repository {0}</value>
+  </data>
+  <data name="StorageLegendOther" xml:space="preserve">
+    <value>Other data {0}</value>
+  </data>
+  <data name="StorageLegendFree" xml:space="preserve">
+    <value>Free {0} of {1} ({2} %)</value>
+  </data>
+  <data name="StorageRatios" xml:space="preserve">
+    <value>Saved by deduplication and compression: {0} % · deduplication {1} : 1 · compression {2} : 1</value>
+  </data>
+  <data name="StorageGrowing" xml:space="preserve">
+    <value>Grows by about {0} a week</value>
+  </data>
+  <data name="StorageNotGrowing" xml:space="preserve">
+    <value>Does not grow at the moment.</value>
+  </data>
+  <data name="StorageFullBy" xml:space="preserve">
+    <value>→ full probably {0}</value>
+  </data>
+  <data name="StorageFullIn" xml:space="preserve">
+    <value>→ full in about {0} days</value>
+  </data>
+  <data name="StorageFullRange" xml:space="preserve">
+    <value>(between {0} and {1})</value>
+  </data>
+  <data name="StorageFullEarliest" xml:space="preserve">
+    <value>(at the earliest {0})</value>
+  </data>
+  <data name="StoragePartStart" xml:space="preserve">
+    <value>early {0}</value>
+  </data>
+  <data name="StoragePartMiddle" xml:space="preserve">
+    <value>mid {0}</value>
+  </data>
+  <data name="StoragePartEnd" xml:space="preserve">
+    <value>late {0}</value>
+  </data>
+  <data name="StorageForecastFromBackups" xml:space="preserve">
+    <value>Estimated from the backups of the last 30 days until there are enough measurements (one a day, after backups or with “Measure”).</value>
+  </data>
 </root>

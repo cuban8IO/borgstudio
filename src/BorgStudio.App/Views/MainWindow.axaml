@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:BorgStudio.App.ViewModels"
         xmlns:views="using:BorgStudio.App.Views"
+        xmlns:controls="using:BorgStudio.App.Controls"
         xmlns:res="using:BorgStudio.App.Resources"
         xmlns:sys="using:System"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -229,20 +230,51 @@
                                             <Button Grid.Column="1" Content="{x:Static res:Strings.StorageMeasure}"
                                                     Command="{Binding MeasureStorageCommand}" />
                                         </Grid>
-                                        <ProgressBar Minimum="0" Maximum="1" Height="10" Value="{Binding SelectedRepository.StorageUsedFraction}"
-                                                     IsVisible="{Binding SelectedRepository.HasStorageBar}"
-                                                     Classes.low="{Binding SelectedRepository.IsStorageLow}"
-                                                     Classes.full="{Binding SelectedRepository.IsStorageFull}">
-                                            <ProgressBar.Styles>
-                                                <Style Selector="ProgressBar.low">
+                                        <controls:StackedBar Segments="{Binding SelectedRepository.StorageSegments}" Height="12" Margin="0,2,0,0"
+                                                             IsVisible="{Binding SelectedRepository.HasStorageBar}" />
+                                        <!-- Legend: the repository, other data on the same disk, free space. -->
+                                        <WrapPanel IsVisible="{Binding SelectedRepository.HasStorageBar}">
+                                            <WrapPanel.Styles>
+                                                <Style Selector="StackPanel.legend">
+                                                    <Setter Property="Orientation" Value="Horizontal" />
+                                                    <Setter Property="Spacing" Value="6" />
+                                                    <Setter Property="Margin" Value="0,0,18,2" />
+                                                </Style>
+                                                <Style Selector="Border.swatch">
+                                                    <Setter Property="Width" Value="10" />
+                                                    <Setter Property="Height" Value="10" />
+                                                    <Setter Property="CornerRadius" Value="2" />
+                                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                                </Style>
+                                            </WrapPanel.Styles>
+                                            <StackPanel Classes="legend">
+                                                <Border Classes="swatch" Background="{DynamicResource ChartSeriesBrush}" />
+                                                <TextBlock Text="{Binding SelectedRepository.StorageRepositoryText}" FontSize="12" />
+                                            </StackPanel>
+                                            <StackPanel Classes="legend" IsVisible="{Binding SelectedRepository.HasStorageSplit}">
+                                                <Border Classes="swatch" Background="{DynamicResource ChartForecastBrush}" />
+                                                <TextBlock Text="{Binding SelectedRepository.StorageOtherText}" FontSize="12" />
+                                            </StackPanel>
+                                            <StackPanel Classes="legend">
+                                                <Border Classes="swatch" Background="{DynamicResource ChartTrackBrush}" BorderBrush="{DynamicResource BpLineBrush}" BorderThickness="1" />
+                                                <TextBlock Text="{Binding SelectedRepository.StorageFreeText}" FontSize="12" />
+                                            </StackPanel>
+                                        </WrapPanel>
+                                        <TextBlock Text="{Binding SelectedRepository.StorageText}" TextWrapping="Wrap"
+                                                   IsVisible="{Binding !SelectedRepository.HasStorageBar}" />
+                                        <TextBlock Text="{Binding SelectedRepository.StorageForecastText}" TextWrapping="Wrap"
+                                                   IsVisible="{Binding SelectedRepository.HasStorageForecast}"
+                                                   Classes.soon="{Binding SelectedRepository.IsForecastSoon}">
+                                            <TextBlock.Styles>
+                                                <Style Selector="TextBlock.soon">
                                                     <Setter Property="Foreground" Value="{DynamicResource WarningBorder}" />
                                                 </Style>
-                                                <Style Selector="ProgressBar.full">
-                                                    <Setter Property="Foreground" Value="{DynamicResource ErrorForeground}" />
-                                                </Style>
-                                            </ProgressBar.Styles>
-                                        </ProgressBar>
-                                        <TextBlock Text="{Binding SelectedRepository.StorageText}" TextWrapping="Wrap" />
+                                            </TextBlock.Styles>
+                                        </TextBlock>
+                                        <TextBlock Text="{Binding SelectedRepository.StorageForecastNote}" TextWrapping="Wrap" FontSize="12" Opacity="0.7"
+                                                   IsVisible="{Binding SelectedRepository.HasStorageForecastNote}" />
+                                        <TextBlock Text="{Binding SelectedRepository.StorageRatiosText}" TextWrapping="Wrap" FontSize="12" Opacity="0.8"
+                                                   IsVisible="{Binding SelectedRepository.HasStorageRatios}" />
                                         <TextBlock Text="{Binding SelectedRepository.StorageLevelText}" TextWrapping="Wrap"
                                                    IsVisible="{Binding SelectedRepository.IsStorageLow}" Foreground="{DynamicResource WarningBorder}" />
                                         <TextBlock Text="{Binding SelectedRepository.StorageLevelText}" TextWrapping="Wrap"

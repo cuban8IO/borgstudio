@@ -37,8 +37,25 @@ public sealed record StorageUsage
     /// <summary>What the repository itself takes up (borg), where it was asked.</summary>
     public long? RepositorySize { get; init; }
 
+    /// <summary>borg's statistics of the repository, as last reported (kept from earlier when the disk was measured alone).</summary>
+    public RepositoryStats? Repository { get; init; }
+
+    /// <summary>What the repository takes up: measured with borg, or from its last statistics.</summary>
+    [JsonIgnore]
+    public long? RepositoryBytes => RepositorySize ?? Repository?.UniqueCompressedSize;
+
     [JsonIgnore]
     public long? Used => Total is { } total && Free is { } free ? Math.Max(0, total - free) : null;
+
+    /// <summary>Taken up by other data next to the repository (same disk or share); <c>null</c> if unknown.</summary>
+    [JsonIgnore]
+    public long? OtherBytes => Source is StorageSource.Disk or StorageSource.Server && Used is { } used && RepositoryBytes is { } repository
+        ? Math.Max(0, used - repository)
+        : null;
+
+    /// <summary>What grows towards full: the used space (disk, share, capacity), or – without total – the repository.</summary>
+    [JsonIgnore]
+    public long? GrowingBytes => Used ?? RepositoryBytes;
 
     /// <summary>Free share 0..1; <c>null</c> without total.</summary>
     [JsonIgnore]
@@ -91,12 +108,18 @@ public static class StorageLevels
     }
 }
 
-/// <summary>The last measurement per repository, in storage.json (shared by the window and scheduled runs).</summary>
+/// <summary>
+/// The last measurement per repository, in storage.json (shared by the window and scheduled runs), and every measurement
+/// in the repository's <see cref="StorageHistory"/>.
+/// </summary>
 public sealed class StorageUsageStore(string filePath)
 {
     public static StorageUsageStore ForDataDirectory(string dataDirectory) => new(Path.Combine(dataDirectory, "storage.json"));
 
     private static readonly object Gate = new();
+
+    /// <summary>The measurements over time, next to storage.json.</summary>
+    public StorageHistory History { get; } = new(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(filePath))!, "storage-history"));
 
     public StorageUsage? Get(Guid repositoryId)
     {
@@ -104,12 +127,34 @@ public sealed class StorageUsageStore(string filePath)
             return Load().GetValueOrDefault(repositoryId.ToString("N"));
     }
 
+    /// <summary>
+    /// Keeps <paramref name="usage"/> as the repository's last measurement (with the statistics borg reported before, if it
+    /// brings none) and adds it to the history.
+    /// </summary>
     public void Set(Guid repositoryId, StorageUsage usage)
     {
         lock (Gate)
         {
             var all = Load();
-            all[repositoryId.ToString("N")] = usage;
+            var key = repositoryId.ToString("N");
+            if (usage.Repository is null && all.GetValueOrDefault(key)?.Repository is { } earlier)
+                usage = usage with { Repository = earlier };
+            all[key] = usage;
+            Save(all);
+            History.Add(repositoryId, usage);
+        }
+    }
+
+    /// <summary>borg reported new statistics (e.g. with a backup): kept with the last measurement.</summary>
+    public void SetStats(Guid repositoryId, RepositoryStats stats)
+    {
+        lock (Gate)
+        {
+            var all = Load();
+            var key = repositoryId.ToString("N");
+            if (all.GetValueOrDefault(key) is not { } usage)
+                return;
+            all[key] = usage with { Repository = stats };
             Save(all);
         }
     }
@@ -121,6 +166,7 @@ public sealed class StorageUsageStore(string filePath)
             var all = Load();
             if (all.Remove(repositoryId.ToString("N")))
                 Save(all);
+            History.Remove(repositoryId);
         }
     }
 
