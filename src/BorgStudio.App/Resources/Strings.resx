@@ -2489,4 +2489,109 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
   <data name="StorageForecastFromBackups" xml:space="preserve">
     <value>Estimated from the backups of the last 30 days until there are enough measurements (one a day, after backups or with “Measure”).</value>
   </data>
+  <data name="TabStatistics" xml:space="preserve">
+    <value>Statistics</value>
+  </data>
+  <data name="ChartForecast" xml:space="preserve">
+    <value>forecast</value>
+  </data>
+  <data name="StatsAllJobs" xml:space="preserve">
+    <value>All jobs</value>
+  </data>
+  <data name="StatsCapacity" xml:space="preserve">
+    <value>Capacity</value>
+  </data>
+  <data name="StatsDiskSize" xml:space="preserve">
+    <value>Disk size</value>
+  </data>
+  <data name="StatsStorageTitle" xml:space="preserve">
+    <value>Storage over time</value>
+  </data>
+  <data name="StatsStorageEmpty" xml:space="preserve">
+    <value>The chart starts with the second measurement: storage is measured after every backup (once a day is kept) and with “Measure” in the overview.</value>
+  </data>
+  <data name="StatsSavingsTitle" xml:space="preserve">
+    <value>What deduplication and compression save</value>
+  </data>
+  <data name="StatsOriginal" xml:space="preserve">
+    <value>All archives, original</value>
+  </data>
+  <data name="StatsArchivesFormat" xml:space="preserve">
+    <value>{0} archives</value>
+  </data>
+  <data name="StatsStored" xml:space="preserve">
+    <value>Stored in the repository</value>
+  </data>
+  <data name="StatsSavedFormat" xml:space="preserve">
+    <value>{0} saved</value>
+  </data>
+  <data name="StatsDeduplication" xml:space="preserve">
+    <value>Deduplication</value>
+  </data>
+  <data name="StatsCompression" xml:space="preserve">
+    <value>Compression</value>
+  </data>
+  <data name="StatsBackupsTitle" xml:space="preserve">
+    <value>Backups</value>
+  </data>
+  <data name="StatsSuccessRate" xml:space="preserve">
+    <value>Success rate (30 days)</value>
+  </data>
+  <data name="StatsSuccessDetail" xml:space="preserve">
+    <value>{0} of {1} runs</value>
+  </data>
+  <data name="StatsLastSuccess" xml:space="preserve">
+    <value>Last successful backup</value>
+  </data>
+  <data name="StatsAverageDuration" xml:space="preserve">
+    <value>Average duration</value>
+  </data>
+  <data name="StatsAverageNew" xml:space="preserve">
+    <value>Newly stored per backup</value>
+  </data>
+  <data name="StatsWeekFormat" xml:space="preserve">
+    <value>{0} in the last 7 days</value>
+  </data>
+  <data name="StatsColumnsTitle" xml:space="preserve">
+    <value>What each of the last backups newly stored (deduplicated) – red: failed, yellow: with warnings</value>
+  </data>
+  <data name="StatsColumnTip" xml:space="preserve">
+    <value>{0} new, {1}</value>
+  </data>
+  <data name="StatsNoRuns" xml:space="preserve">
+    <value>No backups yet.</value>
+  </data>
+  <data name="StatsNever" xml:space="preserve">
+    <value>never</value>
+  </data>
+  <data name="StatsAgoMinutes" xml:space="preserve">
+    <value>{0} min ago</value>
+  </data>
+  <data name="StatsAgoHours" xml:space="preserve">
+    <value>{0} h ago</value>
+  </data>
+  <data name="StatsAgoDays" xml:space="preserve">
+    <value>{0} days ago</value>
+  </data>
+  <data name="StatsActivityTitle" xml:space="preserve">
+    <value>Activity (12 weeks)</value>
+  </data>
+  <data name="StatsNoBackup" xml:space="preserve">
+    <value>no backup</value>
+  </data>
+  <data name="StatsDayTip" xml:space="preserve">
+    <value>{0} of {1} backups worked</value>
+  </data>
+  <data name="StatsLegendOk" xml:space="preserve">
+    <value>all worked</value>
+  </data>
+  <data name="StatsLegendWarnings" xml:space="preserve">
+    <value>with warnings</value>
+  </data>
+  <data name="StatsLegendFailed" xml:space="preserve">
+    <value>failed or skipped</value>
+  </data>
+  <data name="StatsLegendNone" xml:space="preserve">
+    <value>none</value>
+  </data>
 </root>

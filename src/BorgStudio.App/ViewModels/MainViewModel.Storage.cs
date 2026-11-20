@@ -26,6 +26,38 @@ public partial class MainViewModel
             var runs = _jobs.Where(job => job.RepositoryId == item.Config.Id).SelectMany(job => Runner.History.Get(job.Id));
             item.Forecast = StorageForecast.Compute(store.History.Get(item.Config.Id), item.Storage, runs, now);
         }
+        // A measurement or a run changes the statistics too.
+        RefreshStatistics();
+    }
+
+    /// <summary>The statistics of the selected repository; built while their tab is open.</summary>
+    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
+    public partial RepositoryStatisticsViewModel? Statistics { get; private set; }
+
+    /// <summary>Builds the statistics of the selected repository anew (only while their tab is open – it reads files).</summary>
+    internal void RefreshStatistics()
+    {
+        if (SelectedDetailsTab != StatisticsTab || SelectedRepository is not { } item)
+            return;
+        var id = item.Config.Id;
+        var previousJob = Statistics?.SelectedJob.Value;
+        int? archives;
+        try
+        {
+            archives = _services.Archives.Load(id)?.Count;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or Core.Security.VaultLockedException)
+        {
+            archives = null;
+        }
+        var runs = _jobs.Where(job => job.RepositoryId == id)
+            .Select(job => (job, Runner.History.Get(job.Id)))
+            .ToList();
+        Statistics = new RepositoryStatisticsViewModel(new RepositoryStatisticsData(item.Storage, StorageStore.History.Get(id), item.Forecast,
+            runs, archives, DateTimeOffset.Now));
+        // The chosen job stays chosen when the numbers change.
+        if (Statistics.JobOptions.FirstOrDefault(option => option.Value == previousJob) is { } option)
+            Statistics.SelectedJob = option;
     }
 
     /// <summary>"Speicher messen" in the overview: the disk or server directly, otherwise borg (which may need the passphrase).</summary>

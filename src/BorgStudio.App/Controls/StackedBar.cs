@@ -87,6 +87,9 @@ internal static class ChartBrushes
                 "ChartOkBrush" => new SolidColorBrush(Color.Parse("#0CA30C")),
                 "ChartWarnBrush" => new SolidColorBrush(Color.Parse("#FAB219")),
                 "CardBackground" => new SolidColorBrush(Color.Parse("#1F1F1F")),
+                "BpTextBrush" => new SolidColorBrush(Color.Parse("#EAEAEA")),
+                "BpSurface2Brush" => new SolidColorBrush(Color.Parse("#262626")),
+                "ChartGridBrush" => new SolidColorBrush(Color.Parse("#2C2C2A")),
                 _ => new SolidColorBrush(Color.Parse("#2D2D2D")),
             };
 }

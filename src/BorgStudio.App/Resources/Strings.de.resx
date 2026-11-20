@@ -2469,4 +2469,109 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
   <data name="StorageForecastFromBackups" xml:space="preserve">
     <value>Geschätzt aus den Sicherungen der letzten 30 Tage, bis genug Messungen vorliegen (eine pro Tag, nach Sicherungen oder mit „Messen“).</value>
   </data>
+  <data name="TabStatistics" xml:space="preserve">
+    <value>Statistik</value>
+  </data>
+  <data name="ChartForecast" xml:space="preserve">
+    <value>Prognose</value>
+  </data>
+  <data name="StatsAllJobs" xml:space="preserve">
+    <value>Alle Jobs</value>
+  </data>
+  <data name="StatsCapacity" xml:space="preserve">
+    <value>Kapazität</value>
+  </data>
+  <data name="StatsDiskSize" xml:space="preserve">
+    <value>Größe des Laufwerks</value>
+  </data>
+  <data name="StatsStorageTitle" xml:space="preserve">
+    <value>Speicher über Zeit</value>
+  </data>
+  <data name="StatsStorageEmpty" xml:space="preserve">
+    <value>Das Diagramm beginnt mit der zweiten Messung: Gemessen wird nach jeder Sicherung (pro Tag bleibt eine) und mit „Messen“ in der Übersicht.</value>
+  </data>
+  <data name="StatsSavingsTitle" xml:space="preserve">
+    <value>Was Deduplizierung und Kompression sparen</value>
+  </data>
+  <data name="StatsOriginal" xml:space="preserve">
+    <value>Alle Archive, original</value>
+  </data>
+  <data name="StatsArchivesFormat" xml:space="preserve">
+    <value>{0} Archive</value>
+  </data>
+  <data name="StatsStored" xml:space="preserve">
+    <value>Im Repository belegt</value>
+  </data>
+  <data name="StatsSavedFormat" xml:space="preserve">
+    <value>{0} gespart</value>
+  </data>
+  <data name="StatsDeduplication" xml:space="preserve">
+    <value>Deduplizierung</value>
+  </data>
+  <data name="StatsCompression" xml:space="preserve">
+    <value>Kompression</value>
+  </data>
+  <data name="StatsBackupsTitle" xml:space="preserve">
+    <value>Sicherungen</value>
+  </data>
+  <data name="StatsSuccessRate" xml:space="preserve">
+    <value>Erfolgsquote (30 Tage)</value>
+  </data>
+  <data name="StatsSuccessDetail" xml:space="preserve">
+    <value>{0} von {1} Läufen</value>
+  </data>
+  <data name="StatsLastSuccess" xml:space="preserve">
+    <value>Letzte erfolgreiche Sicherung</value>
+  </data>
+  <data name="StatsAverageDuration" xml:space="preserve">
+    <value>Ø Dauer</value>
+  </data>
+  <data name="StatsAverageNew" xml:space="preserve">
+    <value>Ø neu belegt je Sicherung</value>
+  </data>
+  <data name="StatsWeekFormat" xml:space="preserve">
+    <value>{0} in den letzten 7 Tagen</value>
+  </data>
+  <data name="StatsColumnsTitle" xml:space="preserve">
+    <value>Was jede der letzten Sicherungen neu belegt hat (dedupliziert) – rot: fehlgeschlagen, gelb: mit Warnungen</value>
+  </data>
+  <data name="StatsColumnTip" xml:space="preserve">
+    <value>{0} neu, {1}</value>
+  </data>
+  <data name="StatsNoRuns" xml:space="preserve">
+    <value>Noch keine Sicherungen.</value>
+  </data>
+  <data name="StatsNever" xml:space="preserve">
+    <value>nie</value>
+  </data>
+  <data name="StatsAgoMinutes" xml:space="preserve">
+    <value>vor {0} Min.</value>
+  </data>
+  <data name="StatsAgoHours" xml:space="preserve">
+    <value>vor {0} Std.</value>
+  </data>
+  <data name="StatsAgoDays" xml:space="preserve">
+    <value>vor {0} Tagen</value>
+  </data>
+  <data name="StatsActivityTitle" xml:space="preserve">
+    <value>Aktivität (12 Wochen)</value>
+  </data>
+  <data name="StatsNoBackup" xml:space="preserve">
+    <value>keine Sicherung</value>
+  </data>
+  <data name="StatsDayTip" xml:space="preserve">
+    <value>{0} von {1} Sicherungen gelungen</value>
+  </data>
+  <data name="StatsLegendOk" xml:space="preserve">
+    <value>alle gelungen</value>
+  </data>
+  <data name="StatsLegendWarnings" xml:space="preserve">
+    <value>mit Warnungen</value>
+  </data>
+  <data name="StatsLegendFailed" xml:space="preserve">
+    <value>fehlgeschlagen oder übersprungen</value>
+  </data>
+  <data name="StatsLegendNone" xml:space="preserve">
+    <value>keine</value>
+  </data>
 </root>

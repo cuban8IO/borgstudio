@@ -59,6 +59,7 @@ public partial class MainViewModel
     {
         RefreshRepositoryJobs();
         ResetArchives();
+        RefreshStatistics();
     }
 
     private void RefreshRepositoryJobs()

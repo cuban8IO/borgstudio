@@ -230,6 +230,11 @@ section gets the new version number.
   other data and free space; below it: how fast the storage grows and when it will probably be full (linear trend of the
   last 90 days, with a range; before there are enough measurements, estimated from what the backups of the last 30 days
   added minus what clean-ups freed), and what deduplication and compression save.
+- Statistics tab per repository: the storage over time with the forecast as a dashed line up to the disk size or capacity;
+  what deduplication and compression save (original size, stored, ratios); the backups – success rate (30 days), last
+  successful backup, average duration and newly stored data, and a column per backup (red failed, yellow warnings), for all
+  jobs or one; and the activity of the last 12 weeks as a calendar. Hovering a chart shows its values. The charts are
+  BorgStudio’s own controls, no chart library.
 
 **Fixed**
 - BorgStudio no longer crashes at startup when .NET runs without culture data (Linux without ICU).
