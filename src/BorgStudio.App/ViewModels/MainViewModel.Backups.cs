@@ -395,6 +395,11 @@ public sealed class BackupJobItemViewModel(BackupJob job, Core.Checks.RestoreTes
 
     public bool IsScheduled => Job.IsScheduled;
 
+    /// <summary>"Startet nur: im Netzbetrieb, über LAN"; empty without conditions (or schedule).</summary>
+    public string ConditionsText => Job.IsScheduled ? BorgTexts.Conditions(Job.Conditions) ?? "" : "";
+
+    public bool HasConditions => ConditionsText.Length > 0;
+
     /// <summary>"Täglich 20:00 · Mo, Di 12:30 · nächster Lauf: Mo., 17.11. 20:00".</summary>
     public string ScheduleText => !Job.IsScheduled ? Strings.JobNotScheduled
         : ScheduleCalendar.Next(Job.Schedules, DateTime.Now) is { } next

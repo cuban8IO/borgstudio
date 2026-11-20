@@ -3146,4 +3146,49 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
   <data name="EditorLowPriorityHint" xml:space="preserve">
     <value>borg runs with nice (Linux and WSL: also for the disk). The computer stays responsive, backups take longer. No fixed rate.</value>
   </data>
+  <data name="SkipOnBattery" xml:space="preserve">
+    <value>The computer ran on its battery.</value>
+  </data>
+  <data name="SkipMetered" xml:space="preserve">
+    <value>The connection was metered.</value>
+  </data>
+  <data name="SkipNotWired" xml:space="preserve">
+    <value>There was no wired connection (Wi-Fi only).</value>
+  </data>
+  <data name="SkipTargetUnreachable" xml:space="preserve">
+    <value>The server did not answer or the folder was not there.</value>
+  </data>
+  <data name="ConditionNotOnBattery" xml:space="preserve">
+    <value>on mains power</value>
+  </data>
+  <data name="ConditionNotMetered" xml:space="preserve">
+    <value>not over a metered connection</value>
+  </data>
+  <data name="ConditionWiredOnly" xml:space="preserve">
+    <value>over a cable</value>
+  </data>
+  <data name="ConditionTargetReachable" xml:space="preserve">
+    <value>when the target is there</value>
+  </data>
+  <data name="JobConditions" xml:space="preserve">
+    <value>Starts only {0}</value>
+  </data>
+  <data name="JobEditorConditions" xml:space="preserve">
+    <value>Scheduled runs start only:</value>
+  </data>
+  <data name="JobEditorNotOnBattery" xml:space="preserve">
+    <value>on mains power, not on battery</value>
+  </data>
+  <data name="JobEditorNotMetered" xml:space="preserve">
+    <value>not over a metered connection (not available on macOS)</value>
+  </data>
+  <data name="JobEditorWiredOnly" xml:space="preserve">
+    <value>over a cable, not over Wi-Fi</value>
+  </data>
+  <data name="JobEditorTargetReachable" xml:space="preserve">
+    <value>when the server answers or the folder is there – otherwise skipped instead of failed</value>
+  </data>
+  <data name="JobEditorConditionsHint" xml:space="preserve">
+    <value>The connection conditions apply to repositories on a server or a network share. A run held back is tried again every 15 minutes until the next scheduled time, then recorded as skipped. Runs by hand and through the webhook always start.</value>
+  </data>
 </root>

@@ -40,6 +40,60 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
         }
     }
 
+    /// <summary>What the conditions of scheduled runs ask (battery, connection, target).</summary>
+    private ISystemState System => services.SystemState ?? new SystemState();
+
+    /// <summary>
+    /// Why a scheduled run of <paramref name="job"/> may not start now (a condition of the job); <c>null</c> if it may – also
+    /// when its repository is gone (the run then fails with that reason).
+    /// </summary>
+    public async Task<BackupSkipReason?> CheckConditionsAsync(BackupJob job, CancellationToken cancellationToken = default)
+    {
+        if (!job.Conditions.Any
+            || services.RepositoryStore.Load().Repositories.FirstOrDefault(candidate => candidate.Id == job.RepositoryId) is not { } repository
+            || Location(repository) is not { } location)
+            return null;
+        return await job.Conditions.CheckAsync(System, location, cancellationToken);
+    }
+
+    /// <summary>
+    /// A scheduled run without window: while a condition of the job holds it back, it looks again every
+    /// <see cref="RunConditions.RetryInterval"/> – until the job's next scheduled time, then it is recorded as skipped.
+    /// </summary>
+    /// <param name="wait">Waits between the looks (tests replace it).</param>
+    public async Task<BackupRunResult> RunWhenAllowedAsync(Guid jobId, Func<TimeSpan, CancellationToken, Task>? wait = null,
+        Func<DateTime>? clock = null, CancellationToken cancellationToken = default)
+    {
+        var job = services.Jobs.Load().FirstOrDefault(candidate => candidate.Id == jobId)
+            ?? throw new ArgumentException($"There is no backup job {jobId}.", nameof(jobId));
+        wait ??= Task.Delay;
+        clock ??= () => DateTime.Now;
+        var deadline = ScheduleCalendar.Next(job.Schedules, clock()) ?? clock().AddDays(1);
+        while (await CheckConditionsAsync(job, cancellationToken) is { } reason)
+        {
+            if (clock() + RunConditions.RetryInterval >= deadline)
+                return await SkipAsync(job, reason);
+            ScheduledRun.Log($"{job.Name}: waiting – {BorgTexts.SkipReason(reason)}", services.Jobs.DataDirectory);
+            await wait(RunConditions.RetryInterval, cancellationToken);
+        }
+        return await RunAsync(jobId, cancellationToken: cancellationToken);
+    }
+
+    /// <summary>A scheduled run a condition held back until its time was over: recorded as skipped and reported.</summary>
+    public async Task<BackupRunResult> SkipAsync(BackupJob job, BackupSkipReason reason)
+    {
+        try
+        {
+            var result = NotRun(job, reason, BackupOutcome.Skipped);
+            await NotifyAsync(job, result.Summary, null);
+            return result;
+        }
+        finally
+        {
+            services.Vault.Lock();
+        }
+    }
+
     /// <summary>Opens the vault with the key for scheduled runs, if it is locked (for the notification channels' secrets).</summary>
     internal void OpenVaultIfLocked()
     {

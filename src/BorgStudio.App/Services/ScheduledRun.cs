@@ -41,7 +41,8 @@ public static class ScheduledRun
                 && !ScheduleCalendar.IsScheduledNow(scheduled.Schedules, DateTime.Now))
                 return 0;
             var runner = new ScheduledJobRunner(services, MainViewModel.CreateScheduledAccess(services));
-            var result = runner.RunAsync(jobId).GetAwaiter().GetResult();
+            // The job's conditions (battery, connection, target) may hold it back for a while.
+            var result = runner.RunWhenAllowedAsync(jobId).GetAwaiter().GetResult();
             var job = services.Jobs.Load().FirstOrDefault(candidate => candidate.Id == jobId);
             var summary = result.Summary;
             var reason = summary.SkipReason is { } skip ? BorgTexts.SkipReason(skip) : summary.Message;

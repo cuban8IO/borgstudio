@@ -55,7 +55,9 @@ public sealed record JobHealth(HealthLevel Level, HealthReason Reason, DateTimeO
         var lastSuccess = runs.Where(run => run.Outcome is BackupOutcome.Succeeded or BackupOutcome.Warnings)
             .Select(run => (DateTimeOffset?)run.Started).Max();
         var last = runs.MaxBy(run => run.Started);
-        var lastFailed = last?.Outcome is BackupOutcome.Failed or BackupOutcome.Skipped;
+        // Held back by a condition (on battery, no cable …) is no failure – the scheduled time just passed without a backup.
+        var lastFailed = last?.Outcome is BackupOutcome.Failed
+            || (last?.Outcome == BackupOutcome.Skipped && last.SkipReason?.IsCondition() != true);
 
         if (job.OverdueDays > 0 && lastSuccess is { } success && new DateTimeOffset(now) - success > TimeSpan.FromDays(job.OverdueDays))
             return new JobHealth(HealthLevel.Critical, HealthReason.Overdue, lastSuccess);
