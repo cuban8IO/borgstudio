@@ -52,6 +52,11 @@ public sealed partial class BackupJobEditorViewModel : ViewModelBase
         OverdueDays = job.OverdueDays;
         WebhookTrigger = job.WebhookTrigger;
         SelectedRestoreTest = RestoreTestOptions.First(option => option.Value == job.RestoreTest);
+        HookBefore = job.Hooks.Before;
+        HookAfter = job.Hooks.After;
+        SelectedHookShell = HookShellOptions.FirstOrDefault(option => option.Value == job.Hooks.EffectiveShell) ?? HookShellOptions[0];
+        HookContinueOnFailure = job.Hooks.ContinueOnBeforeFailure;
+        HookAfterAlways = job.Hooks.AfterAlways;
         RestoreTestFiles = job.RestoreTestFiles;
         Schedules.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasSchedules));
 
@@ -247,6 +252,45 @@ public sealed partial class BackupJobEditorViewModel : ViewModelBase
     [ObservableProperty]
     public partial bool WebhookTrigger { get; set; }
 
+    // --- Commands ---
+
+    /// <summary>Runs before the backup; empty: none.</summary>
+    [ObservableProperty]
+    public partial string? HookBefore { get; set; } = "";
+
+    /// <summary>Runs after the backup; empty: none.</summary>
+    [ObservableProperty]
+    public partial string? HookAfter { get; set; } = "";
+
+    /// <summary>The shells of this system.</summary>
+    public IReadOnlyList<Option<HookShell>> HookShellOptions { get; } = OperatingSystem.IsWindows()
+        ? [new(HookShell.PowerShell, Strings.HookShellPowerShell), new(HookShell.Cmd, Strings.HookShellCmd), new(HookShell.Wsl, Strings.HookShellWsl)]
+        : OperatingSystem.IsMacOS()
+            ? [new(HookShell.Sh, "sh"), new(HookShell.Bash, "bash"), new(HookShell.Zsh, "zsh")]
+            : [new(HookShell.Sh, "sh"), new(HookShell.Bash, "bash")];
+
+    [ObservableProperty]
+    public partial Option<HookShell> SelectedHookShell { get; set; }
+
+    /// <summary>The backup runs even if the command before it fails.</summary>
+    [ObservableProperty]
+    public partial bool HookContinueOnFailure { get; set; }
+
+    /// <summary>The command after runs whatever the outcome (otherwise only after a backup that worked).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HookAfterOnSuccess))]
+    public partial bool HookAfterAlways { get; set; }
+
+    public bool HookAfterOnSuccess
+    {
+        get => !HookAfterAlways;
+        set
+        {
+            if (value)
+                HookAfterAlways = false;
+        }
+    }
+
     // --- Restore test ---
 
     public IReadOnlyList<Option<Core.Checks.RestoreTestMode>> RestoreTestOptions { get; } =
@@ -303,6 +347,14 @@ public sealed partial class BackupJobEditorViewModel : ViewModelBase
             Notify = Notify,
             WebhookTrigger = WebhookTrigger,
             OverdueDays = (int)Math.Clamp(OverdueDays ?? 0, 0, 365),
+            Hooks = new JobHooks
+            {
+                Before = (HookBefore ?? "").Trim(),
+                After = (HookAfter ?? "").Trim(),
+                Shell = SelectedHookShell.Value,
+                ContinueOnBeforeFailure = HookContinueOnFailure,
+                AfterAlways = HookAfterAlways,
+            },
             RestoreTest = SelectedRestoreTest.Value,
             RestoreTestFiles = (int)Math.Clamp(RestoreTestFiles ?? 20, 1, 1000),
         };

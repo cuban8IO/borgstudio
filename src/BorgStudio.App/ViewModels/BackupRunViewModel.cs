@@ -22,6 +22,12 @@ public enum RunPhase
 
     /// <summary>Restoring the newest archive on trial (with a check, or by hand).</summary>
     RestoreTesting,
+
+    /// <summary>The job's command before the backup.</summary>
+    HookBefore,
+
+    /// <summary>The job's command after the backup.</summary>
+    HookAfter,
 }
 
 /// <summary>
@@ -174,6 +180,8 @@ public sealed partial class BackupRunViewModel : ObservableObject
             RunPhase.Compacting => Strings.CleanupCompacting,
             RunPhase.Checking => Strings.CheckWorking,
             RunPhase.RestoreTesting => Strings.RestoreTestWorking,
+            RunPhase.HookBefore => Strings.HookBeforeWorking,
+            RunPhase.HookAfter => Strings.HookAfterWorking,
             _ => Strings.BackupRunning,
         }
         : RestoreTest is { } test ? BorgTexts.RestoreTestOutcome(test.Outcome)

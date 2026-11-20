@@ -3048,4 +3048,58 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
   <data name="BreakLockThisComputer" xml:space="preserve">
     <value>Das ist dieser Rechner: Dort räumt borg Sperren beendeter Prozesse selbst auf, der Prozess läuft also vermutlich noch (vielleicht hängt er). Löse die Sperre erst, wenn er beendet ist.</value>
   </data>
+  <data name="HookBeforeWorking" xml:space="preserve">
+    <value>Befehl vor dem Backup läuft …</value>
+  </data>
+  <data name="HookAfterWorking" xml:space="preserve">
+    <value>Befehl nach dem Backup läuft …</value>
+  </data>
+  <data name="HookStageBefore" xml:space="preserve">
+    <value>Befehl vor dem Backup</value>
+  </data>
+  <data name="HookStageAfter" xml:space="preserve">
+    <value>Befehl nach dem Backup</value>
+  </data>
+  <data name="HookFailedExit" xml:space="preserve">
+    <value>{0} fehlgeschlagen (Exit-Code {1})</value>
+  </data>
+  <data name="HookNotStarted" xml:space="preserve">
+    <value>{0} konnte nicht gestartet werden ({1} nicht gefunden)</value>
+  </data>
+  <data name="HookStopped" xml:space="preserve">
+    <value>{0} wurde abgebrochen</value>
+  </data>
+  <data name="HookShellPowerShell" xml:space="preserve">
+    <value>PowerShell</value>
+  </data>
+  <data name="HookShellCmd" xml:space="preserve">
+    <value>Eingabeaufforderung (cmd)</value>
+  </data>
+  <data name="HookShellWsl" xml:space="preserve">
+    <value>WSL (sh)</value>
+  </data>
+  <data name="JobEditorHooks" xml:space="preserve">
+    <value>Befehle</value>
+  </data>
+  <data name="JobEditorHookShell" xml:space="preserve">
+    <value>Ausführen in</value>
+  </data>
+  <data name="JobEditorHookBefore" xml:space="preserve">
+    <value>Vor dem Backup (z. B. Datenbank-Dump):</value>
+  </data>
+  <data name="JobEditorHookContinue" xml:space="preserve">
+    <value>Trotzdem sichern, wenn dieser Befehl fehlschlägt (mit Warnung)</value>
+  </data>
+  <data name="JobEditorHookAfter" xml:space="preserve">
+    <value>Nach dem Backup (z. B. Dienst wieder starten):</value>
+  </data>
+  <data name="JobEditorHookAfterSuccess" xml:space="preserve">
+    <value>Nur nach erfolgreichem Backup</value>
+  </data>
+  <data name="JobEditorHookAfterAlways" xml:space="preserve">
+    <value>Immer, auch nach fehlgeschlagenem oder abgebrochenem Backup</value>
+  </data>
+  <data name="JobEditorHooksHint" xml:space="preserve">
+    <value>Läuft bei jedem Backup des Jobs – von Hand, geplant und über den Webhook – ohne Zeitlimit. Umgebungsvariablen: BORGSTUDIO_JOB, BORGSTUDIO_REPOSITORY, BORGSTUDIO_SCHEDULED; nach dem Backup zusätzlich BORGSTUDIO_OUTCOME (succeeded, warnings, failed, cancelled) und BORGSTUDIO_ARCHIVE. Die ganze Ausgabe steht in logs/hooks.log im Datenordner.</value>
+  </data>
 </root>

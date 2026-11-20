@@ -28,6 +28,8 @@ public sealed class RestoreTestFlowTests : IDisposable
             PassphraseMode = PassphraseMode.None,
             EncryptionMode = "none",
             Check = new CheckPolicy { AfterBackup = true },
+            // The disk the tests run on may be almost full: no storage warning next to the restore test's.
+            StorageWarnPercent = 0,
         };
         Directory.CreateDirectory(_test.Directory.Combine("repo"));
         Directory.CreateDirectory(Source);
