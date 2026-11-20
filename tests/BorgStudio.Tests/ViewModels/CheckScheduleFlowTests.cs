@@ -252,6 +252,20 @@ public sealed class CheckScheduleFlowTests : IDisposable
     }
 
     [Fact]
+    public void Monthly_schedules_are_described_as_such()
+    {
+        var culture = System.Globalization.CultureInfo.CurrentCulture;
+        var time = new TimeOnly(3, 0).ToString("t", culture);
+
+        Assert.Equal(BorgTexts.Format(Strings.ScheduleMonthlyWeekdayText, Strings.ScheduleWeekFirst, culture.DateTimeFormat.GetDayName(DayOfWeek.Sunday), time),
+            BorgTexts.Schedule(FirstSunday));
+        Assert.Equal(BorgTexts.Format(Strings.ScheduleMonthlyDayText, Strings.ScheduleLastDayOfMonth, time),
+            BorgTexts.Schedule(new BackupSchedule { Kind = ScheduleKind.MonthlyDay, DayOfMonth = BackupSchedule.Last, Time = new TimeOnly(3, 0) }));
+        Assert.Equal(BorgTexts.Format(Strings.ScheduleMonthlyDayText, BorgTexts.Format(Strings.ScheduleDayOfMonth, 5), time),
+            BorgTexts.Schedule(new BackupSchedule { Kind = ScheduleKind.MonthlyDay, DayOfMonth = 5, Time = new TimeOnly(3, 0) }));
+    }
+
+    [Fact]
     public async Task The_overview_warns_about_overdue_checks_and_ones_that_could_not_run()
     {
         Save(new CheckPolicy { AfterBackup = true, IntervalDays = 30 });

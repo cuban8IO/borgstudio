@@ -51,6 +51,8 @@ public sealed partial class BackupJobEditorViewModel : ViewModelBase
         Notify = job.Notify;
         OverdueDays = job.OverdueDays;
         WebhookTrigger = job.WebhookTrigger;
+        SelectedRestoreTest = RestoreTestOptions.First(option => option.Value == job.RestoreTest);
+        RestoreTestFiles = job.RestoreTestFiles;
         Schedules.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasSchedules));
 
         Sources.CollectionChanged += (_, _) => Refresh();
@@ -245,6 +247,26 @@ public sealed partial class BackupJobEditorViewModel : ViewModelBase
     [ObservableProperty]
     public partial bool WebhookTrigger { get; set; }
 
+    // --- Restore test ---
+
+    public IReadOnlyList<Option<Core.Checks.RestoreTestMode>> RestoreTestOptions { get; } =
+    [
+        new(Core.Checks.RestoreTestMode.Off, Strings.RestoreTestModeOff),
+        new(Core.Checks.RestoreTestMode.Read, Strings.RestoreTestModeRead),
+        new(Core.Checks.RestoreTestMode.Compare, Strings.RestoreTestModeCompare),
+        new(Core.Checks.RestoreTestMode.WholeArchive, Strings.RestoreTestModeWholeArchive),
+    ];
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsRestoreTestSample))]
+    public partial Option<Core.Checks.RestoreTestMode> SelectedRestoreTest { get; set; }
+
+    /// <summary>A sample is restored (its size can be chosen).</summary>
+    public bool IsRestoreTestSample => SelectedRestoreTest?.Value is Core.Checks.RestoreTestMode.Read or Core.Checks.RestoreTestMode.Compare;
+
+    [ObservableProperty]
+    public partial decimal? RestoreTestFiles { get; set; } = 20;
+
     [RelayCommand]
     private void AddSchedule() => Schedules.Add(new ScheduleItemViewModel(new BackupSchedule(), RemoveSchedule));
 
@@ -281,6 +303,8 @@ public sealed partial class BackupJobEditorViewModel : ViewModelBase
             Notify = Notify,
             WebhookTrigger = WebhookTrigger,
             OverdueDays = (int)Math.Clamp(OverdueDays ?? 0, 0, 365),
+            RestoreTest = SelectedRestoreTest.Value,
+            RestoreTestFiles = (int)Math.Clamp(RestoreTestFiles ?? 20, 1, 1000),
         };
         CloseRequested?.Invoke(this, EventArgs.Empty);
     }

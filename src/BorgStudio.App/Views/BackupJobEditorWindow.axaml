@@ -104,6 +104,24 @@
                     </CheckBox>
                 </StackPanel>
 
+                <!-- Restore test -->
+                <StackPanel Spacing="6">
+                    <TextBlock Text="{x:Static res:Strings.JobEditorRestoreTest}" FontWeight="SemiBold" />
+                    <WrapPanel>
+                        <WrapPanel.Styles>
+                            <Style Selector="WrapPanel > :is(Control)">
+                                <Setter Property="Margin" Value="0,0,8,4" />
+                                <Setter Property="VerticalAlignment" Value="Center" />
+                            </Style>
+                        </WrapPanel.Styles>
+                        <ComboBox ItemsSource="{Binding RestoreTestOptions}" SelectedItem="{Binding SelectedRestoreTest}" MinWidth="260" />
+                        <NumericUpDown Value="{Binding RestoreTestFiles}" Minimum="1" Maximum="1000" Increment="5" FormatString="0" Width="120"
+                                       IsVisible="{Binding IsRestoreTestSample}" />
+                        <TextBlock Text="{x:Static res:Strings.JobEditorRestoreTestFiles}" IsVisible="{Binding IsRestoreTestSample}" />
+                    </WrapPanel>
+                    <TextBlock Text="{x:Static res:Strings.JobEditorRestoreTestHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                </StackPanel>
+
                 <!-- Clean-up -->
                 <StackPanel Spacing="6">
                     <TextBlock Text="{x:Static res:Strings.JobEditorCleanup}" FontWeight="SemiBold" />

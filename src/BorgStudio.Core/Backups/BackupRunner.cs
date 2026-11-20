@@ -13,6 +13,9 @@ public enum BackupRunPhase
 
     /// <summary>Checking the repository after the backup (<c>borg check</c>, when due).</summary>
     Checking,
+
+    /// <summary>Restoring the job's newest archive on trial (with the check).</summary>
+    RestoreTesting,
 }
 
 /// <summary>Follows a run while it works; called on background threads.</summary>

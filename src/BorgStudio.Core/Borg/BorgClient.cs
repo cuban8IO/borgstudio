@@ -218,10 +218,11 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
     /// total size (<see cref="BorgExtractProgress.Preparing"/>), then reports bytes and the current file. Cancelling
     /// interrupts borg cleanly; what was restored so far stays.
     /// </summary>
+    /// <param name="dryRun">Only read and decrypt everything (<c>--dry-run</c>): nothing is written.</param>
     public async Task<BorgResult<BorgExtractResult>> ExtractAsync(
         BorgInstallation borg, RepositoryLocation location, string archive, IReadOnlyList<string> paths, string targetDirectory,
         int stripComponents, string? passphrase, SshAccess? ssh = null, IProgress<BorgExtractProgress>? progress = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default, bool dryRun = false)
     {
         if (borg.Runtime == BorgRuntime.Wsl && ToWslPath(targetDirectory) is null)
             return BorgResult<BorgExtractResult>.Failure(new BorgError(BorgErrorKind.UnsupportedPath, targetDirectory));
@@ -241,6 +242,8 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         }
 
         List<string> options = ["--progress"];
+        if (dryRun)
+            options.Insert(0, "--dry-run");
         if (stripComponents > 0)
             options.AddRange(["--strip-components", stripComponents.ToString(CultureInfo.InvariantCulture)]);
         // "pp:" – path prefixes, taken literally (names may contain *, [ or ?).
@@ -276,6 +279,28 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
             return BorgResult<ArchiveTree>.Failure(result.Error!);
         entriesRead?.Report(tree.EntryCount);
         return BorgResult<ArchiveTree>.Success(tree.Complete());
+    }
+
+    /// <summary>
+    /// Every entry of an archive (<c>borg list --json-lines</c>), handed to <paramref name="item"/> as it is read – for a
+    /// pass over all of them without keeping them (archives can have millions of entries).
+    /// </summary>
+    public async Task<BorgResult<long>> ListItemsAsync(
+        BorgInstallation borg, RepositoryLocation location, string archive, string? passphrase, Action<BorgItem> item, SshAccess? ssh = null,
+        CancellationToken cancellationToken = default)
+    {
+        long count = 0;
+        void OnLine(string line)
+        {
+            if (BorgItem.Parse(line) is not { } entry)
+                return;
+            count++;
+            item(entry);
+        }
+
+        var result = await RunAsync(borg, location, ssh, ["list"], ["--json-lines"], [], passphrase, CreateTimeout, cancellationToken,
+            archive, standardOutputLine: OnLine);
+        return result.Succeeded ? BorgResult<long>.Success(count) : BorgResult<long>.Failure(result.Error!);
     }
 
     /// <summary>
@@ -471,6 +496,20 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         // borg lists oldest first; borg 1.2 gives "list" times to the second only, so equal times keep borg's order.
         return [.. archives.Select((archive, index) => (archive, index))
             .OrderByDescending(entry => entry.archive.Start).ThenByDescending(entry => entry.index).Select(entry => entry.archive)];
+    }
+
+    /// <summary>
+    /// Where a path stored in an archive (without its leading slash) lives on this computer: "home/me/a.txt" →
+    /// "/home/me/a.txt", inside WSL "mnt/c/Users/me/a.txt" → "C:\Users\me\a.txt"; <c>null</c> for paths WSL keeps elsewhere.
+    /// </summary>
+    public static string? LocalPath(BorgInstallation borg, string archivePath)
+    {
+        if (borg.Runtime != BorgRuntime.Wsl)
+            return "/" + archivePath.TrimStart('/');
+        var match = WslDrivePath().Match(archivePath.TrimStart('/'));
+        return match.Success
+            ? $"{char.ToUpperInvariant(match.Groups["drive"].Value[0])}:\\{match.Groups["rest"].Value.Replace('/', '\\')}"
+            : null;
     }
 
     /// <summary>A path on this computer as borg sees it: unchanged, or "/mnt/c/…" inside WSL (<c>null</c> if WSL cannot reach it).</summary>
@@ -988,6 +1027,9 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
 
     [GeneratedRegex(@"^(?<drive>[A-Za-z]):[\\/]?(?<rest>.*)$", RegexOptions.CultureInvariant)]
     private static partial Regex DrivePath();
+
+    [GeneratedRegex("^mnt/(?<drive>[a-zA-Z])/(?<rest>.*)$", RegexOptions.CultureInvariant)]
+    private static partial Regex WslDrivePath();
 
     [GeneratedRegex("^[0-9a-fA-F]{8,}$", RegexOptions.CultureInvariant)]
     private static partial Regex SafeRepositoryId();

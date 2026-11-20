@@ -19,6 +19,9 @@ public enum RunPhase
 
     /// <summary>borg check after the backup.</summary>
     Checking,
+
+    /// <summary>Restoring the newest archive on trial (with a check, or by hand).</summary>
+    RestoreTesting,
 }
 
 /// <summary>
@@ -35,15 +38,35 @@ public sealed partial class BackupRunViewModel : ObservableObject
     private readonly DateTimeOffset _started;
     private readonly Queue<(DateTimeOffset At, long Original, long Deduplicated)> _samples = new();
 
-    public BackupRunViewModel(BackupJob job, TimeProvider? time = null, bool cleanupOnly = false)
+    public BackupRunViewModel(BackupJob job, TimeProvider? time = null, bool cleanupOnly = false, bool restoreTestOnly = false)
     {
         _time = time ?? TimeProvider.System;
         _started = _time.GetUtcNow();
         JobId = job.Id;
         JobName = job.Name;
         IsCleanupOnly = cleanupOnly;
-        Phase = cleanupOnly ? RunPhase.Previewing : RunPhase.Backup;
+        IsRestoreTestOnly = restoreTestOnly;
+        Phase = restoreTestOnly ? RunPhase.RestoreTesting : cleanupOnly ? RunPhase.Previewing : RunPhase.Backup;
         PhaseProgress = new ProgressViewModel(_time);
+    }
+
+    /// <summary>A restore test started by hand, without a backup.</summary>
+    public bool IsRestoreTestOnly { get; }
+
+    /// <summary>The outcome of a restore test started by hand, once finished.</summary>
+    [ObservableProperty]
+    public partial Core.Checks.RestoreTestRecord? RestoreTest { get; private set; }
+
+    partial void OnRestoreTestChanged(Core.Checks.RestoreTestRecord? value) => OnResultChanged();
+
+    /// <summary>Ends a restore test started by hand.</summary>
+    public void FinishRestoreTest(Core.Checks.RestoreTestRecord record)
+    {
+        PhaseProgress.Stop();
+        Tick();
+        RestoreTest = record;
+        IsRunning = false;
+        IsCancelling = false;
     }
 
     public Guid JobId { get; }
@@ -53,7 +76,9 @@ public sealed partial class BackupRunViewModel : ObservableObject
     /// <summary>Cleaning up by hand, without a backup.</summary>
     public bool IsCleanupOnly { get; }
 
-    public string Title => IsCleanupOnly ? BorgTexts.Format(Strings.CleanupTitle, JobName) : JobName;
+    public string Title => IsCleanupOnly ? BorgTexts.Format(Strings.CleanupTitle, JobName)
+        : IsRestoreTestOnly ? BorgTexts.Format(Strings.RestoreTestTitle, JobName)
+        : JobName;
 
     public DateTimeOffset Started => _started;
 
@@ -148,14 +173,17 @@ public sealed partial class BackupRunViewModel : ObservableObject
             RunPhase.Pruning => Strings.CleanupPruning,
             RunPhase.Compacting => Strings.CleanupCompacting,
             RunPhase.Checking => Strings.CheckWorking,
+            RunPhase.RestoreTesting => Strings.RestoreTestWorking,
             _ => Strings.BackupRunning,
         }
+        : RestoreTest is { } test ? BorgTexts.RestoreTestOutcome(test.Outcome)
         : Cleanup is { } cleanup ? cleanup.Error is not null ? Strings.OutcomeFailed
             : cleanup.Cancelled ? Strings.OutcomeCancelled : Strings.CleanupDone
         : Summary is { } summary ? BorgTexts.BackupOutcome(summary.Outcome) : "";
 
     /// <summary>The outcome in words (with the clean-up, if any), once finished.</summary>
-    public string? ResultText => Cleanup is { } cleanup ? BorgTexts.Cleanup(cleanup)
+    public string? ResultText => RestoreTest is { } test ? BorgTexts.RestoreTestDetails(test)
+        : Cleanup is { } cleanup ? BorgTexts.Cleanup(cleanup)
         : BackupResultText is not { } backup ? null
         : Summary?.Cleanup is { } afterBackup ? backup + "\n" + BorgTexts.Cleanup(afterBackup)
         : backup;

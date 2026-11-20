@@ -50,7 +50,8 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
     /// What followed the backup: the repository's storage, measured now (<c>null</c> if that did not work), and its check
     /// (<c>null</c> if none was due).
     /// </summary>
-    private sealed record MeasuredStorage(RepositoryConfig Repository, StorageUsage? Usage, Core.Checks.CheckRecord? Check = null);
+    private sealed record MeasuredStorage(RepositoryConfig Repository, StorageUsage? Usage, Core.Checks.CheckRecord? Check = null,
+        IReadOnlyList<(BackupJob Job, Core.Checks.RestoreTestRecord Record)>? RestoreTests = null);
 
     /// <summary>Reports the run – and the storage, if it was measured – through the notification channels; their secrets may be in the vault.</summary>
     private async Task NotifyAsync(BackupJob job, BackupRunSummary summary, MeasuredStorage? storage)
@@ -65,6 +66,8 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
                 await notifications.NotifyStorageAsync(storage.Repository, storage.Usage, services.Vault);
             if (storage?.Check is { } check)
                 await notifications.NotifyCheckAsync(storage.Repository, check, services.Vault);
+            foreach (var (tested, test) in storage?.RestoreTests ?? [])
+                await notifications.NotifyRestoreTestAsync(tested, storage!.Repository.Name, test, services.Vault);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -90,10 +93,11 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
         // How full the storage is now (for the overview and the "almost full" notification).
         var usage = await MeasureStorageAsync(services, repository, access.Borg, access.Location, access.Passphrase, access.Ssh, result.Repository);
         // Checked after the backup, if it is due (the repository is reachable now anyway).
+        var checks = new RepositoryChecks(services);
         var check = result.Summary.Outcome is BackupOutcome.Succeeded or BackupOutcome.Warnings
-            ? await new RepositoryChecks(services).CheckAfterBackupAsync(repository, access, report, cancellationToken)
+            ? await checks.CheckAfterBackupAsync(repository, access, report, cancellationToken)
             : null;
-        return (result, new MeasuredStorage(repository, usage, check));
+        return (result, new MeasuredStorage(repository, usage, check, checks.LastRestoreTests));
     }
 
     /// <summary>

@@ -2898,4 +2898,115 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
   <data name="DashCheckOverdue" xml:space="preserve">
     <value>Prüfung überfällig</value>
   </data>
+  <data name="ScheduleMonthlyWeekdayText" xml:space="preserve">
+    <value>Monatlich am {0} {1}, {2}</value>
+  </data>
+  <data name="ScheduleMonthlyDayText" xml:space="preserve">
+    <value>Monatlich am {0}, {1}</value>
+  </data>
+  <data name="RestoreTestWorking" xml:space="preserve">
+    <value>Wiederherstellung wird getestet …</value>
+  </data>
+  <data name="RestoreTestTitle" xml:space="preserve">
+    <value>Test-Wiederherstellung: {0}</value>
+  </data>
+  <data name="RestoreTestNoArchive" xml:space="preserve">
+    <value>Der Job hat noch keine Sicherung.</value>
+  </data>
+  <data name="RestoreTestOk" xml:space="preserve">
+    <value>erfolgreich</value>
+  </data>
+  <data name="RestoreTestFailed" xml:space="preserve">
+    <value>fehlgeschlagen</value>
+  </data>
+  <data name="RestoreTestNotRun" xml:space="preserve">
+    <value>konnte nicht laufen</value>
+  </data>
+  <data name="RestoreTestWholeArchive" xml:space="preserve">
+    <value>ganzes Archiv gelesen</value>
+  </data>
+  <data name="RestoreTestFiles" xml:space="preserve">
+    <value>{0} Dateien ({1})</value>
+  </data>
+  <data name="RestoreTestFilesCompared" xml:space="preserve">
+    <value>{0} Dateien ({1}), {2} verglichen</value>
+  </data>
+  <data name="RestoreTestLine" xml:space="preserve">
+    <value>Test-Wiederherstellung {0}: {1} – {2}</value>
+  </data>
+  <data name="RestoreTestLineShort" xml:space="preserve">
+    <value>Test-Wiederherstellung {0}: {1}</value>
+  </data>
+  <data name="RestoredFileDifferent" xml:space="preserve">
+    <value>Weicht von der unveränderten Quelle ab: {0}</value>
+  </data>
+  <data name="RestoredFileMissing" xml:space="preserve">
+    <value>Nicht vollständig wiederhergestellt: {0}</value>
+  </data>
+  <data name="NotifyTitleRestoreTestFailed" xml:space="preserve">
+    <value>Test-Wiederherstellung fehlgeschlagen: {0}</value>
+  </data>
+  <data name="NotifyTitleRestoreTestNotRun" xml:space="preserve">
+    <value>Test-Wiederherstellung konnte nicht laufen: {0}</value>
+  </data>
+  <data name="NotifyTitleRestoreTestRecovered" xml:space="preserve">
+    <value>Test-Wiederherstellung wieder erfolgreich: {0}</value>
+  </data>
+  <data name="DashRestoreTestFailed" xml:space="preserve">
+    <value>{0}: Test-Wiederherstellung fehlgeschlagen</value>
+  </data>
+  <data name="DashRestoreTestNotRun" xml:space="preserve">
+    <value>{0}: Test-Wiederherstellung konnte nicht laufen</value>
+  </data>
+  <data name="RestoreTestModeOff" xml:space="preserve">
+    <value>Aus</value>
+  </data>
+  <data name="RestoreTestModeRead" xml:space="preserve">
+    <value>Stichprobe wiederherstellen</value>
+  </data>
+  <data name="RestoreTestModeCompare" xml:space="preserve">
+    <value>Stichprobe wiederherstellen und vergleichen</value>
+  </data>
+  <data name="RestoreTestModeWholeArchive" xml:space="preserve">
+    <value>Ganzes Archiv probelesen</value>
+  </data>
+  <data name="JobEditorRestoreTest" xml:space="preserve">
+    <value>Test-Wiederherstellung</value>
+  </data>
+  <data name="JobEditorRestoreTestFiles" xml:space="preserve">
+    <value>Dateien</value>
+  </data>
+  <data name="JobEditorRestoreTestHint" xml:space="preserve">
+    <value>Läuft mit den automatischen Prüfungen des Repositorys, wenn die Test-Wiederherstellung unter Extras → Einstellungen eingeschaltet ist. Eine Stichprobe wird in einen temporären Ordner wiederhergestellt und danach gelöscht; verglichen werden Dateien, die sich an der Quelle seitdem nicht geändert haben. Das ganze Archiv probezulesen lädt es vollständig herunter.</value>
+  </data>
+  <data name="JobTestRestore" xml:space="preserve">
+    <value>Wiederherstellung testen</value>
+  </data>
+  <data name="JobTestRestoreTip" xml:space="preserve">
+    <value>Stellt das neueste Archiv des Jobs probeweise wieder her (wie im Job eingestellt, sonst eine Stichprobe mit Vergleich)</value>
+  </data>
+  <data name="SettingsRestoreTestHeader" xml:space="preserve">
+    <value>Test-Wiederherstellung</value>
+  </data>
+  <data name="SettingsRestoreTestIntro" xml:space="preserve">
+    <value>Eine Sicherung ist nur so gut wie ihre Wiederherstellung: Mit den automatischen Prüfungen stellt BorgStudio das neueste Archiv der Jobs probeweise wieder her, die eine Test-Wiederherstellung eingestellt haben.</value>
+  </data>
+  <data name="SettingsRestoreTestEnabled" xml:space="preserve">
+    <value>Test-Wiederherstellung mit den automatischen Prüfungen ausführen</value>
+  </data>
+  <data name="SettingsRestoreTestTotal" xml:space="preserve">
+    <value>Stichprobe höchstens</value>
+  </data>
+  <data name="SettingsRestoreTestPerFile" xml:space="preserve">
+    <value>Je Datei höchstens</value>
+  </data>
+  <data name="SettingsRestoreTestComparison" xml:space="preserve">
+    <value>Byte für Byte verglichen werden Dateien, deren Quelle unverändert ist nach</value>
+  </data>
+  <data name="SettingsRestoreTestSizeAndTime" xml:space="preserve">
+    <value>Größe und Änderungszeit</value>
+  </data>
+  <data name="SettingsRestoreTestSizeOnly" xml:space="preserve">
+    <value>nur Größe (vergleicht mehr, meldet aber auch Dateien, die sich seitdem bei gleicher Größe geändert haben)</value>
+  </data>
 </root>

@@ -33,6 +33,9 @@ public sealed record AppSettings
 
     /// <summary>The incoming webhook that starts jobs (only in background mode).</summary>
     public Trigger.TriggerSettings Trigger { get; init; } = new();
+
+    /// <summary>Restore tests with the automatic checks: switched on, limits, comparison.</summary>
+    public Checks.RestoreTestSettings RestoreTest { get; init; } = new();
 }
 
 /// <summary>Who starts scheduled backups.</summary>

@@ -2918,4 +2918,115 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
   <data name="DashCheckOverdue" xml:space="preserve">
     <value>Check overdue</value>
   </data>
+  <data name="ScheduleMonthlyWeekdayText" xml:space="preserve">
+    <value>Monthly on the {0} {1}, {2}</value>
+  </data>
+  <data name="ScheduleMonthlyDayText" xml:space="preserve">
+    <value>Monthly on {0}, {1}</value>
+  </data>
+  <data name="RestoreTestWorking" xml:space="preserve">
+    <value>Restoring on trial …</value>
+  </data>
+  <data name="RestoreTestTitle" xml:space="preserve">
+    <value>Restore test: {0}</value>
+  </data>
+  <data name="RestoreTestNoArchive" xml:space="preserve">
+    <value>The job has no backup yet.</value>
+  </data>
+  <data name="RestoreTestOk" xml:space="preserve">
+    <value>successful</value>
+  </data>
+  <data name="RestoreTestFailed" xml:space="preserve">
+    <value>failed</value>
+  </data>
+  <data name="RestoreTestNotRun" xml:space="preserve">
+    <value>could not run</value>
+  </data>
+  <data name="RestoreTestWholeArchive" xml:space="preserve">
+    <value>whole archive read</value>
+  </data>
+  <data name="RestoreTestFiles" xml:space="preserve">
+    <value>{0} files ({1})</value>
+  </data>
+  <data name="RestoreTestFilesCompared" xml:space="preserve">
+    <value>{0} files ({1}), {2} compared</value>
+  </data>
+  <data name="RestoreTestLine" xml:space="preserve">
+    <value>Restore test {0}: {1} – {2}</value>
+  </data>
+  <data name="RestoreTestLineShort" xml:space="preserve">
+    <value>Restore test {0}: {1}</value>
+  </data>
+  <data name="RestoredFileDifferent" xml:space="preserve">
+    <value>Differs from the unchanged source: {0}</value>
+  </data>
+  <data name="RestoredFileMissing" xml:space="preserve">
+    <value>Not restored whole: {0}</value>
+  </data>
+  <data name="NotifyTitleRestoreTestFailed" xml:space="preserve">
+    <value>Restore test failed: {0}</value>
+  </data>
+  <data name="NotifyTitleRestoreTestNotRun" xml:space="preserve">
+    <value>Restore test could not run: {0}</value>
+  </data>
+  <data name="NotifyTitleRestoreTestRecovered" xml:space="preserve">
+    <value>Restore test successful again: {0}</value>
+  </data>
+  <data name="DashRestoreTestFailed" xml:space="preserve">
+    <value>{0}: restore test failed</value>
+  </data>
+  <data name="DashRestoreTestNotRun" xml:space="preserve">
+    <value>{0}: restore test could not run</value>
+  </data>
+  <data name="RestoreTestModeOff" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="RestoreTestModeRead" xml:space="preserve">
+    <value>Restore a sample</value>
+  </data>
+  <data name="RestoreTestModeCompare" xml:space="preserve">
+    <value>Restore a sample and compare it</value>
+  </data>
+  <data name="RestoreTestModeWholeArchive" xml:space="preserve">
+    <value>Read the whole archive</value>
+  </data>
+  <data name="JobEditorRestoreTest" xml:space="preserve">
+    <value>Restore test</value>
+  </data>
+  <data name="JobEditorRestoreTestFiles" xml:space="preserve">
+    <value>files</value>
+  </data>
+  <data name="JobEditorRestoreTestHint" xml:space="preserve">
+    <value>Runs with the repository's automatic checks, if restore tests are switched on under Tools → Settings. A sample is restored into a temporary folder and removed afterwards; compared are files unchanged at the source since. Reading the whole archive downloads it completely.</value>
+  </data>
+  <data name="JobTestRestore" xml:space="preserve">
+    <value>Test restore</value>
+  </data>
+  <data name="JobTestRestoreTip" xml:space="preserve">
+    <value>Restores the job's newest archive on trial (the job's restore test, or a sample compared with the source)</value>
+  </data>
+  <data name="SettingsRestoreTestHeader" xml:space="preserve">
+    <value>Restore test</value>
+  </data>
+  <data name="SettingsRestoreTestIntro" xml:space="preserve">
+    <value>A backup is only as good as its restore: with the automatic checks, BorgStudio restores the newest archive of the jobs that have a restore test on trial.</value>
+  </data>
+  <data name="SettingsRestoreTestEnabled" xml:space="preserve">
+    <value>Run restore tests with the automatic checks</value>
+  </data>
+  <data name="SettingsRestoreTestTotal" xml:space="preserve">
+    <value>A sample at most</value>
+  </data>
+  <data name="SettingsRestoreTestPerFile" xml:space="preserve">
+    <value>Each file at most</value>
+  </data>
+  <data name="SettingsRestoreTestComparison" xml:space="preserve">
+    <value>Compared byte by byte are files whose source is unchanged by</value>
+  </data>
+  <data name="SettingsRestoreTestSizeAndTime" xml:space="preserve">
+    <value>size and modification time</value>
+  </data>
+  <data name="SettingsRestoreTestSizeOnly" xml:space="preserve">
+    <value>size only (compares more, but also reports files changed since at the same size)</value>
+  </data>
 </root>

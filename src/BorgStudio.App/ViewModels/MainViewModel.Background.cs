@@ -216,6 +216,7 @@ public partial class MainViewModel
             vault.Lock();
         }
         RefreshChecks(repository.Id);
+        RefreshRepositoryJobs();
         RefreshDashboard();
     }
 

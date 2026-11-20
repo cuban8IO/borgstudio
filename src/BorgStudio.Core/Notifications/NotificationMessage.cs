@@ -25,6 +25,9 @@ public sealed record NotificationMessage(NotificationEvent Event, string Title, 
     /// <summary>The check it is about (check events).</summary>
     public Checks.CheckRecord? Check { get; init; }
 
+    /// <summary>The restore test it is about.</summary>
+    public Checks.RestoreTestRecord? RestoreTest { get; init; }
+
     /// <summary>Sent with the "Test" button.</summary>
     public bool IsTest { get; init; }
 

@@ -44,8 +44,14 @@ public partial class MainViewModel
     {
         if (!IsOverviewShown)
             return;
-        var repositories = Repositories.Select(item => new DashboardRepository(item,
-            [.. _jobs.Where(job => job.RepositoryId == item.Config.Id).Select(job => (job, Runner.History.Get(job.Id)))])).ToList();
+        var tests = RestoreTestStore;
+        var repositories = Repositories.Select(item =>
+        {
+            var jobs = _jobs.Where(job => job.RepositoryId == item.Config.Id).ToList();
+            return new DashboardRepository(item, [.. jobs.Select(job => (job, Runner.History.Get(job.Id)))],
+                jobs.Select(job => (job.Id, Test: tests.Get(job.Id).FirstOrDefault())).Where(entry => entry.Test is not null)
+                    .ToDictionary(entry => entry.Id, entry => entry.Test!));
+        }).ToList();
         Dashboard = new DashboardViewModel(repositories, DateTimeOffset.Now, OpenRepository);
     }
 

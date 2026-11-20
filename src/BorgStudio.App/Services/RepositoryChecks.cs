@@ -23,6 +23,14 @@ public sealed class RepositoryChecks(AppServices services)
 
     public RepositoryCheckStore Store => RepositoryCheckStore.ForDataDirectory(services.Jobs.DataDirectory);
 
+    public RestoreTestStore RestoreTests => RestoreTestStore.ForDataDirectory(services.Jobs.DataDirectory);
+
+    /// <summary>The restore tests the last automatic check ran (for the jobs on the repository that have one).</summary>
+    public IReadOnlyList<(BackupJob Job, RestoreTestRecord Record)> LastRestoreTests { get; private set; } = [];
+
+    /// <summary>Where samples are restored to; tests point it elsewhere.</summary>
+    public static string TemporaryRoot { get; set; } = Path.GetTempPath();
+
     /// <summary>After a backup: a normal check if the repository's policy says one is due; <c>null</c> if not.</summary>
     public async Task<CheckRecord?> CheckAfterBackupAsync(RepositoryConfig repository, UnattendedAccess access, IBackupRunReport? report,
         CancellationToken cancellationToken = default)
@@ -60,7 +68,10 @@ public sealed class RepositoryChecks(AppServices services)
             try
             {
                 runner.OpenVaultIfLocked();
-                await new RunNotifications(services).NotifyCheckAsync(repository, record, services.Vault, cancellationToken);
+                var notifications = new RunNotifications(services);
+                await notifications.NotifyCheckAsync(repository, record, services.Vault, cancellationToken);
+                foreach (var (job, test) in LastRestoreTests)
+                    await notifications.NotifyRestoreTestAsync(job, repository.Name, test, services.Vault, cancellationToken);
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
@@ -99,10 +110,74 @@ public sealed class RepositoryChecks(AppServices services)
             if (result.Succeeded)
                 services.Durations.Record(key, duration);
             record = ToRecord(depth, started, duration, result);
+            // With an automatic check, the jobs' restore tests – while the repository is still locked for this.
+            if (automatic && record.IsVerdict)
+            {
+                Store.Add(repository.Id, record with { Automatic = true });
+                LastRestoreTests = await RunRestoreTestsAsync(repository, access, report, cancellationToken);
+                return record with { Automatic = true };
+            }
         }
         record = record with { Automatic = automatic };
         Store.Add(repository.Id, record);
         return record;
+    }
+
+    /// <summary>
+    /// The restore tests of the jobs on <paramref name="repository"/> that have one – if restore tests are switched on at
+    /// all. Each restores the job's newest archive on trial; the outcome is kept with the job.
+    /// </summary>
+    private async Task<IReadOnlyList<(BackupJob Job, RestoreTestRecord Record)>> RunRestoreTestsAsync(RepositoryConfig repository,
+        UnattendedAccess access, IBackupRunReport? report, CancellationToken cancellationToken)
+    {
+        var settings = services.Settings.Load().RestoreTest;
+        if (!settings.Enabled)
+            return [];
+        var results = new List<(BackupJob, RestoreTestRecord)>();
+        foreach (var job in services.Jobs.Load().Where(job => job.RepositoryId == repository.Id && job.RestoreTest != RestoreTestMode.Off))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var record = await TestRestoreAsync(job, access, job.RestoreTest, settings, automatic: true, report, cancellationToken);
+            results.Add((job, record));
+        }
+        return results;
+    }
+
+    /// <summary>
+    /// Restores the job's newest archive on trial and keeps the outcome with the job. The caller holds the repository
+    /// (no lock is taken here). Progress goes to <paramref name="report"/>.
+    /// </summary>
+    public async Task<RestoreTestRecord> TestRestoreAsync(BackupJob job, UnattendedAccess access, RestoreTestMode mode,
+        RestoreTestSettings settings, bool automatic, IBackupRunReport? report, CancellationToken cancellationToken = default)
+    {
+        RestoreTestRecord record;
+        if (NewestArchive(job) is not { } archive)
+        {
+            record = new RestoreTestRecord(DateTimeOffset.Now, TimeSpan.Zero, mode, RestoreTestOutcome.NotRun) { Error = Strings.RestoreTestNoArchive };
+        }
+        else
+        {
+            report?.PhaseStarted(BackupRunPhase.RestoreTesting, services.Durations.Get(DurationHistory.Key(job.Id, "restore-test")));
+            var progress = report is null ? null : new FractionProgress(report.PhaseProgress);
+            record = await new RestoreTester(services.BorgClient, BorgTexts.Describe).RunAsync(access.Borg, access.Location, archive,
+                access.Passphrase, access.Ssh, mode, job.RestoreTestFiles, settings, TemporaryRoot, progress, cancellationToken: cancellationToken);
+            if (record.Outcome is RestoreTestOutcome.Ok or RestoreTestOutcome.Failed)
+                services.Durations.Record(DurationHistory.Key(job.Id, "restore-test"), record.Duration);
+        }
+        record = record with { Automatic = automatic };
+        RestoreTests.Add(job.Id, record);
+        return record;
+    }
+
+    /// <summary>The archive of the job's newest backup that worked; <c>null</c> if it has none.</summary>
+    private string? NewestArchive(BackupJob job) =>
+        new BackupRunHistory(Path.Combine(services.Jobs.DataDirectory, "history")).Get(job.Id).Append(job.LastRun).OfType<BackupRunSummary>()
+            .Where(run => run.Outcome is BackupOutcome.Succeeded or BackupOutcome.Warnings && run.ArchiveName is not null)
+            .MaxBy(run => run.Started)?.ArchiveName;
+
+    private sealed class FractionProgress(Action<double> report) : IProgress<double>
+    {
+        public void Report(double value) => report(value);
     }
 
     private async Task<RepositoryLock?> AcquireLockAsync(Guid repositoryId, TimeSpan wait, CancellationToken cancellationToken)
