@@ -53,7 +53,8 @@ public partial class MainViewModel
                 run.StartPhase(RunPhase.RestoreTesting);
                 var mode = job.RestoreTest == RestoreTestMode.Off ? RestoreTestMode.Compare : job.RestoreTest;
                 record = await Task.Run(() => new RepositoryChecks(_services).TestRestoreAsync(job,
-                    new UnattendedAccess(borg, location, passphrase.Value, ssh.Access), mode, Settings.RestoreTest, automatic: false,
+                    new UnattendedAccess(borg, location, passphrase.Value, ssh.Access, Throttle(item.Config, location)), mode, Settings.RestoreTest,
+                    automatic: false,
                     new RunReport(this, run), cancellation.Token));
             }
         }

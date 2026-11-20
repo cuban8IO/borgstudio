@@ -99,6 +99,19 @@ public sealed class FakeBorg : IProcessRunner
         if (fileName == "sh" && arguments is ["-c", var script, "sh", ..])
             return MountShell(script, arguments.Skip(3).ToList(), wsl);
 
+        // Low priority: borg runs under "nice -n 10" (inside the sh wrapper, or on its own).
+        if (fileName == "sh" && arguments is ["-c", _, "nice", "-n", _, BorgPath, ..])
+        {
+            NiceCalls.Add(arguments[6]);
+            arguments = [arguments[0], arguments[1], .. arguments.Skip(5)];
+        }
+        else if (fileName == "nice" && arguments is ["-n", _, BorgPath, ..])
+        {
+            NiceCalls.Add(arguments[3]);
+            fileName = BorgPath;
+            arguments = arguments.Skip(3).ToList();
+        }
+
         // Interruptible calls run borg through a small sh wrapper (on Linux/macOS).
         if (fileName == "sh" && arguments is ["-c", _, BorgPath, ..])
         {
@@ -370,6 +383,9 @@ public sealed class FakeBorg : IProcessRunner
             $$"""{"type": "log_message", "time": 0, "message": "compaction freed about {{CompactFreed}} repository space.", "levelname": "INFO", "name": "borg.repository"}""");
         return Result(0, "");
     }
+
+    /// <summary>The borg commands that ran under nice (low priority).</summary>
+    public List<string> NiceCalls { get; } = [];
 
     /// <summary>When set, "break-lock" fails with this message id.</summary>
     public string? BreakLockError { get; set; }

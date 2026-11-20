@@ -61,7 +61,8 @@ public partial class MainViewModel
                      || cancellation.IsCancellationRequested)
                 cleanup = new CleanupSummary { Cancelled = true };
             else
-                cleanup = await Runner.PruneAndCompactAsync(new BackupRunRequest(borg, location, job, passphrase.Value, ssh.Access),
+                cleanup = await Runner.PruneAndCompactAsync(new BackupRunRequest(borg, location, job, passphrase.Value, ssh.Access,
+                        Throttle: Throttle(item.Config, location)),
                     retention, new RunReport(this, run), cancellation.Token);
         }
         finally
@@ -99,7 +100,8 @@ public partial class MainViewModel
         // Progress after borg has finished is ignored (the panel is stopped then).
         var progress = new ViewModelProgress<double>(this, fraction => Work.Report(fraction));
         var result = await RunAsync(item, Strings.CleanupCompacting, "compact",
-            () => _services.BorgClient.CompactAsync(borg, location, ssh.Access, progress, cancellation.Token), cancellation.Cancel);
+            () => _services.BorgClient.CompactAsync(borg, location, ssh.Access, progress, cancellation.Token, Throttle(item.Config, location)),
+            cancellation.Cancel);
 
         if (result.Value is { } compacted)
             item.ShowResult(compacted.FreedBytes is { } freed ? BorgTexts.Format(Strings.SpaceFreed, BorgTexts.Size(freed)) : Strings.SpaceFreedNoSize,

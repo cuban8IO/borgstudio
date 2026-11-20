@@ -78,12 +78,14 @@ public partial class MainViewModel
         }
 
         var borg = Borg!;
+        var throttle = Throttle(item.Config, location);
         var record = await RunCheckAsync(item, depth, ct => _services.BorgClient.CheckAsync(borg, location, depth, passphrase.Value, ssh.Access,
-            new ViewModelProgress<BorgCheckProgress>(this, update => ReportCheck(depth, update)), ct));
+            new ViewModelProgress<BorgCheckProgress>(this, update => ReportCheck(depth, update)), ct, throttle));
         // A repair is followed by a normal check: only that tells whether the repository is sound again.
         if (record.Outcome == CheckOutcome.Repaired)
             record = await RunCheckAsync(item, CheckDepth.Normal, ct => _services.BorgClient.CheckAsync(borg, location, CheckDepth.Normal,
-                passphrase.Value, ssh.Access, new ViewModelProgress<BorgCheckProgress>(this, update => ReportCheck(CheckDepth.Normal, update)), ct));
+                passphrase.Value, ssh.Access, new ViewModelProgress<BorgCheckProgress>(this, update => ReportCheck(CheckDepth.Normal, update)), ct,
+                throttle));
 
         item.ShowResult(ResultText(record), isError: record.Outcome is CheckOutcome.ProblemsFound or CheckOutcome.Failed);
         RefreshDashboard();

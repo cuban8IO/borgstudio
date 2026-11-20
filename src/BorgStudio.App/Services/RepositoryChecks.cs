@@ -105,7 +105,7 @@ public sealed class RepositoryChecks(AppServices services)
             report?.PhaseStarted(BackupRunPhase.Checking, services.Durations.Get(key));
             var progress = report is null ? null : new Progress(update => report.PhaseProgress(Overall(depth, update)));
             var result = await services.BorgClient.CheckAsync(access.Borg, access.Location, depth, access.Passphrase, access.Ssh, progress,
-                cancellationToken);
+                cancellationToken, access.Throttle);
             var duration = DateTimeOffset.Now - started;
             if (result.Succeeded)
                 services.Durations.Record(key, duration);
@@ -160,7 +160,8 @@ public sealed class RepositoryChecks(AppServices services)
             report?.PhaseStarted(BackupRunPhase.RestoreTesting, services.Durations.Get(DurationHistory.Key(job.Id, "restore-test")));
             var progress = report is null ? null : new FractionProgress(report.PhaseProgress);
             record = await new RestoreTester(services.BorgClient, BorgTexts.Describe).RunAsync(access.Borg, access.Location, archive,
-                access.Passphrase, access.Ssh, mode, job.RestoreTestFiles, settings, TemporaryRoot, progress, cancellationToken: cancellationToken);
+                access.Passphrase, access.Ssh, mode, job.RestoreTestFiles, settings, TemporaryRoot, progress, cancellationToken: cancellationToken,
+                throttle: access.Throttle);
             if (record.Outcome is RestoreTestOutcome.Ok or RestoreTestOutcome.Failed)
                 services.Durations.Record(DurationHistory.Key(job.Id, "restore-test"), record.Duration);
         }

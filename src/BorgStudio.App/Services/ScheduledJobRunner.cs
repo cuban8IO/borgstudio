@@ -86,7 +86,8 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
         if (access is null)
             return (NotRun(job, problem!.Value, problem == BackupSkipReason.PassphraseAsked ? BackupOutcome.Skipped : BackupOutcome.Failed), null);
 
-        var result = await _runner.RunAsync(new BackupRunRequest(access.Borg, access.Location, job, access.Passphrase, access.Ssh, Scheduled: true),
+        var result = await _runner.RunAsync(new BackupRunRequest(access.Borg, access.Location, job, access.Passphrase, access.Ssh, Scheduled: true,
+                Throttle: access.Throttle),
             report, cancellationToken);
         if (result.Summary.SkipReason == BackupSkipReason.RepositoryBusy)
             return (result, null);
@@ -135,7 +136,7 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
                 return (null, BackupSkipReason.HostUnknown);
             ssh = new SshAccess(key.PrivateKey, services.SshKeys.KnownHostsFile);
         }
-        return (new UnattendedAccess(borg, location, passphrase, ssh), null);
+        return (new UnattendedAccess(borg, location, passphrase, ssh, repository.Limits.ThrottleAt(DateTime.Now, location.Ssh is not null)), null);
     }
 
     /// <summary>
@@ -227,4 +228,6 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
 }
 
 /// <summary>What a run without window works with: borg, the repository's location, its passphrase and SSH login.</summary>
-public sealed record UnattendedAccess(BorgInstallation Borg, RepositoryLocation Location, string? Passphrase, SshAccess? Ssh);
+/// <param name="Throttle">The repository's limits for runs starting now.</param>
+public sealed record UnattendedAccess(BorgInstallation Borg, RepositoryLocation Location, string? Passphrase, SshAccess? Ssh,
+    BorgThrottle? Throttle = null);

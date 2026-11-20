@@ -3122,4 +3122,28 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
   <data name="JobEditorHooksHint" xml:space="preserve">
     <value>Runs with every backup of the job – by hand, scheduled and through the webhook – without time limit. Environment variables: BORGSTUDIO_JOB, BORGSTUDIO_REPOSITORY, BORGSTUDIO_SCHEDULED; after the backup also BORGSTUDIO_OUTCOME (succeeded, warnings, failed, cancelled) and BORGSTUDIO_ARCHIVE. The whole output goes to logs/hooks.log in the data folder.</value>
   </data>
+  <data name="EditorLimits" xml:space="preserve">
+    <value>Limits</value>
+  </data>
+  <data name="EditorUploadLimit" xml:space="preserve">
+    <value>Limit uploads to</value>
+  </data>
+  <data name="EditorUploadOnlyBetween" xml:space="preserve">
+    <value>only for backups starting between</value>
+  </data>
+  <data name="EditorUploadAnd" xml:space="preserve">
+    <value>and</value>
+  </data>
+  <data name="EditorUploadLimitHint" xml:space="preserve">
+    <value>borg's --upload-ratelimit: leaves room on the connection for others. Without the time window it always applies; a window ending before it starts runs over midnight (e.g. 22:00–06:00).</value>
+  </data>
+  <data name="EditorUploadLimitLocal" xml:space="preserve">
+    <value>borg can limit only uploads to a server – not writing to a disk or a network share. There, low priority helps.</value>
+  </data>
+  <data name="EditorLowPriority" xml:space="preserve">
+    <value>Low priority: other programs go first</value>
+  </data>
+  <data name="EditorLowPriorityHint" xml:space="preserve">
+    <value>borg runs with nice (Linux and WSL: also for the disk). The computer stays responsive, backups take longer. No fixed rate.</value>
+  </data>
 </root>

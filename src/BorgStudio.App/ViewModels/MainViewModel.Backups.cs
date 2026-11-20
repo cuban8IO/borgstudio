@@ -191,12 +191,14 @@ public partial class MainViewModel
         var borg = Borg!;
         Core.Checks.CheckRecord? check = null;
         var checks = new RepositoryChecks(_services);
+        var throttle = Throttle(item.Config, location);
         var result = await RunWithCardAsync(job, async (report, cancellationToken) =>
         {
-            var backup = await Runner.RunAsync(new BackupRunRequest(borg, location, job, passphrase.Value, ssh.Access), report, cancellationToken);
+            var backup = await Runner.RunAsync(new BackupRunRequest(borg, location, job, passphrase.Value, ssh.Access, Throttle: throttle), report,
+                cancellationToken);
             // Checked after the backup, if the repository's policy says one is due (with the jobs' restore tests).
             if (backup.Summary.Outcome is BackupOutcome.Succeeded or BackupOutcome.Warnings)
-                check = await checks.CheckAfterBackupAsync(item.Config, new UnattendedAccess(borg, location, passphrase.Value, ssh.Access), report,
+                check = await checks.CheckAfterBackupAsync(item.Config, new UnattendedAccess(borg, location, passphrase.Value, ssh.Access, throttle), report,
                     cancellationToken);
             return backup;
         });
@@ -212,6 +214,10 @@ public partial class MainViewModel
         foreach (var (tested, test) in checks.LastRestoreTests)
             await NotifyRestoreTestAsync(tested, item.Name, test);
     }
+
+    /// <summary>The repository's limits for a run starting now (the upload limit only for a server).</summary>
+    private static Core.Repositories.BorgThrottle Throttle(Core.Repositories.RepositoryConfig repository, Plugins.RepositoryLocation location) =>
+        repository.Limits.ThrottleAt(DateTime.Now, location.Ssh is not null);
 
     /// <summary>
     /// Runs a backup with its card in the window: progress, the expected total, cancelling. The window's own runs and the

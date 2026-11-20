@@ -515,6 +515,22 @@ public sealed class BorgClientIntegrationTests : IDisposable
         Assert.True((await _client.ListArchivesAsync(Borg, Location(), Passphrase)).Succeeded);
     }
 
+    [BorgFact]
+    public async Task Backs_up_with_low_priority_and_an_upload_limit()
+    {
+        await _client.InitAsync(Borg, Location(), BorgEncryption.RepokeyBlake2, Passphrase);
+        var source = _directory.Combine("source");
+        Directory.CreateDirectory(source);
+        File.WriteAllText(Path.Combine(source, "a.txt"), "hello");
+
+        // borg takes the limit for any repository (it only matters for servers) and runs under nice.
+        var created = await _client.CreateAsync(Borg, Location(), "limited", [source], [], Passphrase,
+            throttle: new Core.Repositories.BorgThrottle(1024, LowPriority: true));
+
+        Assert.True(created.Succeeded, created.Error?.ToString());
+        Assert.Equal("limited", created.Value!.ArchiveName);
+    }
+
     /// <summary>Calls the progress callback right away (Progress&lt;T&gt; would post it to a thread pool).</summary>
     private sealed class SynchronousProgress<T>(Action<T> report) : IProgress<T>
     {

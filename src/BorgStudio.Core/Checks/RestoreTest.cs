@@ -224,7 +224,7 @@ public sealed class RestoreTester(BorgClient client, Func<BorgError, string>? de
     /// <param name="progress">0..1 while restoring.</param>
     public async Task<RestoreTestRecord> RunAsync(BorgInstallation borg, RepositoryLocation location, string archive, string? passphrase,
         SshAccess? ssh, RestoreTestMode mode, int files, RestoreTestSettings settings, string temporaryRoot,
-        IProgress<double>? progress = null, Random? random = null, CancellationToken cancellationToken = default)
+        IProgress<double>? progress = null, Random? random = null, CancellationToken cancellationToken = default, BorgThrottle? throttle = null)
     {
         var started = DateTimeOffset.Now;
         RestoreTestRecord Record(RestoreTestOutcome outcome) => new(started, DateTimeOffset.Now - started, mode, outcome) { Archive = archive };
@@ -237,7 +237,7 @@ public sealed class RestoreTester(BorgClient client, Func<BorgError, string>? de
         if (mode == RestoreTestMode.WholeArchive)
         {
             var read = await client.ExtractAsync(borg, location, archive, [], temporaryRoot, 0, passphrase, ssh, extractProgress, cancellationToken,
-                dryRun: true);
+                dryRun: true, throttle: throttle);
             return read switch
             {
                 { Value.Warnings.Count: > 0 } => Record(RestoreTestOutcome.Failed) with { Error = string.Join("\n", read.Value.Warnings.Take(20)) },
@@ -259,7 +259,7 @@ public sealed class RestoreTester(BorgClient client, Func<BorgError, string>? de
         try
         {
             var restored = await client.ExtractAsync(borg, location, archive, [.. picked.Select(item => item.Path)], target, 0, passphrase, ssh,
-                extractProgress, cancellationToken);
+                extractProgress, cancellationToken, throttle: throttle);
             if (!restored.Succeeded && restored.Error!.Kind != BorgErrorKind.Other)
                 return Failure(Record, restored.Error);
 

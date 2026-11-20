@@ -69,6 +69,9 @@ public sealed record RepositoryConfig
     /// </summary>
     public long? StorageCapacity { get; init; }
 
+    /// <summary>How much its backups may take of the connection and of this computer.</summary>
+    public TransferLimits Limits { get; init; } = new();
+
     /// <summary>When the repository is checked by itself (<c>borg check</c>).</summary>
     public Checks.CheckPolicy Check { get; init; } = new();
 
