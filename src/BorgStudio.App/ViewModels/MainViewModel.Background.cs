@@ -30,6 +30,9 @@ public partial class MainViewModel
 
     private readonly Queue<QueuedRun> _dueJobs = new();
 
+    /// <summary>Repositories whose scheduled check is due (run after the due jobs).</summary>
+    private readonly Queue<Guid> _dueChecks = new();
+
     /// <summary>Who waits for a job's next run to finish (the webhook with ?wait=1).</summary>
     private readonly Dictionary<Guid, List<TaskCompletionSource<BackupRunSummary?>>> _runWaiters = [];
     private DateTime? _lastScheduleLook;
@@ -117,6 +120,16 @@ public partial class MainViewModel
                 if (due && !_dueJobs.Any(queued => queued.JobId == job.Id))
                     _dueJobs.Enqueue(new QueuedRun(job.Id, Triggered: false));
             }
+            var checks = CheckStore;
+            foreach (var repository in Repositories.Select(item => item.Config).Where(config => config.Check.IsScheduled))
+            {
+                var policy = repository.Check;
+                var due = since is { } last
+                    ? ScheduleCalendar.IsDue(policy.Schedules, policy.CatchUp, last, now)
+                    : ScheduleCalendar.IsMissed(policy.Schedules, policy.CatchUp, checks.Get(repository.Id).FirstOrDefault()?.Started.LocalDateTime, now);
+                if (due && !_dueChecks.Contains(repository.Id))
+                    _dueChecks.Enqueue(repository.Id);
+            }
             StartDueJobs();
         }
         // The daily check (summary, overdue jobs) – also while the schedules are paused.
@@ -153,7 +166,7 @@ public partial class MainViewModel
 
     private void StartDueJobs()
     {
-        if (_dueJobs.Count > 0 && !_runningDueJobs)
+        if ((_dueJobs.Count > 0 || _dueChecks.Count > 0) && !_runningDueJobs)
             _dueJobsRun = RunDueJobsAsync();
     }
 
@@ -162,25 +175,66 @@ public partial class MainViewModel
         _runningDueJobs = true;
         try
         {
-            while (_dueJobs.TryDequeue(out var queued))
+            do
             {
-                // A backup started in the window goes first.
-                while (IsBackupRunning)
-                    await Task.WhenAny(BackupFinished, Task.Delay(TimeSpan.FromSeconds(2)));
-                var job = _jobs.FirstOrDefault(candidate => candidate.Id == queued.JobId);
-                BackupRunSummary? summary = null;
-                if (job is not null && (queued.Triggered || (job.IsScheduled && !Settings.SchedulesPaused)))
+                await RunQueuedJobsAsync();
+                // The checks after the backups: they wait for the repository anyway.
+                while (_dueJobs.Count == 0 && _dueChecks.TryDequeue(out var repositoryId))
                 {
-                    var run = RunScheduledAsync(job);
-                    _backupTask = run;
-                    summary = await run;
+                    while (IsBackupRunning)
+                        await Task.WhenAny(BackupFinished, Task.Delay(TimeSpan.FromSeconds(2)));
+                    if (!Settings.SchedulesPaused && Repositories.FirstOrDefault(item => item.Config.Id == repositoryId) is { } item)
+                        await RunScheduledCheckAsync(item.Config);
                 }
-                FinishWaiters(queued.JobId, summary);
             }
+            while (_dueJobs.Count > 0 || _dueChecks.Count > 0);
         }
         finally
         {
             _runningDueJobs = false;
+        }
+    }
+
+    /// <summary>A scheduled check in the background: without questions, recorded and reported; the overview follows.</summary>
+    private async Task RunScheduledCheckAsync(Core.Repositories.RepositoryConfig repository)
+    {
+        var vault = OpenVaultCopy(scheduledAccess: false);
+        var services = _services with { Vault = vault };
+        try
+        {
+            var record = await Task.Run(() => new RepositoryChecks(services).RunScheduledAsync(repository,
+                new ScheduledAccess(vault, _services.SecretStore, ScheduledAccess.FallbackFile)));
+            ScheduledRun.Log($"{repository.Name} (background check): {record.Outcome}{(record.Error is null ? "" : $" – {record.Error}")}",
+                _services.Jobs.DataDirectory);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            ScheduledRun.Log($"{repository.Name} (background check): {exception}", _services.Jobs.DataDirectory);
+        }
+        finally
+        {
+            vault.Lock();
+        }
+        RefreshChecks(repository.Id);
+        RefreshDashboard();
+    }
+
+    private async Task RunQueuedJobsAsync()
+    {
+        while (_dueJobs.TryDequeue(out var queued))
+        {
+            // A backup started in the window goes first.
+            while (IsBackupRunning)
+                await Task.WhenAny(BackupFinished, Task.Delay(TimeSpan.FromSeconds(2)));
+            var job = _jobs.FirstOrDefault(candidate => candidate.Id == queued.JobId);
+            BackupRunSummary? summary = null;
+            if (job is not null && (queued.Triggered || (job.IsScheduled && !Settings.SchedulesPaused)))
+            {
+                var run = RunScheduledAsync(job);
+                _backupTask = run;
+                summary = await run;
+            }
+            FinishWaiters(queued.JobId, summary);
         }
     }
 

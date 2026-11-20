@@ -116,35 +116,44 @@ public sealed class NotificationPolicy(string stateFile)
     }
 
     /// <summary>
-    /// The event for a check that ran to its end: <see cref="NotificationEvent.CheckFailed"/> when it found damage (a
-    /// repeat while the damage stays), <see cref="NotificationEvent.Recovered"/> for the first check without damage after
-    /// that; <c>null</c> otherwise (a check that could not run tells nothing about the repository).
+    /// The event for a check: <see cref="NotificationEvent.CheckFailed"/> when it found damage (a repeat while the damage
+    /// stays) or – started by itself – could not run (a repeat until one runs); <see cref="NotificationEvent.Recovered"/>
+    /// for the first check without damage after either. <c>null</c> otherwise: a check by hand that could not run, or was
+    /// stopped, tells nothing new (the user saw it), nor does a check that could not run while damage is known.
     /// </summary>
-    public NotificationDecision? DecideCheck(Guid repositoryId, Checks.CheckOutcome outcome)
+    public NotificationDecision? DecideCheck(Guid repositoryId, Checks.CheckOutcome outcome, bool automatic = false)
     {
-        if (outcome is not (Checks.CheckOutcome.Ok or Checks.CheckOutcome.ProblemsFound))
+        var notRun = automatic && outcome == Checks.CheckOutcome.Failed;
+        if (outcome is not (Checks.CheckOutcome.Ok or Checks.CheckOutcome.ProblemsFound) && !notRun)
             return null;
         lock (Gate)
         {
             var states = Load();
             var key = CheckKey(repositoryId);
-            var known = states.ContainsKey(key);
+            var previous = states.GetValueOrDefault(key);
             if (outcome == Checks.CheckOutcome.Ok)
             {
-                if (!known)
+                if (previous is null)
                     return null;
                 states.Remove(key);
                 Save(states);
                 return new NotificationDecision(NotificationEvent.Recovered, false);
             }
-            if (!known)
+            if (notRun && previous == Damaged)
+                return null;
+            var current = notRun ? NotRun : Damaged;
+            if (current != previous)
             {
-                states[key] = "damaged";
+                states[key] = current;
                 Save(states);
             }
-            return new NotificationDecision(NotificationEvent.CheckFailed, known);
+            return new NotificationDecision(NotificationEvent.CheckFailed, current == previous);
         }
     }
+
+    private const string Damaged = "damaged";
+
+    private const string NotRun = "not-run";
 
     /// <summary>The repository was removed.</summary>
     public void ForgetRepository(Guid repositoryId)

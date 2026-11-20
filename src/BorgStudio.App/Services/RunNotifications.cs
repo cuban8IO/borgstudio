@@ -71,7 +71,7 @@ public sealed class RunNotifications(AppServices services)
     {
         if (services.Notifier is not { } notifier)
             return [];
-        var decision = Policy.DecideCheck(repository.Id, record.Outcome);
+        var decision = Policy.DecideCheck(repository.Id, record.Outcome, record.Automatic);
         var settings = services.Settings.Load().Notifications;
         if (decision is null || !settings.AnyEnabled || (decision.IsRepeat && settings.SuppressRepeats))
             return [];
@@ -91,7 +91,12 @@ public sealed class RunNotifications(AppServices services)
             BorgTexts.Format(Strings.NotifyLineCheck, record.Started.ToLocalTime().ToString("g", CultureInfo.CurrentCulture),
                 BorgTexts.CheckDepth(record.Depth), BorgTexts.Duration(record.Duration)),
         };
-        if (notificationEvent == NotificationEvent.CheckFailed)
+        if (notificationEvent == NotificationEvent.CheckFailed && record.Outcome == Core.Checks.CheckOutcome.Failed)
+        {
+            lines.Add(BorgTexts.Format(Strings.NotifyLineReason, record.Error ?? ""));
+            lines.Add(Strings.NotifyCheckNotRunHint);
+        }
+        else if (notificationEvent == NotificationEvent.CheckFailed)
         {
             lines.AddRange(record.Messages.Take(5));
             if (record.Messages.Count > 5)
@@ -99,8 +104,12 @@ public sealed class RunNotifications(AppServices services)
             lines.Add(Strings.NotifyCheckFailedHint);
         }
         lines.Add(BorgTexts.Format(Strings.NotifyLineComputer, Environment.MachineName));
-        var title = BorgTexts.Format(notificationEvent == NotificationEvent.CheckFailed ? Strings.NotifyTitleCheckFailed : Strings.NotifyTitleCheckRecovered,
-            repository);
+        var title = BorgTexts.Format(notificationEvent switch
+        {
+            NotificationEvent.CheckFailed when record.Outcome == Core.Checks.CheckOutcome.Failed => Strings.NotifyTitleCheckNotRun,
+            NotificationEvent.CheckFailed => Strings.NotifyTitleCheckFailed,
+            _ => Strings.NotifyTitleCheckRecovered,
+        }, repository);
         return new NotificationMessage(notificationEvent, title, string.Join("\n", lines)) { Repository = repository, Check = record };
     }
 

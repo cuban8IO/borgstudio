@@ -16,6 +16,9 @@ public enum RunPhase
     Pruning,
 
     Compacting,
+
+    /// <summary>borg check after the backup.</summary>
+    Checking,
 }
 
 /// <summary>
@@ -144,6 +147,7 @@ public sealed partial class BackupRunViewModel : ObservableObject
             RunPhase.Previewing => Strings.CleanupPreviewing,
             RunPhase.Pruning => Strings.CleanupPruning,
             RunPhase.Compacting => Strings.CleanupCompacting,
+            RunPhase.Checking => Strings.CheckWorking,
             _ => Strings.BackupRunning,
         }
         : Cleanup is { } cleanup ? cleanup.Error is not null ? Strings.OutcomeFailed

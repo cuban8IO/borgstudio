@@ -39,8 +39,18 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
         }
     }
 
-    /// <summary>The repository's storage after a run: measured now (<c>null</c> if that did not work).</summary>
-    private sealed record MeasuredStorage(RepositoryConfig Repository, StorageUsage? Usage);
+    /// <summary>Opens the vault with the key for scheduled runs, if it is locked (for the notification channels' secrets).</summary>
+    internal void OpenVaultIfLocked()
+    {
+        if (services.Vault.State == VaultState.Locked)
+            OpenVault();
+    }
+
+    /// <summary>
+    /// What followed the backup: the repository's storage, measured now (<c>null</c> if that did not work), and its check
+    /// (<c>null</c> if none was due).
+    /// </summary>
+    private sealed record MeasuredStorage(RepositoryConfig Repository, StorageUsage? Usage, Core.Checks.CheckRecord? Check = null);
 
     /// <summary>Reports the run – and the storage, if it was measured – through the notification channels; their secrets may be in the vault.</summary>
     private async Task NotifyAsync(BackupJob job, BackupRunSummary summary, MeasuredStorage? storage)
@@ -53,6 +63,8 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
             await notifications.NotifyAsync(job, summary, services.Vault);
             if (storage is not null)
                 await notifications.NotifyStorageAsync(storage.Repository, storage.Usage, services.Vault);
+            if (storage?.Check is { } check)
+                await notifications.NotifyCheckAsync(storage.Repository, check, services.Vault);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -64,42 +76,61 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
         CancellationToken cancellationToken)
     {
         var repository = services.RepositoryStore.Load().Repositories.FirstOrDefault(candidate => candidate.Id == job.RepositoryId);
-        if (repository is null || Location(repository) is not { } location)
+        if (repository is null)
             return (NotRun(job, BackupSkipReason.RepositoryMissing), null);
+        var (access, problem) = await PrepareAsync(repository, cancellationToken);
+        if (access is null)
+            return (NotRun(job, problem!.Value, problem == BackupSkipReason.PassphraseAsked ? BackupOutcome.Skipped : BackupOutcome.Failed), null);
 
-        if (await services.BorgDetector.DetectAsync(cancellationToken) is not { Support: BorgSupport.Supported } borg)
-            return (NotRun(job, BackupSkipReason.BorgMissing), null);
-
-        // A local repository on a drive that is not there (USB disk): no need to ask borg.
-        if (location.Ssh is null && !Directory.Exists(location.Url))
-            return (NotRun(job, BackupSkipReason.TargetMissing), null);
-
-        var (passphrase, passphraseProblem) = GetPassphrase(repository);
-        if (passphraseProblem is { } problem)
-            return (NotRun(job, problem, problem == BackupSkipReason.PassphraseAsked ? BackupOutcome.Skipped : BackupOutcome.Failed), null);
-
-        SshAccess? ssh = null;
-        if (location.Ssh is { } endpoint)
-        {
-            if (repository.HasLegacySshKey || repository.SshKeyId is not { } keyId)
-                return (NotRun(job, BackupSkipReason.SshKeyMissing), null);
-            if (!OpenVault())
-                return (NotRun(job, BackupSkipReason.ScheduledAccessMissing), null);
-            if (services.Vault.GetKey(keyId) is not { } key)
-                return (NotRun(job, BackupSkipReason.SshKeyMissing), null);
-            if (!services.SshTrust.IsKnown(endpoint.Host, endpoint.Port))
-                return (NotRun(job, BackupSkipReason.HostUnknown), null);
-            ssh = new SshAccess(key.PrivateKey, services.SshKeys.KnownHostsFile);
-        }
-
-        var result = await _runner.RunAsync(new BackupRunRequest(borg, location, job, passphrase, ssh, Scheduled: true),
+        var result = await _runner.RunAsync(new BackupRunRequest(access.Borg, access.Location, job, access.Passphrase, access.Ssh, Scheduled: true),
             report, cancellationToken);
         if (result.Summary.SkipReason == BackupSkipReason.RepositoryBusy)
             return (result, null);
 
         // How full the storage is now (for the overview and the "almost full" notification).
-        var usage = await MeasureStorageAsync(services, repository, borg, location, passphrase, ssh, result.Repository);
-        return (result, new MeasuredStorage(repository, usage));
+        var usage = await MeasureStorageAsync(services, repository, access.Borg, access.Location, access.Passphrase, access.Ssh, result.Repository);
+        // Checked after the backup, if it is due (the repository is reachable now anyway).
+        var check = result.Summary.Outcome is BackupOutcome.Succeeded or BackupOutcome.Warnings
+            ? await new RepositoryChecks(services).CheckAfterBackupAsync(repository, access, report, cancellationToken)
+            : null;
+        return (result, new MeasuredStorage(repository, usage, check));
+    }
+
+    /// <summary>
+    /// What a run without window needs for <paramref name="repository"/>: borg, its location (a local folder must be
+    /// there), the passphrase and the SSH login – or why one of them is missing.
+    /// </summary>
+    internal async Task<(UnattendedAccess? Access, BackupSkipReason? Problem)> PrepareAsync(RepositoryConfig repository,
+        CancellationToken cancellationToken = default)
+    {
+        if (Location(repository) is not { } location)
+            return (null, BackupSkipReason.RepositoryMissing);
+
+        if (await services.BorgDetector.DetectAsync(cancellationToken) is not { Support: BorgSupport.Supported } borg)
+            return (null, BackupSkipReason.BorgMissing);
+
+        // A local repository on a drive that is not there (USB disk): no need to ask borg.
+        if (location.Ssh is null && !Directory.Exists(location.Url))
+            return (null, BackupSkipReason.TargetMissing);
+
+        var (passphrase, passphraseProblem) = GetPassphrase(repository);
+        if (passphraseProblem is { } problem)
+            return (null, problem);
+
+        SshAccess? ssh = null;
+        if (location.Ssh is { } endpoint)
+        {
+            if (repository.HasLegacySshKey || repository.SshKeyId is not { } keyId)
+                return (null, BackupSkipReason.SshKeyMissing);
+            if (!OpenVault())
+                return (null, BackupSkipReason.ScheduledAccessMissing);
+            if (services.Vault.GetKey(keyId) is not { } key)
+                return (null, BackupSkipReason.SshKeyMissing);
+            if (!services.SshTrust.IsKnown(endpoint.Host, endpoint.Port))
+                return (null, BackupSkipReason.HostUnknown);
+            ssh = new SshAccess(key.PrivateKey, services.SshKeys.KnownHostsFile);
+        }
+        return (new UnattendedAccess(borg, location, passphrase, ssh), null);
     }
 
     /// <summary>
@@ -189,3 +220,6 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
         return new BackupRunResult(summary, []);
     }
 }
+
+/// <summary>What a run without window works with: borg, the repository's location, its passphrase and SSH login.</summary>
+public sealed record UnattendedAccess(BorgInstallation Borg, RepositoryLocation Location, string? Passphrase, SshAccess? Ssh);

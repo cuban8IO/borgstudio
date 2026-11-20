@@ -2,12 +2,53 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="BorgStudio.App.App"
              xmlns:local="using:BorgStudio.App"
+             xmlns:vm="using:BorgStudio.App.ViewModels"
+             xmlns:res="using:BorgStudio.App.Resources"
              Name="BorgStudio"
              RequestedThemeVariant="Dark">
     <!-- Always dark, in the Beatport palette (same as the app icon). Views use the semantic brushes below,
          never colour values of their own. -->
 
     <Application.DataTemplates>
+        <!-- One schedule (job editor, and the checks in the repository editor). -->
+        <DataTemplate DataType="vm:ScheduleItemViewModel">
+            <Border Classes="card" Padding="10,8" Margin="0,0,0,6">
+                <StackPanel Spacing="8">
+                    <WrapPanel>
+                        <WrapPanel.Styles>
+                            <Style Selector="WrapPanel > :is(Control)">
+                                <Setter Property="Margin" Value="0,0,8,4" />
+                                <Setter Property="VerticalAlignment" Value="Center" />
+                            </Style>
+                        </WrapPanel.Styles>
+                        <ComboBox ItemsSource="{Binding KindOptions}" SelectedItem="{Binding SelectedKind}" MinWidth="150" />
+                        <NumericUpDown Value="{Binding Hours}" Minimum="1" Maximum="12" Increment="1" FormatString="0"
+                                       Width="110" IsVisible="{Binding IsEveryHours}" />
+                        <TextBlock Text="{x:Static res:Strings.JobEditorScheduleHours}" IsVisible="{Binding IsEveryHours}" />
+                        <TextBlock Text="{Binding MonthlyLabel}" IsVisible="{Binding IsMonthly}" />
+                        <ComboBox ItemsSource="{Binding WeekOptions}" SelectedItem="{Binding SelectedWeek}" IsVisible="{Binding IsMonthlyWeekday}" />
+                        <ComboBox ItemsSource="{Binding WeekdayOptions}" SelectedItem="{Binding SelectedWeekday}" IsVisible="{Binding IsMonthlyWeekday}" />
+                        <ComboBox ItemsSource="{Binding DayOfMonthOptions}" SelectedItem="{Binding SelectedDayOfMonth}" IsVisible="{Binding IsMonthlyDay}"
+                                  MaxDropDownHeight="300" />
+                        <TextBlock Text="{Binding TimeLabel}" />
+                        <TimePicker SelectedTime="{Binding Time}" ClockIdentifier="24HourClock" MinuteIncrement="5" />
+                        <Button Content="{x:Static res:Strings.JobEditorRemoveSchedule}" Command="{Binding RemoveCommand}" />
+                    </WrapPanel>
+                    <ItemsControl ItemsSource="{Binding Days}" IsVisible="{Binding IsWeekdays}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="4" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ScheduleDayViewModel">
+                                <ToggleButton Content="{Binding Label}" IsChecked="{Binding IsChecked}" MinWidth="44" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
         <local:ViewLocator />
     </Application.DataTemplates>
 

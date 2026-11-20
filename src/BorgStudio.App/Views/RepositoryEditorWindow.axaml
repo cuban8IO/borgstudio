@@ -167,6 +167,28 @@
                                    FontSize="12" Foreground="{DynamicResource WarningBorder}" />
                     </StackPanel>
 
+                    <Expander Header="{x:Static res:Strings.EditorChecks}" HorizontalAlignment="Stretch">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="{x:Static res:Strings.EditorChecksIntro}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                            <CheckBox IsChecked="{Binding CheckAfterBackup}">
+                                <TextBlock Text="{x:Static res:Strings.EditorCheckAfterBackup}" TextWrapping="Wrap" />
+                            </CheckBox>
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="28,0,0,4" IsEnabled="{Binding CheckAfterBackup}">
+                                <TextBlock Text="{x:Static res:Strings.EditorCheckInterval}" VerticalAlignment="Center" />
+                                <NumericUpDown Value="{Binding CheckIntervalDays}" Minimum="1" Maximum="365" Increment="1" FormatString="0" Width="120" />
+                                <TextBlock Text="{x:Static res:Strings.EditorCheckIntervalDays}" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <TextBlock Text="{x:Static res:Strings.EditorCheckSchedules}" Margin="0,8,0,0" />
+                            <ItemsControl ItemsSource="{Binding CheckSchedules}" />
+                            <Button Content="{x:Static res:Strings.JobEditorAddSchedule}" Command="{Binding AddCheckScheduleCommand}" HorizontalAlignment="Left" />
+                            <CheckBox IsChecked="{Binding CheckCatchUp}" IsVisible="{Binding HasCheckSchedules}">
+                                <TextBlock Text="{x:Static res:Strings.JobEditorCatchUp}" TextWrapping="Wrap" />
+                            </CheckBox>
+                            <TextBlock Text="{x:Static res:Strings.EditorCheckSchedulesHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap"
+                                       IsVisible="{Binding HasCheckSchedules}" />
+                        </StackPanel>
+                    </Expander>
+
                     <Expander Header="{x:Static res:Strings.EditorAdvanced}" HorizontalAlignment="Stretch">
                         <StackPanel Spacing="4">
                             <TextBlock Text="{x:Static res:Strings.EditorBorgVersion}" />

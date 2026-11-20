@@ -12,7 +12,8 @@ public sealed partial class RepositoryItemViewModel(RepositoryConfig config, Plu
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Name), nameof(Provider), nameof(ProviderName), nameof(Location), nameof(LocationText),
         nameof(EncryptionText), nameof(IsKeyfile), nameof(IsEncrypted), nameof(PassphraseText), nameof(BorgVersionText),
-        nameof(IsSsh), nameof(SshKeyText), nameof(StorageLevelText), nameof(StorageHint), nameof(HasStorageHint))]
+        nameof(IsSsh), nameof(SshKeyText), nameof(StorageLevelText), nameof(StorageHint), nameof(HasStorageHint), nameof(CheckPlanText),
+        nameof(CheckHealth), nameof(CheckHealthText), nameof(HasCheckHealthText))]
     public partial RepositoryConfig Config { get; set; } = config;
 
     public string Name => Config.Name;
@@ -169,7 +170,8 @@ public sealed partial class RepositoryItemViewModel(RepositoryConfig config, Plu
     /// <summary>The repository's checks, newest first.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(LastVerdict), nameof(HasCheckProblems), nameof(IsCheckOk), nameof(CheckStateText), nameof(CheckDetailText),
-        nameof(CheckAttemptText), nameof(HasCheckAttempt), nameof(CheckMessages), nameof(HasCheckMessages), nameof(CheckMessagesHeader))]
+        nameof(CheckAttemptText), nameof(HasCheckAttempt), nameof(CheckMessages), nameof(HasCheckMessages), nameof(CheckMessagesHeader),
+        nameof(CheckHealth), nameof(CheckHealthText), nameof(HasCheckHealthText))]
     public partial IReadOnlyList<Core.Checks.CheckRecord> Checks { get; set; } = [];
 
     /// <summary>The last check that ran to its end; <c>null</c> if never checked.</summary>
@@ -200,6 +202,36 @@ public sealed partial class RepositoryItemViewModel(RepositoryConfig config, Plu
         : "";
 
     public bool HasCheckAttempt => CheckAttemptText.Length > 0;
+
+    /// <summary>"Automatisch: nach einem Backup, wenn 30 Tage nicht geprüft; nach Zeitplan, nächste So. 06.12. 03:00".</summary>
+    public string CheckPlanText
+    {
+        get
+        {
+            var policy = Config.Check;
+            var parts = new List<string>();
+            if (policy.AfterBackup)
+                parts.Add(BorgTexts.Format(Strings.CheckPlanAfterBackup, policy.IntervalDays));
+            if (policy.IsScheduled && Core.Backups.ScheduleCalendar.Next(policy.Schedules, DateTime.Now) is { } next)
+                parts.Add(BorgTexts.Format(Strings.CheckPlanScheduled,
+                    next.ToString("ddd", System.Globalization.CultureInfo.CurrentCulture) + " " + next.ToString("g", System.Globalization.CultureInfo.CurrentCulture)));
+            return parts.Count == 0 ? Strings.CheckPlanNone : BorgTexts.Format(Strings.CheckPlan, string.Join("; ", parts));
+        }
+    }
+
+    /// <summary>How the repository is doing as far as its checks tell (damage, a check that could not run, overdue).</summary>
+    public (Core.Backups.HealthLevel Level, Core.Checks.CheckHealthReason Reason) CheckHealth =>
+        Core.Checks.CheckHealth.Evaluate(Config.Check, Checks, DateTime.Now);
+
+    /// <summary>"Die Prüfung ist überfällig." – a warning about the checks; empty when there is none (damage has its own line).</summary>
+    public string CheckHealthText => CheckHealth.Reason switch
+    {
+        Core.Checks.CheckHealthReason.NotRun => Strings.CheckHealthNotRun,
+        Core.Checks.CheckHealthReason.Overdue => Strings.CheckHealthOverdue,
+        _ => "",
+    };
+
+    public bool HasCheckHealthText => CheckHealthText.Length > 0;
 
     /// <summary>What borg reported in the last completed check.</summary>
     public IReadOnlyList<string> CheckMessages => LastVerdict?.Messages ?? [];

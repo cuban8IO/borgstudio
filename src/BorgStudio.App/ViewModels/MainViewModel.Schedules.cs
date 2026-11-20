@@ -30,12 +30,13 @@ public partial class MainViewModel
 
         // In the background BorgStudio starts the jobs – and the daily check – itself: the system's entries go.
         List<BackupJob> jobs = IsBackgroundMode ? [] : [.. _jobs];
+        List<RepositoryConfig> repositories = IsBackgroundMode ? [] : [.. Repositories.Select(item => item.Config)];
         var notifications = Settings.Notifications;
         TimeOnly? dailyCheck = !IsBackgroundMode && notifications.NeedsDailyCheck(_jobs) ? notifications.DailyTime : null;
         await _scheduleGate.WaitAsync();
         try
         {
-            await Task.Run(() => scheduler.ApplyAsync(jobs, executable, dailyCheck));
+            await Task.Run(() => scheduler.ApplyAsync(jobs, executable, dailyCheck, repositories));
         }
         catch (Exception exception) when (exception is SchedulerException or IOException or UnauthorizedAccessException)
         {
@@ -53,10 +54,14 @@ public partial class MainViewModel
     /// </summary>
     private async Task PrepareScheduleAsync(BackupJob job)
     {
-        if (!job.IsScheduled)
-            return;
+        if (job.IsScheduled)
+            await PrepareUnattendedAsync(job.RepositoryId);
+    }
 
-        if (Repositories.FirstOrDefault(item => item.Config.Id == job.RepositoryId) is { Config.PassphraseMode: PassphraseMode.Ask } item)
+    /// <summary>Before something runs by itself on the repository (scheduled backups or checks): what it needs without questions.</summary>
+    private async Task PrepareUnattendedAsync(Guid repositoryId)
+    {
+        if (Repositories.FirstOrDefault(item => item.Config.Id == repositoryId) is { Config.PassphraseMode: PassphraseMode.Ask } item)
             await OfferToStorePassphraseAsync(item);
 
         if (_services.Vault.State == VaultState.NotSetUp || ScheduledAccess.IsEnabled)
