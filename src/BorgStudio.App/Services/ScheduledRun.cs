@@ -43,6 +43,7 @@ public static class ScheduledRun
             var runner = new ScheduledJobRunner(services, MainViewModel.CreateScheduledAccess(services));
             // The job's conditions (battery, connection, target) may hold it back for a while.
             var result = runner.RunWhenAllowedAsync(jobId).GetAwaiter().GetResult();
+            CloseMounts(services);
             var job = services.Jobs.Load().FirstOrDefault(candidate => candidate.Id == jobId);
             var summary = result.Summary;
             var reason = summary.SkipReason is { } skip ? BorgTexts.SkipReason(skip) : summary.Message;
@@ -66,6 +67,10 @@ public static class ScheduledRun
         }
     }
 
+    /// <summary>SFTP folders the run mounted are unmounted before the process ends (they would stay mounted otherwise).</summary>
+    private static void CloseMounts(AppServices services) =>
+        Task.Run(services.BorgClient.CloseSftpMountsAsync).Wait(TimeSpan.FromSeconds(30));
+
     private static int Usage()
     {
         Log($"Usage: {Argument} <job id> | {ScheduledArguments.CheckRepository} <repository id>");
@@ -87,6 +92,7 @@ public static class ScheduledRun
                 return 0;
             var record = new RepositoryChecks(services).RunScheduledAsync(repository, MainViewModel.CreateScheduledAccess(services))
                 .GetAwaiter().GetResult();
+            CloseMounts(services);
             Log($"{repository.Name} (check): {record.Outcome}{(record.Error is null ? "" : $" – {record.Error}")}");
             return record.Outcome == Core.Checks.CheckOutcome.Ok ? 0 : 1;
         }

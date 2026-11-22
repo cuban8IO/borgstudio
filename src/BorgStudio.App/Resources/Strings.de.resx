@@ -3448,4 +3448,7 @@ Jobs: {1}</value>
   <data name="EditorKeyGenerateProvisioned" xml:space="preserve">
     <value>Neuen Schlüssel erzeugen und bei {0} hinterlegen (per API oder von Hand)</value>
   </data>
+  <data name="BorgErrorSshfsMissing" xml:space="preserve">
+    <value>Das Repository liegt auf einem SFTP-Server und braucht sshfs dort, wo borg läuft. Installiere es – in WSL oder unter Linux: sudo apt install sshfs; unter macOS: macFUSE und sshfs (z. B. brew install --cask macfuse, danach brew install gromgit/fuse/sshfs-mac).</value>
+  </data>
 </root>

@@ -151,6 +151,9 @@ public partial class MainViewModel
         }
     }
 
+    /// <summary>Unmounts the SFTP folders kept mounted for the next borg call (when the app ends).</summary>
+    public void CloseSftpMounts() => Task.Run(_services.BorgClient.CloseSftpMountsAsync).Wait(TimeSpan.FromSeconds(30));
+
     // --- Several queued runs on one drive ---
 
     private readonly Dictionary<Guid, RepositoryLease> _queueLeases = [];

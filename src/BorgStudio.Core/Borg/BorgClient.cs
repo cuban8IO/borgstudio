@@ -676,17 +676,17 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
             return BorgResult<string>.Failure(new BorgError(BorgErrorKind.NotStartable, "wsl.exe"));
 
         var repository = location.Url;
-        if (wsl && !IsUrl(repository))
+        var sftp = location.MountOverSftp && location.Ssh is not null;
+        if (sftp && !wsl && !NativeIsPosix)
+            return BorgResult<string>.Failure(new BorgError(BorgErrorKind.UnsupportedPath, location.Url));
+        if (sftp && ssh is null)
+            return BorgResult<string>.Failure(new BorgError(BorgErrorKind.SshAuthenticationFailed, location.Url));
+        if (!sftp && wsl && !IsUrl(repository))
         {
             if (ToWslPath(repository) is not { } translated)
                 return BorgResult<string>.Failure(new BorgError(BorgErrorKind.UnsupportedPath, location.Url));
             repository = translated;
         }
-        if (archive is not null)
-            repository += "::" + archive;
-
-        List<string> limit = throttle?.UploadKibibytesPerSecond is { } rate ? ["--upload-ratelimit", rate.ToString(CultureInfo.InvariantCulture)] : [];
-        List<string> arguments = [.. command, "--log-json", .. location.BorgArguments, .. limit, .. options, repository, .. trailing];
 
         var environment = new Dictionary<string, string?>
         {
@@ -710,15 +710,40 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
             environment["BORG_RSH"] = SshCommand(sshFiles.PrivateKeyFile, sshFiles.KnownHostsFile);
         }
 
+        IAsyncDisposable? mounted = null;
+        string? mountPoint = null;
         try
         {
+            // A server with SFTP only: its folder mounted with sshfs, borg works on it as on a local folder.
+            if (sftp)
+            {
+                var (local, point, error, use) = await UseSftpMountAsync(borg, location.Ssh!, sshFiles!, cancellationToken);
+                if (error is not null)
+                    return BorgResult<string>.Failure(error);
+                repository = local!;
+                mountPoint = point;
+                mounted = use;
+            }
+            if (archive is not null)
+                repository += "::" + archive;
+            List<string> limit = throttle?.UploadKibibytesPerSecond is { } rate && !sftp
+                ? ["--upload-ratelimit", rate.ToString(CultureInfo.InvariantCulture)]
+                : [];
+            List<string> arguments = [.. command, "--log-json", .. location.BorgArguments, .. limit, .. options, repository, .. trailing];
+
             await using var drives = wsl ? await UseWslDrivesAsync(arguments, workingDirectory, cancellationToken) : null;
-            return await RunBorgAsync(borg, location, arguments, environment, sshFiles, timeout, cancellationToken,
+            var result = await RunBorgAsync(borg, location, arguments, environment, sshFiles, timeout, cancellationToken,
                 standardErrorLine, interruptible, standardOutputLine, workingDirectory, exitCode, throttle?.LowPriority == true,
-                standardOutputStream);
+                standardOutputStream, mountPoint);
+            // The SFTP folder was gone when borg was to start: borg never ran.
+            return result.Error is { } failed && failed.Message?.Contains(NotMountedMarker, StringComparison.Ordinal) == true
+                ? BorgResult<string>.Failure(new BorgError(BorgErrorKind.ConnectionFailed, "sshfs: the SFTP folder is no longer mounted"))
+                : result;
         }
         finally
         {
+            if (mounted is not null)
+                await mounted.DisposeAsync();
             if (sshFiles is not null)
                 await DeleteKeyFileAsync(sshFiles, wsl);
         }
@@ -728,13 +753,16 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         List<string> arguments, Dictionary<string, string?> environment, SshFiles? sshFiles, TimeSpan timeout,
         CancellationToken cancellationToken, Action<string>? standardErrorLine, bool interruptible,
         Action<string>? standardOutputLine = null, string? workingDirectory = null, Action<int>? exitCode = null, bool lowPriority = false,
-        Func<Stream, CancellationToken, Task>? standardOutputStream = null)
+        Func<Stream, CancellationToken, Task>? standardOutputStream = null, string? requireMount = null)
     {
         var wsl = borg.Runtime == BorgRuntime.Wsl;
         // Signals need a POSIX system: natively on Linux/macOS, or inside WSL.
         interruptible &= wsl || !OperatingSystem.IsWindows();
         // Low priority: nice (Linux derives the disk priority from it, too); it execs borg, so the process id stays borg's.
         List<string> program = lowPriority && (wsl || NativeIsPosix) ? ["nice", "-n", "10", borg.Path] : [borg.Path];
+        // On an SFTP folder: borg starts only if it is still mounted (the guard execs it, so the process id stays borg's).
+        if (requireMount is not null)
+            program = ["sh", "-c", MountGuard, requireMount, .. program];
 
         string fileName;
         if (wsl)

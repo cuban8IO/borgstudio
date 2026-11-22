@@ -24,6 +24,7 @@ using BorgStudio.Providers.BorgBase;
 using BorgStudio.Providers.Hetzner;
 using BorgStudio.Providers.Local;
 using BorgStudio.Providers.RsyncNet;
+using BorgStudio.Providers.Sftp;
 using BorgStudio.Providers.Ssh;
 using BorgStudio.Providers.Usb;
 
@@ -93,14 +94,19 @@ public partial class App : Application
         // The incoming webhook (if switched on, in background mode); it ends with the app.
         viewModel.ApplyTrigger();
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
-            lifetime.Exit += (_, _) => viewModel.StopTrigger();
+            lifetime.Exit += (_, _) =>
+            {
+                viewModel.StopTrigger();
+                // SFTP folders still mounted for the next borg call.
+                viewModel.CloseSftpMounts();
+            };
     }
 
     /// <summary>The real services – for the window, and for runs without window (scheduled backups).</summary>
     public static AppServices CreateServices(IDialogService dialogs)
     {
         // Built-in providers use the same plugin API as external ones.
-        var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new UsbProviderPlugin(), new SshProviderPlugin(), new HetznerProviderPlugin(), new RsyncNetProviderPlugin(), new BorgBaseProviderPlugin()], AppPaths.PluginsDirectory);
+        var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new UsbProviderPlugin(), new SshProviderPlugin(), new SftpProviderPlugin(), new HetznerProviderPlugin(), new RsyncNetProviderPlugin(), new BorgBaseProviderPlugin()], AppPaths.PluginsDirectory);
         var vault = Vault.CreateDefault();
         return new AppServices(
             BorgDetector.CreateDefault(),

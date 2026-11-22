@@ -169,10 +169,11 @@
                             <TextBlock Text="{x:Static res:Strings.EditorServerPassword}" />
                             <TextBox Text="{Binding ServerPassword}" PasswordChar="•" />
                             <TextBlock Text="{x:Static res:Strings.EditorServerPasswordHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
-                            <CheckBox IsChecked="{Binding RestrictKey}" Margin="0,4,0,0">
+                            <CheckBox IsChecked="{Binding RestrictKey}" Margin="0,4,0,0" IsVisible="{Binding !IsSftpMount}">
                                 <TextBlock Text="{x:Static res:Strings.EditorRestrictKey}" TextWrapping="Wrap" />
                             </CheckBox>
-                            <TextBlock Text="{x:Static res:Strings.EditorRestrictKeyHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                            <TextBlock Text="{x:Static res:Strings.EditorRestrictKeyHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap"
+                                       IsVisible="{Binding !IsSftpMount}" />
                         </StackPanel>
                         <TextBlock Text="{Binding SharedKeyWarning}" IsVisible="{Binding HasSharedKeyWarning}" TextWrapping="Wrap"
                                    FontSize="12" Foreground="{DynamicResource WarningBorder}" />

@@ -41,6 +41,9 @@ public enum BorgErrorKind
     /// <summary>The repository's disk or server ran out of space.</summary>
     NoSpace,
 
+    /// <summary>A repository on an SFTP server needs sshfs where borg runs, and it is not installed.</summary>
+    SshfsMissing,
+
     Other,
 }
 

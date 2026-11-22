@@ -67,5 +67,6 @@
     <ProjectReference Include="..\BorgStudio.Providers.Usb\BorgStudio.Providers.Usb.csproj" />
     <ProjectReference Include="..\BorgStudio.Providers.RsyncNet\BorgStudio.Providers.RsyncNet.csproj" />
     <ProjectReference Include="..\BorgStudio.Providers.BorgBase\BorgStudio.Providers.BorgBase.csproj" />
+    <ProjectReference Include="..\BorgStudio.Providers.Sftp\BorgStudio.Providers.Sftp.csproj" />
   </ItemGroup>
 </Project>
