@@ -206,6 +206,9 @@ public class BorgClientTests
             IReadOnlyDictionary<string, string?>? environment = null, string? standardInput = null,
             CancellationToken cancellationToken = default, Action<string>? standardErrorLine = null, Action<string>? standardOutputLine = null, string? workingDirectory = null)
         {
+            // Mounting the drive inside WSL first (E: is not the system drive).
+            if (arguments is ["-u", "root", ..])
+                return new ProcessResult(0, "", "");
             if (arguments.Contains("kill"))
             {
                 Kills.Add(arguments);

@@ -16,7 +16,7 @@ public partial class MainViewModel
     {
         var item = SelectedRepository!;
         var archive = TargetArchives[0].Archive;
-        if (!TryGetLocation(item, out var location))
+        if (await ConnectAsync(item) is not { } location)
             return;
         if (await GetArchiveAccessAsync(item, location) is not { } access)
             return;

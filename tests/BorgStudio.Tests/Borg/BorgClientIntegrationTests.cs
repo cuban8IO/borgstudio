@@ -34,6 +34,16 @@ public sealed class BorgClientIntegrationTests : IDisposable
     }
 
     [BorgFact]
+    public async Task The_usb_drive_provider_recognizes_the_repository_by_the_id_borg_reports()
+    {
+        await _client.InitAsync(Borg, Location(), BorgEncryption.RepokeyBlake2, Passphrase);
+        var info = await _client.InfoAsync(Borg, Location(), Passphrase);
+
+        Assert.True(global::BorgStudio.Providers.Usb.RepositoryFinder.IsRepository(Location().Url, info.Value!.Id));
+        Assert.False(global::BorgStudio.Providers.Usb.RepositoryFinder.IsRepository(Location().Url, "0" + info.Value.Id[1..]));
+    }
+
+    [BorgFact]
     public async Task Wrong_passphrase()
     {
         await _client.InitAsync(Borg, Location(), BorgEncryption.RepokeyBlake2, Passphrase);

@@ -52,7 +52,7 @@ public partial class MainViewModel
     private async Task CompareAsync(BorgArchive older, BorgArchive newer)
     {
         var item = SelectedRepository!;
-        if (!TryGetLocation(item, out var location))
+        if (await ConnectAsync(item) is not { } location)
             return;
         if (await GetArchiveAccessAsync(item, location) is not { } access)
             return;

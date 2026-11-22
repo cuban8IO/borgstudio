@@ -3383,4 +3383,13 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
   <data name="ArchiveExportOpenFolder" xml:space="preserve">
     <value>Ordner öffnen</value>
   </data>
+  <data name="EditorConvertToUsb" xml:space="preserve">
+    <value>Als USB-Laufwerk führen</value>
+  </data>
+  <data name="EditorConvertToUsbHint" xml:space="preserve">
+    <value>Dieser Ordner liegt auf einem Wechsel- oder externen Laufwerk. Als USB-Laufwerk geführt, findet BorgStudio das Repository an seiner ID auch unter einem anderen Laufwerksbuchstaben und kann das Laufwerk nach automatischen Läufen auswerfen. Daten, Jobs und Verlauf bleiben, wie sie sind.</value>
+  </data>
+  <data name="EditorConvertedToUsb" xml:space="preserve">
+    <value>Wird nach dem Speichern als USB-Laufwerk geführt.</value>
+  </data>
 </root>

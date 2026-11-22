@@ -40,6 +40,9 @@ public sealed record AppServices(
     ISystemState? SystemState = null)
 {
     public SshHostTrust SshTrust => new(Ssh, new KnownHostsFile(SshKeys.KnownHostsFile));
+
+    /// <summary>Finds or connects repositories before borg uses them (USB drives); shared by everything in this process.</summary>
+    public RepositoryConnections Connections { get; init; } = new(Plugins, RepositoryStore);
 }
 
 public partial class MainViewModel : ViewModelBase

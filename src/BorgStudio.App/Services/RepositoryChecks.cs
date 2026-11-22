@@ -62,7 +62,15 @@ public sealed class RepositoryChecks(AppServices services)
             }
             else
             {
-                record = await RunAsync(repository, unattended, CheckDepth.Normal, automatic: true, report: null, LockWait, cancellationToken);
+                try
+                {
+                    record = await RunAsync(unattended.Lease?.Repository ?? repository, unattended, CheckDepth.Normal, automatic: true, report: null,
+                        LockWait, cancellationToken);
+                }
+                finally
+                {
+                    await runner.ReleaseAsync(unattended, repository);
+                }
             }
 
             try

@@ -38,7 +38,7 @@ public partial class MainViewModel
     private async Task BreakLockAsync()
     {
         var item = SelectedRepository!;
-        if (!TryGetLocation(item, out var location))
+        if (await ConnectAsync(item) is not { } location)
             return;
         // BorgStudio's own runs on the repository hold this lock: that is no lock left behind.
         using var ownLock = RepositoryLock.TryAcquire(Runner.LockDirectory, item.Config.Id);

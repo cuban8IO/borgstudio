@@ -60,7 +60,7 @@ public partial class MainViewModel
 
     private async Task CheckAsync(RepositoryItemViewModel item, CheckDepth depth)
     {
-        if (!TryGetLocation(item, out var location))
+        if (await ConnectAsync(item) is not { } location)
             return;
         if (!await ReleaseMountsAsync(item.Config.Id, item.Name))
             return;

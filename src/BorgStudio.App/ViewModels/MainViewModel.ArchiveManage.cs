@@ -131,7 +131,7 @@ public partial class MainViewModel
         Func<BorgInstallation, RepositoryLocation, string?, SshAccess?, Task<BorgResult<bool>>> change, bool reload = true)
     {
         var item = SelectedRepository!;
-        if (!TryGetLocation(item, out var location))
+        if (await ConnectAsync(item) is not { } location)
             return false;
         if (!await ReleaseMountsAsync(item.Config.Id, item.Name))
             return false;

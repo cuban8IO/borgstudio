@@ -25,7 +25,7 @@ public partial class MainViewModel
     private async Task TestRestoreAsync(BackupJob job)
     {
         var item = Repositories.FirstOrDefault(repository => repository.Config.Id == job.RepositoryId);
-        if (item is null || !TryGetLocation(item, out var location))
+        if (item is null || await ConnectAsync(item) is not { } location)
             return;
         if (await GetSshAccessAsync(item, location) is not { } ssh)
             return;

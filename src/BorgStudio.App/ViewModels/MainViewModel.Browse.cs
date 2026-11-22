@@ -26,7 +26,7 @@ public partial class MainViewModel
     {
         var item = SelectedRepository!;
         var archive = SelectedArchive!;
-        if (!TryGetLocation(item, out var location))
+        if (await ConnectAsync(item) is not { } location)
             return;
 
         var repositoryId = item.Config.Id;
@@ -71,7 +71,7 @@ public partial class MainViewModel
     private async Task SearchArchivesAsync()
     {
         var item = SelectedRepository!;
-        if (!TryGetLocation(item, out var location))
+        if (await ConnectAsync(item) is not { } location)
             return;
         var access = await GetArchiveAccessAsync(item, location);
         var source = NewContentsSource(item, location, access);

@@ -23,6 +23,7 @@ using BorgStudio.Core.Updates;
 using BorgStudio.Providers.Hetzner;
 using BorgStudio.Providers.Local;
 using BorgStudio.Providers.Ssh;
+using BorgStudio.Providers.Usb;
 
 namespace BorgStudio.App;
 
@@ -91,7 +92,7 @@ public partial class App : Application
     public static AppServices CreateServices(IDialogService dialogs)
     {
         // Built-in providers use the same plugin API as external ones.
-        var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new SshProviderPlugin(), new HetznerProviderPlugin()], AppPaths.PluginsDirectory);
+        var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new UsbProviderPlugin(), new SshProviderPlugin(), new HetznerProviderPlugin()], AppPaths.PluginsDirectory);
         var vault = Vault.CreateDefault();
         return new AppServices(
             BorgDetector.CreateDefault(),

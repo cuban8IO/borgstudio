@@ -44,8 +44,9 @@ An `IRepositoryProvider` describes
 - `Id` – stable and unique, stored with every repository that uses the provider. Never change it.
 - `DisplayName`, `Description` – shown when the user picks a provider.
 - `Fields` – the input it needs (`ProviderField`: key, label, kind, required, default value, hint).
-  Kinds are `Text`, `Number`, `FolderPath` (with a folder picker) and `Choice` – a list of `Options`
-  (`ProviderFieldOption`: the value your provider gets, and the label the user sees).
+  Kinds are `Text`, `Number`, `FolderPath` (with a folder picker), `Choice` – a list of `Options`
+  (`ProviderFieldOption`: the value your provider gets, and the label the user sees) – and `Toggle`, a switch whose
+  value is `"true"` or `"false"`.
 - `Validate(values)` – error messages for the entered values; empty when everything is fine.
 - `GetLocation(values)` – the borg repository URL (`/path` or `ssh://user@host:port/path`)
   plus extra borg arguments such as `--remote-path=borg-1.4`.
@@ -82,6 +83,29 @@ Hosted services often differ from a plain server. `SshEndpoint` describes how:
 | `PublishedHostKeyFingerprints = ["SHA256:…"]` | the service publishes its servers' host key fingerprints; a matching key is trusted without asking, any other one only after a warning |
 
 The built-in Hetzner Storage Box provider (`src/BorgStudio.Providers.Hetzner`) uses all three.
+
+### Repositories that have to be found or connected first
+
+If a repository is not simply at the same place every time – a drive that may get another letter, a share to mount,
+a network disk to log in to – implement `IRepositoryConnector` as well. BorgStudio then calls `ConnectAsync` before
+every use and works with the location it returns; uses of the same repository share one connection, and the
+`disconnect` function you pass to `RepositoryConnection` runs when the last one is done.
+
+```csharp
+public async Task<RepositoryConnection> ConnectAsync(RepositoryConnectRequest request, CancellationToken cancellationToken)
+{
+    var folder = await FindAsync(request.Values, request.RepositoryId, cancellationToken)
+        ?? throw new RepositoryUnavailableException("The drive is not attached."); // shown to the user as it is
+    return new RepositoryConnection(new RepositoryLocation(folder), disconnect: null)
+    {
+        UpdatedValues = new Dictionary<string, string>(request.Values) { ["path"] = folder }, // kept with the repository
+    };
+}
+```
+
+`RepositoryId` is the borg repository ID once BorgStudio has reached the repository; `Unattended` is set for
+scheduled runs, where nobody can answer questions. `GetLocation` still describes where the repository was last –
+BorgStudio shows it in the overview. The built-in USB drive provider (`src/BorgStudio.Providers.Usb`) is an example.
 
 BorgStudio creates every public, non-abstract class implementing `IBorgStudioPlugin` that has a public
 parameterless constructor, and calls `Register` once at startup. If anything throws, the plugin is skipped

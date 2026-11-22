@@ -10,6 +10,7 @@ using BorgStudio.Core.Secrets;
 using BorgStudio.Core.Security;
 using BorgStudio.Core.Ssh;
 using BorgStudio.Plugins;
+using BorgStudio.Providers.Usb;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -100,6 +101,53 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         CreateFields(SelectedProvider.Provider, existing.ProviderValues);
         Page = EditorPage.Details;
         RefreshKeys();
+        Loading = FindOutIfConvertibleAsync(existing);
+    }
+
+    /// <summary>What the editor looks up after opening (tests wait for it).</summary>
+    internal Task Loading { get; } = Task.CompletedTask;
+
+    // --- Local folder on an external drive -> USB drive ---
+
+    /// <summary>A local repository on a removable or external drive: it can be kept as a USB drive repository instead.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowConvertToUsb))]
+    public partial bool CanConvertToUsb { get; private set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowConvertToUsb))]
+    public partial bool ConvertedToUsb { get; private set; }
+
+    public bool ShowConvertToUsb => CanConvertToUsb && !ConvertedToUsb;
+
+    private UsbRepositoryProvider? UsbProvider =>
+        Providers.Select(option => option.Provider).OfType<UsbRepositoryProvider>().FirstOrDefault();
+
+    private async Task FindOutIfConvertibleAsync(RepositoryConfig existing)
+    {
+        if (existing.ProviderId != "local" || UsbProvider is not { } usb
+            || existing.ProviderValues.GetValueOrDefault(UsbRepositoryProvider.PathKey) is not { Length: > 0 } path)
+            return;
+        try
+        {
+            CanConvertToUsb = await usb.Drives.IsExternalAsync(path);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            CanConvertToUsb = false;
+        }
+    }
+
+    /// <summary>"Als USB-Laufwerk führen": the same folder, from now on looked for by the repository ID; saved with "Speichern".</summary>
+    [RelayCommand]
+    private void ConvertToUsb()
+    {
+        if (Providers.FirstOrDefault(option => option.Provider is UsbRepositoryProvider) is not { } usb)
+            return;
+        var path = Fields.FirstOrDefault(field => field.Key == UsbRepositoryProvider.PathKey)?.Value ?? "";
+        SelectedProvider = usb;
+        CreateFields(usb.Provider, new Dictionary<string, string> { [UsbRepositoryProvider.PathKey] = path });
+        ConvertedToUsb = true;
     }
 
     public enum EditorPage
@@ -658,6 +706,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
     {
         var repository = existing with
         {
+            ProviderId = provider.Id,
             Name = Name.Trim(),
             ProviderValues = values,
             BorgVersion = SelectedBorgVersion.Value,
@@ -891,15 +940,29 @@ public sealed partial class FieldViewModel(ProviderField providerField, string? 
 
     public bool IsChoice => providerField.Kind == ProviderFieldKind.Choice;
 
-    public bool IsTextInput => !IsChoice;
+    public bool IsToggle => providerField.Kind == ProviderFieldKind.Toggle;
+
+    public bool IsTextInput => !IsChoice && !IsToggle;
+
+    /// <summary>A switch's state (<see cref="Value"/> is "true" or "false").</summary>
+    public bool IsOn
+    {
+        get => bool.TryParse(Value, out var on) && on;
+        set => Value = value ? "true" : "false";
+    }
 
     public IReadOnlyList<Option<string>> Options { get; } =
         providerField.Options.Select(option => new Option<string>(option.Value, option.Label)).ToList();
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SelectedOption))]
+    [NotifyPropertyChangedFor(nameof(SelectedOption), nameof(IsOn))]
     public partial string Value { get; set; } = value ?? providerField.DefaultValue
-        ?? (providerField.Kind == ProviderFieldKind.Choice ? providerField.Options.FirstOrDefault()?.Value : null) ?? "";
+        ?? (providerField.Kind switch
+        {
+            ProviderFieldKind.Choice => providerField.Options.FirstOrDefault()?.Value,
+            ProviderFieldKind.Toggle => "false",
+            _ => null,
+        }) ?? "";
 
     /// <summary>The option matching <see cref="Value"/> (choice fields).</summary>
     public Option<string>? SelectedOption

@@ -51,7 +51,7 @@ public partial class MainViewModel
     private async Task MountAsync(string? archive)
     {
         var item = SelectedRepository!;
-        if (!TryGetLocation(item, out var location))
+        if (await ConnectAsync(item) is not { } location)
             return;
 
         var repositoryId = item.Config.Id;

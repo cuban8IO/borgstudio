@@ -3403,4 +3403,13 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
   <data name="ArchiveExportOpenFolder" xml:space="preserve">
     <value>Open folder</value>
   </data>
+  <data name="EditorConvertToUsb" xml:space="preserve">
+    <value>Keep as USB drive</value>
+  </data>
+  <data name="EditorConvertToUsbHint" xml:space="preserve">
+    <value>This folder is on a removable or external drive. Kept as a USB drive, BorgStudio finds the repository by its ID even under another drive letter, and can eject the drive after automatic runs. Data, jobs and history stay as they are.</value>
+  </data>
+  <data name="EditorConvertedToUsb" xml:space="preserve">
+    <value>Kept as USB drive once you save.</value>
+  </data>
 </root>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Texts of the local provider, English (default). German: Strings.de.resx. -->
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="DisplayName" xml:space="preserve">
+    <value>USB- oder externes Laufwerk</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>Ein Repository auf einem Laufwerk, das nicht immer angeschlossen ist. BorgStudio findet es an seiner Repository-ID, auch unter einem anderen Laufwerksbuchstaben oder Einhängepunkt.</value>
+  </data>
+  <data name="PathLabel" xml:space="preserve">
+    <value>Ordner</value>
+  </data>
+  <data name="PathHint" xml:space="preserve">
+    <value>Wo der Repository-Ordner jetzt liegt. Bekommt das Laufwerk später einen anderen Buchstaben, durchsucht BorgStudio alle Laufwerke und merkt sich den neuen Ort.</value>
+  </data>
+  <data name="PathRequired" xml:space="preserve">
+    <value>Bitte einen Ordner auswählen.</value>
+  </data>
+  <data name="PathNotAbsolute" xml:space="preserve">
+    <value>Bitte den vollständigen Pfad des Ordners angeben.</value>
+  </data>
+  <data name="EjectLabel" xml:space="preserve">
+    <value>Nach automatischen Läufen sicher auswerfen</value>
+  </data>
+  <data name="EjectHint" xml:space="preserve">
+    <value>Nach einer geplanten Sicherung oder Prüfung wirft BorgStudio das Laufwerk aus – außer, etwas anderes nutzt es noch.</value>
+  </data>
+  <data name="NotFound" xml:space="preserve">
+    <value>Das Laufwerk mit diesem Repository ist nicht angeschlossen (zuletzt unter {0}).</value>
+  </data>
+  <data name="NotFoundUnknownId" xml:space="preserve">
+    <value>Der Repository-Ordner {0} wurde nicht gefunden – ist das Laufwerk angeschlossen?</value>
+  </data>
+  <data name="EjectNotExternal" xml:space="preserve">
+    <value>{0} wurde nicht ausgeworfen: Es ist kein Wechsel- oder externes Laufwerk.</value>
+  </data>
+  <data name="EjectFailed" xml:space="preserve">
+    <value>{0} konnte nicht ausgeworfen werden: {1}</value>
+  </data>
+  <data name="EjectVetoed" xml:space="preserve">
+    <value>es wird noch verwendet</value>
+  </data>
+</root>
