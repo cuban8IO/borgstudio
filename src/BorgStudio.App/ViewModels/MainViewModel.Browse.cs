@@ -38,8 +38,12 @@ public partial class MainViewModel
         // tab already. Without them a cached archive can still be looked at, but not restored.
         var access = await GetArchiveAccessAsync(item, location);
         if (access is { } known)
+        {
             browser.RestoreFactory = (items, whole) =>
                 NewRestore(repositoryId, location, known, archive.Archive, items, whole, browser.Dialogs ?? _services.Dialogs);
+            browser.ExportFactory = items => ExportFactory(location, known.Ssh.Access, known.Passphrase.Value, archive.Archive,
+                browser.Dialogs ?? _services.Dialogs)!(items);
+        }
         var source = NewContentsSource(item, location, access);
         browser.VersionsFactory = node => new FileVersionsViewModel(source, node);
         if (cached is not null)

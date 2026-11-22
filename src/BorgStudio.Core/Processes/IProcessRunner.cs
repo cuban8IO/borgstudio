@@ -35,4 +35,20 @@ public interface IProcessRunner
         Action<string>? standardErrorLine = null,
         Action<string>? standardOutputLine = null,
         string? workingDirectory = null);
+
+    /// <summary>
+    /// Like <see cref="RunAsync"/>, but standard output is handed to <paramref name="readOutput"/> as it comes, as bytes
+    /// (e.g. a tar stream); <see cref="ProcessResult.StandardOutput"/> is empty then. The program is waited for after
+    /// <paramref name="readOutput"/> has read to the end.
+    /// </summary>
+    Task<ProcessResult?> RunStreamingAsync(
+        string fileName,
+        IReadOnlyList<string> arguments,
+        TimeSpan timeout,
+        Func<Stream, CancellationToken, Task> readOutput,
+        IReadOnlyDictionary<string, string?>? environment = null,
+        CancellationToken cancellationToken = default,
+        Action<string>? standardErrorLine = null,
+        string? workingDirectory = null) =>
+        throw new NotSupportedException("This runner cannot stream standard output.");
 }

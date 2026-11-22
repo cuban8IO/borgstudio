@@ -664,6 +664,9 @@
                                 <Button Content="{x:Static res:Strings.ArchiveManage}" ToolTip.Tip="{x:Static res:Strings.ArchiveManageTip}">
                                     <Button.Flyout>
                                         <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                                            <MenuItem Header="{x:Static res:Strings.ArchiveExport}" Command="{Binding ExportArchiveCommand}"
+                                                      ToolTip.Tip="{x:Static res:Strings.ArchiveExportTip}" />
+                                            <Separator />
                                             <MenuItem Header="{x:Static res:Strings.ArchiveRename}" Command="{Binding RenameArchiveCommand}" />
                                             <MenuItem Header="{x:Static res:Strings.ArchiveComment}" Command="{Binding CommentArchiveCommand}"
                                                       ToolTip.Tip="{x:Static res:Strings.ArchiveCommentTip}" />

@@ -3349,4 +3349,58 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
   <data name="ArchiveManageTip" xml:space="preserve">
     <value>Rename, comment, keep or delete the marked archives</value>
   </data>
+  <data name="ArchiveExport" xml:space="preserve">
+    <value>Export …</value>
+  </data>
+  <data name="ArchiveExportTip" xml:space="preserve">
+    <value>borg export-tar: the archive as one file – zip, tar.gz, tar.zst or tar</value>
+  </data>
+  <data name="ArchiveExportSelection" xml:space="preserve">
+    <value>Export selection …</value>
+  </data>
+  <data name="ArchiveExportSelectionTip" xml:space="preserve">
+    <value>The selected files and folders as one file (zip, tar.gz, tar.zst, tar)</value>
+  </data>
+  <data name="ArchiveExportTitle" xml:space="preserve">
+    <value>Export</value>
+  </data>
+  <data name="ArchiveExportPickTitle" xml:space="preserve">
+    <value>Export to</value>
+  </data>
+  <data name="ArchiveExportTarget" xml:space="preserve">
+    <value>Into</value>
+  </data>
+  <data name="ArchiveExportWhatArchive" xml:space="preserve">
+    <value>Archive „{0}“</value>
+  </data>
+  <data name="ArchiveExportWhatOne" xml:space="preserve">
+    <value>„{0}“ from „{1}“</value>
+  </data>
+  <data name="ArchiveExportWhatSome" xml:space="preserve">
+    <value>{0} entries from „{1}“</value>
+  </data>
+  <data name="ArchiveExportPreparing" xml:space="preserve">
+    <value>borg works out the size …</value>
+  </data>
+  <data name="ArchiveExportWorking" xml:space="preserve">
+    <value>Exporting …</value>
+  </data>
+  <data name="ArchiveExportDone" xml:space="preserve">
+    <value>Exported into {0} ({1}).</value>
+  </data>
+  <data name="ArchiveExportSkippedLinks" xml:space="preserve">
+    <value>{0} links were left out – zip files cannot hold links (tar can).</value>
+  </data>
+  <data name="ArchiveExportCancelled" xml:space="preserve">
+    <value>Export cancelled – no file was left behind.</value>
+  </data>
+  <data name="ArchiveExportFailed" xml:space="preserve">
+    <value>The export failed: {0}</value>
+  </data>
+  <data name="ArchiveExportZstdMissing" xml:space="preserve">
+    <value>tar.zst needs the program zstd where borg runs (e.g. in WSL: sudo apt install zstd). Or choose zip or tar.gz.</value>
+  </data>
+  <data name="ArchiveExportOpenFolder" xml:space="preserve">
+    <value>Open folder</value>
+  </data>
 </root>

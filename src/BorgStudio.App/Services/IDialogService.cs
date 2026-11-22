@@ -72,6 +72,12 @@ public interface IDialogService
     /// <summary>Shows the versions of a file until the user closes it (looking through the archives starts with it).</summary>
     Task ShowFileVersionsAsync(FileVersionsViewModel versions);
 
+    /// <summary>Where to export an archive to: the file type chosen (zip, tar.gz, tar.zst, tar) gives the extension.</summary>
+    Task<string?> PickArchiveExportFileAsync(string title, string suggestedName);
+
+    /// <summary>An archive exported; the export starts with the window.</summary>
+    Task ShowArchiveExportAsync(ArchiveExportViewModel export);
+
     /// <summary>Two archives compared; returns when the window is closed.</summary>
     Task ShowArchiveDiffAsync(ArchiveDiffViewModel diff);
 }

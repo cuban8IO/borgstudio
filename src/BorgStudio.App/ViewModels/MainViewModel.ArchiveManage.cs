@@ -27,6 +27,7 @@ public partial class MainViewModel
         KeepArchivesCommand.NotifyCanExecuteChanged();
         ReleaseArchivesCommand.NotifyCanExecuteChanged();
         DeleteArchivesCommand.NotifyCanExecuteChanged();
+        ExportArchiveCommand.NotifyCanExecuteChanged();
     }
 
     [RelayCommand(CanExecute = nameof(CanChangeOneArchive))]

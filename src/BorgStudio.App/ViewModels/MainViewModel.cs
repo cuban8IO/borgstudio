@@ -191,6 +191,10 @@ public partial class MainViewModel : ViewModelBase
 
         public Task ShowArchiveDiffAsync(ArchiveDiffViewModel diff) => Task.CompletedTask;
 
+        public Task<string?> PickArchiveExportFileAsync(string title, string suggestedName) => Task.FromResult<string?>(null);
+
+        public Task ShowArchiveExportAsync(ArchiveExportViewModel export) => Task.CompletedTask;
+
         public Task<string?> AskTextAsync(string title, string prompt, string initial) => Task.FromResult<string?>(null);
         public Task CopyToClipboardAsync(string text) => Task.CompletedTask;
         public Task OpenFolderAsync(string path) => Task.CompletedTask;

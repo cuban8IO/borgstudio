@@ -580,6 +580,46 @@ public sealed class BorgClientIntegrationTests : IDisposable
         Assert.Equal(["keep-one"], (await _client.ListArchivesAsync(Borg, Location(), Passphrase)).Value!.Select(archive => archive.Name));
     }
 
+    [BorgFact]
+    public async Task Exports_an_archive_as_zip_and_tar_gz_byte_for_byte()
+    {
+        await _client.InitAsync(Borg, Location(), BorgEncryption.RepokeyBlake2, Passphrase);
+        var source = _directory.Combine("source");
+        Directory.CreateDirectory(Path.Combine(source, "sub"));
+        var data = System.Security.Cryptography.RandomNumberGenerator.GetBytes(3_000_000);
+        File.WriteAllBytes(Path.Combine(source, "sub", "data.bin"), data);
+        File.WriteAllText(Path.Combine(source, "note.txt"), "hello");
+        Assert.True((await _client.CreateAsync(Borg, Location(), "export", [source], [], Passphrase)).Succeeded);
+        var sub = BorgClient.BorgPath(Borg, Path.Combine(source, "sub"))!.TrimStart('/');
+        var exports = _directory.Combine("exports");
+        Directory.CreateDirectory(exports);
+        var progress = new List<BorgExtractProgress>();
+
+        var zipFile = Path.Combine(exports, "sub.zip");
+        var zipped = await _client.ExportAsync(Borg, Location(), "export", [sub], sub.Split('/').Length - 1, zipFile, ExportFormat.Zip, Passphrase,
+            progress: new SynchronousProgress<BorgExtractProgress>(progress.Add));
+
+        Assert.True(zipped.Succeeded, zipped.Error?.ToString());
+        Assert.NotEmpty(progress);
+        using (var zip = System.IO.Compression.ZipFile.OpenRead(zipFile))
+        {
+            var entry = zip.GetEntry("sub/data.bin")!;
+            using var stream = entry.Open();
+            using var copy = new MemoryStream();
+            await stream.CopyToAsync(copy);
+            Assert.Equal(data, copy.ToArray());
+        }
+
+        var tgz = Path.Combine(exports, "all.tar.gz");
+        Assert.True((await _client.ExportAsync(Borg, Location(), "export", [], 0, tgz, ExportFormat.TarGz, Passphrase)).Succeeded);
+        await using var gzip = new System.IO.Compression.GZipStream(File.OpenRead(tgz), System.IO.Compression.CompressionMode.Decompress);
+        var reader = new System.Formats.Tar.TarReader(gzip);
+        var names = new List<string>();
+        while (await reader.GetNextEntryAsync() is { } item)
+            names.Add(item.Name);
+        Assert.Contains(names, name => name.EndsWith("note.txt", StringComparison.Ordinal));
+    }
+
     /// <summary>Calls the progress callback right away (Progress&lt;T&gt; would post it to a thread pool).</summary>
     private sealed class SynchronousProgress<T>(Action<T> report) : IProgress<T>
     {
