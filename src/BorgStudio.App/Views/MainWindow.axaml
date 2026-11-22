@@ -657,6 +657,10 @@
                                         ToolTip.Tip="{x:Static res:Strings.ArchiveOpenTip}" Classes="accent" />
                                 <Button Content="{x:Static res:Strings.ArchivesSearch}" Command="{Binding SearchArchivesCommand}"
                                         ToolTip.Tip="{x:Static res:Strings.ArchivesSearchTip}" />
+                                <Button Content="{x:Static res:Strings.ArchivesCompare}" Command="{Binding CompareArchivesCommand}"
+                                        ToolTip.Tip="{x:Static res:Strings.ArchivesCompareTip}" />
+                                <Button Content="{x:Static res:Strings.ArchivesComparePrevious}" Command="{Binding CompareWithPreviousCommand}"
+                                        ToolTip.Tip="{x:Static res:Strings.ArchivesComparePreviousTip}" />
                                 <Button Content="{x:Static res:Strings.ArchiveMount}" Command="{Binding MountArchiveCommand}"
                                         ToolTip.Tip="{x:Static res:Strings.ArchiveMountTip}" />
                                 <Button Content="{x:Static res:Strings.ArchivesMountAll}" Command="{Binding MountRepositoryCommand}"
@@ -700,6 +704,7 @@
                             </Grid>
 
                             <ListBox ItemsSource="{Binding Archives}" SelectedItem="{Binding SelectedArchive}"
+                                     SelectedItems="{Binding SelectedArchives}" SelectionMode="Multiple"
                                      DoubleTapped="Archives_DoubleTapped">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate x:DataType="vm:ArchiveItemViewModel">

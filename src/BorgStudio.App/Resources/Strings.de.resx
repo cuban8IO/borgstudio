@@ -3171,4 +3171,70 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
   <data name="JobEditorConditionsHint" xml:space="preserve">
     <value>Die Bedingungen zur Verbindung gelten für Repositories auf einem Server oder einer Netzwerkfreigabe. Ein zurückgehaltener Lauf wird alle 15 Minuten erneut versucht, bis zum nächsten geplanten Termin, dann gilt er als übersprungen. Läufe von Hand und über den Webhook starten immer.</value>
   </data>
+  <data name="ArchivesCompare" xml:space="preserve">
+    <value>Vergleichen</value>
+  </data>
+  <data name="ArchivesCompareTip" xml:space="preserve">
+    <value>borg diff: was sich zwischen den zwei markierten Archiven geändert hat (mit Strg oder Umschalt markieren)</value>
+  </data>
+  <data name="ArchivesComparePrevious" xml:space="preserve">
+    <value>Mit Vorgänger vergleichen</value>
+  </data>
+  <data name="ArchivesComparePreviousTip" xml:space="preserve">
+    <value>Was sich seit dem vorigen Archiv desselben Jobs geändert hat</value>
+  </data>
+  <data name="DiffHeader" xml:space="preserve">
+    <value>Vergleich</value>
+  </data>
+  <data name="DiffTitle" xml:space="preserve">
+    <value>{0} → {1}</value>
+  </data>
+  <data name="DiffLoading" xml:space="preserve">
+    <value>borg vergleicht die Archive … bisher {0} Änderungen</value>
+  </data>
+  <data name="DiffKindAll" xml:space="preserve">
+    <value>Alle Änderungen</value>
+  </data>
+  <data name="DiffKindAdded" xml:space="preserve">
+    <value>Nur neue</value>
+  </data>
+  <data name="DiffKindModified" xml:space="preserve">
+    <value>Nur geänderte</value>
+  </data>
+  <data name="DiffKindRemoved" xml:space="preserve">
+    <value>Nur gelöschte</value>
+  </data>
+  <data name="DiffKindAddedShort" xml:space="preserve">
+    <value>neu</value>
+  </data>
+  <data name="DiffKindModifiedShort" xml:space="preserve">
+    <value>geändert</value>
+  </data>
+  <data name="DiffKindRemovedShort" xml:space="preserve">
+    <value>gelöscht</value>
+  </data>
+  <data name="DiffKindMetadataShort" xml:space="preserve">
+    <value>Metadaten</value>
+  </data>
+  <data name="DiffFolder" xml:space="preserve">
+    <value>Ordner</value>
+  </data>
+  <data name="DiffSearch" xml:space="preserve">
+    <value>In Pfaden suchen …</value>
+  </data>
+  <data name="DiffShowMetadata" xml:space="preserve">
+    <value>Auch reine Änderungen an Rechten, Besitzer und Zeiten</value>
+  </data>
+  <data name="DiffSummary" xml:space="preserve">
+    <value>{0} neu · {1} geändert · {2} gelöscht · {3} nur Metadaten</value>
+  </data>
+  <data name="DiffSizes" xml:space="preserve">
+    <value>Neue Dateien: {0} · gelöschte Dateien: {1} · bei geänderten Dateien nennt borg die hinzugekommenen und entfernten Daten</value>
+  </data>
+  <data name="DiffMore" xml:space="preserve">
+    <value>Zeigt {0} von {1} – Filter oder Suche grenzen ein.</value>
+  </data>
+  <data name="DiffNoChanges" xml:space="preserve">
+    <value>Keine Unterschiede.</value>
+  </data>
 </root>

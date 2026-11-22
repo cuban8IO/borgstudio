@@ -97,4 +97,7 @@ public sealed class DialogService(Window owner) : IDialogService
 
     public Task ShowFileVersionsAsync(FileVersionsViewModel versions) =>
         new FileVersionsWindow { DataContext = versions }.ShowDialog(owner);
+
+    public Task ShowArchiveDiffAsync(ArchiveDiffViewModel diff) =>
+        new ArchiveDiffWindow { DataContext = diff }.ShowDialog(owner);
 }
