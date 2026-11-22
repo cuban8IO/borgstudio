@@ -154,6 +154,8 @@ public sealed class FakeBorg : IProcessRunner
             return CompactAsync(standardErrorLine, cancellationToken);
         if (arguments[0] == "check")
             return CheckAsync(arguments, environment, standardErrorLine, cancellationToken);
+        if (arguments[0] == "diff")
+            return DiffAsync(standardOutputLine, cancellationToken);
 
         if (arguments is ["list", ..] && arguments.Contains("--json-lines"))
             return ContentsAsync(arguments, standardOutputLine, cancellationToken);
@@ -382,6 +384,27 @@ public sealed class FakeBorg : IProcessRunner
         standardErrorLine?.Invoke(
             $$"""{"type": "log_message", "time": 0, "message": "compaction freed about {{CompactFreed}} repository space.", "levelname": "INFO", "name": "borg.repository"}""");
         return Result(0, "");
+    }
+
+    /// <summary>What "diff" prints (JSON lines, as borg 1.4 does).</summary>
+    public List<string> DiffLines { get; } = [];
+
+    /// <summary>When set, "diff" fails with this message id.</summary>
+    public string? DiffError { get; set; }
+
+    /// <summary>Awaited before "diff" prints anything (e.g. to close the window meanwhile).</summary>
+    public Func<CancellationToken, Task>? BeforeDiff { get; set; }
+
+    private async Task<ProcessResult?> DiffAsync(Action<string>? standardOutputLine, CancellationToken cancellationToken)
+    {
+        if (BeforeDiff is not null)
+            await BeforeDiff(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (DiffError is not null)
+            return await Error(DiffError);
+        foreach (var line in DiffLines)
+            standardOutputLine?.Invoke(line);
+        return await Result(0, "");
     }
 
     /// <summary>The borg commands that ran under nice (low priority).</summary>
@@ -813,6 +836,21 @@ public sealed class FakeDialogs : IDialogService
         await versions.Begin();
         if (Versions is not null)
             await Versions(versions);
+    }
+
+    /// <summary>The comparisons "shown"; <see cref="Diff"/> runs while one is open (default: until borg is done).</summary>
+    public List<ArchiveDiffViewModel> Diffs { get; } = [];
+
+    public Func<ArchiveDiffViewModel, Task>? Diff { get; set; }
+
+    public async Task ShowArchiveDiffAsync(ArchiveDiffViewModel diff)
+    {
+        Diffs.Add(diff);
+        if (Diff is not null)
+            await Diff(diff);
+        else
+            while (diff.IsLoading)
+                await Task.Delay(10);
     }
 
     public Task<bool> ConfirmPruneAsync(PrunePreviewViewModel preview)

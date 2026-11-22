@@ -68,4 +68,7 @@ public interface IDialogService
 
     /// <summary>Shows the versions of a file until the user closes it (looking through the archives starts with it).</summary>
     Task ShowFileVersionsAsync(FileVersionsViewModel versions);
+
+    /// <summary>Two archives compared; returns when the window is closed.</summary>
+    Task ShowArchiveDiffAsync(ArchiveDiffViewModel diff);
 }

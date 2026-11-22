@@ -3191,4 +3191,70 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
   <data name="JobEditorConditionsHint" xml:space="preserve">
     <value>The connection conditions apply to repositories on a server or a network share. A run held back is tried again every 15 minutes until the next scheduled time, then recorded as skipped. Runs by hand and through the webhook always start.</value>
   </data>
+  <data name="ArchivesCompare" xml:space="preserve">
+    <value>Compare</value>
+  </data>
+  <data name="ArchivesCompareTip" xml:space="preserve">
+    <value>borg diff: what changed between the two marked archives (mark them with Ctrl or Shift)</value>
+  </data>
+  <data name="ArchivesComparePrevious" xml:space="preserve">
+    <value>Compare with previous</value>
+  </data>
+  <data name="ArchivesComparePreviousTip" xml:space="preserve">
+    <value>What changed since the job's archive before this one</value>
+  </data>
+  <data name="DiffHeader" xml:space="preserve">
+    <value>Comparison</value>
+  </data>
+  <data name="DiffTitle" xml:space="preserve">
+    <value>{0} → {1}</value>
+  </data>
+  <data name="DiffLoading" xml:space="preserve">
+    <value>borg compares the archives … {0} changes so far</value>
+  </data>
+  <data name="DiffKindAll" xml:space="preserve">
+    <value>All changes</value>
+  </data>
+  <data name="DiffKindAdded" xml:space="preserve">
+    <value>New only</value>
+  </data>
+  <data name="DiffKindModified" xml:space="preserve">
+    <value>Changed only</value>
+  </data>
+  <data name="DiffKindRemoved" xml:space="preserve">
+    <value>Deleted only</value>
+  </data>
+  <data name="DiffKindAddedShort" xml:space="preserve">
+    <value>new</value>
+  </data>
+  <data name="DiffKindModifiedShort" xml:space="preserve">
+    <value>changed</value>
+  </data>
+  <data name="DiffKindRemovedShort" xml:space="preserve">
+    <value>deleted</value>
+  </data>
+  <data name="DiffKindMetadataShort" xml:space="preserve">
+    <value>metadata</value>
+  </data>
+  <data name="DiffFolder" xml:space="preserve">
+    <value>folder</value>
+  </data>
+  <data name="DiffSearch" xml:space="preserve">
+    <value>Search in paths …</value>
+  </data>
+  <data name="DiffShowMetadata" xml:space="preserve">
+    <value>Also changes of permissions, owner and times only</value>
+  </data>
+  <data name="DiffSummary" xml:space="preserve">
+    <value>{0} new · {1} changed · {2} deleted · {3} metadata only</value>
+  </data>
+  <data name="DiffSizes" xml:space="preserve">
+    <value>New files: {0} · deleted files: {1} · for changed files borg tells the data added and removed</value>
+  </data>
+  <data name="DiffMore" xml:space="preserve">
+    <value>Showing {0} of {1} – filter or search to narrow it down.</value>
+  </data>
+  <data name="DiffNoChanges" xml:space="preserve">
+    <value>No differences.</value>
+  </data>
 </root>

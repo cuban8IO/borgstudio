@@ -531,6 +531,31 @@ public sealed class BorgClientIntegrationTests : IDisposable
         Assert.Equal("limited", created.Value!.ArchiveName);
     }
 
+    [BorgFact]
+    public async Task Compares_two_archives()
+    {
+        await _client.InitAsync(Borg, Location(), BorgEncryption.RepokeyBlake2, Passphrase);
+        var source = _directory.Combine("source");
+        Directory.CreateDirectory(source);
+        File.WriteAllText(Path.Combine(source, "kept.txt"), "same");
+        File.WriteAllText(Path.Combine(source, "changed.txt"), "before");
+        File.WriteAllText(Path.Combine(source, "gone.txt"), "bye");
+        Assert.True((await _client.CreateAsync(Borg, Location(), "one", [source], [], Passphrase)).Succeeded);
+        File.WriteAllText(Path.Combine(source, "changed.txt"), "after, and longer");
+        File.Delete(Path.Combine(source, "gone.txt"));
+        File.WriteAllText(Path.Combine(source, "new.txt"), "hello");
+        Assert.True((await _client.CreateAsync(Borg, Location(), "two", [source], [], Passphrase)).Succeeded);
+
+        var diff = await _client.DiffAsync(Borg, Location(), "one", "two", Passphrase);
+
+        Assert.True(diff.Succeeded, diff.Error?.ToString());
+        var byName = diff.Value!.Where(entry => entry.Kind != DiffKind.Metadata).ToDictionary(entry => Path.GetFileName(entry.Path), entry => entry.Kind);
+        Assert.Equal(DiffKind.Modified, byName["changed.txt"]);
+        Assert.Equal(DiffKind.Removed, byName["gone.txt"]);
+        Assert.Equal(DiffKind.Added, byName["new.txt"]);
+        Assert.False(byName.ContainsKey("kept.txt"));
+    }
+
     /// <summary>Calls the progress callback right away (Progress&lt;T&gt; would post it to a thread pool).</summary>
     private sealed class SynchronousProgress<T>(Action<T> report) : IProgress<T>
     {

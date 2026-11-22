@@ -15,7 +15,7 @@ namespace BorgStudio.App.ViewModels;
 public partial class MainViewModel
 {
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(OpenArchiveCommand), nameof(MountArchiveCommand))]
+    [NotifyCanExecuteChangedFor(nameof(OpenArchiveCommand), nameof(MountArchiveCommand), nameof(CompareWithPreviousCommand))]
     public partial ArchiveItemViewModel? SelectedArchive { get; set; }
 
     /// <summary>The loading started for the open browser (tests wait for it).</summary>
