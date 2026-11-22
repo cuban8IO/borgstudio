@@ -18,6 +18,7 @@ using BorgStudio.Providers.BorgBase;
 using BorgStudio.Providers.Hetzner;
 using BorgStudio.Providers.Local;
 using BorgStudio.Providers.RsyncNet;
+using BorgStudio.Providers.Sftp;
 using BorgStudio.Providers.Ssh;
 using BorgStudio.Providers.Usb;
 
@@ -104,6 +105,22 @@ public sealed class FakeBorg : IProcessRunner
                 fileName = program;
                 arguments = arguments.Skip(2).ToList();
             }
+        }
+
+        // sshfs in the foreground: "runs" until its folder is unmounted.
+        if (fileName == "sshfs")
+            return RunSshfs(arguments, cancellationToken);
+
+        // borg on an SFTP folder: the guard lets it start only on a mounted folder (inside the pid wrapper, or on its own).
+        if (fileName == "sh" && arguments is ["-c", _, "sh", "-c", var wrapped, ..] && wrapped.Contains("BORGSTUDIO_NOT_MOUNTED", StringComparison.Ordinal))
+            arguments = arguments.Skip(2).ToList();
+        if (fileName == "sh" && arguments is ["-c", var guard, var guarded, ..] && guard.Contains("BORGSTUDIO_NOT_MOUNTED", StringComparison.Ordinal))
+        {
+            GuardedMounts.Add(guarded);
+            if (!SftpMounts.ContainsKey(guarded) || SftpVanished)
+                return Task.FromResult<ProcessResult?>(new ProcessResult(97, "", "BORGSTUDIO_NOT_MOUNTED\n"));
+            fileName = arguments[3];
+            arguments = arguments.Skip(4).ToList();
         }
 
         // The shell scripts around mounting.
@@ -660,9 +677,50 @@ public sealed class FakeBorg : IProcessRunner
         return Result(0, "");
     }
 
+    // --- sshfs (SFTP folders) ---
+
+    /// <summary>SFTP folders mounted now (mount point → sshfs "running" until unmounted).</summary>
+    public Dictionary<string, TaskCompletionSource<ProcessResult?>> SftpMounts { get; } = [];
+
+    public List<IReadOnlyList<string>> SshfsCalls { get; } = [];
+
+    public List<string> SftpUnmounts { get; } = [];
+
+    /// <summary>Mount points borg's guard looked at before borg started.</summary>
+    public List<string> GuardedMounts { get; } = [];
+
+    public bool SshfsMissing { get; set; }
+
+    /// <summary>sshfs fails with this on standard error.</summary>
+    public string? SshfsError { get; set; }
+
+    /// <summary>The folder is gone while sshfs still runs (the guard must stop borg).</summary>
+    public bool SftpVanished { get; set; }
+
+    private Task<ProcessResult?> RunSshfs(IReadOnlyList<string> arguments, CancellationToken cancellationToken)
+    {
+        SshfsCalls.Add(arguments);
+        if (SshfsError is { } error)
+            return Task.FromResult<ProcessResult?>(new ProcessResult(1, "", error));
+        var running = new TaskCompletionSource<ProcessResult?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        SftpMounts[arguments[^1]] = running;
+        return running.Task.WaitAsync(cancellationToken);
+    }
+
     private Task<ProcessResult?> MountShell(string script, IReadOnlyList<string> arguments, bool wsl)
     {
         var path = arguments.FirstOrDefault() ?? "";
+        if (script.Contains(".borgstudio/sftp", StringComparison.Ordinal))
+            return SshfsMissing ? Result(3, "BORGSTUDIO_SSHFS_MISSING\n") : Result(0, $"READY /home/me/.borgstudio/sftp/{path}\n");
+        if (script.StartsWith("fusermount -u \"$1\"", StringComparison.Ordinal))
+        {
+            SftpUnmounts.Add(path);
+            if (SftpMounts.Remove(path, out var sshfs))
+                sshfs.TrySetResult(new ProcessResult(0, "", ""));
+            return Result(0, "");
+        }
+        if (script.EndsWith("is_mounted \"$1\"", StringComparison.Ordinal) && SftpMounts.ContainsKey(path))
+            return Result(0, "");
         if (script.Contains("mkdir -p", StringComparison.Ordinal))
         {
             var mountPoint = "/home/me/" + path;
@@ -803,7 +861,7 @@ public sealed class TestServices : IDisposable
         Vault = new Vault(Directory.Combine("vault.json"), FastKdf, Time);
         Settings = new SettingsStore(Directory.Combine("settings.json"));
         Jobs = new BackupJobStore(Directory.Combine("jobs.json"));
-        var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new UsbProviderPlugin(Drives), new SshProviderPlugin(), new HetznerProviderPlugin(), new RsyncNetProviderPlugin(), new BorgBaseProviderPlugin(BorgBaseApi)], "no-plugins-here");
+        var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new UsbProviderPlugin(Drives), new SshProviderPlugin(), new SftpProviderPlugin(), new HetznerProviderPlugin(), new RsyncNetProviderPlugin(), new BorgBaseProviderPlugin(BorgBaseApi)], "no-plugins-here");
         Archives = new ArchiveCache(Directory.Combine("archives"), Vault);
         Durations = new DurationHistory(Directory.Combine("durations.json"));
         System.IO.Directory.CreateDirectory(AppFolder);

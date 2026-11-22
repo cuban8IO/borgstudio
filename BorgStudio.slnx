@@ -10,6 +10,7 @@
     <Project Path="src/BorgStudio.Providers.Hetzner/BorgStudio.Providers.Hetzner.csproj" />
     <Project Path="src/BorgStudio.Providers.Local/BorgStudio.Providers.Local.csproj" />
     <Project Path="src/BorgStudio.Providers.RsyncNet/BorgStudio.Providers.RsyncNet.csproj" />
+    <Project Path="src/BorgStudio.Providers.Sftp/BorgStudio.Providers.Sftp.csproj" />
     <Project Path="src/BorgStudio.Providers.Ssh/BorgStudio.Providers.Ssh.csproj" />
     <Project Path="src/BorgStudio.Providers.Usb/BorgStudio.Providers.Usb.csproj" />
   </Folder>

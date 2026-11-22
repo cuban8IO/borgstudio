@@ -86,7 +86,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             ? (capacity / (double)Gigabyte).ToString("0.##", System.Globalization.CultureInfo.CurrentCulture)
             : "";
         KeyChoice = existing.SshKeyId is null ? SshKeyChoice.Generate : SshKeyChoice.Keep;
-        RestrictKey = existing.SshKeyId is null || existing.SshKeyRestricted;
+        RestrictKey = (existing.SshKeyId is null || existing.SshKeyRestricted) && !IsSftpMount;
         UploadLimit = existing.Limits.UploadMegabytesPerSecond is { } limit ? (decimal)limit : null;
         LimitUpload = UploadLimit is not null;
         UploadOnlyBetween = existing.Limits.OnlyBetween;
@@ -201,7 +201,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(NextCommand))]
-    [NotifyPropertyChangedFor(nameof(IsSsh), nameof(IsUsb), nameof(IsProvisioned), nameof(ShowInstallOptions), nameof(KeyGenerateText))]
+    [NotifyPropertyChangedFor(nameof(IsSsh), nameof(IsUsb), nameof(IsProvisioned), nameof(ShowInstallOptions), nameof(KeyGenerateText), nameof(IsSftpMount))]
     public partial ProviderOptionViewModel? SelectedProvider { get; set; }
 
     // --- Page 2: details ---
@@ -345,6 +345,29 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
 
     /// <summary>The service sets up keys itself (or the user does, in its web interface): no server password, no restriction.</summary>
     public bool IsProvisioned => SelectedProvider?.Provider is ISshKeyProvisioner;
+
+    /// <summary>
+    /// A server with SFTP only, mounted with sshfs: its key must not be restricted to borg serve (that would block SFTP).
+    /// </summary>
+    public bool IsSftpMount => SelectedProvider?.Provider is { UsesSsh: true } provider && SampleLocation(provider)?.MountOverSftp == true;
+
+    private static RepositoryLocation? SampleLocation(IRepositoryProvider provider)
+    {
+        try
+        {
+            return provider.GetLocation(provider.Fields.ToDictionary(field => field.Key, field => field.DefaultValue ?? "x"));
+        }
+        catch (Exception exception) when (exception is ArgumentException or FormatException or KeyNotFoundException)
+        {
+            return null;
+        }
+    }
+
+    partial void OnSelectedProviderChanged(ProviderOptionViewModel? value)
+    {
+        if (IsSftpMount)
+            RestrictKey = false;
+    }
 
     /// <summary>"Neuen Schlüssel erzeugen …": with the server password, or registered at the service.</summary>
     public string KeyGenerateText => IsProvisioned

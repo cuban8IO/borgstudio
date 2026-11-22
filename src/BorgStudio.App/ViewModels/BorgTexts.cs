@@ -26,6 +26,7 @@ internal static class BorgTexts
             BorgErrorKind.MountNotAllowed => Strings.BorgErrorMountNotAllowed,
             BorgErrorKind.MountUnavailable => Strings.BorgErrorMountUnavailable,
             BorgErrorKind.NoSpace => Strings.BorgErrorNoSpace,
+            BorgErrorKind.SshfsMissing => Strings.BorgErrorSshfsMissing,
             _ => Strings.BorgErrorOther,
         };
 

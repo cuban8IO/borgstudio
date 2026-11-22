@@ -9,8 +9,8 @@ The **[product page](https://borgstudio.cuban8io.net/)** shows what it does, the
 
 ## Features
 
-- **Repositories** in a local folder, on a USB or external drive, on an SSH server, on a Hetzner Storage Box, at
-  rsync.net or at BorgBase –
+- **Repositories** in a local folder, on a USB or external drive, on an SSH server, on an SFTP-only server, on a
+  Hetzner Storage Box, at rsync.net or at BorgBase –
   create new ones or connect existing ones; borg runs natively or, on Windows, inside WSL.
 - **Backup jobs** with source folders, exclusions and compression; live progress with upload speed and remaining
   time; cancelling keeps a checkpoint.
@@ -102,6 +102,12 @@ it follows the system language (English if that is neither) or the choice under 
   `dd of=.ssh/authorized_keys oflag=append conv=notrunc`, as rsync.net documents; if the service does not accept the
   restricted key, the editor suggests an unrestricted one. With an unrestricted key the storage overview shows the
   account's quota (rsync.net's `quota` command).
+- **SFTP server (without borg):** BorgStudio mounts the folder holding the repository with sshfs where borg runs
+  (WSL, Linux, macOS with macFUSE) and borg works on it like on a local folder – slower than borg on the server. sshfs
+  runs in the foreground, held by BorgStudio; borg only starts after checking the folder is mounted, so it never writes
+  to the empty local folder. The mount is reused by the next call and unmounted two minutes after the last one (and
+  when BorgStudio or a scheduled run ends). The login key is added over SFTP with the password and is not restricted to
+  borg (that would block SFTP). Install sshfs first, e.g. `sudo apt install sshfs` in WSL.
 - **BorgBase:** with an API token (kept in the vault; "Create Only" is enough) BorgStudio registers the login key,
   creates or finds the repository by name, trusts the host key BorgBase reports for its server and shows the quota
   (the repository's, or the account's). Without a token the editor shows the public key to add in BorgBase's web
@@ -134,6 +140,7 @@ BorgStudio.slnx
 │   ├── BorgStudio.Plugins.Abstractions Public plugin API (repository providers)
 │   ├── BorgStudio.Providers.Local      Built-in provider: local folder
 │   ├── BorgStudio.Providers.Ssh        Built-in provider: SSH server with borg
+│   ├── BorgStudio.Providers.Sftp       Built-in provider: SFTP-only server (sshfs)
 │   ├── BorgStudio.Providers.Hetzner    Built-in provider: Hetzner Storage Box
 │   ├── BorgStudio.Providers.Usb        Built-in provider: USB or external drive
 │   ├── BorgStudio.Providers.RsyncNet   Built-in provider: rsync.net
@@ -152,7 +159,7 @@ Shared build settings (target framework, nullable, version) live in `Directory.B
 
 ## Plugins
 
-Repository providers (local folder, USB drive, SSH server, Hetzner Storage Box, rsync.net, BorgBase, …) are plugins. Built-in providers use the same
+Repository providers (local folder, USB drive, SSH server, SFTP server, Hetzner Storage Box, rsync.net, BorgBase, …) are plugins. Built-in providers use the same
 API as external ones; see [docs/plugins.md](docs/plugins.md) for writing and installing a plugin.
 
 ## Build, test, run

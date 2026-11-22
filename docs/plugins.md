@@ -88,6 +88,13 @@ Hosted services often differ from a plain server. `SshEndpoint` describes how:
 The built-in Hetzner Storage Box provider (`src/BorgStudio.Providers.Hetzner`) uses the first, second and last;
 the rsync.net provider (`src/BorgStudio.Providers.RsyncNet`) uses `Command`.
 
+### Servers with SFTP only
+
+If the server has no borg, set `RepositoryLocation.MountOverSftp = true` (with `Ssh` describing the login). BorgStudio
+mounts the folder holding the repository with sshfs before each borg call and borg works on it like on a local folder.
+Keys for such servers are never restricted to borg serve. The built-in SFTP provider (`src/BorgStudio.Providers.Sftp`)
+does this.
+
 ### Services that set up keys themselves
 
 Some services have no password login: keys are registered through their API (or by hand in their web interface).

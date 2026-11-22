@@ -15,6 +15,12 @@ public sealed record RepositoryLocation(string Url)
     /// and to set up the login key. <c>null</c> for local repositories.
     /// </summary>
     public SshEndpoint? Ssh { get; init; }
+
+    /// <summary>
+    /// The server only offers SFTP (no borg on it): BorgStudio mounts the folder holding the repository with sshfs, using
+    /// <see cref="Ssh"/> to log in, and borg works on it like on a local folder. Needs borg in WSL, on Linux or on macOS.
+    /// </summary>
+    public bool MountOverSftp { get; init; }
 }
 
 /// <summary>An SSH server holding a repository.</summary>
