@@ -80,9 +80,23 @@ Hosted services often differ from a plain server. `SshEndpoint` describes how:
 |---|---|
 | `KeyInstallation = SshKeyInstallation.Sftp` | the service has no regular shell (no redirections), so the key line is appended to `~/.ssh/authorized_keys` over SFTP |
 | `InstallKeyCommand = "install-ssh-key"` | the service has its own command that reads a public key from standard input; BorgStudio uses it for keys not restricted to borg |
+| `KeyInstallation = SshKeyInstallation.Command` | the service appends standard input to a file with a command of its own; BorgStudio sends every key line (restricted or not) to `InstallKeyCommand`, e.g. `dd of=.ssh/authorized_keys oflag=append conv=notrunc` |
 | `PublishedHostKeyFingerprints = ["SHA256:…"]` | the service publishes its servers' host key fingerprints; a matching key is trusted without asking, any other one only after a warning |
 
-The built-in Hetzner Storage Box provider (`src/BorgStudio.Providers.Hetzner`) uses all three.
+The built-in Hetzner Storage Box provider (`src/BorgStudio.Providers.Hetzner`) uses the first, second and last;
+the rsync.net provider (`src/BorgStudio.Providers.RsyncNet`) uses `Command`.
+
+### Quotas
+
+If the service knows how much space an account has, implement `IStorageQuotaSource`. BorgStudio asks it before
+measuring the server's disk; `RunCommandAsync` runs a command on the server with the repository's login key (only
+for keys not restricted to borg, otherwise it is `null`). Return `null` when the quota cannot be found out – BorgStudio
+then measures as usual.
+
+```csharp
+public async Task<StorageQuota?> GetQuotaAsync(StorageQuotaRequest request, CancellationToken cancellationToken) =>
+    request.RunCommandAsync is { } run && await run("quota", cancellationToken) is { } output ? Parse(output) : null;
+```
 
 ### Repositories that have to be found or connected first
 

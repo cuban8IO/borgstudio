@@ -16,6 +16,7 @@ using BorgStudio.Core.Ssh;
 using BorgStudio.Plugins;
 using BorgStudio.Providers.Hetzner;
 using BorgStudio.Providers.Local;
+using BorgStudio.Providers.RsyncNet;
 using BorgStudio.Providers.Ssh;
 using BorgStudio.Providers.Usb;
 
@@ -798,7 +799,7 @@ public sealed class TestServices : IDisposable
         Vault = new Vault(Directory.Combine("vault.json"), FastKdf, Time);
         Settings = new SettingsStore(Directory.Combine("settings.json"));
         Jobs = new BackupJobStore(Directory.Combine("jobs.json"));
-        var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new UsbProviderPlugin(Drives), new SshProviderPlugin(), new HetznerProviderPlugin()], "no-plugins-here");
+        var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new UsbProviderPlugin(Drives), new SshProviderPlugin(), new HetznerProviderPlugin(), new RsyncNetProviderPlugin()], "no-plugins-here");
         Archives = new ArchiveCache(Directory.Combine("archives"), Vault);
         Durations = new DurationHistory(Directory.Combine("durations.json"));
         System.IO.Directory.CreateDirectory(AppFolder);

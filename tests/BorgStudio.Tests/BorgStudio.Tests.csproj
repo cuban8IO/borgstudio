@@ -25,6 +25,7 @@
     <ProjectReference Include="..\..\src\BorgStudio.Providers.Ssh\BorgStudio.Providers.Ssh.csproj" />
     <ProjectReference Include="..\..\src\BorgStudio.Providers.Hetzner\BorgStudio.Providers.Hetzner.csproj" />
     <ProjectReference Include="..\..\src\BorgStudio.Providers.Usb\BorgStudio.Providers.Usb.csproj" />
+    <ProjectReference Include="..\..\src\BorgStudio.Providers.RsyncNet\BorgStudio.Providers.RsyncNet.csproj" />
   </ItemGroup>
 
   <!-- The sample plugin's build output, as it would be installed: test output/plugins/BorgStudio.SamplePlugin/ -->

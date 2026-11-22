@@ -688,6 +688,9 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         if (!info.Succeeded)
         {
             Errors.Add(BorgTexts.Describe(info.Error!));
+            // Some services do not run the forced command of a restricted key (rsync.net does not document it).
+            if (login.Restricted && info.Error!.Kind is BorgErrorKind.ConnectionFailed or BorgErrorKind.SshAuthenticationFailed or BorgErrorKind.Other)
+                Errors.Add(Strings.EditorRestrictedKeyRefused);
             return;
         }
 

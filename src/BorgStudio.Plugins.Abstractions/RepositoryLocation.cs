@@ -53,4 +53,10 @@ public enum SshKeyInstallation
 
     /// <summary>Over SFTP – for servers whose shell is restricted (no redirections), e.g. storage services.</summary>
     Sftp,
+
+    /// <summary>
+    /// Through <see cref="SshEndpoint.InstallKeyCommand"/>, restricted keys too: the command reads the whole line from
+    /// standard input and appends it (e.g. <c>dd of=.ssh/authorized_keys oflag=append conv=notrunc</c>).
+    /// </summary>
+    Command,
 }

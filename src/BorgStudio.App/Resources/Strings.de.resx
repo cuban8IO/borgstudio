@@ -3421,4 +3421,7 @@ Jobs: {1}</value>
   <data name="PlugInNotNow" xml:space="preserve">
     <value>Nicht jetzt</value>
   </data>
+  <data name="EditorRestrictedKeyRefused" xml:space="preserve">
+    <value>Der Server nimmt auf borg beschränkte Schlüssel möglicherweise nicht an. Versuche es noch einmal ohne „Schlüssel auf borg und dieses Repository beschränken“.</value>
+  </data>
 </root>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Texts of the local provider, English (default). German: Strings.de.resx. -->
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="DisplayName" xml:space="preserve">
+    <value>rsync.net</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>Cloud storage at rsync.net – borg runs on their server (borg 1.4 or 1.2). The account's quota shows in the storage overview.</value>
+  </data>
+  <data name="HostLabel" xml:space="preserve">
+    <value>Server</value>
+  </data>
+  <data name="HostHint" xml:space="preserve">
+    <value>The host name from your welcome e-mail, e.g. zh1234.rsync.net (“.rsync.net” may be left out).</value>
+  </data>
+  <data name="HostRequired" xml:space="preserve">
+    <value>Please enter the server.</value>
+  </data>
+  <data name="HostInvalid" xml:space="preserve">
+    <value>The server should look like zh1234.rsync.net.</value>
+  </data>
+  <data name="UserLabel" xml:space="preserve">
+    <value>Login name</value>
+  </data>
+  <data name="UserHint" xml:space="preserve">
+    <value>The login name from your welcome e-mail.</value>
+  </data>
+  <data name="UserRequired" xml:space="preserve">
+    <value>Please enter the login name.</value>
+  </data>
+  <data name="UserInvalid" xml:space="preserve">
+    <value>The login name may only contain letters, digits, dots, hyphens and underscores.</value>
+  </data>
+  <data name="PathLabel" xml:space="preserve">
+    <value>Folder in the account</value>
+  </data>
+  <data name="PathHint" xml:space="preserve">
+    <value>Relative to the account's home folder, e.g. borg/laptop. Created with a new repository.</value>
+  </data>
+  <data name="PathRequired" xml:space="preserve">
+    <value>Please enter a folder.</value>
+  </data>
+  <data name="PathNotRelative" xml:space="preserve">
+    <value>Please enter the folder relative to the home folder (without a leading /).</value>
+  </data>
+  <data name="PathInvalid" xml:space="preserve">
+    <value>The folder may only contain letters, digits and . _ + - / (no “..”).</value>
+  </data>
+  <data name="RemoteBorgLabel" xml:space="preserve">
+    <value>borg on the server</value>
+  </data>
+  <data name="RemoteBorgHint" xml:space="preserve">
+    <value>rsync.net offers borg 1.4 and 1.2. Choose the series of the borg on this computer (1.4 for new repositories).</value>
+  </data>
+  <data name="RemoteBorgInvalid" xml:space="preserve">
+    <value>Please choose the borg version on the server.</value>
+  </data>
+  <data name="Borg14" xml:space="preserve">
+    <value>borg 1.4 (borg14)</value>
+  </data>
+  <data name="Borg12" xml:space="preserve">
+    <value>borg 1.2 (borg12)</value>
+  </data>
+</root>

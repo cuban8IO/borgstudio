@@ -72,7 +72,7 @@ public partial class MainViewModel
             return;
 
         var borg = Borg!;
-        var probe = new StorageProbe(_services.BorgClient);
+        var probe = new StorageProbe(_services.BorgClient, plugins: _services.Plugins);
         var usage = await Task.Run(() => probe.MeasureDirectAsync(item.Config, borg, location, ssh.Access));
         if (usage is null)
         {
