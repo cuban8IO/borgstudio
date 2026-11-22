@@ -61,7 +61,11 @@ public partial class MainViewModel : ViewModelBase
         // Created right away: it follows PIN changes and vault resets from now on.
         ScheduledAccess = CreateScheduledAccess(services);
         InitializeVault();
-        SelectedArchives.CollectionChanged += (_, _) => OnSelectedArchivesChanged();
+        SelectedArchives.CollectionChanged += (_, _) =>
+        {
+            OnSelectedArchivesChanged();
+            NotifyArchiveChangeCommands();
+        };
         LoadRepositories();
         LoadJobs();
         RefreshChecks();
@@ -186,6 +190,8 @@ public partial class MainViewModel : ViewModelBase
         public Task ShowFileVersionsAsync(FileVersionsViewModel versions) => Task.CompletedTask;
 
         public Task ShowArchiveDiffAsync(ArchiveDiffViewModel diff) => Task.CompletedTask;
+
+        public Task<string?> AskTextAsync(string title, string prompt, string initial) => Task.FromResult<string?>(null);
         public Task CopyToClipboardAsync(string text) => Task.CompletedTask;
         public Task OpenFolderAsync(string path) => Task.CompletedTask;
         public void RestartApp(System.Diagnostics.ProcessStartInfo? instead = null) { }

@@ -556,6 +556,30 @@ public sealed class BorgClientIntegrationTests : IDisposable
         Assert.False(byName.ContainsKey("kept.txt"));
     }
 
+    [BorgFact]
+    public async Task Renames_comments_and_deletes_archives()
+    {
+        await _client.InitAsync(Borg, Location(), BorgEncryption.RepokeyBlake2, Passphrase);
+        var source = _directory.Combine("source");
+        Directory.CreateDirectory(source);
+        File.WriteAllText(Path.Combine(source, "a.txt"), "a");
+        foreach (var name in new[] { "one", "two", "three" })
+            Assert.True((await _client.CreateAsync(Borg, Location(), name, [source], [], Passphrase)).Succeeded);
+
+        Assert.True((await _client.RenameArchiveAsync(Borg, Location(), "one", "keep-one", Passphrase)).Succeeded);
+        Assert.False((await _client.RenameArchiveAsync(Borg, Location(), "two", "three", Passphrase)).Succeeded);
+        var commented = await _client.SetArchiveCommentAsync(Borg, Location(), "three", "before the update", Passphrase);
+        Assert.True(commented.Succeeded, commented.Error?.ToString());
+
+        var listed = (await _client.ListArchivesAsync(Borg, Location(), Passphrase)).Value!;
+        Assert.Equal(["keep-one", "three", "two"], listed.Select(archive => archive.Name).Order());
+        Assert.Equal("before the update", listed.Single(archive => archive.Name == "three").Comment);
+        Assert.Null(listed.Single(archive => archive.Name == "two").Comment);
+
+        Assert.True((await _client.DeleteArchivesAsync(Borg, Location(), ["two", "three"], Passphrase)).Succeeded);
+        Assert.Equal(["keep-one"], (await _client.ListArchivesAsync(Borg, Location(), Passphrase)).Value!.Select(archive => archive.Name));
+    }
+
     /// <summary>Calls the progress callback right away (Progress&lt;T&gt; would post it to a thread pool).</summary>
     private sealed class SynchronousProgress<T>(Action<T> report) : IProgress<T>
     {

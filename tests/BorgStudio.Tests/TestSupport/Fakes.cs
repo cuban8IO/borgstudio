@@ -156,6 +156,8 @@ public sealed class FakeBorg : IProcessRunner
             return CheckAsync(arguments, environment, standardErrorLine, cancellationToken);
         if (arguments[0] == "diff")
             return DiffAsync(standardOutputLine, cancellationToken);
+        if (arguments[0] is "rename" or "delete" or "recreate")
+            return ChangeArchives(arguments);
 
         if (arguments is ["list", ..] && arguments.Contains("--json-lines"))
             return ContentsAsync(arguments, standardOutputLine, cancellationToken);
@@ -198,7 +200,7 @@ public sealed class FakeBorg : IProcessRunner
         var start = archive.Start.ToString("yyyy-MM-ddTHH:mm:ss.ffffff", CultureInfo.InvariantCulture);
         return details
             ? $$$"""{"name": "{{{archive.Name}}}", "id": "{{{id}}}", "start": "{{{start}}}", "duration": {{{index * 10}}}.5, "hostname": "host", "stats": {"original_size": {{{index * 1_000_000}}}, "compressed_size": {{{index * 500_000}}}, "deduplicated_size": {{{index * 1000}}}, "nfiles": {{{index * 100}}}}}"""
-            : $$"""{"archive": "{{archive.Name}}", "barchive": "{{archive.Name}}", "name": "{{archive.Name}}", "id": "{{id}}", "start": "{{start}}", "time": "{{start}}"}""";
+            : $$"""{"archive": "{{archive.Name}}", "barchive": "{{archive.Name}}", "name": "{{archive.Name}}", "id": "{{id}}", "start": "{{start}}", "time": "{{start}}", "comment": "{{Comments.GetValueOrDefault(archive.Name, "")}}"}""";
     }
 
     /// <summary>Three progress lines, the warnings, then the final statistics.</summary>
@@ -383,6 +385,46 @@ public sealed class FakeBorg : IProcessRunner
         standardErrorLine?.Invoke("""{"operation": 1, "msgid": "repository.compact_segments", "type": "progress_percent", "finished": true, "time": 0}""");
         standardErrorLine?.Invoke(
             $$"""{"type": "log_message", "time": 0, "message": "compaction freed about {{CompactFreed}} repository space.", "levelname": "INFO", "name": "borg.repository"}""");
+        return Result(0, "");
+    }
+
+    /// <summary>The archives' comments ("recreate --comment" sets them, "list" reports them).</summary>
+    public Dictionary<string, string> Comments { get; } = [];
+
+    /// <summary>When set, "rename", "delete" and "recreate" fail with this message id.</summary>
+    public string? ChangeError { get; set; }
+
+    /// <summary>"rename", "delete" (several archives at once) and "recreate --comment" on <see cref="Archives"/>.</summary>
+    private Task<ProcessResult?> ChangeArchives(IReadOnlyList<string> arguments)
+    {
+        if (ChangeError is not null)
+            return Error(ChangeError);
+        var target = arguments.First(argument => argument.Contains("::", StringComparison.Ordinal));
+        var first = target[(target.IndexOf("::", StringComparison.Ordinal) + 2)..];
+        var rest = arguments.SkipWhile(argument => argument != target).Skip(1).ToList();
+        int Index(string name) => Archives.FindIndex(archive => archive.Name == name);
+        switch (arguments[0])
+        {
+            case "rename":
+                if (Index(rest[0]) >= 0)
+                    return Error("Archive.AlreadyExists");
+                if (Index(first) is var index and >= 0)
+                    Archives[index] = (rest[0], Archives[index].Start);
+                if (Comments.Remove(first, out var comment))
+                    Comments[rest[0]] = comment;
+                break;
+            case "delete":
+                foreach (var name in rest.Prepend(first))
+                    Archives.RemoveAll(archive => archive.Name == name);
+                break;
+            default:
+                var text = arguments[arguments.ToList().IndexOf("--comment") + 1];
+                if (text.Length == 0)
+                    Comments.Remove(first);
+                else
+                    Comments[first] = text;
+                break;
+        }
         return Result(0, "");
     }
 
@@ -762,6 +804,19 @@ public sealed class FakeDialogs : IDialogService
     }
 
     public Task<string?> AskNewPinAsync() => Task.FromResult(NewPins.Count > 0 ? NewPins.Dequeue() : null);
+
+    /// <summary>Answers to text prompts (names, comments); none left: cancelled.</summary>
+    public Queue<string?> TextAnswers { get; } = [];
+
+    /// <summary>What the text prompts were filled in with.</summary>
+    public List<string> TextInitials { get; } = [];
+
+    public Task<string?> AskTextAsync(string title, string prompt, string initial)
+    {
+        Shown.Add(title);
+        TextInitials.Add(initial);
+        return Task.FromResult(TextAnswers.Count > 0 ? TextAnswers.Dequeue() : null);
+    }
 
     public Task<string?> AskSecretAsync(string title, string prompt, string? error = null)
     {
