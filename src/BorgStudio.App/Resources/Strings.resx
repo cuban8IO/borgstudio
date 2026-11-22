@@ -3444,4 +3444,28 @@ Jobs: {1}</value>
   <data name="EditorRestrictedKeyRefused" xml:space="preserve">
     <value>The server may not accept keys restricted to borg. Try again without “Restrict the key to borg and this repository”.</value>
   </data>
+  <data name="EditorProvisionFailed" xml:space="preserve">
+    <value>The service could not be reached: {0}</value>
+  </data>
+  <data name="EditorAddKeyTitle" xml:space="preserve">
+    <value>Add the login key</value>
+  </data>
+  <data name="EditorAddKeyByHand" xml:space="preserve">
+    <value>Add this public key in the web interface of {0} and give it access to the repository (for BorgBase: Account → SSH Keys → Add Key, then in the repository's settings under “Full Access”). Then click “Added”.</value>
+  </data>
+  <data name="EditorAddKeyCancelled" xml:space="preserve">
+    <value>The key was not added – nothing was saved.</value>
+  </data>
+  <data name="PublicKeyCopy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="PublicKeyCopied" xml:space="preserve">
+    <value>Copied.</value>
+  </data>
+  <data name="PublicKeyAdded" xml:space="preserve">
+    <value>Added</value>
+  </data>
+  <data name="EditorKeyGenerateProvisioned" xml:space="preserve">
+    <value>Create a new key and register it at {0} (through the API, or by hand)</value>
+  </data>
 </root>

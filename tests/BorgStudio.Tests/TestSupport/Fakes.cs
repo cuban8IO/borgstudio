@@ -14,6 +14,7 @@ using BorgStudio.Core.Settings;
 using BorgStudio.Core.Updates;
 using BorgStudio.Core.Ssh;
 using BorgStudio.Plugins;
+using BorgStudio.Providers.BorgBase;
 using BorgStudio.Providers.Hetzner;
 using BorgStudio.Providers.Local;
 using BorgStudio.Providers.RsyncNet;
@@ -787,6 +788,9 @@ public sealed class TestServices : IDisposable
     /// <summary>Cheap key derivation: the tests check the logic, not the cost.</summary>
     public static readonly KdfParameters FastKdf = new(64, 1, 1);
 
+    /// <summary>BorgBase's GraphQL API.</summary>
+    public FakeBorgBase BorgBaseApi { get; } = new();
+
     /// <summary>The drives the USB provider searches and ejects.</summary>
     public FakeDrives Drives { get; } = new();
 
@@ -799,7 +803,7 @@ public sealed class TestServices : IDisposable
         Vault = new Vault(Directory.Combine("vault.json"), FastKdf, Time);
         Settings = new SettingsStore(Directory.Combine("settings.json"));
         Jobs = new BackupJobStore(Directory.Combine("jobs.json"));
-        var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new UsbProviderPlugin(Drives), new SshProviderPlugin(), new HetznerProviderPlugin(), new RsyncNetProviderPlugin()], "no-plugins-here");
+        var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new UsbProviderPlugin(Drives), new SshProviderPlugin(), new HetznerProviderPlugin(), new RsyncNetProviderPlugin(), new BorgBaseProviderPlugin(BorgBaseApi)], "no-plugins-here");
         Archives = new ArchiveCache(Directory.Combine("archives"), Vault);
         Durations = new DurationHistory(Directory.Combine("durations.json"));
         System.IO.Directory.CreateDirectory(AppFolder);
@@ -998,6 +1002,17 @@ public sealed class FakeDialogs : IDialogService
         Shown.Add(title);
         TextInitials.Add(suggestedName);
         return Task.FromResult(ExportFile);
+    }
+
+    /// <summary>Public keys shown to add by hand; answered with <see cref="PublicKeyAdded"/>.</summary>
+    public List<(string Instructions, string PublicKey)> PublicKeys { get; } = [];
+
+    public bool PublicKeyAdded { get; set; } = true;
+
+    public Task<bool> ShowPublicKeyAsync(string title, string instructions, string publicKey)
+    {
+        PublicKeys.Add((instructions, publicKey));
+        return Task.FromResult(PublicKeyAdded);
     }
 
     /// <summary>The questions asked on top (title, message); answered with <see cref="OnTopAnswer"/>.</summary>
@@ -1314,4 +1329,99 @@ public sealed class FakeDrives : IDriveSystem
         Ejected.Add(path);
         return Task.FromResult(EjectProblem);
     }
+}
+
+/// <summary>Plays BorgBase's GraphQL API: SSH keys and repositories of one account; requests are recorded.</summary>
+public sealed class FakeBorgBase : HttpMessageHandler
+{
+    public const string Token = "borgbase-test-token";
+
+    public List<(string Query, System.Text.Json.Nodes.JsonObject? Variables, string? Token)> Requests { get; } = [];
+
+    public List<(string Id, string KeyData)> Keys { get; } = [];
+
+    public List<FakeBorgBaseRepo> Repos { get; } = [];
+
+    public double DiskUsageMb { get; set; } = 1500;
+
+    public int StorageLimitMb { get; set; } = 10000;
+
+    public IEnumerable<string> Operations => Requests.Select(request => request.Query.Split('{', '(')[0].Trim() + " "
+        + System.Text.RegularExpressions.Regex.Match(request.Query, @"\{\s*(\w+)").Groups[1].Value);
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var body = System.Text.Json.Nodes.JsonNode.Parse(await request.Content!.ReadAsStringAsync(cancellationToken))!.AsObject();
+        var query = body["query"]!.GetValue<string>();
+        var variables = body["variables"] as System.Text.Json.Nodes.JsonObject;
+        var token = request.Headers.Authorization?.Parameter;
+        Requests.Add((query, variables, token));
+        if (token != Token)
+            return new HttpResponseMessage(System.Net.HttpStatusCode.Unauthorized);
+
+        System.Text.Json.Nodes.JsonObject data;
+        if (query.Contains("sshList"))
+            data = new() { ["sshList"] = new System.Text.Json.Nodes.JsonArray([.. Keys.Select(key => (System.Text.Json.Nodes.JsonNode)new System.Text.Json.Nodes.JsonObject { ["id"] = key.Id, ["keyData"] = key.KeyData })]) };
+        else if (query.Contains("sshAdd"))
+        {
+            var id = (Keys.Count + 100).ToString(CultureInfo.InvariantCulture);
+            Keys.Add((id, variables!["keyData"]!.GetValue<string>()));
+            data = new() { ["sshAdd"] = new System.Text.Json.Nodes.JsonObject { ["keyAdded"] = new System.Text.Json.Nodes.JsonObject { ["id"] = id } } };
+        }
+        else if (query.Contains("repoList"))
+            data = new() { ["repoList"] = new System.Text.Json.Nodes.JsonArray([.. Repos.Select(repo => (System.Text.Json.Nodes.JsonNode)repo.Json())]) };
+        else if (query.Contains("repoAdd"))
+        {
+            var repo = new FakeBorgBaseRepo($"r{Repos.Count + 1}", variables!["name"]!.GetValue<string>(), $"abcd{Repos.Count + 1}")
+            {
+                Region = variables["region"]!.GetValue<string>(),
+            };
+            repo.FullAccessKeys.AddRange(variables["keys"]!.AsArray().Select(key => key!.GetValue<string>()));
+            Repos.Add(repo);
+            data = new() { ["repoAdd"] = new System.Text.Json.Nodes.JsonObject { ["repoAdded"] = repo.Json() } };
+        }
+        else if (query.Contains("repoEdit"))
+        {
+            var repo = Repos.Single(candidate => candidate.Id == variables!["id"]!.GetValue<string>());
+            repo.FullAccessKeys.Clear();
+            repo.FullAccessKeys.AddRange(variables!["keys"]!.AsArray().Select(key => key!.GetValue<string>()));
+            data = new() { ["repoEdit"] = new System.Text.Json.Nodes.JsonObject { ["repoEdited"] = new System.Text.Json.Nodes.JsonObject { ["id"] = repo.Id } } };
+        }
+        else if (query.Contains("repo(repoId"))
+        {
+            var repo = Repos.Single(candidate => candidate.Id == variables!["id"]!.GetValue<string>());
+            data = new() { ["repo"] = new System.Text.Json.Nodes.JsonObject { ["currentUsage"] = repo.UsageMb, ["quota"] = repo.QuotaMb, ["quotaEnabled"] = repo.QuotaMb > 0 } };
+        }
+        else if (query.Contains("me"))
+            data = new() { ["me"] = new System.Text.Json.Nodes.JsonObject { ["diskUsage"] = DiskUsageMb, ["storageLimitMb"] = StorageLimitMb } };
+        else
+            return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
+
+        return new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+        {
+            Content = new StringContent(new System.Text.Json.Nodes.JsonObject { ["data"] = data }.ToJsonString()),
+        };
+    }
+}
+
+public sealed record FakeBorgBaseRepo(string Id, string Name, string Login)
+{
+    public const string Ed25519 = "SHA256:BorgBaseEd25519FingerprintAAAAAAAAAAAAAAAAAA";
+
+    public string Region { get; init; } = "eu";
+
+    public List<string> FullAccessKeys { get; } = [];
+
+    public double UsageMb { get; set; } = 250;
+
+    public int QuotaMb { get; set; }
+
+    public System.Text.Json.Nodes.JsonObject Json() => new()
+    {
+        ["id"] = Id,
+        ["name"] = Name,
+        ["repoPath"] = $"{Login}@{Login}.repo.borgbase.com:repo",
+        ["fullAccessKeyList"] = new System.Text.Json.Nodes.JsonArray([.. FullAccessKeys.Select(key => (System.Text.Json.Nodes.JsonNode)new System.Text.Json.Nodes.JsonObject { ["id"] = key })]),
+        ["server"] = new System.Text.Json.Nodes.JsonObject { ["fingerprintEd25519"] = Ed25519, ["fingerprintEcdsa"] = "", ["fingerprintRsa"] = "ab:cd:ef" },
+    };
 }

@@ -1,0 +1,23 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:res="clr-namespace:BorgStudio.App.Resources"
+        x:Class="BorgStudio.App.Views.PublicKeyWindow"
+        Width="560" SizeToContent="Height" CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+    <StackPanel Margin="20" Spacing="12">
+        <TextBlock x:Name="InstructionsText" TextWrapping="Wrap" />
+        <TextBox x:Name="KeyText" IsReadOnly="True" TextWrapping="Wrap" FontFamily="Consolas,Menlo,monospace" FontSize="12" />
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <Button Content="{x:Static res:Strings.PublicKeyCopy}" Click="Copy_Click" />
+            <TextBlock x:Name="CopiedText" Text="{x:Static res:Strings.PublicKeyCopied}" VerticalAlignment="Center"
+                       Foreground="{StaticResource BpGreenBrush}" IsVisible="False" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button Content="{x:Static res:Strings.PublicKeyAdded}" Classes="accent" IsDefault="True" Click="Added_Click" />
+            <Button Content="{x:Static res:Strings.Cancel}" IsCancel="True" Click="Cancel_Click" />
+        </StackPanel>
+    </StackPanel>
+
+</Window>

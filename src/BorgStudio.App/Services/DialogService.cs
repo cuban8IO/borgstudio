@@ -120,6 +120,9 @@ public sealed class DialogService(Window owner) : IDialogService
         return file?.TryGetLocalPath();
     }
 
+    public Task<bool> ShowPublicKeyAsync(string title, string instructions, string publicKey) =>
+        new PublicKeyWindow(title, instructions, publicKey).ShowDialog<bool>(owner);
+
     public async Task<bool> AskOnTopAsync(string title, string message, string confirmText, string cancelText,
         CancellationToken cancellationToken)
     {

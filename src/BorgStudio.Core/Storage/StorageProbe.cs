@@ -21,6 +21,9 @@ public sealed partial class StorageProbe(BorgClient borg, TimeProvider? time = n
     /// <summary>Asks the disk directly (tests replace it).</summary>
     internal Func<string, (long Total, long Free)?> DiskSpace { get; init; } = Disk.Space;
 
+    /// <summary>The provider's secrets of a repository that can be read now (e.g. an API token for the quota).</summary>
+    public Func<RepositoryConfig, IReadOnlyDictionary<string, string>>? Secrets { get; init; }
+
     /// <summary>The usage now; <c>null</c> if nothing could be found out (e.g. the server is not reachable).</summary>
     public async Task<StorageUsage?> MeasureAsync(RepositoryConfig repository, BorgInstallation installation, RepositoryLocation location,
         string? passphrase, SshAccess? ssh, CancellationToken cancellationToken = default) =>
@@ -85,7 +88,11 @@ public sealed partial class StorageProbe(BorgClient borg, TimeProvider? time = n
                 await borg.RunSshCommandAsync(installation, location, ssh, command, token) is { ExitCode: 0 } result ? result.StandardOutput : null;
         try
         {
-            return await source.GetQuotaAsync(new StorageQuotaRequest(repository.ProviderValues) { RunCommandAsync = run }, cancellationToken)
+            return await source.GetQuotaAsync(new StorageQuotaRequest(repository.ProviderValues)
+                {
+                    RunCommandAsync = run,
+                    Secrets = Secrets?.Invoke(repository) ?? new Dictionary<string, string>(),
+                }, cancellationToken)
                 is { TotalBytes: > 0 } quota ? quota : null;
         }
         catch (Exception exception) when (exception is not OperationCanceledException)

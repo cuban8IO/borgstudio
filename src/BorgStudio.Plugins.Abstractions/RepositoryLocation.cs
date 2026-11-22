@@ -59,4 +59,10 @@ public enum SshKeyInstallation
     /// standard input and appends it (e.g. <c>dd of=.ssh/authorized_keys oflag=append conv=notrunc</c>).
     /// </summary>
     Command,
+
+    /// <summary>
+    /// By the provider itself (<see cref="ISshKeyProvisioner"/>) or by the user in the service's web interface – the
+    /// service has no password login.
+    /// </summary>
+    Provider,
 }

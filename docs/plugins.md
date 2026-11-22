@@ -45,8 +45,10 @@ An `IRepositoryProvider` describes
 - `DisplayName`, `Description` – shown when the user picks a provider.
 - `Fields` – the input it needs (`ProviderField`: key, label, kind, required, default value, hint).
   Kinds are `Text`, `Number`, `FolderPath` (with a folder picker), `Choice` – a list of `Options`
-  (`ProviderFieldOption`: the value your provider gets, and the label the user sees) – and `Toggle`, a switch whose
-  value is `"true"` or `"false"`.
+  (`ProviderFieldOption`: the value your provider gets, and the label the user sees), `Toggle`, a switch whose
+  value is `"true"` or `"false"`, and `Secret` – entered hidden and kept in BorgStudio's vault, never with the
+  repository. Secrets are not part of the values `Validate` and `GetLocation` get; the requests that need them carry
+  them in `Secrets`.
 - `Validate(values)` – error messages for the entered values; empty when everything is fine.
 - `GetLocation(values)` – the borg repository URL (`/path` or `ssh://user@host:port/path`)
   plus extra borg arguments such as `--remote-path=borg-1.4`.
@@ -85,6 +87,15 @@ Hosted services often differ from a plain server. `SshEndpoint` describes how:
 
 The built-in Hetzner Storage Box provider (`src/BorgStudio.Providers.Hetzner`) uses the first, second and last;
 the rsync.net provider (`src/BorgStudio.Providers.RsyncNet`) uses `Command`.
+
+### Services that set up keys themselves
+
+Some services have no password login: keys are registered through their API (or by hand in their web interface).
+Return `SshKeyInstallation.Provider` from the endpoint and implement `ISshKeyProvisioner`. BorgStudio calls
+`ProvisionAsync` with the new login key before it first reaches the repository; return the values to keep (e.g. the
+repository's address, which `GetLocation` reads from then on, and the server's host key fingerprints), or `null` when
+the service cannot be asked – BorgStudio then shows the public key for the user to add by hand. Values without a field
+of their own are kept with the repository. The BorgBase provider (`src/BorgStudio.Providers.BorgBase`) is an example.
 
 ### Quotas
 

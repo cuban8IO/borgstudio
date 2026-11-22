@@ -21,6 +21,9 @@ public sealed record StorageQuotaRequest(IReadOnlyDictionary<string, string> Val
     /// not reached over SSH.
     /// </summary>
     public Func<string, CancellationToken, Task<string?>>? RunCommandAsync { get; init; }
+
+    /// <summary>The values of <see cref="ProviderFieldKind.Secret"/> fields that are available now (e.g. an API token).</summary>
+    public IReadOnlyDictionary<string, string> Secrets { get; init; } = new Dictionary<string, string>();
 }
 
 /// <summary>An account's space.</summary>

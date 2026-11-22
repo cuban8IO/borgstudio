@@ -37,7 +37,7 @@ public sealed class RepositoryEditorViewModelTests : IDisposable
     {
         var editor = new RepositoryEditorViewModel(_test.Services, FakeBorg.Installation);
         Assert.True(editor.IsProviderPage);
-        Assert.Equal(["local", "usb", "ssh", "hetzner-storage-box", "rsync-net"], editor.Providers.Select(option => option.Provider.Id));
+        Assert.Equal(["local", "usb", "ssh", "hetzner-storage-box", "rsync-net", "borgbase"], editor.Providers.Select(option => option.Provider.Id));
 
         editor.SelectedProvider = editor.Providers[0];
         editor.NextCommand.Execute(null);

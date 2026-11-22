@@ -83,6 +83,12 @@ public interface IDialogService
     /// <c>true</c> for the confirm button; <c>false</c> when it is declined, closed or <paramref name="cancellationToken"/>
     /// takes it away.
     /// </summary>
+    /// <summary>
+    /// Shows a public key to add by hand (e.g. in a service's web interface), with a button to copy it; <c>true</c> once
+    /// the user says it is added.
+    /// </summary>
+    Task<bool> ShowPublicKeyAsync(string title, string instructions, string publicKey);
+
     Task<bool> AskOnTopAsync(string title, string message, string confirmText, string cancelText, CancellationToken cancellationToken);
 
     /// <summary>Two archives compared; returns when the window is closed.</summary>
