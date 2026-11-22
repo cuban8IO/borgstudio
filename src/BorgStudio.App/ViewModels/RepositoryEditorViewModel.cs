@@ -610,7 +610,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             if (_existing is not null)
                 await SaveChangesAsync(_existing, provider, values);
             else
-                await AddAsync(provider, values);
+                await AddPreparedAsync(provider, values);
         }
         finally
         {
@@ -696,7 +696,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             values = provisioned;
         }
 
-        var location = provider.GetLocation(values);
+        var location = _editorLocation ?? provider.GetLocation(values);
         var borgVersion = SelectedBorgVersion.Value;
         if (RepositoryFormat.Resolve(borgVersion, location) == 2)
         {
@@ -772,6 +772,13 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
 
     private async Task SaveChangesAsync(RepositoryConfig existing, IRepositoryProvider provider, IReadOnlyDictionary<string, string> values)
     {
+        if (provider is IRepositoryPreparation preparation)
+        {
+            if (await PrepareAsync(preparation, values) is not { } prepared)
+                return;
+            values = prepared;
+        }
+
         var repository = existing with
         {
             ProviderId = provider.Id,
@@ -863,6 +870,73 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
 
         _newKey = new InstalledKey(endpoint, remoteBorg, key, RestrictKey);
         return new SshLogin(new SshAccess(key.PrivateKey, knownHosts), key.Id, RestrictKey, key);
+    }
+
+    /// <summary>Where a provider that had to connect first put the repository (<see cref="AddPreparedAsync"/>).</summary>
+    private RepositoryLocation? _editorLocation;
+
+    /// <summary>
+    /// Adding: a provider that has to set something up first (e.g. an iSCSI target) does so now – it may ask for
+    /// administrator rights – and is connected for the time the repository is created or checked; then disconnected again.
+    /// </summary>
+    private async Task AddPreparedAsync(IRepositoryProvider provider, IReadOnlyDictionary<string, string> values)
+    {
+        if (provider is not IRepositoryPreparation preparation)
+        {
+            await AddAsync(provider, values);
+            return;
+        }
+        if (await PrepareAsync(preparation, values) is not { } prepared)
+            return;
+        values = prepared;
+
+        RepositoryConnection? connection = null;
+        if (provider is IRepositoryConnector connector)
+        {
+            Busy(Strings.EditorConnecting, "connect");
+            try
+            {
+                connection = await connector.ConnectAsync(new RepositoryConnectRequest(values), CancellationToken.None);
+            }
+            catch (RepositoryUnavailableException exception)
+            {
+                Errors.Add(exception.Message);
+                return;
+            }
+            if (connection.UpdatedValues is { } updated)
+                values = updated;
+        }
+
+        _editorLocation = connection?.Location;
+        try
+        {
+            await AddAsync(provider, values);
+        }
+        finally
+        {
+            _editorLocation = null;
+            if (connection is not null && await connection.DisconnectAsync() is { } problem)
+                Errors.Add(problem);
+        }
+    }
+
+    /// <summary>Lets the provider set up what it needs; the values to keep, or <c>null</c> with the reason in <see cref="Errors"/>.</summary>
+    private async Task<IReadOnlyDictionary<string, string>?> PrepareAsync(IRepositoryPreparation preparation, IReadOnlyDictionary<string, string> values)
+    {
+        Busy(Strings.EditorPreparing, operation: null);
+        try
+        {
+            var prepared = await preparation.PrepareAsync(new RepositoryPreparationRequest(values, EnteredSecrets(), _id), CancellationToken.None);
+            var merged = new Dictionary<string, string>(values);
+            foreach (var (name, value) in prepared)
+                merged[name] = value;
+            return merged;
+        }
+        catch (RepositoryUnavailableException exception)
+        {
+            Errors.Add(exception.Message);
+            return null;
+        }
     }
 
     /// <summary>The login key the service was given (<see cref="ProvisionAsync"/>); new ones are saved with the repository.</summary>
