@@ -18,7 +18,8 @@ public sealed class LinuxNetworkDisks : INetworkDiskSystem
 
     public async Task SetUpAsync(NetworkDiskTarget target, string id, string? chapSecret, CancellationToken cancellationToken)
     {
-        var result = await Commands.RunAsync("pkexec", ["/bin/sh", "-c", SetupScript, "sh", Environment.UserName, id,
+        // Without carriage returns, whatever line endings the source was built with.
+        var result = await Commands.RunAsync("pkexec", ["/bin/sh", "-c", SetupScript.ReplaceLineEndings("\n"), "sh", Environment.UserName, id,
                 target.Protocol == NetworkDiskProtocol.Iscsi ? "iscsi" : "nvme-tcp", target.Host, target.Port.ToString(CultureInfo.InvariantCulture),
                 target.Name, target.ChapUser ?? ""],
             input: (chapSecret ?? "") + "\n", cancellationToken: cancellationToken);
