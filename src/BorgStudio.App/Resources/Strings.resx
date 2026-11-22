@@ -3412,4 +3412,33 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
   <data name="EditorConvertedToUsb" xml:space="preserve">
     <value>Kept as USB drive once you save.</value>
   </data>
+  <data name="EditorPlugIn" xml:space="preserve">
+    <value>Back up when the drive is attached</value>
+  </data>
+  <data name="EditorPlugInAtMost" xml:space="preserve">
+    <value>at most every</value>
+  </data>
+  <data name="EditorPlugInHours" xml:space="preserve">
+    <value>hours</value>
+  </data>
+  <data name="EditorPlugInHint" xml:space="preserve">
+    <value>BorgStudio asks first, then runs all jobs of this repository one after the other. It does not ask while a job backed up successfully within this time (0: every time).</value>
+  </data>
+  <data name="EditorPlugInNeedsBackground" xml:space="preserve">
+    <value>Only works while BorgStudio runs in the background (Tools → Settings → Scheduled backups: “BorgStudio in the background”).</value>
+  </data>
+  <data name="PlugInTitle" xml:space="preserve">
+    <value>Drive attached</value>
+  </data>
+  <data name="PlugInQuestion" xml:space="preserve">
+    <value>The drive of „{0}“ was attached. Back up now?
+
+Jobs: {1}</value>
+  </data>
+  <data name="PlugInBackUp" xml:space="preserve">
+    <value>Back up now</value>
+  </data>
+  <data name="PlugInNotNow" xml:space="preserve">
+    <value>Not now</value>
+  </data>
 </root>

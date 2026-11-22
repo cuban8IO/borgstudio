@@ -1,0 +1,193 @@
+using BorgStudio.App.Resources;
+using BorgStudio.App.Services;
+using BorgStudio.Core.Backups;
+using BorgStudio.Core.Repositories;
+using BorgStudio.Plugins;
+using BorgStudio.Providers.Usb;
+
+namespace BorgStudio.App.ViewModels;
+
+/// <summary>
+/// Backing up when a USB drive is attached (BorgStudio in the background): every few seconds the drives are listed; on a
+/// new one, each USB drive repository that wants it and is found there asks "Jetzt sichern?" – on yes all its jobs run
+/// one after the other, and the drive stays connected until the last one is done (then it is ejected, if wanted).
+/// </summary>
+public partial class MainViewModel
+{
+    private HashSet<string>? _knownDrives;
+    private readonly Dictionary<Guid, (string Root, CancellationTokenSource Away)> _plugInQuestions = [];
+    private readonly HashSet<Guid> _plugInBusy = [];
+    private Task _plugInRun = Task.CompletedTask;
+
+    /// <summary>What the last attached drive started (tests wait for it).</summary>
+    internal Task PlugInRun => _plugInRun;
+
+    private static StringComparer PathComparer =>
+        OperatingSystem.IsLinux() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+
+    private IDriveSystem? UsbDrives => _services.Plugins.RepositoryProviders.OfType<UsbRepositoryProvider>().FirstOrDefault()?.Drives;
+
+    /// <summary>Called every few seconds: notices drives attached and pulled since the last look (the first look only remembers).</summary>
+    public void DriveTick()
+    {
+        if (UsbDrives is not { } drives)
+            return;
+        HashSet<string> now;
+        try
+        {
+            now = drives.Roots().Select(root => root.Path).ToHashSet(PathComparer);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return;
+        }
+        var before = _knownDrives;
+        _knownDrives = now;
+        if (before is null)
+            return;
+
+        // Pulled while its question is open: the question goes away.
+        foreach (var (_, (root, away)) in _plugInQuestions.Where(question => !now.Contains(question.Value.Root)).ToList())
+            away.Cancel();
+
+        var attached = now.Where(root => !before.Contains(root)).ToList();
+        if (attached.Count == 0 || !IsBackgroundMode)
+            return;
+        foreach (var repository in Repositories.Select(item => item.Config)
+                     .Where(config => config.ProviderId == UsbRepositoryProvider.ProviderId && config.PlugIn.Enabled))
+        {
+            if (!_plugInBusy.Add(repository.Id))
+                continue;
+            var run = PlugInAsync(repository, attached);
+            _plugInRun = Task.WhenAll(_plugInRun, run);
+        }
+    }
+
+    private async Task PlugInAsync(RepositoryConfig repository, IReadOnlyList<string> attached)
+    {
+        try
+        {
+            var jobs = _jobs.Where(job => job.RepositoryId == repository.Id).ToList();
+            if (jobs.Count == 0 || BackedUpRecently(repository, jobs))
+                return;
+            // On one of the drives just attached? (Looked for without holding the drive: "Nicht jetzt" leaves it attached.)
+            if (await FindOnAttachedAsync(repository, attached) is not { } root)
+                return;
+
+            using var away = new CancellationTokenSource();
+            _plugInQuestions[repository.Id] = (root, away);
+            bool backUp;
+            try
+            {
+                backUp = await _services.Dialogs.AskOnTopAsync(Strings.PlugInTitle,
+                    BorgTexts.Format(Strings.PlugInQuestion, repository.Name, string.Join(", ", jobs.Select(job => job.Name))),
+                    Strings.PlugInBackUp, Strings.PlugInNotNow, away.Token);
+            }
+            finally
+            {
+                _plugInQuestions.Remove(repository.Id);
+            }
+            if (!backUp)
+            {
+                ScheduledRun.Log($"{repository.Name} (attached): not backed up now", _services.Jobs.DataDirectory);
+                return;
+            }
+
+            ScheduledRun.Log($"{repository.Name} (attached): backing up {jobs.Count} job(s)", _services.Jobs.DataDirectory);
+            // Held for all jobs: the drive is ejected (if wanted) only after the last one.
+            RepositoryLease? lease = null;
+            try
+            {
+                lease = await _services.Connections.ConnectAsync(repository, unattended: true);
+            }
+            catch (RepositoryUnavailableException)
+            {
+                // Pulled meanwhile: the jobs record that.
+            }
+            try
+            {
+                await Task.WhenAll(jobs.Select(job => QueueTriggeredRun(job.Id).Finished));
+            }
+            finally
+            {
+                if (lease is not null && await lease.ReleaseAsync() is { } problem)
+                    ScheduledRun.Log($"{repository.Name}: {problem}", _services.Jobs.DataDirectory);
+            }
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            ScheduledRun.Log($"{repository.Name} (attached): {exception}", _services.Jobs.DataDirectory);
+        }
+        finally
+        {
+            _plugInBusy.Remove(repository.Id);
+        }
+    }
+
+    /// <summary>A job of the repository backed up successfully within its <see cref="PlugInBackup.MinimumHours"/>.</summary>
+    private bool BackedUpRecently(RepositoryConfig repository, IEnumerable<BackupJob> jobs)
+    {
+        var hours = repository.PlugIn.MinimumHours;
+        return hours > 0 && jobs.Any(job => job.LastRun is { Outcome: BackupOutcome.Succeeded or BackupOutcome.Warnings } run
+            && Clock() - run.Started.LocalDateTime < TimeSpan.FromHours(hours));
+    }
+
+    /// <summary>The attached drive the repository is on; <c>null</c> if it is elsewhere (it was attached before) or not found.</summary>
+    private async Task<string?> FindOnAttachedAsync(RepositoryConfig repository, IReadOnlyList<string> attached)
+    {
+        try
+        {
+            await using var lease = await _services.Connections.ConnectAsync(repository);
+            if (lease is null)
+                return null;
+            if (lease.Repository != repository && Repositories.FirstOrDefault(item => item.Config.Id == repository.Id) is { } item)
+                item.Config = lease.Repository;
+            var comparison = PathComparer == StringComparer.Ordinal ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+            return attached.FirstOrDefault(root => lease.Location.Url.StartsWith(root, comparison));
+        }
+        catch (RepositoryUnavailableException)
+        {
+            return null;
+        }
+    }
+
+    // --- Several queued runs on one drive ---
+
+    private readonly Dictionary<Guid, RepositoryLease> _queueLeases = [];
+
+    /// <summary>
+    /// Keeps a drive connected while more queued runs of its repository wait, so it is ejected (if wanted) only after the
+    /// last one – not after the first.
+    /// </summary>
+    private async Task HoldWhileQueuedAsync(Guid repositoryId)
+    {
+        if (_queueLeases.ContainsKey(repositoryId) || !IsQueued(repositoryId)
+            || Repositories.FirstOrDefault(item => item.Config.Id == repositoryId)?.Config is not { } repository
+            || _services.Plugins.FindRepositoryProvider(repository.ProviderId) is not IRepositoryConnector)
+            return;
+        try
+        {
+            if (await _services.Connections.ConnectAsync(repository, unattended: true) is { } lease)
+                _queueLeases[repositoryId] = lease;
+        }
+        catch (RepositoryUnavailableException)
+        {
+            // Not there: each run records that itself.
+        }
+    }
+
+    /// <summary>Lets go of the drives no queued run waits for any more (<paramref name="all"/>: of every one).</summary>
+    private async Task ReleaseQueueLeasesAsync(bool all = false)
+    {
+        foreach (var (repositoryId, lease) in _queueLeases.Where(held => all || !IsQueued(held.Key)).ToList())
+        {
+            _queueLeases.Remove(repositoryId);
+            if (await lease.ReleaseAsync() is { } problem)
+                ScheduledRun.Log($"{lease.Repository.Name}: {problem}", _services.Jobs.DataDirectory);
+        }
+    }
+
+    private bool IsQueued(Guid repositoryId) =>
+        _dueChecks.Contains(repositoryId)
+        || _dueJobs.Any(queued => _jobs.FirstOrDefault(job => job.Id == queued.JobId)?.RepositoryId == repositoryId);
+}

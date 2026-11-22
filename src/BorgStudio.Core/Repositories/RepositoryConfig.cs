@@ -75,6 +75,9 @@ public sealed record RepositoryConfig
     /// <summary>When the repository is checked by itself (<c>borg check</c>).</summary>
     public Checks.CheckPolicy Check { get; init; } = new();
 
+    /// <summary>Backing up when the drive is attached (USB drive repositories).</summary>
+    public PlugInBackup PlugIn { get; init; } = new();
+
     /// <summary>Older versions: the key file borg logged in with. Moved into the vault, then cleared.</summary>
     [JsonPropertyName("sshKeyFile")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

@@ -78,6 +78,13 @@ public interface IDialogService
     /// <summary>An archive exported; the export starts with the window.</summary>
     Task ShowArchiveExportAsync(ArchiveExportViewModel export);
 
+    /// <summary>
+    /// A question that may come while the window is hidden (BorgStudio in the background): shown on its own, on top.
+    /// <c>true</c> for the confirm button; <c>false</c> when it is declined, closed or <paramref name="cancellationToken"/>
+    /// takes it away.
+    /// </summary>
+    Task<bool> AskOnTopAsync(string title, string message, string confirmText, string cancelText, CancellationToken cancellationToken);
+
     /// <summary>Two archives compared; returns when the window is closed.</summary>
     Task ShowArchiveDiffAsync(ArchiveDiffViewModel diff);
 }

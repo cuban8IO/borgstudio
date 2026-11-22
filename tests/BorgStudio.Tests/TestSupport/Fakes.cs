@@ -999,6 +999,31 @@ public sealed class FakeDialogs : IDialogService
         return Task.FromResult(ExportFile);
     }
 
+    /// <summary>The questions asked on top (title, message); answered with <see cref="OnTopAnswer"/>.</summary>
+    public List<(string Title, string Message)> OnTop { get; } = [];
+
+    public bool OnTopAnswer { get; set; } = true;
+
+    /// <summary>Set: the question stays open until this completes (or it is taken away).</summary>
+    public Task? OnTopOpenUntil { get; set; }
+
+    public async Task<bool> AskOnTopAsync(string title, string message, string confirmText, string cancelText, CancellationToken cancellationToken)
+    {
+        OnTop.Add((title, message));
+        if (OnTopOpenUntil is { } open)
+        {
+            try
+            {
+                await open.WaitAsync(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
+        }
+        return OnTopAnswer;
+    }
+
     /// <summary>Like the window: the export starts when it opens; "open" until it has finished.</summary>
     public async Task ShowArchiveExportAsync(ArchiveExportViewModel export)
     {
