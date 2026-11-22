@@ -158,6 +158,8 @@ public sealed class FakeBorg : IProcessRunner
             return DiffAsync(standardOutputLine, cancellationToken);
         if (arguments[0] is "rename" or "delete" or "recreate")
             return ChangeArchives(arguments);
+        if (arguments[0] == "export-tar")
+            return ExportTarAsync(arguments, standardErrorLine, cancellationToken);
 
         if (arguments is ["list", ..] && arguments.Contains("--json-lines"))
             return ContentsAsync(arguments, standardOutputLine, cancellationToken);
@@ -386,6 +388,83 @@ public sealed class FakeBorg : IProcessRunner
         standardErrorLine?.Invoke(
             $$"""{"type": "log_message", "time": 0, "message": "compaction freed about {{CompactFreed}} repository space.", "levelname": "INFO", "name": "borg.repository"}""");
         return Result(0, "");
+    }
+
+    /// <summary>Where "export-tar -" writes its tar stream (set while <see cref="RunStreamingAsync"/> runs).</summary>
+    private Func<Stream, CancellationToken, Task>? _output;
+
+    public async Task<ProcessResult?> RunStreamingAsync(string fileName, IReadOnlyList<string> arguments, TimeSpan timeout,
+        Func<Stream, CancellationToken, Task> readOutput, IReadOnlyDictionary<string, string?>? environment = null,
+        CancellationToken cancellationToken = default, Action<string>? standardErrorLine = null, string? workingDirectory = null)
+    {
+        _output = readOutput;
+        try
+        {
+            return await RunAsync(fileName, arguments, timeout, environment, null, cancellationToken, standardErrorLine, null, workingDirectory);
+        }
+        finally
+        {
+            _output = null;
+        }
+    }
+
+    /// <summary>When set, "export-tar" fails with this message (as borg's error), e.g. a missing zstd.</summary>
+    public string? ExportError { get; set; }
+
+    /// <summary>Called after the progress of "export-tar" (e.g. to cancel in the middle).</summary>
+    public Action? DuringExport { get; set; }
+
+    /// <summary>
+    /// "export-tar": the archive's <see cref="Contents"/> (only the paths asked for, with --strip-components) as a tar – to
+    /// the stream for "-", into the file otherwise. Files hold their size in bytes of 'x'.
+    /// </summary>
+    private async Task<ProcessResult?> ExportTarAsync(IReadOnlyList<string> arguments, Action<string>? standardErrorLine,
+        CancellationToken cancellationToken)
+    {
+        if (ExportError is not null)
+            return new ProcessResult(2, "", $$"""{"type": "log_message", "levelname": "ERROR", "message": "{{ExportError}}", "msgid": "Error"}""");
+        var list = arguments.ToList();
+        var target = list.First(argument => argument.Contains("::", StringComparison.Ordinal));
+        var name = target[(target.IndexOf("::", StringComparison.Ordinal) + 2)..];
+        var file = list[list.IndexOf(target) + 1];
+        var strip = list.IndexOf("--strip-components") is var at and >= 0 ? int.Parse(list[at + 1], CultureInfo.InvariantCulture) : 0;
+        var prefixes = list.Where(argument => argument.StartsWith("pp:", StringComparison.Ordinal)).Select(argument => argument[3..]).ToList();
+        var entries = (Contents.GetValueOrDefault(name) ?? DefaultContents)
+            .Where(entry => prefixes.Count == 0 || prefixes.Any(prefix => entry.Path == prefix || entry.Path.StartsWith(prefix + "/", StringComparison.Ordinal)))
+            .ToList();
+        standardErrorLine?.Invoke("""{"message": "Calculating size", "current": 0, "total": 0, "info": null, "operation": 1, "msgid": "extract", "type": "progress_percent", "finished": false, "time": 0}""");
+        standardErrorLine?.Invoke(System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object>
+        {
+            ["message"] = "50% Processing", ["current"] = 1, ["total"] = 2, ["info"] = new[] { entries.FirstOrDefault().Path ?? "" },
+            ["operation"] = 1, ["msgid"] = "extract", ["type"] = "progress_percent", ["finished"] = false, ["time"] = 0,
+        }));
+        DuringExport?.Invoke();
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var tar = new MemoryStream();
+        await using (var writer = new System.Formats.Tar.TarWriter(tar, System.Formats.Tar.TarEntryFormat.Pax, leaveOpen: true))
+        {
+            foreach (var (type, path, size) in entries)
+            {
+                var stripped = string.Join('/', path.Split('/').Skip(strip));
+                if (stripped.Length == 0)
+                    continue;
+                System.Formats.Tar.PaxTarEntry entry = type switch
+                {
+                    "d" => new(System.Formats.Tar.TarEntryType.Directory, stripped + "/"),
+                    "l" => new(System.Formats.Tar.TarEntryType.SymbolicLink, stripped) { LinkName = "letter.txt" },
+                    _ => new(System.Formats.Tar.TarEntryType.RegularFile, stripped) { DataStream = new MemoryStream(Enumerable.Repeat((byte)'x', (int)size).ToArray()) },
+                };
+                entry.ModificationTime = new DateTimeOffset(2026, 11, 5, 10, 20, 30, TimeSpan.Zero);
+                await writer.WriteEntryAsync(entry, cancellationToken);
+            }
+        }
+        tar.Position = 0;
+        if (file == "-")
+            await _output!(tar, cancellationToken);
+        else
+            await File.WriteAllBytesAsync(file, tar.ToArray(), cancellationToken);
+        return new ProcessResult(0, "", "");
     }
 
     /// <summary>The archives' comments ("recreate --comment" sets them, "list" reports them).</summary>
@@ -891,6 +970,26 @@ public sealed class FakeDialogs : IDialogService
         await versions.Begin();
         if (Versions is not null)
             await Versions(versions);
+    }
+
+    /// <summary>The file "chosen" as the export's target; <c>null</c>: cancelled.</summary>
+    public string? ExportFile { get; set; }
+
+    public List<ArchiveExportViewModel> Exports { get; } = [];
+
+    public Task<string?> PickArchiveExportFileAsync(string title, string suggestedName)
+    {
+        Shown.Add(title);
+        TextInitials.Add(suggestedName);
+        return Task.FromResult(ExportFile);
+    }
+
+    /// <summary>Like the window: the export starts when it opens; "open" until it has finished.</summary>
+    public async Task ShowArchiveExportAsync(ArchiveExportViewModel export)
+    {
+        Exports.Add(export);
+        export.Dialogs = this;
+        await export.Begin();
     }
 
     /// <summary>The comparisons "shown"; <see cref="Diff"/> runs while one is open (default: until borg is done).</summary>

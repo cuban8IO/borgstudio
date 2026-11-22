@@ -1,0 +1,34 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:BorgStudio.App.ViewModels"
+        xmlns:views="using:BorgStudio.App.Views"
+        xmlns:res="using:BorgStudio.App.Resources"
+        x:Class="BorgStudio.App.Views.ArchiveExportWindow"
+        x:DataType="vm:ArchiveExportViewModel"
+        Title="{x:Static res:Strings.ArchiveExportTitle}"
+        Width="560" SizeToContent="Height" CanResize="False"
+        WindowStartupLocation="CenterOwner">
+
+    <StackPanel Margin="20" Spacing="12">
+        <TextBlock Text="{Binding What}" FontWeight="SemiBold" TextWrapping="Wrap" />
+        <StackPanel Spacing="2">
+            <TextBlock Text="{x:Static res:Strings.ArchiveExportTarget}" Opacity="0.7" FontSize="12" />
+            <SelectableTextBlock Text="{Binding TargetFile}" TextWrapping="Wrap" />
+        </StackPanel>
+        <Panel IsVisible="{Binding IsRunning}">
+            <views:ProgressPanel DataContext="{Binding Progress}" />
+        </Panel>
+        <TextBlock Text="{Binding ResultText}" TextWrapping="Wrap" IsVisible="{Binding HasResult}"
+                   Classes.error="{Binding IsError}">
+            <TextBlock.Styles>
+                <Style Selector="TextBlock.error">
+                    <Setter Property="Foreground" Value="{DynamicResource ErrorForeground}" />
+                </Style>
+            </TextBlock.Styles>
+        </TextBlock>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button Content="{x:Static res:Strings.ArchiveExportOpenFolder}" Command="{Binding OpenFolderCommand}" IsVisible="{Binding Succeeded}" />
+            <Button Content="{x:Static res:Strings.Close}" Click="Close_Click" IsCancel="True" />
+        </StackPanel>
+    </StackPanel>
+</Window>

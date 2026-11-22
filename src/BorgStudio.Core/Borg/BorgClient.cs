@@ -668,7 +668,8 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         string? passphrase, TimeSpan timeout, CancellationToken cancellationToken,
         string? archive = null, Action<string>? standardErrorLine = null, bool interruptible = false,
         Action<string>? standardOutputLine = null, string? workingDirectory = null,
-        IReadOnlyDictionary<string, string>? extraEnvironment = null, Action<int>? exitCode = null, BorgThrottle? throttle = null)
+        IReadOnlyDictionary<string, string>? extraEnvironment = null, Action<int>? exitCode = null, BorgThrottle? throttle = null,
+        Func<Stream, CancellationToken, Task>? standardOutputStream = null)
     {
         var wsl = borg.Runtime == BorgRuntime.Wsl;
         if (wsl && wslExecutable is null)
@@ -712,7 +713,8 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         try
         {
             return await RunBorgAsync(borg, location, arguments, environment, sshFiles, timeout, cancellationToken,
-                standardErrorLine, interruptible, standardOutputLine, workingDirectory, exitCode, throttle?.LowPriority == true);
+                standardErrorLine, interruptible, standardOutputLine, workingDirectory, exitCode, throttle?.LowPriority == true,
+                standardOutputStream);
         }
         finally
         {
@@ -724,7 +726,8 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
     private async Task<BorgResult<string>> RunBorgAsync(BorgInstallation borg, RepositoryLocation location,
         List<string> arguments, Dictionary<string, string?> environment, SshFiles? sshFiles, TimeSpan timeout,
         CancellationToken cancellationToken, Action<string>? standardErrorLine, bool interruptible,
-        Action<string>? standardOutputLine = null, string? workingDirectory = null, Action<int>? exitCode = null, bool lowPriority = false)
+        Action<string>? standardOutputLine = null, string? workingDirectory = null, Action<int>? exitCode = null, bool lowPriority = false,
+        Func<Stream, CancellationToken, Task>? standardOutputStream = null)
     {
         var wsl = borg.Runtime == BorgRuntime.Wsl;
         // Signals need a POSIX system: natively on Linux/macOS, or inside WSL.
@@ -774,10 +777,13 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         ProcessResult? result;
         try
         {
-            result = await processRunner.RunAsync(fileName, arguments, timeout, environment,
-                cancellationToken: hardStop.Token,
-                standardErrorLine: interruptible || standardErrorLine is not null ? OnLine : null,
-                standardOutputLine: standardOutputLine, workingDirectory: workingDirectory);
+            result = standardOutputStream is null
+                ? await processRunner.RunAsync(fileName, arguments, timeout, environment,
+                    cancellationToken: hardStop.Token,
+                    standardErrorLine: interruptible || standardErrorLine is not null ? OnLine : null,
+                    standardOutputLine: standardOutputLine, workingDirectory: workingDirectory)
+                : await processRunner.RunStreamingAsync(fileName, arguments, timeout, standardOutputStream, environment, hardStop.Token,
+                    interruptible || standardErrorLine is not null ? OnLine : null, workingDirectory);
         }
         catch (TimeoutException)
         {

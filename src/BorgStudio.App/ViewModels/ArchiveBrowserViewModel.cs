@@ -36,6 +36,9 @@ public sealed partial class ArchiveBrowserViewModel : ViewModelBase
     /// <summary>Creates the restore dialog for some entries (or the whole archive); <c>null</c> if restoring isn't possible.</summary>
     public Func<IReadOnlyList<ArchiveNode>, bool, RestoreViewModel>? RestoreFactory { get; set; }
 
+    /// <summary>Exports the selected files and folders into one file (set when the archive can be read).</summary>
+    public Func<IReadOnlyList<ArchiveNode>, Task>? ExportFactory { get; set; }
+
     /// <summary>The versions of an entry across all archives; <c>null</c> if not available.</summary>
     public Func<ArchiveNode, FileVersionsViewModel>? VersionsFactory { get; set; }
 
@@ -63,7 +66,7 @@ public sealed partial class ArchiveBrowserViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsReady))]
-    [NotifyCanExecuteChangedFor(nameof(SearchCommand), nameof(RestoreAllCommand), nameof(RestoreSelectionCommand))]
+    [NotifyCanExecuteChangedFor(nameof(SearchCommand), nameof(RestoreAllCommand), nameof(RestoreSelectionCommand), nameof(ExportSelectionCommand))]
     public partial ArchiveTree? Tree { get; private set; }
 
     public bool IsReady => Tree is not null && !IsLoading;
@@ -120,7 +123,7 @@ public sealed partial class ArchiveBrowserViewModel : ViewModelBase
     /// <summary>"3 ausgewählt · 12 MB" or "Nichts ausgewählt".</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelection))]
-    [NotifyCanExecuteChangedFor(nameof(ClearSelectionCommand), nameof(RestoreSelectionCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ClearSelectionCommand), nameof(RestoreSelectionCommand), nameof(ExportSelectionCommand))]
     public partial string SelectionText { get; private set; } = Strings.BrowserSelectionNone;
 
     public bool HasSelection => _selected.Count > 0;
@@ -323,6 +326,13 @@ public sealed partial class ArchiveBrowserViewModel : ViewModelBase
             await dialogs.ShowRestoreAsync(restore);
         }
     }
+
+    // --- Exporting ---
+
+    [RelayCommand(CanExecute = nameof(CanExportSelection))]
+    private Task ExportSelectionAsync() => ExportFactory!(Selection);
+
+    private bool CanExportSelection() => ExportFactory is not null && IsReady && HasSelection;
 
     // --- Versions ---
 

@@ -101,6 +101,28 @@ public sealed class DialogService(Window owner) : IDialogService
     public Task ShowFileVersionsAsync(FileVersionsViewModel versions) =>
         new FileVersionsWindow { DataContext = versions }.ShowDialog(owner);
 
+    public async Task<string?> PickArchiveExportFileAsync(string title, string suggestedName)
+    {
+        var file = await owner.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = title,
+            SuggestedFileName = suggestedName,
+            DefaultExtension = "zip",
+            ShowOverwritePrompt = true,
+            FileTypeChoices =
+            [
+                new FilePickerFileType("zip") { Patterns = ["*.zip"] },
+                new FilePickerFileType("tar.gz") { Patterns = ["*.tar.gz"] },
+                new FilePickerFileType("tar.zst") { Patterns = ["*.tar.zst"] },
+                new FilePickerFileType("tar") { Patterns = ["*.tar"] },
+            ],
+        });
+        return file?.TryGetLocalPath();
+    }
+
+    public Task ShowArchiveExportAsync(ArchiveExportViewModel export) =>
+        new ArchiveExportWindow { DataContext = export }.ShowDialog(owner);
+
     public Task ShowArchiveDiffAsync(ArchiveDiffViewModel diff) =>
         new ArchiveDiffWindow { DataContext = diff }.ShowDialog(owner);
 }
