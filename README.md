@@ -9,7 +9,8 @@ The **[product page](https://borgstudio.cuban8io.net/)** shows what it does, the
 
 ## Features
 
-- **Repositories** in a local folder, on a USB or external drive, on an SSH server or on a Hetzner Storage Box –
+- **Repositories** in a local folder, on a USB or external drive, on an SSH server, on a Hetzner Storage Box or at
+  rsync.net –
   create new ones or connect existing ones; borg runs natively or, on Windows, inside WSL.
 - **Backup jobs** with source folders, exclusions and compression; live progress with upload speed and remaining
   time; cancelling keeps a checkpoint.
@@ -96,6 +97,11 @@ it follows the system language (English if that is neither) or the choice under 
 - **Hetzner Storage Box:** connects on port 23 with the borg version you choose (1.4 or 1.2). The server's host key
   is checked against the fingerprints Hetzner publishes. Restricted login keys are written to
   `.ssh/authorized_keys` on the box over SFTP; unrestricted ones are installed with Hetzner's `install-ssh-key`.
+- **rsync.net:** connects on port 22 with `borg14` or `borg12` on the server. The host key is checked against the
+  fingerprints rsync.net publishes. Login keys (restricted to borg by default) are appended with
+  `dd of=.ssh/authorized_keys oflag=append conv=notrunc`, as rsync.net documents; if the service does not accept the
+  restricted key, the editor suggests an unrestricted one. With an unrestricted key the storage overview shows the
+  account's quota (rsync.net's `quota` command).
 - **USB or external drive:** the repository is found by its borg repository ID wherever the drive is attached – where
   it was last seen, at the same folder on every drive, then up to two levels deep on every drive (network drives
   included); a new place is remembered. A local repository on an external drive can be switched over in the editor
@@ -124,7 +130,8 @@ BorgStudio.slnx
 │   ├── BorgStudio.Providers.Local      Built-in provider: local folder
 │   ├── BorgStudio.Providers.Ssh        Built-in provider: SSH server with borg
 │   ├── BorgStudio.Providers.Hetzner    Built-in provider: Hetzner Storage Box
-│   └── BorgStudio.Providers.Usb        Built-in provider: USB or external drive
+│   ├── BorgStudio.Providers.Usb        Built-in provider: USB or external drive
+│   └── BorgStudio.Providers.RsyncNet   Built-in provider: rsync.net
 ├── samples/
 │   └── BorgStudio.SamplePlugin         Example external plugin (not part of the release)
 ├── tests/
@@ -139,7 +146,7 @@ Shared build settings (target framework, nullable, version) live in `Directory.B
 
 ## Plugins
 
-Repository providers (local folder, USB drive, SSH server, Hetzner Storage Box, …) are plugins. Built-in providers use the same
+Repository providers (local folder, USB drive, SSH server, Hetzner Storage Box, rsync.net, …) are plugins. Built-in providers use the same
 API as external ones; see [docs/plugins.md](docs/plugins.md) for writing and installing a plugin.
 
 ## Build, test, run

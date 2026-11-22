@@ -204,10 +204,13 @@ public static class SshKeyInstaller
     public static Task InstallAsync(ISshService ssh, SshEndpoint endpoint, string password, SshHostKey trustedHostKey,
         string publicKeyLine, bool restrict, string remoteBorg, CancellationToken cancellationToken = default)
     {
-        if (!restrict && endpoint.InstallKeyCommand is { Length: > 0 } installCommand)
+        if (!restrict && endpoint.InstallKeyCommand is { Length: > 0 } installCommand && endpoint.KeyInstallation != SshKeyInstallation.Command)
             return ssh.RunWithPasswordAsync(endpoint, password, trustedHostKey, installCommand, publicKeyLine + "\n", cancellationToken);
 
         var line = AuthorizedKeys.Line(publicKeyLine, restrict ? endpoint.RepositoryPath : null, remoteBorg);
+        // The whole line on standard input; a line break first, in case the file does not end with one.
+        if (endpoint.KeyInstallation == SshKeyInstallation.Command && endpoint.InstallKeyCommand is { Length: > 0 } appendCommand)
+            return ssh.RunWithPasswordAsync(endpoint, password, trustedHostKey, appendCommand, "\n" + line + "\n", cancellationToken);
         return endpoint.KeyInstallation == SshKeyInstallation.Sftp
             ? ssh.AppendAuthorizedKeyAsync(endpoint, password, trustedHostKey, line, cancellationToken)
             : ssh.RunWithPasswordAsync(endpoint, password, trustedHostKey, AuthorizedKeys.AppendCommand(line),

@@ -65,5 +65,6 @@
     <ProjectReference Include="..\BorgStudio.Providers.Ssh\BorgStudio.Providers.Ssh.csproj" />
     <ProjectReference Include="..\BorgStudio.Providers.Hetzner\BorgStudio.Providers.Hetzner.csproj" />
     <ProjectReference Include="..\BorgStudio.Providers.Usb\BorgStudio.Providers.Usb.csproj" />
+    <ProjectReference Include="..\BorgStudio.Providers.RsyncNet\BorgStudio.Providers.RsyncNet.csproj" />
   </ItemGroup>
 </Project>
