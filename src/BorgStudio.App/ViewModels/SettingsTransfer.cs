@@ -68,6 +68,11 @@ public static class SettingsTransfer
         foreach (var name in NotificationSecretNames)
             if (notificationSecrets.Get(name) is { } secret)
                 secrets[name] = secret;
+        // The providers' secrets of the repositories (e.g. API tokens).
+        if (vaultOpen)
+            foreach (var item in main.Repositories)
+                foreach (var (key, secret) in RepositorySecrets.Read(services.Vault, item.Config, item.Provider))
+                    secrets[RepositorySecrets.Name(item.Config.Id, key)] = secret;
 
         var contents = new ExportContents
         {
@@ -169,6 +174,14 @@ public static class SettingsTransfer
             {
                 problems.Add(BorgTexts.Format(Strings.KeychainError, exception.Message));
             }
+        }
+
+        // The providers' secrets of the imported repositories.
+        foreach (var (name, secret) in contents.Secrets.Where(entry => entry.Key.StartsWith(RepositorySecrets.Prefix, StringComparison.Ordinal)))
+        {
+            if (mode == ImportMode.Merge && vault.GetSecret(name) is not null)
+                continue;
+            vault.SetSecret(name, secret);
         }
 
         // Known hosts and settings.

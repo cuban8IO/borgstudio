@@ -79,7 +79,7 @@
                                     <TextBlock Text="{Binding Label}" IsVisible="{Binding !IsToggle}" />
                                     <CheckBox Content="{Binding Label}" IsChecked="{Binding IsOn}" IsVisible="{Binding IsToggle}" />
                                     <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding IsTextInput}">
-                                        <TextBox Text="{Binding Value}" />
+                                        <TextBox Text="{Binding Value}" PasswordChar="{Binding PasswordChar}" />
                                         <Button Grid.Column="1" Margin="8,0,0,0" IsVisible="{Binding IsFolder}"
                                                 Content="{x:Static res:Strings.EditorBrowse}" Click="BrowseFolder_Click" />
                                     </Grid>
@@ -145,7 +145,7 @@
                         <RadioButton GroupName="SshKey" IsChecked="{Binding KeyChoiceKeep}" IsVisible="{Binding ShowKeepKeyOption}"
                                      Content="{x:Static res:Strings.EditorKeyKeep}" />
                         <RadioButton GroupName="SshKey" IsChecked="{Binding KeyChoiceGenerate}">
-                            <TextBlock Text="{x:Static res:Strings.EditorKeyGenerate}" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding KeyGenerateText}" TextWrapping="Wrap" />
                         </RadioButton>
                         <RadioButton GroupName="SshKey" IsChecked="{Binding KeyChoiceExisting}">
                             <TextBlock Text="{x:Static res:Strings.EditorKeyExisting}" TextWrapping="Wrap" />
@@ -159,7 +159,7 @@
                                 <Button Grid.Column="1" Margin="8,0,0,0" Content="{x:Static res:Strings.KeysImport}"
                                         Command="{Binding ImportKeyCommand}" />
                             </Grid>
-                            <CheckBox IsChecked="{Binding InstallExistingKey}" Margin="0,4,0,0">
+                            <CheckBox IsChecked="{Binding InstallExistingKey}" Margin="0,4,0,0" IsVisible="{Binding !IsProvisioned}">
                                 <TextBlock Text="{x:Static res:Strings.EditorInstallExistingKey}" TextWrapping="Wrap" />
                             </CheckBox>
                         </StackPanel>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Texts of the local provider, English (default). German: Strings.de.resx. -->
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="DisplayName" xml:space="preserve">
+    <value>BorgBase</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>Hosting speziell für borg. Mit einem API-Token legt BorgStudio das Repository an, hinterlegt den Login-Schlüssel und zeigt das Kontingent; ohne Token richtest du beides in der Weboberfläche von BorgBase ein.</value>
+  </data>
+  <data name="TokenLabel" xml:space="preserve">
+    <value>API-Token</value>
+  </data>
+  <data name="TokenHint" xml:space="preserve">
+    <value>Erstellt auf borgbase.com unter Account → API; „Create Only“ genügt. Wird im Tresor gespeichert. Leer lassen, um den Schlüssel von Hand einzurichten.</value>
+  </data>
+  <data name="RepoLabel" xml:space="preserve">
+    <value>Repository</value>
+  </data>
+  <data name="RepoHint" xml:space="preserve">
+    <value>Mit Token: der Name des Repositorys bei BorgBase (wird gefunden bzw. für ein neues angelegt). Ohne: seine Adresse aus BorgBase, z. B. ssh://abcd1234@abcd1234.repo.borgbase.com/./repo</value>
+  </data>
+  <data name="RepoRequired" xml:space="preserve">
+    <value>Bitte Name oder Adresse des Repositorys angeben.</value>
+  </data>
+  <data name="RegionLabel" xml:space="preserve">
+    <value>Region</value>
+  </data>
+  <data name="RegionHint" xml:space="preserve">
+    <value>Wo BorgBase ein neues Repository anlegt.</value>
+  </data>
+  <data name="RegionEu" xml:space="preserve">
+    <value>Europa</value>
+  </data>
+  <data name="RegionUs" xml:space="preserve">
+    <value>USA</value>
+  </data>
+  <data name="AddressNeeded" xml:space="preserve">
+    <value>Ohne API-Token bitte die Adresse des Repositorys aus BorgBase eintragen (ssh://…).</value>
+  </data>
+  <data name="RepoNotFound" xml:space="preserve">
+    <value>BorgBase hat kein Repository „{0}“. Wähle „Neues Repository anlegen“, damit es angelegt wird.</value>
+  </data>
+  <data name="TokenRefused" xml:space="preserve">
+    <value>BorgBase hat den API-Token abgelehnt (abgelaufen oder ohne die nötige Berechtigung).</value>
+  </data>
+  <data name="ApiError" xml:space="preserve">
+    <value>BorgBase: {0}</value>
+  </data>
+</root>

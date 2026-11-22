@@ -239,7 +239,10 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
         try
         {
             var store = StorageUsageStore.ForDataDirectory(services.Jobs.DataDirectory);
-            var usage = await new StorageProbe(services.BorgClient, plugins: services.Plugins).MeasureAsync(repository, borg, location, passphrase, ssh, cancellationToken);
+            var usage = await new StorageProbe(services.BorgClient, plugins: services.Plugins)
+            {
+                Secrets = config => RepositorySecrets.Read(services.Vault, config, services.Plugins.FindRepositoryProvider(config.ProviderId)),
+            }.MeasureAsync(repository, borg, location, passphrase, ssh, cancellationToken);
             if (usage is not null)
             {
                 usage = stats is null ? usage : usage with { Repository = stats };

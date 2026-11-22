@@ -198,6 +198,8 @@ public partial class MainViewModel : ViewModelBase
 
         public Task ShowArchiveExportAsync(ArchiveExportViewModel export) => Task.CompletedTask;
 
+        public Task<bool> ShowPublicKeyAsync(string title, string instructions, string publicKey) => Task.FromResult(false);
+
         public Task<bool> AskOnTopAsync(string title, string message, string confirmText, string cancelText,
             CancellationToken cancellationToken) => Task.FromResult(false);
 
