@@ -3392,4 +3392,33 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
   <data name="EditorConvertedToUsb" xml:space="preserve">
     <value>Wird nach dem Speichern als USB-Laufwerk geführt.</value>
   </data>
+  <data name="EditorPlugIn" xml:space="preserve">
+    <value>Beim Anstecken sichern</value>
+  </data>
+  <data name="EditorPlugInAtMost" xml:space="preserve">
+    <value>höchstens alle</value>
+  </data>
+  <data name="EditorPlugInHours" xml:space="preserve">
+    <value>Stunden</value>
+  </data>
+  <data name="EditorPlugInHint" xml:space="preserve">
+    <value>BorgStudio fragt kurz nach und lässt dann alle Jobs dieses Repositorys nacheinander laufen. Es fragt nicht, solange ein Job in dieser Zeit erfolgreich gesichert hat (0: jedes Mal).</value>
+  </data>
+  <data name="EditorPlugInNeedsBackground" xml:space="preserve">
+    <value>Funktioniert nur, wenn BorgStudio im Hintergrund läuft (Extras → Einstellungen → Geplante Sicherungen: „BorgStudio im Hintergrund“).</value>
+  </data>
+  <data name="PlugInTitle" xml:space="preserve">
+    <value>Laufwerk angesteckt</value>
+  </data>
+  <data name="PlugInQuestion" xml:space="preserve">
+    <value>Das Laufwerk von „{0}“ wurde angesteckt. Jetzt sichern?
+
+Jobs: {1}</value>
+  </data>
+  <data name="PlugInBackUp" xml:space="preserve">
+    <value>Jetzt sichern</value>
+  </data>
+  <data name="PlugInNotNow" xml:space="preserve">
+    <value>Nicht jetzt</value>
+  </data>
 </root>

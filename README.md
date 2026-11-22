@@ -100,7 +100,10 @@ it follows the system language (English if that is neither) or the choice under 
   it was last seen, at the same folder on every drive, then up to two levels deep on every drive (network drives
   included); a new place is remembered. A local repository on an external drive can be switched over in the editor
   (*Keep as USB drive*). Optionally the drive is ejected safely after scheduled backups and checks (Windows: like
-  "Safely remove hardware", Linux: `udisksctl`, macOS: `diskutil eject`). Inside WSL, BorgStudio mounts drives that
+  "Safely remove hardware", Linux: `udisksctl`, macOS: `diskutil eject`) – also after several scheduled runs in a row
+  only once, after the last. *Back up when the drive is attached* (per repository, BorgStudio in the background):
+  BorgStudio asks, then runs all jobs of the repository one after the other; not again while a job backed up
+  successfully within the set hours (default 12). Inside WSL, BorgStudio mounts drives that
   were attached after WSL started (`mount -t drvfs`) and unmounts them again after borg is done.
 
 ## License

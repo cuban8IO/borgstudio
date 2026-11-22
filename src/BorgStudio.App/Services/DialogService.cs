@@ -120,6 +120,24 @@ public sealed class DialogService(Window owner) : IDialogService
         return file?.TryGetLocalPath();
     }
 
+    public async Task<bool> AskOnTopAsync(string title, string message, string confirmText, string cancelText,
+        CancellationToken cancellationToken)
+    {
+        var window = new MessageWindow(title, message, confirmText, cancelText)
+        {
+            Topmost = true,
+            ShowInTaskbar = true,
+            WindowStartupLocation = WindowStartupLocation.CenterScreen,
+        };
+        var closed = new TaskCompletionSource();
+        window.Closed += (_, _) => closed.TrySetResult();
+        await using var away = cancellationToken.Register(() => Avalonia.Threading.Dispatcher.UIThread.Post(window.Close));
+        window.Show();
+        window.Activate();
+        await closed.Task;
+        return window.Confirmed;
+    }
+
     public Task ShowArchiveExportAsync(ArchiveExportViewModel export) =>
         new ArchiveExportWindow { DataContext = export }.ShowDialog(owner);
 

@@ -198,6 +198,9 @@ public partial class MainViewModel : ViewModelBase
 
         public Task ShowArchiveExportAsync(ArchiveExportViewModel export) => Task.CompletedTask;
 
+        public Task<bool> AskOnTopAsync(string title, string message, string confirmText, string cancelText,
+            CancellationToken cancellationToken) => Task.FromResult(false);
+
         public Task<string?> AskTextAsync(string title, string prompt, string initial) => Task.FromResult<string?>(null);
         public Task CopyToClipboardAsync(string text) => Task.CompletedTask;
         public Task OpenFolderAsync(string path) => Task.CompletedTask;

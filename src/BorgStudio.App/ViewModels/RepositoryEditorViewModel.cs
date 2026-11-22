@@ -98,11 +98,31 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         foreach (var schedule in existing.Check.Schedules)
             CheckSchedules.Add(new ScheduleItemViewModel(schedule, RemoveCheckSchedule));
         CheckCatchUp = existing.Check.CatchUp;
+        PlugInEnabled = existing.PlugIn.Enabled;
+        PlugInHours = existing.PlugIn.MinimumHours;
         CreateFields(SelectedProvider.Provider, existing.ProviderValues);
         Page = EditorPage.Details;
         RefreshKeys();
         Loading = FindOutIfConvertibleAsync(existing);
     }
+
+    // --- USB drive: backing up when it is attached ---
+
+    /// <summary>A USB drive repository: it can back up when the drive is attached.</summary>
+    public bool IsUsb => SelectedProvider?.Provider is UsbRepositoryProvider;
+
+    [ObservableProperty]
+    public partial bool PlugInEnabled { get; set; }
+
+    [ObservableProperty]
+    public partial decimal? PlugInHours { get; set; } = PlugInBackup.DefaultMinimumHours;
+
+    /// <summary>Attaching is only noticed while BorgStudio runs in the background.</summary>
+    public bool PlugInNeedsBackground => _services.Settings.Load().ScheduleRunner != Core.Settings.ScheduleRunner.Background;
+
+    private PlugInBackup PlugInPolicy => IsUsb
+        ? new PlugInBackup { Enabled = PlugInEnabled, MinimumHours = (int)Math.Clamp(PlugInHours ?? PlugInBackup.DefaultMinimumHours, 0, 720) }
+        : new PlugInBackup();
 
     /// <summary>What the editor looks up after opening (tests wait for it).</summary>
     internal Task Loading { get; } = Task.CompletedTask;
@@ -181,7 +201,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(NextCommand))]
-    [NotifyPropertyChangedFor(nameof(IsSsh))]
+    [NotifyPropertyChangedFor(nameof(IsSsh), nameof(IsUsb))]
     public partial ProviderOptionViewModel? SelectedProvider { get; set; }
 
     // --- Page 2: details ---
@@ -687,6 +707,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             StorageWarnPercent = WarnPercent,
             StorageCapacity = IsSsh ? StorageCapacity : null,
             Check = CheckPolicy,
+            PlugIn = PlugInPolicy,
             Limits = Limits,
         };
 
@@ -713,6 +734,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             StorageWarnPercent = WarnPercent,
             StorageCapacity = IsSsh ? StorageCapacity : null,
             Check = CheckPolicy,
+            PlugIn = PlugInPolicy,
             Limits = Limits,
         };
 

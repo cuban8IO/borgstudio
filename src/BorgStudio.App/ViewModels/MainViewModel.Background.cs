@@ -192,13 +192,18 @@ public partial class MainViewModel
                     while (IsBackupRunning)
                         await Task.WhenAny(BackupFinished, Task.Delay(TimeSpan.FromSeconds(2)));
                     if (!Settings.SchedulesPaused && Repositories.FirstOrDefault(item => item.Config.Id == repositoryId) is { } item)
+                    {
+                        await HoldWhileQueuedAsync(repositoryId);
                         await RunScheduledCheckAsync(item.Config);
+                    }
+                    await ReleaseQueueLeasesAsync();
                 }
             }
             while (_dueJobs.Count > 0 || _dueChecks.Count > 0);
         }
         finally
         {
+            await ReleaseQueueLeasesAsync(all: true);
             _runningDueJobs = false;
         }
     }
@@ -244,11 +249,13 @@ public partial class MainViewModel
             }
             else if (job is not null && (queued.Triggered || (job.IsScheduled && !Settings.SchedulesPaused)))
             {
+                await HoldWhileQueuedAsync(job.RepositoryId);
                 var run = RunScheduledAsync(job);
                 _backupTask = run;
                 summary = await run;
             }
             FinishWaiters(queued.JobId, summary);
+            await ReleaseQueueLeasesAsync();
         }
     }
 

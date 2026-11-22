@@ -82,6 +82,12 @@ public partial class App : Application
         timer.Tick += (_, _) => viewModel.ScheduleTick();
         timer.Start();
 
+        // Attached drives (backing up USB drives when they are attached).
+        viewModel.DriveTick();
+        var drives = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
+        drives.Tick += (_, _) => viewModel.DriveTick();
+        drives.Start();
+
         // The incoming webhook (if switched on, in background mode); it ends with the app.
         viewModel.ApplyTrigger();
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
