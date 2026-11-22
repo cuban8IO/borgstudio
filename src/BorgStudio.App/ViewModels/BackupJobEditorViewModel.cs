@@ -52,6 +52,10 @@ public sealed partial class BackupJobEditorViewModel : ViewModelBase
         OverdueDays = job.OverdueDays;
         WebhookTrigger = job.WebhookTrigger;
         SelectedRestoreTest = RestoreTestOptions.First(option => option.Value == job.RestoreTest);
+        NotOnBattery = job.Conditions.NotOnBattery;
+        NotMetered = job.Conditions.NotMetered;
+        WiredOnly = job.Conditions.WiredOnly;
+        TargetReachable = job.Conditions.TargetReachable;
         HookBefore = job.Hooks.Before;
         HookAfter = job.Hooks.After;
         SelectedHookShell = HookShellOptions.FirstOrDefault(option => option.Value == job.Hooks.EffectiveShell) ?? HookShellOptions[0];
@@ -252,6 +256,23 @@ public sealed partial class BackupJobEditorViewModel : ViewModelBase
     [ObservableProperty]
     public partial bool WebhookTrigger { get; set; }
 
+    // --- Conditions of scheduled runs ---
+
+    [ObservableProperty]
+    public partial bool NotOnBattery { get; set; }
+
+    [ObservableProperty]
+    public partial bool NotMetered { get; set; }
+
+    [ObservableProperty]
+    public partial bool WiredOnly { get; set; }
+
+    [ObservableProperty]
+    public partial bool TargetReachable { get; set; }
+
+    /// <summary>macOS cannot tell a metered connection.</summary>
+    public bool CanTellMetered => !OperatingSystem.IsMacOS();
+
     // --- Commands ---
 
     /// <summary>Runs before the backup; empty: none.</summary>
@@ -347,6 +368,13 @@ public sealed partial class BackupJobEditorViewModel : ViewModelBase
             Notify = Notify,
             WebhookTrigger = WebhookTrigger,
             OverdueDays = (int)Math.Clamp(OverdueDays ?? 0, 0, 365),
+            Conditions = new RunConditions
+            {
+                NotOnBattery = NotOnBattery,
+                NotMetered = NotMetered,
+                WiredOnly = WiredOnly,
+                TargetReachable = TargetReachable,
+            },
             Hooks = new JobHooks
             {
                 Before = (HookBefore ?? "").Trim(),

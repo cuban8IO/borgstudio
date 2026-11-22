@@ -609,6 +609,8 @@
                                                 <TextBlock Text="{Binding RetentionText}" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis" />
                                                 <TextBlock Text="{Binding ScheduleText}" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis"
                                                            ToolTip.Tip="{Binding ScheduleText}" />
+                                                <TextBlock Text="{Binding ConditionsText}" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis"
+                                                           IsVisible="{Binding HasConditions}" />
                                                 <TextBlock Text="{Binding RestoreTestText}" FontSize="12" Opacity="0.85" TextWrapping="Wrap"
                                                            IsVisible="{Binding HasRestoreTest}" Classes.failed="{Binding RestoreTestFailed}"
                                                            Classes.warned="{Binding RestoreTestNotRun}">

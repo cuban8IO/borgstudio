@@ -3126,4 +3126,49 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
   <data name="EditorLowPriorityHint" xml:space="preserve">
     <value>borg läuft mit nice (unter Linux und in WSL auch für die Platte). Der Rechner bleibt flüssig, Sicherungen dauern länger. Keine feste Rate.</value>
   </data>
+  <data name="SkipOnBattery" xml:space="preserve">
+    <value>Der Rechner lief im Akkubetrieb.</value>
+  </data>
+  <data name="SkipMetered" xml:space="preserve">
+    <value>Die Verbindung war getaktet.</value>
+  </data>
+  <data name="SkipNotWired" xml:space="preserve">
+    <value>Es gab keine Kabelverbindung (nur WLAN).</value>
+  </data>
+  <data name="SkipTargetUnreachable" xml:space="preserve">
+    <value>Der Server antwortete nicht oder der Ordner war nicht da.</value>
+  </data>
+  <data name="ConditionNotOnBattery" xml:space="preserve">
+    <value>im Netzbetrieb</value>
+  </data>
+  <data name="ConditionNotMetered" xml:space="preserve">
+    <value>nicht über getaktete Verbindung</value>
+  </data>
+  <data name="ConditionWiredOnly" xml:space="preserve">
+    <value>über LAN-Kabel</value>
+  </data>
+  <data name="ConditionTargetReachable" xml:space="preserve">
+    <value>wenn das Ziel erreichbar ist</value>
+  </data>
+  <data name="JobConditions" xml:space="preserve">
+    <value>Startet nur {0}</value>
+  </data>
+  <data name="JobEditorConditions" xml:space="preserve">
+    <value>Geplante Läufe starten nur:</value>
+  </data>
+  <data name="JobEditorNotOnBattery" xml:space="preserve">
+    <value>im Netzbetrieb, nicht im Akkubetrieb</value>
+  </data>
+  <data name="JobEditorNotMetered" xml:space="preserve">
+    <value>nicht über eine getaktete Verbindung (unter macOS nicht verfügbar)</value>
+  </data>
+  <data name="JobEditorWiredOnly" xml:space="preserve">
+    <value>über LAN-Kabel, nicht über WLAN</value>
+  </data>
+  <data name="JobEditorTargetReachable" xml:space="preserve">
+    <value>wenn der Server antwortet bzw. der Ordner da ist – sonst übersprungen statt fehlgeschlagen</value>
+  </data>
+  <data name="JobEditorConditionsHint" xml:space="preserve">
+    <value>Die Bedingungen zur Verbindung gelten für Repositories auf einem Server oder einer Netzwerkfreigabe. Ein zurückgehaltener Lauf wird alle 15 Minuten erneut versucht, bis zum nächsten geplanten Termin, dann gilt er als übersprungen. Läufe von Hand und über den Webhook starten immer.</value>
+  </data>
 </root>

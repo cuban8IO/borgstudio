@@ -89,8 +89,27 @@ internal static class BorgTexts
         Core.Backups.BackupSkipReason.BorgMissing => Strings.SkipBorgMissing,
         Core.Backups.BackupSkipReason.RepositoryMissing => Strings.SkipRepositoryMissing,
         Core.Backups.BackupSkipReason.SshKeyMissing => Strings.SkipSshKeyMissing,
+        Core.Backups.BackupSkipReason.OnBattery => Strings.SkipOnBattery,
+        Core.Backups.BackupSkipReason.MeteredConnection => Strings.SkipMetered,
+        Core.Backups.BackupSkipReason.NotWired => Strings.SkipNotWired,
+        Core.Backups.BackupSkipReason.TargetUnreachable => Strings.SkipTargetUnreachable,
         _ => Strings.SkipHostUnknown,
     };
+
+    /// <summary>"Nur im Netzbetrieb, nur über LAN" – the job's conditions; <c>null</c> without any.</summary>
+    public static string? Conditions(Core.Backups.RunConditions conditions)
+    {
+        var parts = new List<string>();
+        if (conditions.NotOnBattery)
+            parts.Add(Strings.ConditionNotOnBattery);
+        if (conditions.NotMetered)
+            parts.Add(Strings.ConditionNotMetered);
+        if (conditions.WiredOnly)
+            parts.Add(Strings.ConditionWiredOnly);
+        if (conditions.TargetReachable)
+            parts.Add(Strings.ConditionTargetReachable);
+        return parts.Count == 0 ? null : Format(Strings.JobConditions, string.Join(", ", parts));
+    }
 
     public static string BackupOutcome(Core.Backups.BackupOutcome outcome) => outcome switch
     {

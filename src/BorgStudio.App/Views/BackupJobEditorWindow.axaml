@@ -91,6 +91,20 @@
                     </CheckBox>
                     <TextBlock Text="{x:Static res:Strings.JobEditorSchedulesHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap"
                                IsVisible="{Binding HasSchedules}" />
+                    <StackPanel Spacing="4" IsVisible="{Binding HasSchedules}" Margin="0,6,0,0">
+                        <TextBlock Text="{x:Static res:Strings.JobEditorConditions}" />
+                        <CheckBox IsChecked="{Binding NotOnBattery}" Content="{x:Static res:Strings.JobEditorNotOnBattery}" />
+                        <CheckBox IsChecked="{Binding NotMetered}" IsEnabled="{Binding CanTellMetered}">
+                            <TextBlock Text="{x:Static res:Strings.JobEditorNotMetered}" TextWrapping="Wrap" />
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding WiredOnly}">
+                            <TextBlock Text="{x:Static res:Strings.JobEditorWiredOnly}" TextWrapping="Wrap" />
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding TargetReachable}">
+                            <TextBlock Text="{x:Static res:Strings.JobEditorTargetReachable}" TextWrapping="Wrap" />
+                        </CheckBox>
+                        <TextBlock Text="{x:Static res:Strings.JobEditorConditionsHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                    </StackPanel>
                     <CheckBox IsChecked="{Binding Notify}">
                         <TextBlock Text="{x:Static res:Strings.JobEditorNotify}" TextWrapping="Wrap" />
                     </CheckBox>

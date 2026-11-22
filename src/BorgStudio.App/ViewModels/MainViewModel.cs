@@ -36,7 +36,8 @@ public sealed record AppServices(
     ISystemScheduler? Scheduler = null,
     IAutostart? Autostart = null,
     Notifier? Notifier = null,
-    HookRunner? Hooks = null)
+    HookRunner? Hooks = null,
+    ISystemState? SystemState = null)
 {
     public SshHostTrust SshTrust => new(Ssh, new KnownHostsFile(SshKeys.KnownHostsFile));
 }
