@@ -17,6 +17,7 @@ using BorgStudio.Plugins;
 using BorgStudio.Providers.Hetzner;
 using BorgStudio.Providers.Local;
 using BorgStudio.Providers.Ssh;
+using BorgStudio.Providers.Usb;
 
 namespace BorgStudio.Tests.TestSupport;
 
@@ -79,6 +80,14 @@ public sealed class FakeBorg : IProcessRunner
         var wsl = fileName == WslExecutable;
         if (wsl)
         {
+            // Mounting Windows drives inside WSL: says which of the drives it mounted.
+            if (arguments is ["-u", "root", "-e", "sh", "-c", var driveScript] && driveScript.Contains("/mnt/$d", StringComparison.Ordinal))
+            {
+                RootCommands.Add(driveScript);
+                var letters = System.Text.RegularExpressions.Regex.Match(driveScript, "for d in ([a-z ]+);").Groups[1].Value
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                return Result(0, string.Join('\n', letters.Where(letter => WslDrivesMissing.Contains(letter[0]))));
+            }
             if (arguments is ["-u", "root", "-e", ..])
             {
                 RootCommands.Add(string.Join(' ', arguments.Skip(3)));
@@ -594,6 +603,9 @@ public sealed class FakeBorg : IProcessRunner
     /// <summary>What ran as root in WSL.</summary>
     public List<string> RootCommands { get; } = [];
 
+    /// <summary>Windows drives WSL has not mounted (attached after it started).</summary>
+    public HashSet<char> WslDrivesMissing { get; } = [];
+
     /// <summary>When set, "mount" fails with this message id (or with this text from FUSE, if it has blanks).</summary>
     public string? MountError { get; set; }
 
@@ -774,6 +786,9 @@ public sealed class TestServices : IDisposable
     /// <summary>Cheap key derivation: the tests check the logic, not the cost.</summary>
     public static readonly KdfParameters FastKdf = new(64, 1, 1);
 
+    /// <summary>The drives the USB provider searches and ejects.</summary>
+    public FakeDrives Drives { get; } = new();
+
     public TestServices(bool keychainAvailable = true, bool wsl = false)
     {
         if (!keychainAvailable)
@@ -783,7 +798,7 @@ public sealed class TestServices : IDisposable
         Vault = new Vault(Directory.Combine("vault.json"), FastKdf, Time);
         Settings = new SettingsStore(Directory.Combine("settings.json"));
         Jobs = new BackupJobStore(Directory.Combine("jobs.json"));
-        var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new SshProviderPlugin(), new HetznerProviderPlugin()], "no-plugins-here");
+        var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new UsbProviderPlugin(Drives), new SshProviderPlugin(), new HetznerProviderPlugin()], "no-plugins-here");
         Archives = new ArchiveCache(Directory.Combine("archives"), Vault);
         Durations = new DurationHistory(Directory.Combine("durations.json"));
         System.IO.Directory.CreateDirectory(AppFolder);
@@ -1248,4 +1263,29 @@ public sealed class FakeSystemState : ISystemState
         Task.FromResult(Reachable);
 
     public bool IsNetworkTarget(BorgStudio.Plugins.RepositoryLocation location) => NetworkTarget(location);
+}
+
+/// <summary>Drives as folders of the test; ejecting is recorded (and can be refused).</summary>
+public sealed class FakeDrives : IDriveSystem
+{
+    public List<DriveRoot> Attached { get; } = [];
+
+    /// <summary>Folders on external drives (everything below them counts).</summary>
+    public List<string> External { get; } = [];
+
+    public List<string> Ejected { get; } = [];
+
+    /// <summary>The answer to ejecting; <c>null</c>: ejected.</summary>
+    public string? EjectProblem { get; set; }
+
+    public IReadOnlyList<DriveRoot> Roots() => Attached;
+
+    public Task<bool> IsExternalAsync(string path, CancellationToken cancellationToken = default) =>
+        Task.FromResult(External.Any(root => path.StartsWith(root, StringComparison.OrdinalIgnoreCase)));
+
+    public Task<string?> EjectAsync(string path, CancellationToken cancellationToken = default)
+    {
+        Ejected.Add(path);
+        return Task.FromResult(EjectProblem);
+    }
 }

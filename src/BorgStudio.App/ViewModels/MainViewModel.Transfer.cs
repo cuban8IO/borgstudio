@@ -15,8 +15,8 @@ public partial class MainViewModel
     {
         if (Borg is not { Support: BorgSupport.Supported } borg)
             return (null, Strings.BorgNotReady);
-        if (item.Location is not { } location || RepositoryFormat.Resolve(item.Config.BorgVersion, location) == 2)
-            return (null, Strings.Borg2NotSupported);
+        if (await ConnectAsync(item) is not { } location)
+            return (null, item.ResultText ?? Strings.Borg2NotSupported);
         // Without an open vault there is no SSH key – and an export must not start setting up a PIN.
         if (location.Ssh is not null && _services.Vault.State != Core.Security.VaultState.Unlocked)
             return (null, Strings.SshKeyMissing);

@@ -29,7 +29,7 @@ public partial class MainViewModel
     private async Task CleanUpAsync(BackupJob job)
     {
         var item = Repositories.FirstOrDefault(repository => repository.Config.Id == job.RepositoryId);
-        if (item is null || job.Retention is not { HasRules: true } retention || !TryGetLocation(item, out var location))
+        if (item is null || job.Retention is not { HasRules: true } retention || await ConnectAsync(item) is not { } location)
             return;
         if (!await ReleaseMountsAsync(item.Config.Id, item.Name))
             return;
@@ -87,7 +87,7 @@ public partial class MainViewModel
     private async Task FreeSpaceAsync()
     {
         var item = SelectedRepository!;
-        if (!TryGetLocation(item, out var location))
+        if (await ConnectAsync(item) is not { } location)
             return;
         if (!await ReleaseMountsAsync(item.Config.Id, item.Name))
             return;

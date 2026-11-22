@@ -76,7 +76,8 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:FieldViewModel">
                                 <StackPanel Spacing="4">
-                                    <TextBlock Text="{Binding Label}" />
+                                    <TextBlock Text="{Binding Label}" IsVisible="{Binding !IsToggle}" />
+                                    <CheckBox Content="{Binding Label}" IsChecked="{Binding IsOn}" IsVisible="{Binding IsToggle}" />
                                     <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding IsTextInput}">
                                         <TextBox Text="{Binding Value}" />
                                         <Button Grid.Column="1" Margin="8,0,0,0" IsVisible="{Binding IsFolder}"
@@ -90,6 +91,16 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
+
+                    <Border IsVisible="{Binding ShowConvertToUsb}" Background="{StaticResource BpSurface2Brush}" BorderBrush="{StaticResource BpLineBrush}"
+                            BorderThickness="1" CornerRadius="6" Padding="12">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="{x:Static res:Strings.EditorConvertToUsbHint}" TextWrapping="Wrap" />
+                            <Button Content="{x:Static res:Strings.EditorConvertToUsb}" Command="{Binding ConvertToUsbCommand}" />
+                        </StackPanel>
+                    </Border>
+                    <TextBlock Text="{x:Static res:Strings.EditorConvertedToUsb}" IsVisible="{Binding ConvertedToUsb}"
+                               Foreground="{StaticResource BpGreenBrush}" TextWrapping="Wrap" />
 
                     <StackPanel Spacing="4" IsVisible="{Binding ShowModeChoice}">
                         <RadioButton GroupName="Mode" IsChecked="{Binding !CreateNew}"

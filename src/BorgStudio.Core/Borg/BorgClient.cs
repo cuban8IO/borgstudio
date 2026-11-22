@@ -712,6 +712,7 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
 
         try
         {
+            await using var drives = wsl ? await UseWslDrivesAsync(arguments, workingDirectory, cancellationToken) : null;
             return await RunBorgAsync(borg, location, arguments, environment, sshFiles, timeout, cancellationToken,
                 standardErrorLine, interruptible, standardOutputLine, workingDirectory, exitCode, throttle?.LowPriority == true,
                 standardOutputStream);

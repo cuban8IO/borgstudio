@@ -51,7 +51,7 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
     {
         if (!job.Conditions.Any
             || services.RepositoryStore.Load().Repositories.FirstOrDefault(candidate => candidate.Id == job.RepositoryId) is not { } repository
-            || Location(repository) is not { } location)
+            || await ConditionLocationAsync(repository, cancellationToken) is not { } location)
             return null;
         return await job.Conditions.CheckAsync(System, location, cancellationToken);
     }
@@ -139,7 +139,19 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
         var (access, problem) = await PrepareAsync(repository, cancellationToken);
         if (access is null)
             return (NotRun(job, problem!.Value, problem == BackupSkipReason.PassphraseAsked ? BackupOutcome.Skipped : BackupOutcome.Failed), null);
+        try
+        {
+            return await RunJobAsync(job, access.Lease?.Repository ?? repository, access, report, cancellationToken);
+        }
+        finally
+        {
+            await ReleaseAsync(access, repository);
+        }
+    }
 
+    private async Task<(BackupRunResult Result, MeasuredStorage? Storage)> RunJobAsync(BackupJob job, RepositoryConfig repository,
+        UnattendedAccess access, IBackupRunReport? report, CancellationToken cancellationToken)
+    {
         var result = await _runner.RunAsync(new BackupRunRequest(access.Borg, access.Location, job, access.Passphrase, access.Ssh, Scheduled: true,
                 Throttle: access.Throttle),
             report, cancellationToken);
@@ -158,17 +170,40 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
 
     /// <summary>
     /// What a run without window needs for <paramref name="repository"/>: borg, its location (a local folder must be
-    /// there), the passphrase and the SSH login – or why one of them is missing.
+    /// there; a USB drive is looked for), the passphrase and the SSH login – or why one of them is missing. The access
+    /// holds the repository's connection: give it back with <see cref="ReleaseAsync"/>.
     /// </summary>
     internal async Task<(UnattendedAccess? Access, BackupSkipReason? Problem)> PrepareAsync(RepositoryConfig repository,
         CancellationToken cancellationToken = default)
     {
-        if (Location(repository) is not { } location)
-            return (null, BackupSkipReason.RepositoryMissing);
-
         if (await services.BorgDetector.DetectAsync(cancellationToken) is not { Support: BorgSupport.Supported } borg)
             return (null, BackupSkipReason.BorgMissing);
 
+        RepositoryLease? lease;
+        try
+        {
+            lease = await services.Connections.ConnectAsync(repository, unattended: true, cancellationToken);
+        }
+        catch (RepositoryUnavailableException exception)
+        {
+            ScheduledRun.Log($"{repository.Name}: {exception.Message}", services.Jobs.DataDirectory);
+            return (null, BackupSkipReason.TargetMissing);
+        }
+        if (lease is null)
+            return (null, BackupSkipReason.RepositoryMissing);
+
+        var (prepared, problem) = Prepare(lease.Repository, lease.Location, borg);
+        if (prepared is null)
+        {
+            await lease.ReleaseAsync();
+            return (null, problem);
+        }
+        return (prepared with { Lease = lease }, null);
+    }
+
+    private (UnattendedAccess? Access, BackupSkipReason? Problem) Prepare(RepositoryConfig repository, RepositoryLocation location,
+        BorgInstallation borg)
+    {
         // A local repository on a drive that is not there (USB disk): no need to ask borg.
         if (location.Ssh is null && !Directory.Exists(location.Url))
             return (null, BackupSkipReason.TargetMissing);
@@ -261,6 +296,33 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
         }
     }
 
+    /// <summary>
+    /// Where the conditions look: the place the repository is found now (a USB drive under another letter), otherwise
+    /// where it was last – the condition "target reachable" then says it is not.
+    /// </summary>
+    private async Task<RepositoryLocation?> ConditionLocationAsync(RepositoryConfig repository, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var lease = await services.Connections.ConnectAsync(repository, cancellationToken: cancellationToken);
+            return lease?.Location;
+        }
+        catch (RepositoryUnavailableException)
+        {
+            return Location(repository);
+        }
+    }
+
+    /// <summary>
+    /// Ends the run's use of the repository: a drive is ejected now, if the repository asks for that and nothing else
+    /// uses it. A problem with that goes to the log of scheduled runs.
+    /// </summary>
+    internal async Task ReleaseAsync(UnattendedAccess access, RepositoryConfig repository)
+    {
+        if (access.Lease is { } lease && await lease.ReleaseAsync() is { } problem)
+            ScheduledRun.Log($"{repository.Name}: {problem}", services.Jobs.DataDirectory);
+    }
+
     private RepositoryLocation? Location(RepositoryConfig repository)
     {
         try
@@ -283,5 +345,6 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
 
 /// <summary>What a run without window works with: borg, the repository's location, its passphrase and SSH login.</summary>
 /// <param name="Throttle">The repository's limits for runs starting now.</param>
+/// <param name="Lease">The repository's connection (scheduled runs); released when the run is done.</param>
 public sealed record UnattendedAccess(BorgInstallation Borg, RepositoryLocation Location, string? Passphrase, SshAccess? Ssh,
-    BorgThrottle? Throttle = null);
+    BorgThrottle? Throttle = null, RepositoryLease? Lease = null);

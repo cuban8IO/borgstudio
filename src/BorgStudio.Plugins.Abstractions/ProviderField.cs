@@ -14,6 +14,9 @@ public enum ProviderFieldKind
 
     /// <summary>One of <see cref="ProviderField.Options"/>, picked from a list.</summary>
     Choice,
+
+    /// <summary>A switch: the value is <c>"true"</c> or <c>"false"</c> (default <c>"false"</c>). <see cref="ProviderField.Required"/> is ignored.</summary>
+    Toggle,
 }
 
 /// <summary>One input a <see cref="IRepositoryProvider"/> needs from the user.</summary>

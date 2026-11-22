@@ -191,7 +191,7 @@ public partial class MainViewModel
     {
         var repositoryId = item.Config.Id;
         ArchivesError = null;
-        if (!TryGetLocation(item, out var location))
+        if (await ConnectAsync(item) is not { } location)
         {
             ArchivesError = item.ResultText;
             return;
@@ -290,7 +290,7 @@ public partial class MainViewModel
     private async Task LoadDetailsAsync(RepositoryItemViewModel item, int count)
     {
         count = Math.Min(count, Archives.Count);
-        if (count == 0 || _archiveAccess is not { } access || !TryGetLocation(item, out var location))
+        if (count == 0 || _archiveAccess is not { } access || await ConnectAsync(item) is not { } location)
         {
             UpdateArchivesStatus();
             return;
