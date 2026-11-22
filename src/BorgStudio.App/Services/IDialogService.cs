@@ -24,6 +24,9 @@ public interface IDialogService
     /// <summary>Asks for some other secret (e.g. the password of a key file); <c>null</c> if cancelled.</summary>
     Task<string?> AskSecretAsync(string title, string prompt, string? error = null);
 
+    /// <summary>Asks for a line of text (a name, a comment), filled in with <paramref name="initial"/>; <c>null</c> if cancelled.</summary>
+    Task<string?> AskTextAsync(string title, string prompt, string initial);
+
     /// <summary>Asks where to save a file; <c>null</c> if cancelled.</summary>
     /// <param name="defaultExtension">Added if the name has none; <c>null</c> for files without extension.</param>
     Task<string?> PickSaveFileAsync(string title, string suggestedFileName, string? defaultExtension = "txt");

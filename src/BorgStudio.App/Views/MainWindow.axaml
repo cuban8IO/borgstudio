@@ -661,6 +661,23 @@
                                         ToolTip.Tip="{x:Static res:Strings.ArchivesCompareTip}" />
                                 <Button Content="{x:Static res:Strings.ArchivesComparePrevious}" Command="{Binding CompareWithPreviousCommand}"
                                         ToolTip.Tip="{x:Static res:Strings.ArchivesComparePreviousTip}" />
+                                <Button Content="{x:Static res:Strings.ArchiveManage}" ToolTip.Tip="{x:Static res:Strings.ArchiveManageTip}">
+                                    <Button.Flyout>
+                                        <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                                            <MenuItem Header="{x:Static res:Strings.ArchiveRename}" Command="{Binding RenameArchiveCommand}" />
+                                            <MenuItem Header="{x:Static res:Strings.ArchiveComment}" Command="{Binding CommentArchiveCommand}"
+                                                      ToolTip.Tip="{x:Static res:Strings.ArchiveCommentTip}" />
+                                            <Separator />
+                                            <MenuItem Header="{x:Static res:Strings.ArchiveKeep}" Command="{Binding KeepArchivesCommand}"
+                                                      ToolTip.Tip="{x:Static res:Strings.ArchiveKeepTip}" />
+                                            <MenuItem Header="{x:Static res:Strings.ArchiveRelease}" Command="{Binding ReleaseArchivesCommand}"
+                                                      ToolTip.Tip="{x:Static res:Strings.ArchiveReleaseTip}" />
+                                            <Separator />
+                                            <MenuItem Header="{x:Static res:Strings.ArchiveDelete}" Command="{Binding DeleteArchivesCommand}"
+                                                      ToolTip.Tip="{x:Static res:Strings.ArchiveDeleteTip}" />
+                                        </MenuFlyout>
+                                    </Button.Flyout>
+                                </Button>
                                 <Button Content="{x:Static res:Strings.ArchiveMount}" Command="{Binding MountArchiveCommand}"
                                         ToolTip.Tip="{x:Static res:Strings.ArchiveMountTip}" />
                                 <Button Content="{x:Static res:Strings.ArchivesMountAll}" Command="{Binding MountRepositoryCommand}"
@@ -717,9 +734,17 @@
                                                 </Style>
                                             </Grid.Styles>
                                             <StackPanel Spacing="2">
-                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
-                                                           ToolTip.Tip="{Binding Name}" />
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <Border Padding="5,0" CornerRadius="3" Background="{DynamicResource ChartOkBrush}" VerticalAlignment="Center"
+                                                            IsVisible="{Binding IsKept}" ToolTip.Tip="{x:Static res:Strings.ArchiveKeptTip}">
+                                                        <TextBlock Text="{x:Static res:Strings.ArchiveKept}" FontSize="11" />
+                                                    </Border>
+                                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
+                                                               ToolTip.Tip="{Binding Name}" />
+                                                </StackPanel>
                                                 <TextBlock Text="{Binding JobText}" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding Comment}" FontSize="12" FontStyle="Italic" Opacity="0.85" TextTrimming="CharacterEllipsis"
+                                                           IsVisible="{Binding HasComment}" ToolTip.Tip="{Binding Comment}" />
                                             </StackPanel>
                                             <TextBlock Grid.Column="1" Text="{Binding StartText}" VerticalAlignment="Center" FontSize="13" Margin="8,0,0,0" />
                                             <TextBlock Grid.Column="2" Classes="number" Text="{Binding DurationText}" />

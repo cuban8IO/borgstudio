@@ -3237,4 +3237,96 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
   <data name="DiffNoChanges" xml:space="preserve">
     <value>Keine Unterschiede.</value>
   </data>
+  <data name="ArchiveRename" xml:space="preserve">
+    <value>Umbenennen …</value>
+  </data>
+  <data name="ArchiveRenameTitle" xml:space="preserve">
+    <value>Archiv umbenennen</value>
+  </data>
+  <data name="ArchiveRenamePrompt" xml:space="preserve">
+    <value>Neuer Name für „{0}“:</value>
+  </data>
+  <data name="ArchiveRenaming" xml:space="preserve">
+    <value>Wird umbenannt …</value>
+  </data>
+  <data name="ArchiveNameEmpty" xml:space="preserve">
+    <value>Der Name darf nicht leer sein.</value>
+  </data>
+  <data name="ArchiveNameInvalid" xml:space="preserve">
+    <value>Der Name darf weder „/“ noch „::“ enthalten.</value>
+  </data>
+  <data name="ArchiveNameExists" xml:space="preserve">
+    <value>Es gibt schon ein Archiv „{0}“.</value>
+  </data>
+  <data name="ArchiveComment" xml:space="preserve">
+    <value>Kommentar …</value>
+  </data>
+  <data name="ArchiveCommentTip" xml:space="preserve">
+    <value>borg recreate --comment: eine Notiz im Archiv (z. B. „vor dem Update“)</value>
+  </data>
+  <data name="ArchiveCommentTitle" xml:space="preserve">
+    <value>Kommentar zum Archiv</value>
+  </data>
+  <data name="ArchiveCommentPrompt" xml:space="preserve">
+    <value>Kommentar zu „{0}“ (leer: keiner):</value>
+  </data>
+  <data name="ArchiveCommenting" xml:space="preserve">
+    <value>Kommentar wird gespeichert …</value>
+  </data>
+  <data name="ArchiveKeep" xml:space="preserve">
+    <value>Behalten</value>
+  </data>
+  <data name="ArchiveKeepTip" xml:space="preserve">
+    <value>Behält das Archiv dauerhaft: „keep-“ vor dem Namen, damit das Aufräumen des Jobs es nicht mehr löscht</value>
+  </data>
+  <data name="ArchiveRelease" xml:space="preserve">
+    <value>Nicht mehr behalten</value>
+  </data>
+  <data name="ArchiveReleaseTip" xml:space="preserve">
+    <value>Gibt dem Archiv seinen Namen zurück: Das Aufräumen des Jobs entscheidet wieder darüber</value>
+  </data>
+  <data name="ArchiveKeeping" xml:space="preserve">
+    <value>Wird behalten …</value>
+  </data>
+  <data name="ArchiveReleasing" xml:space="preserve">
+    <value>Namen werden zurückgegeben …</value>
+  </data>
+  <data name="ArchiveKept" xml:space="preserve">
+    <value>behalten</value>
+  </data>
+  <data name="ArchiveKeptTip" xml:space="preserve">
+    <value>Dauerhaft behalten: Das Aufräumen des Jobs lässt es in Ruhe</value>
+  </data>
+  <data name="ArchiveDelete" xml:space="preserve">
+    <value>Löschen …</value>
+  </data>
+  <data name="ArchiveDeleteTip" xml:space="preserve">
+    <value>borg delete: löscht die markierten Archive endgültig</value>
+  </data>
+  <data name="ArchiveDeleteTitle" xml:space="preserve">
+    <value>Archive löschen</value>
+  </data>
+  <data name="ArchiveDeleteMessage" xml:space="preserve">
+    <value>{0} Archiv(e) endgültig löschen? Sie lassen sich danach nicht wiederherstellen.
+
+{1}</value>
+  </data>
+  <data name="ArchiveDeleteMore" xml:space="preserve">
+    <value>… und {0} weitere</value>
+  </data>
+  <data name="ArchiveDeleting" xml:space="preserve">
+    <value>Wird gelöscht …</value>
+  </data>
+  <data name="ArchiveCompactTitle" xml:space="preserve">
+    <value>Speicher freigeben</value>
+  </data>
+  <data name="ArchiveCompactMessage" xml:space="preserve">
+    <value>Die Archive sind gelöscht. Ihr Platz wird erst frei, wenn das Repository verdichtet wird (borg compact). Jetzt freigeben?</value>
+  </data>
+  <data name="ArchiveManage" xml:space="preserve">
+    <value>Verwalten ▾</value>
+  </data>
+  <data name="ArchiveManageTip" xml:space="preserve">
+    <value>Markierte Archive umbenennen, kommentieren, behalten oder löschen</value>
+  </data>
 </root>

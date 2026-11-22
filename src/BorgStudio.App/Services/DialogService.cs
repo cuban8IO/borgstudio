@@ -28,6 +28,9 @@ public sealed class DialogService(Window owner) : IDialogService
     public Task<string?> AskSecretAsync(string title, string prompt, string? error = null) =>
         new PassphraseWindow(title, prompt, error).ShowDialog<string?>(owner);
 
+    public Task<string?> AskTextAsync(string title, string prompt, string initial) =>
+        new TextInputWindow(title, prompt, initial).ShowDialog<string?>(owner);
+
     public async Task<string?> PickSaveFileAsync(string title, string suggestedFileName, string? defaultExtension = "txt")
     {
         var file = await owner.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions

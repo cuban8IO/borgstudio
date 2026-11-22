@@ -183,7 +183,8 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         BorgInstallation borg, RepositoryLocation location, string? passphrase, SshAccess? ssh = null,
         CancellationToken cancellationToken = default)
     {
-        var result = await RunAsync(borg, location, ssh, ["list"], ["--json"], [], passphrase, InfoTimeout, cancellationToken);
+        // With --json, the keys --format names are added: so each archive comes with its comment.
+        var result = await RunAsync(borg, location, ssh, ["list"], ["--json", "--format", "{comment}"], [], passphrase, InfoTimeout, cancellationToken);
         return ParseArchives(result);
     }
 
@@ -492,7 +493,11 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
                 ? new BorgArchiveStats(values.GetProperty("original_size").GetInt64(), values.GetProperty("compressed_size").GetInt64(),
                     values.GetProperty("deduplicated_size").GetInt64(), values.GetProperty("nfiles").GetInt64())
                 : null;
-            archives.Add(new BorgArchive(archive.GetProperty("name").GetString()!, archive.GetProperty("id").GetString()!, start, duration, stats));
+            var comment = archive.TryGetProperty("comment", out var text) && text.GetString() is { Length: > 0 } written ? written : null;
+            archives.Add(new BorgArchive(archive.GetProperty("name").GetString()!, archive.GetProperty("id").GetString()!, start, duration, stats)
+            {
+                Comment = comment,
+            });
         }
         // borg lists oldest first; borg 1.2 gives "list" times to the second only, so equal times keep borg's order.
         return [.. archives.Select((archive, index) => (archive, index))

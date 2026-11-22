@@ -3257,4 +3257,96 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
   <data name="DiffNoChanges" xml:space="preserve">
     <value>No differences.</value>
   </data>
+  <data name="ArchiveRename" xml:space="preserve">
+    <value>Rename …</value>
+  </data>
+  <data name="ArchiveRenameTitle" xml:space="preserve">
+    <value>Rename archive</value>
+  </data>
+  <data name="ArchiveRenamePrompt" xml:space="preserve">
+    <value>New name for „{0}“:</value>
+  </data>
+  <data name="ArchiveRenaming" xml:space="preserve">
+    <value>Renaming …</value>
+  </data>
+  <data name="ArchiveNameEmpty" xml:space="preserve">
+    <value>The name must not be empty.</value>
+  </data>
+  <data name="ArchiveNameInvalid" xml:space="preserve">
+    <value>The name must not contain „/“ or „::“.</value>
+  </data>
+  <data name="ArchiveNameExists" xml:space="preserve">
+    <value>There is an archive „{0}“ already.</value>
+  </data>
+  <data name="ArchiveComment" xml:space="preserve">
+    <value>Comment …</value>
+  </data>
+  <data name="ArchiveCommentTip" xml:space="preserve">
+    <value>borg recreate --comment: a note kept in the archive (e.g. „before the update“)</value>
+  </data>
+  <data name="ArchiveCommentTitle" xml:space="preserve">
+    <value>Archive comment</value>
+  </data>
+  <data name="ArchiveCommentPrompt" xml:space="preserve">
+    <value>Comment for „{0}“ (empty: none):</value>
+  </data>
+  <data name="ArchiveCommenting" xml:space="preserve">
+    <value>Saving the comment …</value>
+  </data>
+  <data name="ArchiveKeep" xml:space="preserve">
+    <value>Keep</value>
+  </data>
+  <data name="ArchiveKeepTip" xml:space="preserve">
+    <value>Keeps the archive for good: „keep-“ in front of its name, so its job's clean-up no longer deletes it</value>
+  </data>
+  <data name="ArchiveRelease" xml:space="preserve">
+    <value>Don't keep</value>
+  </data>
+  <data name="ArchiveReleaseTip" xml:space="preserve">
+    <value>Gives the archive its name back: its job's clean-up decides about it again</value>
+  </data>
+  <data name="ArchiveKeeping" xml:space="preserve">
+    <value>Keeping …</value>
+  </data>
+  <data name="ArchiveReleasing" xml:space="preserve">
+    <value>Giving the names back …</value>
+  </data>
+  <data name="ArchiveKept" xml:space="preserve">
+    <value>kept</value>
+  </data>
+  <data name="ArchiveKeptTip" xml:space="preserve">
+    <value>Kept for good: the job's clean-up leaves it alone</value>
+  </data>
+  <data name="ArchiveDelete" xml:space="preserve">
+    <value>Delete …</value>
+  </data>
+  <data name="ArchiveDeleteTip" xml:space="preserve">
+    <value>borg delete: deletes the marked archives for good</value>
+  </data>
+  <data name="ArchiveDeleteTitle" xml:space="preserve">
+    <value>Delete archives</value>
+  </data>
+  <data name="ArchiveDeleteMessage" xml:space="preserve">
+    <value>Delete {0} archive(s) for good? They cannot be restored afterwards.
+
+{1}</value>
+  </data>
+  <data name="ArchiveDeleteMore" xml:space="preserve">
+    <value>… and {0} more</value>
+  </data>
+  <data name="ArchiveDeleting" xml:space="preserve">
+    <value>Deleting …</value>
+  </data>
+  <data name="ArchiveCompactTitle" xml:space="preserve">
+    <value>Free space</value>
+  </data>
+  <data name="ArchiveCompactMessage" xml:space="preserve">
+    <value>The archives are deleted. Their space is freed only when the repository is compacted (borg compact). Free it now?</value>
+  </data>
+  <data name="ArchiveManage" xml:space="preserve">
+    <value>Manage ▾</value>
+  </data>
+  <data name="ArchiveManageTip" xml:space="preserve">
+    <value>Rename, comment, keep or delete the marked archives</value>
+  </data>
 </root>

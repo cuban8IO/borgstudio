@@ -110,6 +110,7 @@ public partial class MainViewModel
         MountRepositoryCommand.NotifyCanExecuteChanged();
         CompareArchivesCommand.NotifyCanExecuteChanged();
         CompareWithPreviousCommand.NotifyCanExecuteChanged();
+        NotifyArchiveChangeCommands();
     }
 
     /// <summary>Another repository was selected: its archives are shown when the tab is (or gets) opened.</summary>
@@ -242,7 +243,8 @@ public partial class MainViewModel
                 // Refreshing fetches the newest again (their values stay visible meanwhile) and forgets the older ones.
                 if (refresh && index >= newest)
                     details = null;
-                Archives.Add(NewArchiveItem(item, details ?? archive));
+                // Name and comment as borg lists them now (renaming keeps the id; the sizes stay valid).
+                Archives.Add(NewArchiveItem(item, details is null ? archive : details with { Name = archive.Name, Comment = archive.Comment }));
             }
             _shownOf = _archivesOf = repositoryId;
             SelectedArchive = Archives.FirstOrDefault(archive => archive.Archive.Id == selected);
@@ -326,10 +328,12 @@ public partial class MainViewModel
 
     private ArchiveItemViewModel NewArchiveItem(RepositoryItemViewModel item, BorgArchive archive)
     {
-        // The job whose prefix fits best (the longest: "Docs-Photos-…" belongs to "Docs Photos", not "Docs").
+        // The job whose prefix fits best (the longest: "Docs-Photos-…" belongs to "Docs Photos", not "Docs"); a kept
+        // archive still belongs to its job.
+        var name = Core.Backups.BackupNames.Unkept(archive.Name);
         var jobName = _jobs.Where(job => job.RepositoryId == item.Config.Id)
             .Select(job => (job.Name, Prefix: ArchivePrefix(job.Name) + "-"))
-            .Where(job => archive.Name.StartsWith(job.Prefix, StringComparison.Ordinal))
+            .Where(job => name.StartsWith(job.Prefix, StringComparison.Ordinal))
             .OrderByDescending(job => job.Prefix.Length)
             .Select(job => job.Name)
             .FirstOrDefault();
@@ -362,10 +366,18 @@ public sealed partial class ArchiveItemViewModel(BorgArchive archive, string? jo
     public string? JobName => jobName;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasDetails), nameof(DurationText), nameof(OriginalText), nameof(NewText), nameof(FilesText))]
+    [NotifyPropertyChangedFor(nameof(HasDetails), nameof(DurationText), nameof(OriginalText), nameof(NewText), nameof(FilesText),
+        nameof(Comment), nameof(HasComment))]
     public partial BorgArchive Archive { get; private set; } = archive;
 
     public string Name => Archive.Name;
+
+    /// <summary>Kept for good: its job's clean-up leaves it alone ("keep-" in front of its name).</summary>
+    public bool IsKept => Core.Backups.BackupNames.IsKept(Archive.Name);
+
+    public string? Comment => Archive.Comment;
+
+    public bool HasComment => Archive.Comment is not null;
 
     public bool HasDetails => Archive.Stats is not null;
 
@@ -385,5 +397,6 @@ public sealed partial class ArchiveItemViewModel(BorgArchive archive, string? jo
 
     public string FilesText => Archive.Stats is { } stats ? stats.Files.ToString("N0", CultureInfo.CurrentCulture) : "…";
 
-    public void SetDetails(BorgArchive detailed) => Archive = detailed;
+    /// <summary>The details borg worked out; the comment comes from the list if the details have none.</summary>
+    public void SetDetails(BorgArchive detailed) => Archive = detailed.Comment is null ? detailed with { Comment = Archive.Comment } : detailed;
 }

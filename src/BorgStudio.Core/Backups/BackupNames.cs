@@ -21,4 +21,18 @@ public static class BackupNames
     /// With the host name a job "Documents-Old" (or another computer backing up into the same repository) stays out.
     /// </summary>
     public static string ArchiveGlob(string jobName) => $"{ArchivePrefix(jobName)}-{{hostname}}-*";
+
+    /// <summary>
+    /// What an archive kept for good starts with: it no longer fits <see cref="ArchiveGlob"/>, so its job's clean-up leaves it
+    /// alone (on every computer – the name is in the repository).
+    /// </summary>
+    public const string KeepPrefix = "keep-";
+
+    public static bool IsKept(string archiveName) => archiveName.StartsWith(KeepPrefix, StringComparison.Ordinal);
+
+    /// <summary>"Docs-pc-2026-11-20" → "keep-Docs-pc-2026-11-20".</summary>
+    public static string Kept(string archiveName) => IsKept(archiveName) ? archiveName : KeepPrefix + archiveName;
+
+    /// <summary>"keep-Docs-pc-2026-11-20" → "Docs-pc-2026-11-20".</summary>
+    public static string Unkept(string archiveName) => IsKept(archiveName) ? archiveName[KeepPrefix.Length..] : archiveName;
 }
