@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Built-in provider: network disks (iSCSI, NVMe over TCP), logged in to before each use. -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\BorgStudio.Plugins.Abstractions\BorgStudio.Plugins.Abstractions.csproj" />
+    <!-- Finding the repository on the disk's volumes works as for USB drives. -->
+    <ProjectReference Include="..\BorgStudio.Providers.Usb\BorgStudio.Providers.Usb.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\Strings.resx">
+      <StronglyTypedFileName>$(IntermediateOutputPath)Strings.Designer.cs</StronglyTypedFileName>
+      <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
+      <StronglyTypedNamespace>BorgStudio.Providers.NetworkDisk.Resources</StronglyTypedNamespace>
+      <StronglyTypedClassName>Strings</StronglyTypedClassName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

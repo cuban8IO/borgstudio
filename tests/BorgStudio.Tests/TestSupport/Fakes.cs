@@ -17,6 +17,7 @@ using BorgStudio.Plugins;
 using BorgStudio.Providers.BorgBase;
 using BorgStudio.Providers.Hetzner;
 using BorgStudio.Providers.Local;
+using BorgStudio.Providers.NetworkDisk;
 using BorgStudio.Providers.RsyncNet;
 using BorgStudio.Providers.Sftp;
 using BorgStudio.Providers.Ssh;
@@ -846,6 +847,9 @@ public sealed class TestServices : IDisposable
     /// <summary>Cheap key derivation: the tests check the logic, not the cost.</summary>
     public static readonly KdfParameters FastKdf = new(64, 1, 1);
 
+    /// <summary>Network disks: logging in attaches <see cref="FakeNetworkDisks.Volume"/> to <see cref="Drives"/>.</summary>
+    public FakeNetworkDisks NetworkDisks { get; }
+
     /// <summary>BorgBase's GraphQL API.</summary>
     public FakeBorgBase BorgBaseApi { get; } = new();
 
@@ -854,6 +858,7 @@ public sealed class TestServices : IDisposable
 
     public TestServices(bool keychainAvailable = true, bool wsl = false)
     {
+        NetworkDisks = new FakeNetworkDisks(Drives);
         if (!keychainAvailable)
             Secrets = new FakeSecretStore(available: false);
         Store = new RepositoryStore(Directory.Combine("repositories.json"));
@@ -861,7 +866,7 @@ public sealed class TestServices : IDisposable
         Vault = new Vault(Directory.Combine("vault.json"), FastKdf, Time);
         Settings = new SettingsStore(Directory.Combine("settings.json"));
         Jobs = new BackupJobStore(Directory.Combine("jobs.json"));
-        var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new UsbProviderPlugin(Drives), new SshProviderPlugin(), new SftpProviderPlugin(), new HetznerProviderPlugin(), new RsyncNetProviderPlugin(), new BorgBaseProviderPlugin(BorgBaseApi)], "no-plugins-here");
+        var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new UsbProviderPlugin(Drives), new NetworkDiskProviderPlugin(NetworkDisks, Drives), new SshProviderPlugin(), new SftpProviderPlugin(), new HetznerProviderPlugin(), new RsyncNetProviderPlugin(), new BorgBaseProviderPlugin(BorgBaseApi)], "no-plugins-here");
         Archives = new ArchiveCache(Directory.Combine("archives"), Vault);
         Durations = new DurationHistory(Directory.Combine("durations.json"));
         System.IO.Directory.CreateDirectory(AppFolder);
@@ -1482,4 +1487,44 @@ public sealed record FakeBorgBaseRepo(string Id, string Name, string Login)
         ["fullAccessKeyList"] = new System.Text.Json.Nodes.JsonArray([.. FullAccessKeys.Select(key => (System.Text.Json.Nodes.JsonNode)new System.Text.Json.Nodes.JsonObject { ["id"] = key })]),
         ["server"] = new System.Text.Json.Nodes.JsonObject { ["fingerprintEd25519"] = Ed25519, ["fingerprintEcdsa"] = "", ["fingerprintRsa"] = "ab:cd:ef" },
     };
+}
+
+/// <summary>Plays network disks: set up and logged in to by id; logging in attaches a volume (a folder of the test).</summary>
+public sealed class FakeNetworkDisks(FakeDrives drives) : INetworkDiskSystem
+{
+    public List<(NetworkDiskTarget Target, string Id, string? ChapSecret)> SetUps { get; } = [];
+
+    public List<string> Connects { get; } = [];
+
+    public List<string> Disconnects { get; } = [];
+
+    /// <summary>The volume that appears when logged in; <c>null</c>: nothing appears.</summary>
+    public string? Volume { get; set; }
+
+    public string? SetUpRefusal { get; set; }
+
+    public Task SetUpAsync(NetworkDiskTarget target, string id, string? chapSecret, CancellationToken cancellationToken)
+    {
+        if (SetUpRefusal is { } refusal)
+            throw new RepositoryUnavailableException(refusal);
+        SetUps.Add((target, id, chapSecret));
+        return Task.CompletedTask;
+    }
+
+    public Task ConnectAsync(NetworkDiskTarget target, string id, CancellationToken cancellationToken)
+    {
+        if (!SetUps.Any(setUp => setUp.Id == id))
+            throw new RepositoryUnavailableException("not set up");
+        Connects.Add(id);
+        if (Volume is { } volume && !drives.Attached.Any(root => root.Path == volume))
+            drives.Attached.Add(new DriveRoot(volume, IsNetwork: false));
+        return Task.CompletedTask;
+    }
+
+    public Task<string?> DisconnectAsync(NetworkDiskTarget target, string id, CancellationToken cancellationToken)
+    {
+        Disconnects.Add(id);
+        drives.Attached.RemoveAll(root => root.Path == Volume);
+        return Task.FromResult<string?>(null);
+    }
 }

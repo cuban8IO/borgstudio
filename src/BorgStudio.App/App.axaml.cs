@@ -23,6 +23,7 @@ using BorgStudio.Core.Updates;
 using BorgStudio.Providers.BorgBase;
 using BorgStudio.Providers.Hetzner;
 using BorgStudio.Providers.Local;
+using BorgStudio.Providers.NetworkDisk;
 using BorgStudio.Providers.RsyncNet;
 using BorgStudio.Providers.Sftp;
 using BorgStudio.Providers.Ssh;
@@ -106,7 +107,7 @@ public partial class App : Application
     public static AppServices CreateServices(IDialogService dialogs)
     {
         // Built-in providers use the same plugin API as external ones.
-        var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new UsbProviderPlugin(), new SshProviderPlugin(), new SftpProviderPlugin(), new HetznerProviderPlugin(), new RsyncNetProviderPlugin(), new BorgBaseProviderPlugin()], AppPaths.PluginsDirectory);
+        var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new UsbProviderPlugin(), new NetworkDiskProviderPlugin(), new SshProviderPlugin(), new SftpProviderPlugin(), new HetznerProviderPlugin(), new RsyncNetProviderPlugin(), new BorgBaseProviderPlugin()], AppPaths.PluginsDirectory);
         var vault = Vault.CreateDefault();
         return new AppServices(
             BorgDetector.CreateDefault(),

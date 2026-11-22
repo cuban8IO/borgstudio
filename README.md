@@ -9,8 +9,8 @@ The **[product page](https://borgstudio.cuban8io.net/)** shows what it does, the
 
 ## Features
 
-- **Repositories** in a local folder, on a USB or external drive, on an SSH server, on an SFTP-only server, on a
-  Hetzner Storage Box, at rsync.net or at BorgBase –
+- **Repositories** in a local folder, on a USB or external drive, on a network disk (iSCSI, NVMe/TCP), on an SSH server,
+  on an SFTP-only server, on a Hetzner Storage Box, at rsync.net or at BorgBase –
   create new ones or connect existing ones; borg runs natively or, on Windows, inside WSL.
 - **Backup jobs** with source folders, exclusions and compression; live progress with upload speed and remaining
   time; cancelling keeps a checkpoint.
@@ -102,6 +102,14 @@ it follows the system language (English if that is neither) or the choice under 
   `dd of=.ssh/authorized_keys oflag=append conv=notrunc`, as rsync.net documents; if the service does not accept the
   restricted key, the editor suggests an unrestricted one. With an unrestricted key the storage overview shows the
   account's quota (rsync.net's `quota` command).
+- **Network disk (iSCSI, NVMe over TCP on Linux):** before each use BorgStudio logs in to the target – unless its
+  volume is attached already – finds the repository on it by its ID (like a USB drive) and logs out afterwards if it
+  logged in. Logging in needs administrator rights, so saving the repository in the editor sets that up once: on
+  Windows (built-in iSCSI initiator) with a UAC prompt, two tasks in the Task Scheduler (`\BorgStudio\`) that log in to
+  and out of exactly this target with highest rights; on Linux (open-iscsi or nvme-cli) with pkexec, a sudoers rule
+  (`/etc/sudoers.d/borgstudio-<id>`) for exactly this login and logout, and the volumes are mounted with udisks.
+  CHAP is optional (iSCSI; the secret is kept in the vault and, on Windows, in the login task). macOS has no built-in
+  initiator; Windows clients have no NVMe/TCP. Removing the repository leaves the tasks or the sudoers rule in place.
 - **SFTP server (without borg):** BorgStudio mounts the folder holding the repository with sshfs where borg runs
   (WSL, Linux, macOS with macFUSE) and borg works on it like on a local folder – slower than borg on the server. sshfs
   runs in the foreground, held by BorgStudio; borg only starts after checking the folder is mounted, so it never writes
@@ -143,6 +151,7 @@ BorgStudio.slnx
 │   ├── BorgStudio.Providers.Sftp       Built-in provider: SFTP-only server (sshfs)
 │   ├── BorgStudio.Providers.Hetzner    Built-in provider: Hetzner Storage Box
 │   ├── BorgStudio.Providers.Usb        Built-in provider: USB or external drive
+│   ├── BorgStudio.Providers.NetworkDisk Built-in provider: network disk (iSCSI, NVMe/TCP)
 │   ├── BorgStudio.Providers.RsyncNet   Built-in provider: rsync.net
 │   └── BorgStudio.Providers.BorgBase   Built-in provider: BorgBase (GraphQL API)
 ├── samples/
@@ -159,7 +168,8 @@ Shared build settings (target framework, nullable, version) live in `Directory.B
 
 ## Plugins
 
-Repository providers (local folder, USB drive, SSH server, SFTP server, Hetzner Storage Box, rsync.net, BorgBase, …) are plugins. Built-in providers use the same
+Repository providers (local folder, USB drive, network disk, SSH server, SFTP server, Hetzner Storage Box, rsync.net,
+BorgBase, …) are plugins. Built-in providers use the same
 API as external ones; see [docs/plugins.md](docs/plugins.md) for writing and installing a plugin.
 
 ## Build, test, run

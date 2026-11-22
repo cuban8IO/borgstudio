@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Texts of the local provider, English (default). German: Strings.de.resx. -->
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="DisplayName" xml:space="preserve">
+    <value>Netzwerk-Laufwerk (iSCSI / NVMe-TCP)</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>Ein Laufwerk im Netzwerk (z. B. eine iSCSI-LUN eines NAS). BorgStudio meldet sich vor jeder Nutzung an und danach wieder ab; für die Einrichtung braucht es einmal Administratorrechte.</value>
+  </data>
+  <data name="ProtocolLabel" xml:space="preserve">
+    <value>Protokoll</value>
+  </data>
+  <data name="ProtocolIscsi" xml:space="preserve">
+    <value>iSCSI</value>
+  </data>
+  <data name="ProtocolNvme" xml:space="preserve">
+    <value>NVMe over TCP (nur Linux)</value>
+  </data>
+  <data name="PortalLabel" xml:space="preserve">
+    <value>Portal</value>
+  </data>
+  <data name="PortalHint" xml:space="preserve">
+    <value>Hostname oder IP-Adresse des Ziels, optional mit Port (iSCSI 3260, NVMe/TCP 4420), z. B. nas.local:3260.</value>
+  </data>
+  <data name="PortalInvalid" xml:space="preserve">
+    <value>Bitte das Portal als Host oder Host:Port angeben.</value>
+  </data>
+  <data name="TargetLabel" xml:space="preserve">
+    <value>Zielname</value>
+  </data>
+  <data name="TargetHint" xml:space="preserve">
+    <value>Die IQN (iSCSI, z. B. iqn.2000-01.com.synology:nas.backup) bzw. NQN (NVMe).</value>
+  </data>
+  <data name="TargetInvalid" xml:space="preserve">
+    <value>Der Zielname darf nur Buchstaben, Ziffern, Punkte, Doppelpunkte und Bindestriche enthalten.</value>
+  </data>
+  <data name="ChapUserLabel" xml:space="preserve">
+    <value>CHAP-Benutzer</value>
+  </data>
+  <data name="ChapUserHint" xml:space="preserve">
+    <value>Nur, wenn das Ziel CHAP verlangt (iSCSI).</value>
+  </data>
+  <data name="ChapUserInvalid" xml:space="preserve">
+    <value>Der CHAP-Benutzer darf nur Buchstaben, Ziffern und . _ @ - enthalten.</value>
+  </data>
+  <data name="ChapOnlyIscsi" xml:space="preserve">
+    <value>CHAP wird nur für iSCSI unterstützt.</value>
+  </data>
+  <data name="ChapSecretLabel" xml:space="preserve">
+    <value>CHAP-Geheimnis</value>
+  </data>
+  <data name="FolderLabel" xml:space="preserve">
+    <value>Repository-Ordner auf dem Laufwerk</value>
+  </data>
+  <data name="FolderHint" xml:space="preserve">
+    <value>Relativ zum Volume des Laufwerks, z. B. borg/laptop. Laufwerksbuchstabe oder Einhängepunkt spielen keine Rolle.</value>
+  </data>
+  <data name="FolderInvalid" xml:space="preserve">
+    <value>Bitte den Ordner relativ zum Volume angeben (ohne ..).</value>
+  </data>
+  <data name="UnsupportedMac" xml:space="preserve">
+    <value>macOS hat keinen eingebauten iSCSI- oder NVMe/TCP-Initiator – Netzwerk-Laufwerke werden dort nicht unterstützt.</value>
+  </data>
+  <data name="UnsupportedNvmeWindows" xml:space="preserve">
+    <value>Windows hat keinen eingebauten NVMe/TCP-Initiator – bitte iSCSI verwenden.</value>
+  </data>
+  <data name="NotSetUp" xml:space="preserve">
+    <value>Die Anmeldung am Netzwerk-Laufwerk ist nicht eingerichtet – öffne das Repository im Editor und speichere es (fragt einmal nach Administratorrechten).</value>
+  </data>
+  <data name="RepositoryNotFound" xml:space="preserve">
+    <value>Das Netzwerk-Laufwerk wurde angemeldet, aber der Repository-Ordner {0} ist darauf nicht erschienen.</value>
+  </data>
+  <data name="SetupFailed" xml:space="preserve">
+    <value>Das Einrichten des Netzwerk-Laufwerks ist fehlgeschlagen.</value>
+  </data>
+  <data name="SetupFailedBecause" xml:space="preserve">
+    <value>Das Einrichten des Netzwerk-Laufwerks ist fehlgeschlagen: {0}</value>
+  </data>
+  <data name="SetupDeclined" xml:space="preserve">
+    <value>Administratorrechte wurden nicht erteilt – es wurde nichts eingerichtet.</value>
+  </data>
+  <data name="DisconnectFailed" xml:space="preserve">
+    <value>Das Abmelden von {0} hat nicht geklappt: {1}</value>
+  </data>
+  <data name="ConnectFailed" xml:space="preserve">
+    <value>Die Anmeldung am Netzwerk-Laufwerk ist fehlgeschlagen: {0}</value>
+  </data>
+  <data name="PkexecMissing" xml:space="preserve">
+    <value>pkexec fehlt – es fragt nach Administratorrechten (Paket polkit).</value>
+  </data>
+</root>

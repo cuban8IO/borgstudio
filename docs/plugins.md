@@ -88,6 +88,14 @@ Hosted services often differ from a plain server. `SshEndpoint` describes how:
 The built-in Hetzner Storage Box provider (`src/BorgStudio.Providers.Hetzner`) uses the first, second and last;
 the rsync.net provider (`src/BorgStudio.Providers.RsyncNet`) uses `Command`.
 
+### Setting something up once
+
+If connecting needs something set up first – often with administrator rights, which scheduled runs cannot ask for –
+implement `IRepositoryPreparation`. The editor calls `PrepareAsync` when the user saves the repository (with its
+secrets and BorgStudio's id of the repository); return the values to keep, e.g. a marker of what was set up, so the next
+save can skip it. A provider that also implements `IRepositoryConnector` is connected by the editor itself while the
+repository is created or checked. The network disk provider (`src/BorgStudio.Providers.NetworkDisk`) is an example.
+
 ### Servers with SFTP only
 
 If the server has no borg, set `RepositoryLocation.MountOverSftp = true` (with `Ssh` describing the login). BorgStudio

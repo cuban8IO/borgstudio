@@ -3451,4 +3451,10 @@ Jobs: {1}</value>
   <data name="BorgErrorSshfsMissing" xml:space="preserve">
     <value>Das Repository liegt auf einem SFTP-Server und braucht sshfs dort, wo borg läuft. Installiere es – in WSL oder unter Linux: sudo apt install sshfs; unter macOS: macFUSE und sshfs (z. B. brew install --cask macfuse, danach brew install gromgit/fuse/sshfs-mac).</value>
   </data>
+  <data name="EditorPreparing" xml:space="preserve">
+    <value>Verbindung wird eingerichtet … (dein System fragt eventuell einmal nach Administratorrechten)</value>
+  </data>
+  <data name="EditorConnecting" xml:space="preserve">
+    <value>Wird verbunden …</value>
+  </data>
 </root>

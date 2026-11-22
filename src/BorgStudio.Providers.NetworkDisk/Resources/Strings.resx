@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Texts of the local provider, English (default). German: Strings.de.resx. -->
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="DisplayName" xml:space="preserve">
+    <value>Network disk (iSCSI / NVMe-TCP)</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>A disk on the network (e.g. an iSCSI LUN of a NAS). BorgStudio logs in before each use and logs out afterwards; logging in needs administrator rights once to set up.</value>
+  </data>
+  <data name="ProtocolLabel" xml:space="preserve">
+    <value>Protocol</value>
+  </data>
+  <data name="ProtocolIscsi" xml:space="preserve">
+    <value>iSCSI</value>
+  </data>
+  <data name="ProtocolNvme" xml:space="preserve">
+    <value>NVMe over TCP (Linux only)</value>
+  </data>
+  <data name="PortalLabel" xml:space="preserve">
+    <value>Portal</value>
+  </data>
+  <data name="PortalHint" xml:space="preserve">
+    <value>Host name or IP address of the target, optionally with port (iSCSI 3260, NVMe/TCP 4420), e.g. nas.local:3260.</value>
+  </data>
+  <data name="PortalInvalid" xml:space="preserve">
+    <value>Please enter the portal as host or host:port.</value>
+  </data>
+  <data name="TargetLabel" xml:space="preserve">
+    <value>Target name</value>
+  </data>
+  <data name="TargetHint" xml:space="preserve">
+    <value>The IQN (iSCSI, e.g. iqn.2000-01.com.synology:nas.backup) or NQN (NVMe).</value>
+  </data>
+  <data name="TargetInvalid" xml:space="preserve">
+    <value>The target name may only contain letters, digits, dots, colons and hyphens.</value>
+  </data>
+  <data name="ChapUserLabel" xml:space="preserve">
+    <value>CHAP user</value>
+  </data>
+  <data name="ChapUserHint" xml:space="preserve">
+    <value>Only if the target requires CHAP (iSCSI).</value>
+  </data>
+  <data name="ChapUserInvalid" xml:space="preserve">
+    <value>The CHAP user may only contain letters, digits and . _ @ -.</value>
+  </data>
+  <data name="ChapOnlyIscsi" xml:space="preserve">
+    <value>CHAP is only supported for iSCSI.</value>
+  </data>
+  <data name="ChapSecretLabel" xml:space="preserve">
+    <value>CHAP secret</value>
+  </data>
+  <data name="FolderLabel" xml:space="preserve">
+    <value>Repository folder on the disk</value>
+  </data>
+  <data name="FolderHint" xml:space="preserve">
+    <value>Relative to the disk's volume, e.g. borg/laptop. The volume's drive letter or mount point does not matter.</value>
+  </data>
+  <data name="FolderInvalid" xml:space="preserve">
+    <value>Please enter the folder relative to the volume (without .. ).</value>
+  </data>
+  <data name="UnsupportedMac" xml:space="preserve">
+    <value>macOS has no built-in iSCSI or NVMe/TCP initiator – network disks are not supported there.</value>
+  </data>
+  <data name="UnsupportedNvmeWindows" xml:space="preserve">
+    <value>Windows has no built-in NVMe/TCP initiator – please use iSCSI.</value>
+  </data>
+  <data name="NotSetUp" xml:space="preserve">
+    <value>Logging in to the network disk is not set up – open the repository in the editor and save it (asks for administrator rights once).</value>
+  </data>
+  <data name="RepositoryNotFound" xml:space="preserve">
+    <value>The network disk was logged in to, but the repository folder {0} did not appear on it.</value>
+  </data>
+  <data name="SetupFailed" xml:space="preserve">
+    <value>Setting up the network disk failed.</value>
+  </data>
+  <data name="SetupFailedBecause" xml:space="preserve">
+    <value>Setting up the network disk failed: {0}</value>
+  </data>
+  <data name="SetupDeclined" xml:space="preserve">
+    <value>Administrator rights were not given – nothing was set up.</value>
+  </data>
+  <data name="DisconnectFailed" xml:space="preserve">
+    <value>Logging out of {0} did not work: {1}</value>
+  </data>
+  <data name="ConnectFailed" xml:space="preserve">
+    <value>Logging in to the network disk failed: {0}</value>
+  </data>
+  <data name="PkexecMissing" xml:space="preserve">
+    <value>pkexec is missing – it asks for administrator rights (package polkit).</value>
+  </data>
+</root>
