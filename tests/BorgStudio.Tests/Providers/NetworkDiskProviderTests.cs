@@ -71,7 +71,9 @@ public sealed class NetworkDiskProviderTests : IDisposable
         Assert.Single(_provider.Validate(Values("nas local")));
         Assert.Single(_provider.Validate(new Dictionary<string, string>(Values()) { [NetworkDiskProvider.TargetKey] = "iqn with space" }));
         Assert.Single(_provider.Validate(new Dictionary<string, string>(Values()) { [NetworkDiskProvider.FolderKey] = "../x" }));
-        Assert.Single(_provider.Validate(new Dictionary<string, string>(Values()) { [NetworkDiskProvider.ProtocolKey] = "nvme-tcp" })); // Windows
+        // NVMe/TCP: Linux has an initiator, Windows clients (and macOS) have none.
+        Assert.Equal(OperatingSystem.IsLinux() ? 0 : 1,
+            _provider.Validate(new Dictionary<string, string>(Values()) { [NetworkDiskProvider.ProtocolKey] = "nvme-tcp" }).Count);
         Assert.Equal("borg/laptop", _provider.GetLocation(Values()).Url);
     }
 
