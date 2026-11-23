@@ -3564,4 +3564,19 @@ Jobs: {1}</value>
   <data name="DashStatusRestoreNone" xml:space="preserve">
     <value>Not set up</value>
   </data>
+  <data name="JobEditorScheduleEveryMinutes" xml:space="preserve">
+    <value>Every few minutes</value>
+  </data>
+  <data name="ScheduleOneMinute" xml:space="preserve">
+    <value>every minute</value>
+  </data>
+  <data name="ScheduleMinutes" xml:space="preserve">
+    <value>every {0} minutes</value>
+  </data>
+  <data name="ScheduleEveryMinute" xml:space="preserve">
+    <value>Every minute</value>
+  </data>
+  <data name="ScheduleEveryMinutes" xml:space="preserve">
+    <value>Every {0} minutes</value>
+  </data>
 </root>

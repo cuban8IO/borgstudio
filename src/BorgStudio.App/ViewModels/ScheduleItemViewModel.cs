@@ -20,6 +20,7 @@ public sealed partial class ScheduleItemViewModel : ObservableObject
         SelectedKind = KindOptions.First(option => option.Value == schedule.Kind);
         Time = schedule.Time.ToTimeSpan();
         Hours = schedule.Hours;
+        SelectedMinutes = MinuteOptions.FirstOrDefault(option => option.Value == schedule.Minutes) ?? MinuteOptions[5];
         // Monday first, as calendars in Germany (and ISO) start the week.
         Days = [.. WeekOrder.Select(day =>
             new ScheduleDayViewModel(day, CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(day), schedule.Days.Contains(day)))];
@@ -35,6 +36,7 @@ public sealed partial class ScheduleItemViewModel : ObservableObject
     [
         new(ScheduleKind.Daily, Strings.JobEditorScheduleDaily),
         new(ScheduleKind.Weekdays, Strings.JobEditorScheduleWeekdays),
+        new(ScheduleKind.EveryMinutes, Strings.JobEditorScheduleEveryMinutes),
         new(ScheduleKind.EveryHours, Strings.JobEditorScheduleEveryHours),
         new(ScheduleKind.MonthlyWeekday, Strings.ScheduleMonthlyWeekday),
         new(ScheduleKind.MonthlyDay, Strings.ScheduleMonthlyDay),
@@ -42,12 +44,25 @@ public sealed partial class ScheduleItemViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsWeekdays), nameof(IsEveryHours), nameof(IsMonthlyWeekday), nameof(IsMonthlyDay), nameof(IsMonthly),
-        nameof(MonthlyLabel), nameof(TimeLabel))]
+        nameof(MonthlyLabel), nameof(TimeLabel), nameof(IsEveryMinutes), nameof(HasTime))]
     public partial Option<ScheduleKind> SelectedKind { get; set; }
 
     public bool IsWeekdays => SelectedKind?.Value == ScheduleKind.Weekdays;
 
     public bool IsEveryHours => SelectedKind?.Value == ScheduleKind.EveryHours;
+
+    public bool IsEveryMinutes => SelectedKind?.Value == ScheduleKind.EveryMinutes;
+
+    /// <summary>Every N minutes runs around the clock: no time of day.</summary>
+    public bool HasTime => !IsEveryMinutes;
+
+    /// <summary>"1 Minute", "2 Minuten", … "30 Minuten".</summary>
+    public IReadOnlyList<Option<int>> MinuteOptions { get; } =
+        [.. BackupSchedule.MinuteSteps.Select(minutes => new Option<int>(minutes,
+            minutes == 1 ? Strings.ScheduleOneMinute : BorgTexts.Format(Strings.ScheduleMinutes, minutes)))];
+
+    [ObservableProperty]
+    public partial Option<int> SelectedMinutes { get; set; }
 
     public bool IsMonthlyWeekday => SelectedKind?.Value == ScheduleKind.MonthlyWeekday;
 
@@ -108,6 +123,7 @@ public sealed partial class ScheduleItemViewModel : ObservableObject
         Time = TimeOnly.FromTimeSpan(Time is { } time && time >= TimeSpan.Zero && time < TimeSpan.FromDays(1) ? time : new TimeSpan(20, 0, 0)),
         Days = [.. Days.Where(day => day.IsChecked).Select(day => day.Day)],
         Hours = (int)Math.Clamp(Hours ?? 4, 1, 12),
+        Minutes = SelectedMinutes.Value,
         Week = SelectedWeek.Value,
         Weekday = SelectedWeekday.Value,
         DayOfMonth = SelectedDayOfMonth.Value,

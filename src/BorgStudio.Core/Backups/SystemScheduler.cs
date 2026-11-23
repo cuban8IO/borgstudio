@@ -186,11 +186,21 @@ public sealed class WindowsTaskScheduler(IProcessRunner runner, string workDirec
         foreach (var schedule in task.Schedules.Where(schedule => schedule.IsValid))
         {
             // The first start after now, so registering never counts as a missed run.
-            var start = now.Date + schedule.Time.ToTimeSpan();
+            var start = schedule.Kind == ScheduleKind.EveryMinutes
+                ? ScheduleCalendar.Next([schedule], now)!.Value
+                : now.Date + schedule.Time.ToTimeSpan();
             if (start <= now)
                 start = start.AddDays(1);
             xml.AppendLine("    <CalendarTrigger>");
-            if (schedule.Kind == ScheduleKind.EveryHours)
+            if (schedule.Kind == ScheduleKind.EveryMinutes)
+            {
+                // Repeated without end, from the first aligned time on.
+                xml.AppendLine("      <Repetition>");
+                xml.AppendLine($"        <Interval>PT{schedule.Minutes}M</Interval>");
+                xml.AppendLine("        <StopAtDurationEnd>false</StopAtDurationEnd>");
+                xml.AppendLine("      </Repetition>");
+            }
+            else if (schedule.Kind == ScheduleKind.EveryHours)
             {
                 xml.AppendLine("      <Repetition>");
                 xml.AppendLine($"        <Interval>PT{schedule.Hours}H</Interval>");
@@ -329,6 +339,13 @@ public sealed class LaunchdScheduler(IProcessRunner runner, string agentsDirecto
         var entries = new StringBuilder();
         foreach (var schedule in task.Schedules.Where(schedule => schedule.IsValid))
         {
+            // Every N minutes: those minutes of every hour.
+            if (schedule.Kind == ScheduleKind.EveryMinutes)
+            {
+                for (var minute = 0; minute < 60; minute += schedule.Minutes)
+                    entries.Append($"      <dict><key>Minute</key><integer>{minute}</integer></dict>\n");
+                continue;
+            }
             foreach (var (weekday, day) in CalendarDays(schedule))
             {
                 foreach (var time in schedule.TimesOfDay())
@@ -467,9 +484,12 @@ public sealed class SystemdScheduler(IProcessRunner runner, string unitDirectory
     /// <summary>systemd's calendar expression, e.g. "Mon,Fri *-*-* 12:30:00", "Sun *-*-01..07 03:00:00" (first Sunday).</summary>
     internal static string Calendar(BackupSchedule schedule)
     {
-        var time = schedule.Kind == ScheduleKind.EveryHours
-            ? $"{schedule.Time.Hour:00}/{schedule.Hours}:{schedule.Time.Minute:00}:00"
-            : $"{schedule.Time.Hour:00}:{schedule.Time.Minute:00}:00";
+        var time = schedule.Kind switch
+        {
+            ScheduleKind.EveryHours => $"{schedule.Time.Hour:00}/{schedule.Hours}:{schedule.Time.Minute:00}:00",
+            ScheduleKind.EveryMinutes => $"*:00/{schedule.Minutes}:00",
+            _ => $"{schedule.Time.Hour:00}:{schedule.Time.Minute:00}:00",
+        };
         return schedule.Kind switch
         {
             ScheduleKind.Weekdays => $"{string.Join(',', schedule.Days.Distinct().Order().Select(Abbreviation))} *-*-* {time}",
