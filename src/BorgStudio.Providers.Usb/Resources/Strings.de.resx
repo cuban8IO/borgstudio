@@ -17,13 +17,13 @@
     <value>USB- oder externes Laufwerk</value>
   </data>
   <data name="Description" xml:space="preserve">
-    <value>Ein Repository auf einem Laufwerk, das nicht immer angeschlossen ist. BorgStudio findet es an seiner Repository-ID, auch unter einem anderen Laufwerksbuchstaben oder Einhängepunkt.</value>
+    <value>Externe Festplatte oder USB-Stick. Wird auch unter einem anderen Laufwerksbuchstaben wiedergefunden.</value>
   </data>
   <data name="PathLabel" xml:space="preserve">
     <value>Ordner</value>
   </data>
   <data name="PathHint" xml:space="preserve">
-    <value>Wo der Repository-Ordner jetzt liegt. Bekommt das Laufwerk später einen anderen Buchstaben, durchsucht BorgStudio alle Laufwerke und merkt sich den neuen Ort.</value>
+    <value>Der Repository-Ordner auf dem Laufwerk, z. B. E:\Backups\laptop</value>
   </data>
   <data name="PathRequired" xml:space="preserve">
     <value>Bitte einen Ordner auswählen.</value>
@@ -35,7 +35,7 @@
     <value>Nach automatischen Läufen sicher auswerfen</value>
   </data>
   <data name="EjectHint" xml:space="preserve">
-    <value>Nach einer geplanten Sicherung oder Prüfung wirft BorgStudio das Laufwerk aus – außer, etwas anderes nutzt es noch.</value>
+    <value>Nach geplanten Sicherungen und Prüfungen.</value>
   </data>
   <data name="NotFound" xml:space="preserve">
     <value>Das Laufwerk mit diesem Repository ist nicht angeschlossen (zuletzt unter {0}).</value>

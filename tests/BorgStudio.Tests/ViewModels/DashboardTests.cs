@@ -108,6 +108,9 @@ public sealed class DashboardTests : IDisposable
         var fine = Item("Fine", 600, new StorageForecast(Gigabyte, ForecastBasis.Trend, new DateTimeOffset(Now).AddDays(400), null, null));
         var fillsUp = Item("Fills up", 500, new StorageForecast(Gigabyte, ForecastBasis.Trend, new DateTimeOffset(Now).AddDays(45), null, null));
         var broken = Item("Broken", 50);
+        // Checked: its integrity is fine; the others were never checked.
+        fine.Checks = [new Core.Checks.CheckRecord(new DateTimeOffset(Now).AddDays(-3), TimeSpan.FromMinutes(5), Core.Checks.CheckDepth.Full,
+            Core.Checks.CheckOutcome.Ok)];
         var documents = Job("Documents");
         var photos = Job("Photos");
         var opened = new List<RepositoryItemViewModel>();
@@ -123,8 +126,18 @@ public sealed class DashboardTests : IDisposable
         Assert.Equal(["Broken", "Fills up", "Fine"], dashboard.Rows.Select(row => row.Item.Name));
         var first = dashboard.Rows[0];
         Assert.True(first.IsCritical);
-        Assert.Equal(BorgTexts.Format(Strings.DashMoreProblems, BorgTexts.Format(Strings.DashReasonMissedTwice, "Documents"), 2), first.HealthText);
+        // Two job problems and the missing integrity check.
+        Assert.Equal(BorgTexts.Format(Strings.DashMoreProblems, BorgTexts.Format(Strings.DashReasonMissedTwice, "Documents"), 3), first.HealthText);
+        Assert.Equal(Strings.DashCheckNever, dashboard.Rows[1].HealthText);
         Assert.Equal(Strings.DashAllWell, dashboard.Rows[2].HealthText);
+
+        // The state is always told, line by line.
+        Assert.Equal([Strings.DashStatusBackups, Strings.DashStatusCheck, Strings.DashStatusRestore], dashboard.Rows[2].Statuses.Select(status => status.Label));
+        Assert.Equal([HealthLevel.Critical, HealthLevel.Warning, HealthLevel.Info], first.Statuses.Select(status => status.Level));
+        Assert.Equal(Strings.DashNeverChecked, first.Statuses[1].Text);
+        Assert.Equal(BorgTexts.Format(Strings.DashStatusCheckedFull, BorgTexts.Format(Strings.StatsAgoDays, 3)), dashboard.Rows[2].Statuses[1].Text);
+        Assert.Equal(HealthLevel.Ok, dashboard.Rows[2].Statuses[0].Level);
+        Assert.Equal(Strings.DashStatusRestoreNone, dashboard.Rows[2].Statuses[2].Text);
 
         Assert.Equal(BorgTexts.Size(300 * Gigabyte), dashboard.StoredText);
         Assert.Equal("95 %", dashboard.SavingsText);

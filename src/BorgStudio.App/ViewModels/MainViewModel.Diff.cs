@@ -23,14 +23,32 @@ public partial class MainViewModel
         CompareWithPreviousCommand.NotifyCanExecuteChanged();
     }
 
+    /// <summary>
+    /// "Vergleichen …": any two archives, chosen in a small window – preset with the two marked ones, or the marked one and
+    /// its predecessor, or the newest two.
+    /// </summary>
     [RelayCommand(CanExecute = nameof(CanCompareArchives))]
-    private Task CompareArchivesAsync()
+    private async Task CompareArchivesAsync()
     {
-        var pair = SelectedArchives.OrderBy(archive => archive.Archive.Start).ToList();
-        return CompareAsync(pair[0].Archive, pair[1].Archive);
+        BorgArchive? older = null, newer = null;
+        if (SelectedArchives.Count == 2)
+        {
+            var marked = SelectedArchives.OrderBy(archive => archive.Archive.Start).ToList();
+            (older, newer) = (marked[0].Archive, marked[1].Archive);
+        }
+        else if (SelectedArchive is { } selected)
+        {
+            newer = selected.Archive;
+            older = (Previous(selected) ?? Archives.Where(other => other.Archive.Start < selected.Archive.Start).MaxBy(other => other.Archive.Start))?.Archive;
+        }
+
+        var picker = new ArchiveComparePickerViewModel(Archives.Select(archive => archive.Archive).ToList(), older, newer);
+        if (!await _services.Dialogs.PickArchivesToCompareAsync(picker) || picker.Pair is not { } pair)
+            return;
+        await CompareAsync(pair.Older, pair.Newer);
     }
 
-    private bool CanCompareArchives() => SelectedArchives.Count == 2 && CanUseArchives();
+    private bool CanCompareArchives() => Archives.Count >= 2 && CanUseArchives();
 
     /// <summary>The marked archive and the one of its job made before it.</summary>
     [RelayCommand(CanExecute = nameof(CanCompareWithPrevious))]

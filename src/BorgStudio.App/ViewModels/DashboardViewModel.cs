@@ -99,6 +99,18 @@ public sealed class DashboardViewModel
     private static bool Worked(BackupRunSummary run) => run.Outcome is BackupOutcome.Succeeded or BackupOutcome.Warnings;
 }
 
+/// <summary>One line of a repository's state: what ("Prüfung"), how it is ("vor 3 Tagen ok"), and its level for the dot.</summary>
+public sealed record DashboardStatus(string Label, string Text, HealthLevel Level)
+{
+    public bool IsCritical => Level == HealthLevel.Critical;
+
+    public bool IsWarning => Level == HealthLevel.Warning;
+
+    public bool IsOk => Level == HealthLevel.Ok;
+
+    public bool IsInfo => Level == HealthLevel.Info;
+}
+
 /// <summary>A repository in the overview: its storage bar, its state (the worst of its jobs and its storage), its last backup.</summary>
 public sealed partial class DashboardRowViewModel
 {
@@ -123,6 +135,10 @@ public sealed partial class DashboardRowViewModel
                 break;
             case (_, Core.Checks.CheckHealthReason.Overdue):
                 problems.Add((HealthLevel.Warning, Strings.DashCheckOverdue));
+                break;
+            // Backed up, but its integrity never checked.
+            case (_, Core.Checks.CheckHealthReason.Fine) when Item.LastVerdict is null && repository.Jobs.Any(entry => entry.Runs.Any(run => run.Outcome is BackupOutcome.Succeeded or BackupOutcome.Warnings)):
+                problems.Add((HealthLevel.Warning, Strings.DashCheckNever));
                 break;
         }
         if (Item.StorageLevel == StorageLevel.Full)
@@ -158,6 +174,8 @@ public sealed partial class DashboardRowViewModel
                 : Strings.DashByHandOnly;
         }
 
+        Statuses = [BackupStatus(repository, health, now), CheckStatus(now), RestoreStatus(repository)];
+
         var lastSuccess = health.Select(entry => entry.Health.LastSuccess).Max();
         LastBackupText = (lastSuccess is { } last
             ? BorgTexts.Format(Strings.DashLastBackup, Ago(now - last))
@@ -168,6 +186,49 @@ public sealed partial class DashboardRowViewModel
     public RepositoryItemViewModel Item { get; }
 
     public HealthLevel Level { get; }
+
+    /// <summary>Always shown: backups, integrity check, restore test – each with its own state.</summary>
+    public IReadOnlyList<DashboardStatus> Statuses { get; }
+
+    private static DashboardStatus BackupStatus(DashboardRepository repository, IReadOnlyList<(BackupJob Job, JobHealth Health)> health,
+        DateTimeOffset now)
+    {
+        if (repository.Jobs.Count == 0)
+            return new(Strings.DashStatusBackups, Strings.DashNoJobs, HealthLevel.Info);
+        var worst = health.MaxBy(entry => entry.Health.Level);
+        if (worst.Health.Level is HealthLevel.Warning or HealthLevel.Critical)
+            return new(Strings.DashStatusBackups, BorgTexts.Format(Reason(worst.Health, now), worst.Job.Name,
+                worst.Health.LastSuccess is { } at ? (int)(now - at).TotalDays : 0), worst.Health.Level);
+        return health.Max(entry => entry.Health.LastSuccess) is { } last
+            ? new(Strings.DashStatusBackups, BorgTexts.Format(Strings.DashStatusLast, Ago(now - last)), HealthLevel.Ok)
+            : new(Strings.DashStatusBackups, Strings.DashNeverBackedUp, HealthLevel.Info);
+    }
+
+    private DashboardStatus CheckStatus(DateTimeOffset now)
+    {
+        var verdict = Item.LastVerdict;
+        return Item.CheckHealth.Reason switch
+        {
+            Core.Checks.CheckHealthReason.Damaged => new(Strings.DashStatusCheck, Strings.DashCheckProblems, HealthLevel.Critical),
+            Core.Checks.CheckHealthReason.NotRun => new(Strings.DashStatusCheck, Strings.DashCheckNotRun, HealthLevel.Warning),
+            Core.Checks.CheckHealthReason.Overdue => new(Strings.DashStatusCheck, Strings.DashCheckOverdue, HealthLevel.Warning),
+            _ when verdict is null => new(Strings.DashStatusCheck, Strings.DashNeverChecked, HealthLevel.Warning),
+            _ => new(Strings.DashStatusCheck, BorgTexts.Format(verdict.Depth == Core.Checks.CheckDepth.Full ? Strings.DashStatusCheckedFull : Strings.DashStatusChecked,
+                Ago(now - verdict.Started)), HealthLevel.Ok),
+        };
+    }
+
+    private static DashboardStatus RestoreStatus(DashboardRepository repository)
+    {
+        var tests = repository.Jobs.Select(entry => (entry.Job, Test: repository.RestoreTests?.GetValueOrDefault(entry.Job.Id))).ToList();
+        if (tests.FirstOrDefault(entry => entry.Test?.Outcome == Core.Checks.RestoreTestOutcome.Failed) is { Test: not null } failed)
+            return new(Strings.DashStatusRestore, BorgTexts.Format(Strings.DashStatusRestoreFailed, failed.Job.Name), HealthLevel.Critical);
+        if (tests.FirstOrDefault(entry => entry.Test is { Outcome: Core.Checks.RestoreTestOutcome.NotRun, Automatic: true }) is { Test: not null } notRun)
+            return new(Strings.DashStatusRestore, BorgTexts.Format(Strings.DashStatusRestoreNotRun, notRun.Job.Name), HealthLevel.Warning);
+        if (tests.Any(entry => entry.Test?.Outcome == Core.Checks.RestoreTestOutcome.Ok))
+            return new(Strings.DashStatusRestore, Strings.DashStatusRestoreOk, HealthLevel.Ok);
+        return new(Strings.DashStatusRestore, Strings.DashStatusRestoreNone, HealthLevel.Info);
+    }
 
     public string HealthText { get; }
 

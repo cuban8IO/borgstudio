@@ -17,7 +17,7 @@
     <value>Netzwerk-Laufwerk (iSCSI / NVMe-TCP)</value>
   </data>
   <data name="Description" xml:space="preserve">
-    <value>Ein Laufwerk im Netzwerk (z. B. eine iSCSI-LUN eines NAS). BorgStudio meldet sich vor jeder Nutzung an und danach wieder ab; für die Einrichtung braucht es einmal Administratorrechte.</value>
+    <value>iSCSI- oder NVMe/TCP-Laufwerk, z. B. eine LUN auf einem NAS. Wird einmal mit Administratorrechten eingerichtet.</value>
   </data>
   <data name="ProtocolLabel" xml:space="preserve">
     <value>Protokoll</value>
@@ -32,7 +32,7 @@
     <value>Portal</value>
   </data>
   <data name="PortalHint" xml:space="preserve">
-    <value>Hostname oder IP-Adresse des Ziels, optional mit Port (iSCSI 3260, NVMe/TCP 4420), z. B. nas.local:3260.</value>
+    <value>z. B. nas.local oder nas.local:3260</value>
   </data>
   <data name="PortalInvalid" xml:space="preserve">
     <value>Bitte das Portal als Host oder Host:Port angeben.</value>
@@ -41,7 +41,7 @@
     <value>Zielname</value>
   </data>
   <data name="TargetHint" xml:space="preserve">
-    <value>Die IQN (iSCSI, z. B. iqn.2000-01.com.synology:nas.backup) bzw. NQN (NVMe).</value>
+    <value>IQN bzw. NQN des Ziels.</value>
   </data>
   <data name="TargetInvalid" xml:space="preserve">
     <value>Der Zielname darf nur Buchstaben, Ziffern, Punkte, Doppelpunkte und Bindestriche enthalten.</value>
@@ -50,7 +50,7 @@
     <value>CHAP-Benutzer</value>
   </data>
   <data name="ChapUserHint" xml:space="preserve">
-    <value>Nur, wenn das Ziel CHAP verlangt (iSCSI).</value>
+    <value>Nur, wenn das Ziel CHAP verlangt.</value>
   </data>
   <data name="ChapUserInvalid" xml:space="preserve">
     <value>Der CHAP-Benutzer darf nur Buchstaben, Ziffern und . _ @ - enthalten.</value>
@@ -65,7 +65,7 @@
     <value>Repository-Ordner auf dem Laufwerk</value>
   </data>
   <data name="FolderHint" xml:space="preserve">
-    <value>Relativ zum Volume des Laufwerks, z. B. borg/laptop. Laufwerksbuchstabe oder Einhängepunkt spielen keine Rolle.</value>
+    <value>Relativ zum Laufwerk, z. B. borg/laptop</value>
   </data>
   <data name="FolderInvalid" xml:space="preserve">
     <value>Bitte den Ordner relativ zum Volume angeben (ohne ..).</value>

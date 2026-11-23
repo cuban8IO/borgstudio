@@ -189,10 +189,18 @@
                 <ListBox ItemsSource="{Binding Repositories}" SelectedItem="{Binding ListedRepository}">
                     <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="vm:RepositoryItemViewModel">
-                            <StackPanel Spacing="2" Margin="2,4">
-                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                                <TextBlock Text="{Binding ProviderName}" FontSize="12" Opacity="0.7" />
-                            </StackPanel>
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" Margin="2,4">
+                                <Panel VerticalAlignment="Top" Margin="0,5,0,0" Width="9" Height="9">
+                                    <Ellipse Width="9" Height="9" Fill="{DynamicResource ChartFailBrush}" IsVisible="{Binding StateIsCritical}" />
+                                    <Ellipse Width="9" Height="9" Fill="{DynamicResource ChartWarnBrush}" IsVisible="{Binding StateIsWarning}" />
+                                    <Ellipse Width="9" Height="9" Fill="{DynamicResource ChartOkBrush}" IsVisible="{Binding StateIsOk}" />
+                                    <Ellipse Width="9" Height="9" Fill="{DynamicResource ChartTrackBrush}" IsVisible="{Binding StateIsInfo}" />
+                                </Panel>
+                                <StackPanel Grid.Column="1" Spacing="2">
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding ProviderName}" FontSize="12" Opacity="0.7" />
+                                </StackPanel>
+                            </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
@@ -304,7 +312,22 @@
                                                 <StackPanel Grid.Column="1" Spacing="2">
                                                     <TextBlock Text="{Binding Item.Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                                                     <TextBlock Text="{Binding HealthText}" FontSize="12" TextWrapping="Wrap" Opacity="0.85" />
-                                                    <TextBlock Text="{Binding LastBackupText}" FontSize="12" Opacity="0.6" />
+                                                    <ItemsControl ItemsSource="{Binding Statuses}" Margin="0,2,0,0">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate x:DataType="vm:DashboardStatus">
+                                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                    <Panel Width="7" Height="7" VerticalAlignment="Center">
+                                                                        <Ellipse Width="7" Height="7" Fill="{DynamicResource ChartFailBrush}" IsVisible="{Binding IsCritical}" />
+                                                                        <Ellipse Width="7" Height="7" Fill="{DynamicResource ChartWarnBrush}" IsVisible="{Binding IsWarning}" />
+                                                                        <Ellipse Width="7" Height="7" Fill="{DynamicResource ChartOkBrush}" IsVisible="{Binding IsOk}" />
+                                                                        <Ellipse Width="7" Height="7" Fill="{DynamicResource ChartTrackBrush}" IsVisible="{Binding IsInfo}" />
+                                                                    </Panel>
+                                                                    <TextBlock Text="{Binding Label}" FontSize="12" Opacity="0.6" Width="140" />
+                                                                    <TextBlock Text="{Binding Text}" FontSize="12" TextWrapping="Wrap" />
+                                                                </StackPanel>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
                                                 </StackPanel>
                                                 <StackPanel Grid.Column="2" Spacing="4" VerticalAlignment="Center">
                                                     <controls:StackedBar Segments="{Binding Item.StorageSegments}" Height="10"
@@ -741,6 +764,22 @@
                                                     <Border Padding="5,0" CornerRadius="3" Background="{DynamicResource ChartOkBrush}" VerticalAlignment="Center"
                                                             IsVisible="{Binding IsKept}" ToolTip.Tip="{x:Static res:Strings.ArchiveKeptTip}">
                                                         <TextBlock Text="{x:Static res:Strings.ArchiveKept}" FontSize="11" />
+                                                    </Border>
+                                                    <Border Padding="5,0" CornerRadius="3" BorderThickness="1" BorderBrush="{DynamicResource ChartOkBrush}" VerticalAlignment="Center"
+                                                            IsVisible="{Binding IsChecked}" ToolTip.Tip="{Binding CheckBadgeTip}">
+                                                        <TextBlock Text="{Binding CheckBadgeText}" FontSize="11" Foreground="{DynamicResource ChartOkBrush}" />
+                                                    </Border>
+                                                    <Border Padding="5,0" CornerRadius="3" Background="{DynamicResource ChartFailBrush}" VerticalAlignment="Center"
+                                                            IsVisible="{Binding IsCheckDamaged}" ToolTip.Tip="{Binding CheckBadgeTip}">
+                                                        <TextBlock Text="{x:Static res:Strings.ArchiveCheckDamaged}" FontSize="11" />
+                                                    </Border>
+                                                    <Border Padding="5,0" CornerRadius="3" BorderThickness="1" BorderBrush="{DynamicResource ChartOkBrush}" VerticalAlignment="Center"
+                                                            IsVisible="{Binding IsRestoreTested}" ToolTip.Tip="{Binding RestoreBadgeTip}">
+                                                        <TextBlock Text="{x:Static res:Strings.ArchiveRestoreTested}" FontSize="11" Foreground="{DynamicResource ChartOkBrush}" />
+                                                    </Border>
+                                                    <Border Padding="5,0" CornerRadius="3" Background="{DynamicResource ChartFailBrush}" VerticalAlignment="Center"
+                                                            IsVisible="{Binding IsRestoreTestFailed}" ToolTip.Tip="{Binding RestoreBadgeTip}">
+                                                        <TextBlock Text="{x:Static res:Strings.ArchiveRestoreTestFailed}" FontSize="11" />
                                                     </Border>
                                                     <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
                                                                ToolTip.Tip="{Binding Name}" />

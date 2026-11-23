@@ -17,13 +17,13 @@
     <value>USB or external drive</value>
   </data>
   <data name="Description" xml:space="preserve">
-    <value>A repository on a drive that is not always attached. BorgStudio finds it by its repository ID, even under another drive letter or mount point.</value>
+    <value>External disk or USB stick. Found again even under another drive letter.</value>
   </data>
   <data name="PathLabel" xml:space="preserve">
     <value>Folder</value>
   </data>
   <data name="PathHint" xml:space="preserve">
-    <value>Where the repository folder is now. If the drive later gets another letter, BorgStudio searches all drives for it and remembers the new place.</value>
+    <value>The repository folder on the drive, e.g. E:\Backups\laptop</value>
   </data>
   <data name="PathRequired" xml:space="preserve">
     <value>Please choose a folder.</value>
@@ -35,7 +35,7 @@
     <value>Eject safely after automatic runs</value>
   </data>
   <data name="EjectHint" xml:space="preserve">
-    <value>After a scheduled backup or check, BorgStudio ejects the drive – unless something else still uses it.</value>
+    <value>After scheduled backups and checks.</value>
   </data>
   <data name="NotFound" xml:space="preserve">
     <value>The drive with this repository is not attached (last seen at {0}).</value>

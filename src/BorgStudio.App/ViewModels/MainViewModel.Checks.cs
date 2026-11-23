@@ -24,6 +24,7 @@ public partial class MainViewModel
         {
             item.Checks = store.Get(item.Config.Id);
             NoteLockFromRuns(item);
+            RefreshArchiveVerification(item.Config.Id);
         }
         RepairRepositoryCommand.NotifyCanExecuteChanged();
         BreakLockCommand.NotifyCanExecuteChanged();

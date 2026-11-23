@@ -17,7 +17,7 @@
     <value>Network disk (iSCSI / NVMe-TCP)</value>
   </data>
   <data name="Description" xml:space="preserve">
-    <value>A disk on the network (e.g. an iSCSI LUN of a NAS). BorgStudio logs in before each use and logs out afterwards; logging in needs administrator rights once to set up.</value>
+    <value>iSCSI or NVMe/TCP disk, e.g. a LUN on a NAS. Set up once with administrator rights.</value>
   </data>
   <data name="ProtocolLabel" xml:space="preserve">
     <value>Protocol</value>
@@ -32,7 +32,7 @@
     <value>Portal</value>
   </data>
   <data name="PortalHint" xml:space="preserve">
-    <value>Host name or IP address of the target, optionally with port (iSCSI 3260, NVMe/TCP 4420), e.g. nas.local:3260.</value>
+    <value>e.g. nas.local or nas.local:3260</value>
   </data>
   <data name="PortalInvalid" xml:space="preserve">
     <value>Please enter the portal as host or host:port.</value>
@@ -41,7 +41,7 @@
     <value>Target name</value>
   </data>
   <data name="TargetHint" xml:space="preserve">
-    <value>The IQN (iSCSI, e.g. iqn.2000-01.com.synology:nas.backup) or NQN (NVMe).</value>
+    <value>The target's IQN or NQN.</value>
   </data>
   <data name="TargetInvalid" xml:space="preserve">
     <value>The target name may only contain letters, digits, dots, colons and hyphens.</value>
@@ -50,7 +50,7 @@
     <value>CHAP user</value>
   </data>
   <data name="ChapUserHint" xml:space="preserve">
-    <value>Only if the target requires CHAP (iSCSI).</value>
+    <value>Only if the target requires CHAP.</value>
   </data>
   <data name="ChapUserInvalid" xml:space="preserve">
     <value>The CHAP user may only contain letters, digits and . _ @ -.</value>
@@ -65,7 +65,7 @@
     <value>Repository folder on the disk</value>
   </data>
   <data name="FolderHint" xml:space="preserve">
-    <value>Relative to the disk's volume, e.g. borg/laptop. The volume's drive letter or mount point does not matter.</value>
+    <value>Relative to the disk, e.g. borg/laptop</value>
   </data>
   <data name="FolderInvalid" xml:space="preserve">
     <value>Please enter the folder relative to the volume (without .. ).</value>

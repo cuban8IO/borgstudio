@@ -18,4 +18,12 @@ public sealed class AppVersionTests
         Assert.NotEmpty(AppVersion.Current);
         Assert.DoesNotContain('+', AppVersion.Current);
     }
+
+    [Fact]
+    public void Local_builds_are_titled_as_development_version_with_their_commit()
+    {
+        Assert.Equal("BorgStudio 0.5.0", AppVersion.TitleFor("0.5.0+f9caf18abc"));
+        Assert.Equal($"BorgStudio – {BorgStudio.App.Resources.Strings.DevelopmentVersion} (f9caf18)", AppVersion.TitleFor("0.0.0-dev+f9caf18abcdef"));
+        Assert.Equal($"BorgStudio – {BorgStudio.App.Resources.Strings.DevelopmentVersion}", AppVersion.TitleFor("0.0.0-dev"));
+    }
 }

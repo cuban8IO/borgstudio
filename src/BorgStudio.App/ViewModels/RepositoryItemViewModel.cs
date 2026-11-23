@@ -23,6 +23,19 @@ public sealed partial class RepositoryItemViewModel(RepositoryConfig config, Plu
 
     public string ProviderName => Provider?.DisplayName ?? Config.ProviderId;
 
+    /// <summary>The repository's overall state, as the overview judges it (for the dot in the list).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StateIsCritical), nameof(StateIsWarning), nameof(StateIsOk), nameof(StateIsInfo))]
+    public partial Core.Backups.HealthLevel StateLevel { get; set; } = Core.Backups.HealthLevel.Info;
+
+    public bool StateIsCritical => StateLevel == Core.Backups.HealthLevel.Critical;
+
+    public bool StateIsWarning => StateLevel == Core.Backups.HealthLevel.Warning;
+
+    public bool StateIsOk => StateLevel == Core.Backups.HealthLevel.Ok;
+
+    public bool StateIsInfo => StateLevel == Core.Backups.HealthLevel.Info;
+
     public RepositoryLocation? Location
     {
         get

@@ -17,13 +17,13 @@
     <value>rsync.net</value>
   </data>
   <data name="Description" xml:space="preserve">
-    <value>Cloud storage at rsync.net – borg runs on their server (borg 1.4 or 1.2). The account's quota shows in the storage overview.</value>
+    <value>Cloud storage at rsync.net, over SSH.</value>
   </data>
   <data name="HostLabel" xml:space="preserve">
     <value>Server</value>
   </data>
   <data name="HostHint" xml:space="preserve">
-    <value>The host name from your welcome e-mail, e.g. zh1234.rsync.net (“.rsync.net” may be left out).</value>
+    <value>e.g. zh1234.rsync.net, from the welcome e-mail.</value>
   </data>
   <data name="HostRequired" xml:space="preserve">
     <value>Please enter the server.</value>
@@ -35,7 +35,7 @@
     <value>Login name</value>
   </data>
   <data name="UserHint" xml:space="preserve">
-    <value>The login name from your welcome e-mail.</value>
+    <value>From the welcome e-mail.</value>
   </data>
   <data name="UserRequired" xml:space="preserve">
     <value>Please enter the login name.</value>
@@ -47,7 +47,7 @@
     <value>Folder in the account</value>
   </data>
   <data name="PathHint" xml:space="preserve">
-    <value>Relative to the account's home folder, e.g. borg/laptop. Created with a new repository.</value>
+    <value>Relative to the home folder, e.g. borg/laptop</value>
   </data>
   <data name="PathRequired" xml:space="preserve">
     <value>Please enter a folder.</value>
@@ -62,7 +62,7 @@
     <value>borg on the server</value>
   </data>
   <data name="RemoteBorgHint" xml:space="preserve">
-    <value>rsync.net offers borg 1.4 and 1.2. Choose the series of the borg on this computer (1.4 for new repositories).</value>
+    <value>The borg rsync.net runs for this repository.</value>
   </data>
   <data name="RemoteBorgInvalid" xml:space="preserve">
     <value>Please choose the borg version on the server.</value>

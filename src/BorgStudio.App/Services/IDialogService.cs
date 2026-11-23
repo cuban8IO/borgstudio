@@ -91,6 +91,9 @@ public interface IDialogService
 
     Task<bool> AskOnTopAsync(string title, string message, string confirmText, string cancelText, CancellationToken cancellationToken);
 
+    /// <summary>Lets the user choose the two archives to compare; <c>true</c> for "Vergleichen".</summary>
+    Task<bool> PickArchivesToCompareAsync(ArchiveComparePickerViewModel picker);
+
     /// <summary>Two archives compared; returns when the window is closed.</summary>
     Task ShowArchiveDiffAsync(ArchiveDiffViewModel diff);
 }

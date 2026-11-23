@@ -75,15 +75,49 @@ public sealed class ArchiveDiffFlowTests : IDisposable
     }
 
     [Fact]
+    public async Task Any_two_archives_can_be_chosen_in_either_order_and_the_same_one_twice_is_refused()
+    {
+        var main = await StartAsync();
+        _test.Dialogs.PickCompare = picker =>
+        {
+            Assert.Equal(main.Archives.Count, picker.Options.Count);
+            picker.Older = picker.Options.First(option => option.Archive.Name == "Documents-host-2026-11-02");
+            picker.Newer = picker.Older;
+            Assert.False(picker.CanCompare);
+            Assert.NotNull(picker.Problem);
+            // Chosen the wrong way round: compared older first anyway.
+            picker.Newer = picker.Options.First(option => option.Archive.Name == "Photos-host-2026-11-01");
+            picker.SwapCommand.Execute(null);
+            Assert.Equal("Photos-host-2026-11-01", picker.Older!.Archive.Name);
+            picker.SwapCommand.Execute(null);
+            return true;
+        };
+
+        await main.CompareArchivesCommand.ExecuteAsync(null);
+
+        Assert.Equal($"{_test.Directory.Combine("Disk")}::Photos-host-2026-11-01", DiffCall[^2]);
+        Assert.Equal("Documents-host-2026-11-02", DiffCall[^1]);
+
+        // Cancelled: nothing is compared.
+        _test.Dialogs.PickCompare = _ => false;
+        var calls = _test.Borg.Calls.Count;
+        await main.CompareArchivesCommand.ExecuteAsync(null);
+        Assert.Equal(calls, _test.Borg.Calls.Count);
+    }
+
+    [Fact]
     public async Task Two_marked_archives_are_compared_older_first()
     {
         var main = await StartAsync();
-        Assert.False(main.CompareArchivesCommand.CanExecute(null));
+        Assert.True(main.CompareArchivesCommand.CanExecute(null)); // any two, chosen in the window
         main.SelectedArchives.Add(Archive(main, "Documents-host-2026-11-02"));
         main.SelectedArchives.Add(Archive(main, "Photos-host-2026-11-01"));
-        Assert.True(main.CompareArchivesCommand.CanExecute(null));
 
         await main.CompareArchivesCommand.ExecuteAsync(null);
+
+        // The window was preset with the two marked ones, older first.
+        var picker = Assert.Single(_test.Dialogs.ComparePickers);
+        Assert.Equal(("Photos-host-2026-11-01", "Documents-host-2026-11-02"), (picker.Older!.Archive.Name, picker.Newer!.Archive.Name));
 
         Assert.Equal(["diff", "--log-json", "--json-lines", $"{_test.Directory.Combine("Disk")}::Photos-host-2026-11-01", "Documents-host-2026-11-02"],
             DiffCall);

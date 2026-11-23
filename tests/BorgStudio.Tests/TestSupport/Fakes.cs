@@ -1111,6 +1111,17 @@ public sealed class FakeDialogs : IDialogService
         await export.Begin();
     }
 
+    /// <summary>The comparison choices "shown"; <see cref="PickCompare"/> may change the choice (default: as preset), <c>false</c> cancels.</summary>
+    public List<ArchiveComparePickerViewModel> ComparePickers { get; } = [];
+
+    public Func<ArchiveComparePickerViewModel, bool>? PickCompare { get; set; }
+
+    public Task<bool> PickArchivesToCompareAsync(ArchiveComparePickerViewModel picker)
+    {
+        ComparePickers.Add(picker);
+        return Task.FromResult(PickCompare?.Invoke(picker) ?? true);
+    }
+
     /// <summary>The comparisons "shown"; <see cref="Diff"/> runs while one is open (default: until borg is done).</summary>
     public List<ArchiveDiffViewModel> Diffs { get; } = [];
 
