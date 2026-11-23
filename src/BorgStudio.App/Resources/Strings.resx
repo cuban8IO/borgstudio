@@ -3579,4 +3579,96 @@ Jobs: {1}</value>
   <data name="ScheduleEveryMinutes" xml:space="preserve">
     <value>Every {0} minutes</value>
   </data>
+  <data name="RestoreOriginalUnavailableDrive" xml:space="preserve">
+    <value>Not possible: this archive was made from a removable drive, its paths are relative to the drive. Restore into a folder – e.g. on the drive itself.</value>
+  </data>
+  <data name="SkipSourceMissing" xml:space="preserve">
+    <value>The drive to back up was not attached.</value>
+  </data>
+  <data name="SourceDriveMissingTitle" xml:space="preserve">
+    <value>Drive not attached</value>
+  </data>
+  <data name="SourceDriveMissing" xml:space="preserve">
+    <value>“{0}” is not attached. Attach the drive and start the backup again.</value>
+  </data>
+  <data name="SourceDriveUnnamed" xml:space="preserve">
+    <value>Removable drive</value>
+  </data>
+  <data name="SourceDriveWhole" xml:space="preserve">
+    <value>Removable drive “{0}” (all of it)</value>
+  </data>
+  <data name="SourceDriveFolders" xml:space="preserve">
+    <value>Removable drive “{0}”: {1}</value>
+  </data>
+  <data name="PlugInSourceQuestion" xml:space="preserve">
+    <value>“{0}” was attached. Back up now?
+
+Jobs: {1}</value>
+  </data>
+  <data name="JobEditorSourceKind" xml:space="preserve">
+    <value>What to back up</value>
+  </data>
+  <data name="JobEditorSourceFolders" xml:space="preserve">
+    <value>Folders on this computer</value>
+  </data>
+  <data name="JobEditorSourceDrive" xml:space="preserve">
+    <value>A removable drive (USB stick, external disk, memory card) – this very drive, whatever letter it gets</value>
+  </data>
+  <data name="JobEditorDrive" xml:space="preserve">
+    <value>Drive</value>
+  </data>
+  <data name="JobEditorDriveNone" xml:space="preserve">
+    <value>No removable drive attached</value>
+  </data>
+  <data name="JobEditorDriveRefresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="JobEditorDriveOption" xml:space="preserve">
+    <value>{0} ({1}, {2})</value>
+  </data>
+  <data name="JobEditorDriveNotAttached" xml:space="preserve">
+    <value>{0} (not attached)</value>
+  </data>
+  <data name="JobEditorDriveHint" xml:space="preserve">
+    <value>BorgStudio recognizes the drive by its UUID or serial number. The archives hold the paths on the drive (e.g. “DCIM/…”), whatever letter it has. Not attached at a scheduled time: the run waits for it and is skipped if it does not come.</value>
+  </data>
+  <data name="JobEditorDriveIdFile" xml:space="preserve">
+    <value>This drive has no readable UUID. When saving, BorgStudio puts a small hidden file (.borgstudio-id) on it to recognize it.</value>
+  </data>
+  <data name="JobEditorDriveWhole" xml:space="preserve">
+    <value>The whole drive</value>
+  </data>
+  <data name="JobEditorDriveSome" xml:space="preserve">
+    <value>Only these folders on it:</value>
+  </data>
+  <data name="JobEditorDriveFolders" xml:space="preserve">
+    <value>Folders on the drive</value>
+  </data>
+  <data name="JobEditorAddDriveFolder" xml:space="preserve">
+    <value>Add folder…</value>
+  </data>
+  <data name="JobEditorDriveFolderNeedsDrive" xml:space="preserve">
+    <value>Attach the drive and choose it first.</value>
+  </data>
+  <data name="JobEditorDriveFolderOutside" xml:space="preserve">
+    <value>{0} is not on the chosen drive ({1}).</value>
+  </data>
+  <data name="JobEditorDriveRequired" xml:space="preserve">
+    <value>Please choose a drive (attach it first).</value>
+  </data>
+  <data name="JobEditorDriveFoldersRequired" xml:space="preserve">
+    <value>Please add at least one folder on the drive, or back up the whole drive.</value>
+  </data>
+  <data name="JobEditorDriveIdFailed" xml:space="preserve">
+    <value>Could not write the id file onto {0}: {1}</value>
+  </data>
+  <data name="JobEditorDrivePlugIn" xml:space="preserve">
+    <value>Ask “Back up now?” when the drive is attached</value>
+  </data>
+  <data name="JobEditorDrivePlugInHint" xml:space="preserve">
+    <value>Only while BorgStudio runs in the background (Tools → Settings → Scheduled backups). Not asked again within this time after a successful backup (0: every time).</value>
+  </data>
+  <data name="JobEditorDriveEject" xml:space="preserve">
+    <value>Eject the drive after automatic runs (scheduled or on attaching)</value>
+  </data>
 </root>

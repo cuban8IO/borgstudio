@@ -141,17 +141,23 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
     /// </summary>
     /// <param name="archive">Archive name; borg placeholders such as {hostname} and {now} are allowed.</param>
     /// <param name="options">E.g. compression and the exclusions (<see cref="Backups.BackupPatterns"/>).</param>
+    /// <param name="workingDirectory">A folder on this computer borg starts in; <paramref name="sources"/> are then relative to
+    /// it ("DCIM", "." for all of it) and the archive holds the paths below it.</param>
     public async Task<BorgResult<BorgCreateResult>> CreateAsync(
         BorgInstallation borg, RepositoryLocation location, string archive, IReadOnlyList<string> sources,
         IReadOnlyList<string> options, string? passphrase, SshAccess? ssh = null,
-        IProgress<BorgCreateProgress>? progress = null, CancellationToken cancellationToken = default, BorgThrottle? throttle = null)
+        IProgress<BorgCreateProgress>? progress = null, CancellationToken cancellationToken = default, BorgThrottle? throttle = null,
+        string? workingDirectory = null)
     {
         var paths = new List<string>();
         foreach (var source in sources)
         {
-            if (BorgPath(borg, source) is not { } path)
+            if (workingDirectory is not null)
+                paths.Add(Backups.SourceDrive.RelativePath(source) is { Length: > 0 } relative ? relative : ".");
+            else if (BorgPath(borg, source) is { } path)
+                paths.Add(path);
+            else
                 return BorgResult<BorgCreateResult>.Failure(new BorgError(BorgErrorKind.UnsupportedPath, source));
-            paths.Add(path);
         }
 
         var warnings = new List<string>();
@@ -164,7 +170,8 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
         }
 
         var result = await RunAsync(borg, location, ssh, ["create"], ["--progress", "--json", .. options], paths,
-            passphrase, CreateTimeout, cancellationToken, archive, OnLine, interruptible: true, throttle: throttle);
+            passphrase, CreateTimeout, cancellationToken, archive, OnLine, interruptible: true, throttle: throttle,
+            workingDirectory: workingDirectory);
         if (!result.Succeeded)
             return BorgResult<BorgCreateResult>.Failure(result.Error!);
 

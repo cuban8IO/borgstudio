@@ -85,13 +85,20 @@ public enum BackupSkipReason
 
     /// <summary>A condition of the job: the server did not answer or the folder was not there.</summary>
     TargetUnreachable,
+
+    /// <summary>The removable drive the job backs up is not attached.</summary>
+    SourceMissing,
 }
 
 public static class BackupSkipReasons
 {
-    /// <summary>A scheduled run held back by a condition of its job (not a failure; it was tried again for a while).</summary>
+    /// <summary>
+    /// A scheduled run held back by a condition of its job (not a failure; it was tried again for a while) – the job's
+    /// drive not being attached counts as one.
+    /// </summary>
     public static bool IsCondition(this BackupSkipReason reason) =>
-        reason is BackupSkipReason.OnBattery or BackupSkipReason.MeteredConnection or BackupSkipReason.NotWired or BackupSkipReason.TargetUnreachable;
+        reason is BackupSkipReason.OnBattery or BackupSkipReason.MeteredConnection or BackupSkipReason.NotWired or BackupSkipReason.TargetUnreachable
+            or BackupSkipReason.SourceMissing;
 }
 
 /// <summary>The last run of a job, kept to show it and to estimate the next run.</summary>
@@ -159,8 +166,14 @@ public sealed record BackupJob
 
     public required Guid RepositoryId { get; init; }
 
-    /// <summary>Folders to back up (paths on this computer).</summary>
+    /// <summary>Folders to back up (paths on this computer); not used when the job backs up a <see cref="Drive"/>.</summary>
     public List<string> Sources { get; init; } = [];
+
+    /// <summary>
+    /// A removable drive to back up instead of <see cref="Sources"/> (its exclusion folders are then relative to its root,
+    /// e.g. "DCIM\.thumbnails").
+    /// </summary>
+    public SourceDrive? Drive { get; init; }
 
     public BackupExclusions Exclusions { get; init; } = new();
 

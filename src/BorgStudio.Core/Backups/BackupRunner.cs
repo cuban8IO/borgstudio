@@ -45,7 +45,9 @@ public sealed record BackupRunRequest(BorgInstallation Borg, RepositoryLocation 
 
 /// <summary>A finished run: its summary (also saved with the job and in its history) and borg's warnings.</summary>
 /// <param name="Repository">The repository's statistics after the run (borg reports them with the backup; clean-up subtracted).</param>
-public sealed record BackupRunResult(BackupRunSummary Summary, IReadOnlyList<string> Warnings, Storage.RepositoryStats? Repository = null);
+/// <param name="SourceRoot">Where the job's drive was attached (a job backing up a <see cref="SourceDrive"/>), e.g. to eject it.</param>
+public sealed record BackupRunResult(BackupRunSummary Summary, IReadOnlyList<string> Warnings, Storage.RepositoryStats? Repository = null,
+    string? SourceRoot = null);
 
 /// <summary>
 /// Runs a backup job: <c>borg create</c>, then – if the job keeps only some archives – <c>borg prune</c> and, when
@@ -56,8 +58,9 @@ public sealed record BackupRunResult(BackupRunSummary Summary, IReadOnlyList<str
 /// <param name="describe">Turns a borg error into the text kept with the run (localized by the app).</param>
 /// <param name="hooks">Runs the jobs' commands (a real shell unless a test says otherwise).</param>
 /// <param name="describeHook">Turns a failed command into the text kept with the run (localized by the app).</param>
+/// <param name="sourceDrives">Finds the drives of jobs backing up a <see cref="SourceDrive"/>; without it they are never found.</param>
 public sealed class BackupRunner(BorgClient borg, BackupJobStore jobs, DurationHistory durations, Func<BorgError, string> describe,
-    TimeProvider? time = null, HookRunner? hooks = null, Func<HookProblem, string>? describeHook = null)
+    TimeProvider? time = null, HookRunner? hooks = null, Func<HookProblem, string>? describeHook = null, ISourceDriveLocator? sourceDrives = null)
 {
     private readonly TimeProvider _time = time ?? TimeProvider.System;
 
@@ -88,6 +91,19 @@ public sealed class BackupRunner(BorgClient borg, BackupJobStore jobs, DurationH
             var notRun = NotRun(BackupSkipReason.RepositoryBusy, request.Scheduled ? BackupOutcome.Failed : BackupOutcome.Skipped);
             Record(job.Id, notRun, asLastRun: request.Scheduled);
             return new BackupRunResult(notRun, []);
+        }
+
+        // A removable drive: wherever it is attached now – or nothing to back up.
+        string? sourceRoot = null;
+        if (job.Drive is { } drive)
+        {
+            sourceRoot = sourceDrives is null ? null : await sourceDrives.FindAsync(drive, cancellationToken);
+            if (sourceRoot is null)
+            {
+                var missing = NotRun(BackupSkipReason.SourceMissing, BackupOutcome.Skipped);
+                Record(job.Id, missing);
+                return new BackupRunResult(missing, []);
+            }
         }
 
         // The command before the backup (e.g. a database dump).
@@ -125,9 +141,10 @@ public sealed class BackupRunner(BorgClient borg, BackupJobStore jobs, DurationH
 
         var tracker = new Tracker(report);
         var options = new List<string> { "--compression", job.Compression };
-        options.AddRange(BackupPatterns.Arguments(job.Exclusions, path => BorgClient.BorgPath(request.Borg, path)));
-        var created = await borg.CreateAsync(request.Borg, request.Location, BackupNames.ArchiveName(job.Name), job.Sources, options,
-            request.Passphrase, request.Ssh, tracker, cancellationToken, request.Throttle);
+        options.AddRange(SourceArguments(job, request.Borg));
+        var created = await borg.CreateAsync(request.Borg, request.Location, BackupNames.ArchiveName(job.Name),
+            job.Drive?.BorgSources ?? job.Sources, options, request.Passphrase, request.Ssh, tracker, cancellationToken, request.Throttle,
+            workingDirectory: sourceRoot);
 
         var summary = Summarize(created, tracker, started);
         if (summary.Outcome is BackupOutcome.Succeeded or BackupOutcome.Warnings && job.Retention is { HasRules: true } retention)
@@ -142,7 +159,21 @@ public sealed class BackupRunner(BorgClient borg, BackupJobStore jobs, DurationH
         var repository = created.Value?.Repository is { } stats && summary.Cleanup?.FreedBytes is { } freed
             ? stats with { UniqueCompressedSize = Math.Max(0, stats.UniqueCompressedSize - freed) }
             : created.Value?.Repository;
-        return new BackupRunResult(summary, created.Value?.Warnings ?? [], repository);
+        return new BackupRunResult(summary, created.Value?.Warnings ?? [], repository, sourceRoot);
+    }
+
+    /// <summary>
+    /// The exclusions as borg options. A drive's exclusion folders are relative to its root, as the archive's paths are,
+    /// and what the systems keep on a drive for themselves is always left out.
+    /// </summary>
+    public static List<string> SourceArguments(BackupJob job, BorgInstallation borgInstallation)
+    {
+        if (job.Drive is null)
+            return BackupPatterns.Arguments(job.Exclusions, path => BorgClient.BorgPath(borgInstallation, path));
+        var arguments = BackupPatterns.Arguments(job.Exclusions, path => SourceDrive.RelativePath(path) is { Length: > 0 } relative ? relative : null);
+        foreach (var pattern in SourceDrive.SystemPatterns)
+            arguments.AddRange(["--exclude", pattern]);
+        return arguments;
     }
 
     /// <summary>

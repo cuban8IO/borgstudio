@@ -18,7 +18,9 @@ namespace BorgStudio.App.Services;
 public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess access)
 {
     private readonly BackupRunner _runner = new(services.BorgClient, services.Jobs, services.Durations, BorgTexts.Describe,
-        hooks: services.Hooks, describeHook: BorgTexts.HookProblem);
+        hooks: services.Hooks, describeHook: BorgTexts.HookProblem, sourceDrives: SourceDriveLocator.For(services));
+
+    private readonly SourceDriveLocator? _sourceDrives = SourceDriveLocator.For(services);
 
     public BackupRunner Runner => _runner;
 
@@ -49,6 +51,9 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
     /// </summary>
     public async Task<BackupSkipReason?> CheckConditionsAsync(BackupJob job, CancellationToken cancellationToken = default)
     {
+        // A drive that is not attached holds the run back like a condition: it starts once the drive is there.
+        if (job.Drive is { } drive && (_sourceDrives is null || await _sourceDrives.FindAsync(drive, cancellationToken) is null))
+            return BackupSkipReason.SourceMissing;
         if (!job.Conditions.Any
             || services.RepositoryStore.Load().Repositories.FirstOrDefault(candidate => candidate.Id == job.RepositoryId) is not { } repository
             || await ConditionLocationAsync(repository, cancellationToken) is not { } location)
@@ -136,6 +141,9 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
         var repository = services.RepositoryStore.Load().Repositories.FirstOrDefault(candidate => candidate.Id == job.RepositoryId);
         if (repository is null)
             return (NotRun(job, BackupSkipReason.RepositoryMissing), null);
+        // No drive to back up: no need to connect the repository.
+        if (job.Drive is { } drive && (_sourceDrives is null || await _sourceDrives.FindAsync(drive, cancellationToken) is null))
+            return (NotRun(job, BackupSkipReason.SourceMissing, BackupOutcome.Skipped), null);
         var (access, problem) = await PrepareAsync(repository, cancellationToken);
         if (access is null)
             return (NotRun(job, problem!.Value, problem == BackupSkipReason.PassphraseAsked ? BackupOutcome.Skipped : BackupOutcome.Failed), null);
@@ -155,7 +163,8 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
         var result = await _runner.RunAsync(new BackupRunRequest(access.Borg, access.Location, job, access.Passphrase, access.Ssh, Scheduled: true,
                 Throttle: access.Throttle),
             report, cancellationToken);
-        if (result.Summary.SkipReason == BackupSkipReason.RepositoryBusy)
+        await EjectSourceAsync(job, result);
+        if (result.Summary.SkipReason is BackupSkipReason.RepositoryBusy or BackupSkipReason.SourceMissing)
             return (result, null);
 
         // How full the storage is now (for the overview and the "almost full" notification).
@@ -166,6 +175,18 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
             ? await checks.CheckAfterBackupAsync(repository, access, report, cancellationToken)
             : null;
         return (result, new MeasuredStorage(repository, usage, check, checks.LastRestoreTests));
+    }
+
+    /// <summary>
+    /// The job's drive is ejected after the run if it asks for that – unless another run still holds it (all jobs of a
+    /// drive just attached: then after the last one). A problem goes to the log of scheduled runs.
+    /// </summary>
+    private async Task EjectSourceAsync(BackupJob job, BackupRunResult result)
+    {
+        if (job.Drive is not { Eject: true } || result.SourceRoot is not { } root || _sourceDrives is null)
+            return;
+        if (await _sourceDrives.EjectAsync(root) is { } problem)
+            ScheduledRun.Log($"{job.Name}: {problem}", services.Jobs.DataDirectory);
     }
 
     /// <summary>
