@@ -759,8 +759,15 @@
                                                     <Setter Property="FontSize" Value="13" />
                                                 </Style>
                                             </Grid.Styles>
-                                            <StackPanel Spacing="2">
-                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <StackPanel Spacing="2" Margin="0,0,12,0">
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
+                                                           ToolTip.Tip="{Binding Name}" />
+                                                <WrapPanel>
+                                                    <WrapPanel.Styles>
+                                                        <Style Selector="WrapPanel > Border">
+                                                            <Setter Property="Margin" Value="0,2,6,0" />
+                                                        </Style>
+                                                    </WrapPanel.Styles>
                                                     <Border Padding="5,0" CornerRadius="3" Background="{DynamicResource ChartOkBrush}" VerticalAlignment="Center"
                                                             IsVisible="{Binding IsKept}" ToolTip.Tip="{x:Static res:Strings.ArchiveKeptTip}">
                                                         <TextBlock Text="{x:Static res:Strings.ArchiveKept}" FontSize="11" />
@@ -781,9 +788,7 @@
                                                             IsVisible="{Binding IsRestoreTestFailed}" ToolTip.Tip="{Binding RestoreBadgeTip}">
                                                         <TextBlock Text="{x:Static res:Strings.ArchiveRestoreTestFailed}" FontSize="11" />
                                                     </Border>
-                                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
-                                                               ToolTip.Tip="{Binding Name}" />
-                                                </StackPanel>
+                                                </WrapPanel>
                                                 <TextBlock Text="{Binding JobText}" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis" />
                                                 <TextBlock Text="{Binding Comment}" FontSize="12" FontStyle="Italic" Opacity="0.85" TextTrimming="CharacterEllipsis"
                                                            IsVisible="{Binding HasComment}" ToolTip.Tip="{Binding Comment}" />

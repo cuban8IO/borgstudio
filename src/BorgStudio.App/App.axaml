@@ -25,13 +25,14 @@
                         <NumericUpDown Value="{Binding Hours}" Minimum="1" Maximum="12" Increment="1" FormatString="0"
                                        Width="110" IsVisible="{Binding IsEveryHours}" />
                         <TextBlock Text="{x:Static res:Strings.JobEditorScheduleHours}" IsVisible="{Binding IsEveryHours}" />
+                        <ComboBox ItemsSource="{Binding MinuteOptions}" SelectedItem="{Binding SelectedMinutes}" IsVisible="{Binding IsEveryMinutes}" />
                         <TextBlock Text="{Binding MonthlyLabel}" IsVisible="{Binding IsMonthly}" />
                         <ComboBox ItemsSource="{Binding WeekOptions}" SelectedItem="{Binding SelectedWeek}" IsVisible="{Binding IsMonthlyWeekday}" />
                         <ComboBox ItemsSource="{Binding WeekdayOptions}" SelectedItem="{Binding SelectedWeekday}" IsVisible="{Binding IsMonthlyWeekday}" />
                         <ComboBox ItemsSource="{Binding DayOfMonthOptions}" SelectedItem="{Binding SelectedDayOfMonth}" IsVisible="{Binding IsMonthlyDay}"
                                   MaxDropDownHeight="300" />
-                        <TextBlock Text="{Binding TimeLabel}" />
-                        <TimePicker SelectedTime="{Binding Time}" ClockIdentifier="24HourClock" MinuteIncrement="5" />
+                        <TextBlock Text="{Binding TimeLabel}" IsVisible="{Binding HasTime}" />
+                        <TimePicker SelectedTime="{Binding Time}" ClockIdentifier="24HourClock" MinuteIncrement="5" IsVisible="{Binding HasTime}" />
                         <Button Content="{x:Static res:Strings.JobEditorRemoveSchedule}" Command="{Binding RemoveCommand}" />
                     </WrapPanel>
                     <ItemsControl ItemsSource="{Binding Days}" IsVisible="{Binding IsWeekdays}">

@@ -17,6 +17,12 @@ public enum ScheduleKind
 
     /// <summary>Once a month on day <see cref="BackupSchedule.DayOfMonth"/>.</summary>
     MonthlyDay,
+
+    /// <summary>
+    /// Every <see cref="BackupSchedule.Minutes"/> minutes around the clock, on the hour and the minutes after it (every 15
+    /// minutes: :00, :15, :30, :45) – so every system scheduler can start it at exactly the same times.
+    /// </summary>
+    EveryMinutes,
 }
 
 /// <summary>When a backup job runs by itself; a job may have several (e.g. weekdays 12:30 and Sundays 20:00).</summary>
@@ -31,6 +37,12 @@ public sealed record BackupSchedule
 
     /// <summary>1–12; for <see cref="ScheduleKind.EveryHours"/>.</summary>
     public int Hours { get; init; } = 4;
+
+    /// <summary>One of <see cref="MinuteSteps"/>; for <see cref="ScheduleKind.EveryMinutes"/>.</summary>
+    public int Minutes { get; init; } = 15;
+
+    /// <summary>The minute steps that divide an hour evenly (each hour then starts the same way).</summary>
+    public static IReadOnlyList<int> MinuteSteps { get; } = [1, 2, 3, 5, 10, 15, 20, 30];
 
     /// <summary>For <see cref="Week"/> and <see cref="DayOfMonth"/>: the last one of the month.</summary>
     public const int Last = -1;
@@ -51,6 +63,7 @@ public sealed record BackupSchedule
     {
         ScheduleKind.Weekdays => Days.Count > 0,
         ScheduleKind.EveryHours => Hours is >= 1 and <= 12,
+        ScheduleKind.EveryMinutes => MinuteSteps.Contains(Minutes),
         ScheduleKind.MonthlyWeekday => Week is (>= 1 and <= 4) or Last,
         ScheduleKind.MonthlyDay => DayOfMonth is (>= 1 and <= 28) or Last,
         _ => true,
@@ -59,6 +72,8 @@ public sealed record BackupSchedule
     /// <summary>The times of day this schedule starts the job (one, or several for every N hours).</summary>
     public IReadOnlyList<TimeOnly> TimesOfDay()
     {
+        if (Kind == ScheduleKind.EveryMinutes && IsValid)
+            return [.. Enumerable.Range(0, 24 * 60 / Minutes).Select(step => TimeOnly.FromTimeSpan(TimeSpan.FromMinutes(step * Minutes)))];
         if (Kind != ScheduleKind.EveryHours || !IsValid)
             return [Time];
         var times = new List<TimeOnly>();
