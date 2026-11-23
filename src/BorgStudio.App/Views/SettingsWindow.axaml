@@ -47,6 +47,34 @@
             </StackPanel>
         </Border>
 
+        <!-- Restore tests -->
+        <Border Classes="card">
+            <StackPanel Spacing="10">
+                <TextBlock Text="{x:Static res:Strings.SettingsRestoreTestHeader}" FontSize="16" FontWeight="SemiBold" />
+                <TextBlock Text="{x:Static res:Strings.SettingsRestoreTestIntro}" TextWrapping="Wrap" Opacity="0.8" />
+                <CheckBox IsChecked="{Binding RestoreTestEnabled}" Content="{x:Static res:Strings.SettingsRestoreTestEnabled}" />
+                <StackPanel Spacing="8" IsEnabled="{Binding RestoreTestEnabled}">
+                    <Grid ColumnDefinitions="Auto,Auto,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="6">
+                        <TextBlock Text="{x:Static res:Strings.SettingsRestoreTestTotal}" VerticalAlignment="Center" />
+                        <NumericUpDown Grid.Column="1" Value="{Binding RestoreTestTotalMegabytes}" Minimum="1" Maximum="1048576" Increment="100"
+                                       FormatString="0" Width="140" />
+                        <TextBlock Grid.Column="2" Text="MB" VerticalAlignment="Center" />
+                        <TextBlock Grid.Row="1" Text="{x:Static res:Strings.SettingsRestoreTestPerFile}" VerticalAlignment="Center" />
+                        <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding RestoreTestFileMegabytes}" Minimum="1" Maximum="1048576"
+                                       Increment="10" FormatString="0" Width="140" />
+                        <TextBlock Grid.Row="1" Grid.Column="2" Text="MB" VerticalAlignment="Center" />
+                    </Grid>
+                    <TextBlock Text="{x:Static res:Strings.SettingsRestoreTestComparison}" />
+                    <RadioButton GroupName="RestoreTestComparison" IsChecked="{Binding RestoreTestSizeAndTime}">
+                        <TextBlock Text="{x:Static res:Strings.SettingsRestoreTestSizeAndTime}" TextWrapping="Wrap" />
+                    </RadioButton>
+                    <RadioButton GroupName="RestoreTestComparison" IsChecked="{Binding RestoreTestSizeOnly}">
+                        <TextBlock Text="{x:Static res:Strings.SettingsRestoreTestSizeOnly}" TextWrapping="Wrap" />
+                    </RadioButton>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
         <!-- Incoming webhook -->
         <Border Classes="card">
             <StackPanel Spacing="10">

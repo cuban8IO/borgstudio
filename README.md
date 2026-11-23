@@ -9,11 +9,22 @@ The **[product page](https://borgstudio.cuban8io.net/)** shows what it does, the
 
 ## Features
 
-- **Repositories** in a local folder, on an SSH server or on a Hetzner Storage Box – create new ones or connect
-  existing ones; borg runs natively or, on Windows, inside WSL.
-- **Backup jobs** with source folders, exclusions and compression; live progress with upload speed and remaining
-  time; cancelling keeps a checkpoint.
-- **Schedules**: daily, on chosen weekdays or every few hours – started by the system's task scheduler (also while
+- **Repositories** in a local folder, on a USB or external drive, on a network disk (iSCSI, NVMe/TCP), on an SSH server,
+  on an SFTP-only server, on a Hetzner Storage Box, at rsync.net or at BorgBase –
+  create new ones or connect existing ones; borg runs natively or, on Windows, inside WSL.
+- **Backup jobs** with source folders – or a removable drive (USB stick, external disk, memory card), recognized
+  wherever it is attached – exclusions and compression; live progress with upload speed and remaining time; cancelling
+  keeps a checkpoint.
+- **Commands before and after** a job's backup (PowerShell, cmd, sh, bash, zsh), an **upload limit** and **low
+  priority** per repository, and **conditions** for scheduled runs (mains power, no metered connection, cable, target
+  reachable).
+- **Trust in backups**: integrity checks (`borg check`, also thorough) by hand, after backups or by schedule; restore
+  tests that restore a sample and compare it with the source; releasing a lock left behind.
+- **Running tasks** in the status bar: backups, checks, restores, exports, searches and downloads with their progress
+  and the time still to go, queued and held back runs, and runs the system's task scheduler started – each with *Show*
+  and, where possible, *Cancel*. The windows of longer work (archive browser, search, versions, comparison, export,
+  update) leave the main window usable.
+- **Schedules**: every few minutes or hours, daily, on chosen weekdays or monthly – started by the system's task scheduler (also while
   BorgStudio is closed) or by BorgStudio itself in the background (notification area, start at login); missed times
   are made up for. Other programs can start jobs through an incoming webhook.
 - **Notifications** by system notification, e-mail and webhook (ntfy, Discord, Slack, Gotify, JSON) – failures,
@@ -22,7 +33,8 @@ The **[product page](https://borgstudio.cuban8io.net/)** shows what it does, the
   time with a forecast of when it will be full, what each backup newly stored and the activity of the last weeks.
 - **Cleaning up** old archives per job (daily, weekly, monthly, yearly …) with a preview, and freeing space.
 - **Archives**: list with size and own share, a browser with folder tree and search, search across all archives and
-  the versions of a file.
+  the versions of a file; compare two archives; rename, comment, keep and delete archives; export an archive or a
+  selection as zip, tar, tar.gz or tar.zst.
 - **Restore** files and folders into a folder or back to their original place, with a check for files that would be
   overwritten.
 - **Mount** an archive or the whole repository as a read-only folder and open it in the file manager.
@@ -69,7 +81,9 @@ it follows the system language (English if that is neither) or the choice under 
   archives tab opens at once. Encrypted with the vault's key (`<id>.vault`) when a PIN is set up, plain JSON
   (`<id>.json`) otherwise; safe to delete.
 - **Backup jobs:** `jobs.json` in the data folder – per job the repository, the source folders, what to leave out,
-  the compression and the outcome of the last run. Archives are named `<job>-<computer>-<date and time>`.
+  the compression and the outcome of the last run. Archives are named `<job>-<computer>-<date and time>`. A job backing
+  up a removable drive keeps the drive's id (`volume:<UUID or serial number>`, or `file:<id>` for a drive without one,
+  with the id in `.borgstudio-id` on the drive) instead of source folders.
 - **Run history:** `history/<job>.json` in the data folder – the last 100 runs of each job (outcome, sizes, clean-up);
   removed with the job. `locks/` holds one lock file per repository while a backup runs, so two BorgStudio runs never
   work on the same repository at once.
@@ -80,6 +94,8 @@ it follows the system language (English if that is neither) or the choice under 
   With a PIN, scheduled runs open the vault with its key kept in the system keychain (entry `scheduled-access`) – or,
   without a keychain, in `scheduled-access.key`, readable only by the user. It follows PIN changes and goes when the
   vault is reset.
+- **Running runs:** `running/<process>-<id>.json` in the data folder – each run started without window leaves word of itself
+  there while it waits or works (the window lists it); removed when it ends, ignored once its process is gone.
 - **Moving to another computer:** Tools → Export settings writes everything – repositories, stored passphrases
   (vault and keychain), SSH keys, known servers, settings and, if wanted, the borg keys of the repositories – into one
   `.borgstudio` file, encrypted with a password of its own (at least 12 characters; Argon2id + AES-256-GCM). Tools →
@@ -96,6 +112,48 @@ it follows the system language (English if that is neither) or the choice under 
 - **Hetzner Storage Box:** connects on port 23 with the borg version you choose (1.4 or 1.2). The server's host key
   is checked against the fingerprints Hetzner publishes. Restricted login keys are written to
   `.ssh/authorized_keys` on the box over SFTP; unrestricted ones are installed with Hetzner's `install-ssh-key`.
+- **rsync.net:** connects on port 22 with `borg14` or `borg12` on the server. The host key is checked against the
+  fingerprints rsync.net publishes. Login keys (restricted to borg by default) are appended with
+  `dd of=.ssh/authorized_keys oflag=append conv=notrunc`, as rsync.net documents; if the service does not accept the
+  restricted key, the editor suggests an unrestricted one. With an unrestricted key the storage overview shows the
+  account's quota (rsync.net's `quota` command).
+- **Network disk (iSCSI, NVMe over TCP on Linux):** before each use BorgStudio logs in to the target – unless its
+  volume is attached already – finds the repository on it by its ID (like a USB drive) and logs out afterwards if it
+  logged in. Logging in needs administrator rights, so saving the repository in the editor sets that up once: on
+  Windows (built-in iSCSI initiator) with a UAC prompt, two tasks in the Task Scheduler (`\BorgStudio\`) that log in to
+  and out of exactly this target with highest rights; on Linux (open-iscsi or nvme-cli) with pkexec, a sudoers rule
+  (`/etc/sudoers.d/borgstudio-<id>`) for exactly this login and logout, and the volumes are mounted with udisks.
+  CHAP is optional (iSCSI; the secret is kept in the vault and, on Windows, in the login task). macOS has no built-in
+  initiator; Windows clients have no NVMe/TCP. Removing the repository leaves the tasks or the sudoers rule in place.
+- **SFTP server (without borg):** BorgStudio mounts the folder holding the repository with sshfs where borg runs
+  (WSL, Linux, macOS with macFUSE) and borg works on it like on a local folder – slower than borg on the server. sshfs
+  runs in the foreground, held by BorgStudio; borg only starts after checking the folder is mounted, so it never writes
+  to the empty local folder. The mount is reused by the next call and unmounted two minutes after the last one (and
+  when BorgStudio or a scheduled run ends). The login key is added over SFTP with the password and is not restricted to
+  borg (that would block SFTP). Install sshfs first, e.g. `sudo apt install sshfs` in WSL.
+- **BorgBase:** with an API token (kept in the vault; "Create Only" is enough) BorgStudio registers the login key,
+  creates or finds the repository by name, trusts the host key BorgBase reports for its server and shows the quota
+  (the repository's, or the account's). Without a token the editor shows the public key to add in BorgBase's web
+  interface, and the repository's address is entered by hand. The key gets full access (BorgStudio prunes and
+  compacts).
+- **USB or external drive:** the repository is found by its borg repository ID wherever the drive is attached – where
+  it was last seen, at the same folder on every drive, then up to two levels deep on every drive (network drives
+  included); a new place is remembered. A local repository on an external drive can be switched over in the editor
+  (*Keep as USB drive*). Optionally the drive is ejected safely after scheduled backups and checks (Windows: like
+  "Safely remove hardware", Linux: `udisksctl`, macOS: `diskutil eject`) – also after several scheduled runs in a row
+  only once, after the last. *Back up when the drive is attached* (per repository, while BorgStudio is open – window or notification area):
+  BorgStudio asks, then runs all jobs of the repository one after the other; not again while a job backed up
+  successfully by itself (scheduled or on attaching – not by hand) within the set hours (default 12). Inside WSL, BorgStudio mounts drives that
+  were attached after WSL started (`mount -t drvfs`) and unmounts them again after borg is done.
+- **Removable drive as the source of a job:** the drive is recognized by its file system's UUID or serial number
+  (Windows: the volume serial number, Linux: `findmnt`/`lsblk`, macOS: `diskutil`); a drive without one gets a small
+  hidden file `.borgstudio-id` when it is chosen. borg runs in the drive's root folder, so the archives hold paths like
+  `DCIM/…` whatever letter or mount point the drive has (and borg's file cache keeps working). The whole drive or chosen
+  folders on it, with exclusions relative to its root; `System Volume Information`, `.Spotlight-V100`, `.fseventsd`,
+  `.Trashes` and `.borgstudio-id` are always left out. Not attached: a run by hand says so, a scheduled run waits for the
+  drive like for a condition and is skipped if it does not come. Optionally *ask when the drive is attached* (per job,
+  while BorgStudio is open; all jobs of the drive in one question) and eject it after automatic runs. Archives of a
+  drive cannot be restored to their "original place" – restore them into a folder, e.g. on the drive.
 
 ## License
 
@@ -114,7 +172,12 @@ BorgStudio.slnx
 │   ├── BorgStudio.Plugins.Abstractions Public plugin API (repository providers)
 │   ├── BorgStudio.Providers.Local      Built-in provider: local folder
 │   ├── BorgStudio.Providers.Ssh        Built-in provider: SSH server with borg
-│   └── BorgStudio.Providers.Hetzner    Built-in provider: Hetzner Storage Box
+│   ├── BorgStudio.Providers.Sftp       Built-in provider: SFTP-only server (sshfs)
+│   ├── BorgStudio.Providers.Hetzner    Built-in provider: Hetzner Storage Box
+│   ├── BorgStudio.Providers.Usb        Built-in provider: USB or external drive
+│   ├── BorgStudio.Providers.NetworkDisk Built-in provider: network disk (iSCSI, NVMe/TCP)
+│   ├── BorgStudio.Providers.RsyncNet   Built-in provider: rsync.net
+│   └── BorgStudio.Providers.BorgBase   Built-in provider: BorgBase (GraphQL API)
 ├── samples/
 │   └── BorgStudio.SamplePlugin         Example external plugin (not part of the release)
 ├── tests/
@@ -129,7 +192,8 @@ Shared build settings (target framework, nullable, version) live in `Directory.B
 
 ## Plugins
 
-Repository providers (local folder, SSH server, Hetzner Storage Box, …) are plugins. Built-in providers use the same
+Repository providers (local folder, USB drive, network disk, SSH server, SFTP server, Hetzner Storage Box, rsync.net,
+BorgBase, …) are plugins. Built-in providers use the same
 API as external ones; see [docs/plugins.md](docs/plugins.md) for writing and installing a plugin.
 
 ## Build, test, run
@@ -168,6 +232,41 @@ Every pull request adds its change to the **Unreleased** section of the changelo
 section gets the new version number.
 
 ## Changelog
+
+### 0.5.0 – 2026-11-23
+
+**Added**
+- Integrity check per repository (`borg check`, thorough with `--verify-data`, repair after damage), with its history,
+  dashboard state and a "check errors" notification (#53). Automatic checks after backups or by schedule, and monthly
+  schedules for checks and jobs (#54).
+- Restore test per job: a random sample restored and compared byte by byte, or the whole archive read without writing;
+  with the automatic checks or by hand (#55).
+- Release a lock left behind (`borg break-lock`) after a warning that tells who holds it (#56).
+- Commands before and after a job's backup, with the shell chosen per system and selectable error handling (#57).
+- Upload limit (optionally only between two times) and low priority (`nice`) per repository (#58).
+- Conditions for scheduled runs: mains power, no metered connection, cable instead of Wi-Fi, target reachable (#59).
+- Archives: compare two archives (`borg diff`) (#60, #69); rename, comment, keep and delete archives (#61); export an
+  archive or a selection as zip, tar, tar.gz or tar.zst (#62).
+- New repository types: USB or external drive, found by the repository's ID wherever it is attached, with optional
+  ejecting (#63) and backing up when the drive is attached (#64); rsync.net (#65); BorgBase with API token, key setup and
+  quota (#66); SFTP-only servers mounted with sshfs (#67); network disks over iSCSI and NVMe/TCP (#68). Plugin API:
+  `IRepositoryConnector`, `IStorageQuotaSource`, `ISshKeyProvisioner`, `IRepositoryPreparation`, secret and toggle fields.
+- A removable drive as the source of a job, recognized under any letter or mount point (#72).
+- Schedules every few minutes (#70).
+- Running tasks in the status bar, with *Show* and *Cancel*; the windows of longer work no longer block the main
+  window (#73).
+- Repository types not yet tested against a real service or target (rsync.net, network disk) are marked "Untested"
+  when choosing where a repository is. Plugin API: `IRepositoryProvider.IsUntested`.
+
+**Changed**
+- The tray icon is shown whenever BorgStudio runs, and closing the window hides it there; archive marks for checks and
+  restore tests; three state lines per repository in "All repositories"; local builds name their commit in the title
+  (#69).
+- The archive list fits narrow windows (#70).
+
+**Fixed**
+- A killed borg no longer shows the internal process id line; English texts use English quotes; exporting a whole
+  archive leaves out the folders above what was backed up (#71).
 
 ### 0.4.0 – 2026-11-20
 

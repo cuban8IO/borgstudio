@@ -85,6 +85,87 @@ public sealed class ProcessRunner : IProcessRunner
         return new ProcessResult(process.ExitCode, await standardOutput, await standardError);
     }
 
+    public async Task<ProcessResult?> RunStreamingAsync(
+        string fileName,
+        IReadOnlyList<string> arguments,
+        TimeSpan timeout,
+        Func<Stream, CancellationToken, Task> readOutput,
+        IReadOnlyDictionary<string, string?>? environment = null,
+        CancellationToken cancellationToken = default,
+        Action<string>? standardErrorLine = null,
+        string? workingDirectory = null)
+    {
+        var startInfo = new ProcessStartInfo(fileName)
+        {
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            StandardErrorEncoding = Encoding.UTF8,
+        };
+        if (workingDirectory is not null)
+            startInfo.WorkingDirectory = workingDirectory;
+        foreach (var argument in arguments)
+            startInfo.ArgumentList.Add(argument);
+        foreach (var (name, value) in environment ?? new Dictionary<string, string?>())
+        {
+            if (value is null)
+                startInfo.Environment.Remove(name);
+            else
+                startInfo.Environment[name] = value;
+        }
+
+        using var process = new Process { StartInfo = startInfo };
+        try
+        {
+            process.Start();
+        }
+        catch (Win32Exception)
+        {
+            return null;
+        }
+        process.StandardInput.Close();
+
+        using var timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutSource.CancelAfter(timeout);
+        var standardError = standardErrorLine is null
+            ? process.StandardError.ReadToEndAsync(timeoutSource.Token)
+            : ReadLinesAsync(process.StandardError, standardErrorLine, timeoutSource.Token);
+        try
+        {
+            await readOutput(process.StandardOutput.BaseStream, timeoutSource.Token);
+            // Whatever the reader left (it stopped early): drained, so the program can end.
+            await process.StandardOutput.BaseStream.CopyToAsync(Stream.Null, timeoutSource.Token);
+            await process.WaitForExitAsync(timeoutSource.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            try
+            {
+                process.Kill(entireProcessTree: true);
+            }
+            catch (InvalidOperationException)
+            {
+            }
+            cancellationToken.ThrowIfCancellationRequested();
+            throw new TimeoutException($"'{fileName}' did not exit within {timeout.TotalSeconds:0.#} s.");
+        }
+        catch
+        {
+            try
+            {
+                process.Kill(entireProcessTree: true);
+            }
+            catch (InvalidOperationException)
+            {
+            }
+            throw;
+        }
+
+        return new ProcessResult(process.ExitCode, "", await standardError);
+    }
+
     /// <summary>Reads to the end, passing every line on as it arrives; returns everything read.</summary>
     private static async Task<string> ReadLinesAsync(StreamReader reader, Action<string> line, CancellationToken cancellationToken,
         bool keep = true)

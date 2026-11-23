@@ -42,11 +42,20 @@ public partial class MainViewModel
     /// <summary>Builds the overview anew (only while it is shown – it reads the runs' history).</summary>
     internal void RefreshDashboard()
     {
-        if (!IsOverviewShown)
-            return;
-        var repositories = Repositories.Select(item => new DashboardRepository(item,
-            [.. _jobs.Where(job => job.RepositoryId == item.Config.Id).Select(job => (job, Runner.History.Get(job.Id)))])).ToList();
-        Dashboard = new DashboardViewModel(repositories, DateTimeOffset.Now, OpenRepository);
+        var tests = RestoreTestStore;
+        var repositories = Repositories.Select(item =>
+        {
+            var jobs = _jobs.Where(job => job.RepositoryId == item.Config.Id).ToList();
+            return new DashboardRepository(item, [.. jobs.Select(job => (job, Runner.History.Get(job.Id)))],
+                jobs.Select(job => (job.Id, Test: tests.Get(job.Id).FirstOrDefault())).Where(entry => entry.Test is not null)
+                    .ToDictionary(entry => entry.Id, entry => entry.Test!));
+        }).ToList();
+        var dashboard = new DashboardViewModel(repositories, DateTimeOffset.Now, OpenRepository);
+        // The dot in the list of repositories: always current, also while one repository is shown.
+        foreach (var row in dashboard.Rows)
+            row.Item.StateLevel = row.Level;
+        if (IsOverviewShown)
+            Dashboard = dashboard;
     }
 
     /// <summary>A repository clicked in the overview.</summary>

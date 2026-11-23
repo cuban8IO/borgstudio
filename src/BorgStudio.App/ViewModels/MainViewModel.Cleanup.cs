@@ -29,7 +29,7 @@ public partial class MainViewModel
     private async Task CleanUpAsync(BackupJob job)
     {
         var item = Repositories.FirstOrDefault(repository => repository.Config.Id == job.RepositoryId);
-        if (item is null || job.Retention is not { HasRules: true } retention || !TryGetLocation(item, out var location))
+        if (item is null || job.Retention is not { HasRules: true } retention || await ConnectAsync(item) is not { } location)
             return;
         if (!await ReleaseMountsAsync(item.Config.Id, item.Name))
             return;
@@ -40,6 +40,7 @@ public partial class MainViewModel
 
         var borg = Borg!;
         var run = new BackupRunViewModel(job, cleanupOnly: true);
+        using var task = Tasks.Track(BackupTask(run, job));
         CurrentBackup = run;
         IsBackupRunning = true;
         using var cancellation = new CancellationTokenSource();
@@ -61,7 +62,8 @@ public partial class MainViewModel
                      || cancellation.IsCancellationRequested)
                 cleanup = new CleanupSummary { Cancelled = true };
             else
-                cleanup = await Runner.PruneAndCompactAsync(new BackupRunRequest(borg, location, job, passphrase.Value, ssh.Access),
+                cleanup = await Runner.PruneAndCompactAsync(new BackupRunRequest(borg, location, job, passphrase.Value, ssh.Access,
+                        Throttle: Throttle(item.Config, location)),
                     retention, new RunReport(this, run), cancellation.Token);
         }
         finally
@@ -86,7 +88,7 @@ public partial class MainViewModel
     private async Task FreeSpaceAsync()
     {
         var item = SelectedRepository!;
-        if (!TryGetLocation(item, out var location))
+        if (await ConnectAsync(item) is not { } location)
             return;
         if (!await ReleaseMountsAsync(item.Config.Id, item.Name))
             return;
@@ -99,7 +101,8 @@ public partial class MainViewModel
         // Progress after borg has finished is ignored (the panel is stopped then).
         var progress = new ViewModelProgress<double>(this, fraction => Work.Report(fraction));
         var result = await RunAsync(item, Strings.CleanupCompacting, "compact",
-            () => _services.BorgClient.CompactAsync(borg, location, ssh.Access, progress, cancellation.Token), cancellation.Cancel);
+            () => _services.BorgClient.CompactAsync(borg, location, ssh.Access, progress, cancellation.Token, Throttle(item.Config, location)),
+            cancellation.Cancel);
 
         if (result.Value is { } compacted)
             item.ShowResult(compacted.FreedBytes is { } freed ? BorgTexts.Format(Strings.SpaceFreed, BorgTexts.Size(freed)) : Strings.SpaceFreedNoSize,

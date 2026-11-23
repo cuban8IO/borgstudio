@@ -24,6 +24,11 @@
     <ProjectReference Include="..\..\samples\BorgStudio.SamplePlugin\BorgStudio.SamplePlugin.csproj" ReferenceOutputAssembly="false" Private="false" />
     <ProjectReference Include="..\..\src\BorgStudio.Providers.Ssh\BorgStudio.Providers.Ssh.csproj" />
     <ProjectReference Include="..\..\src\BorgStudio.Providers.Hetzner\BorgStudio.Providers.Hetzner.csproj" />
+    <ProjectReference Include="..\..\src\BorgStudio.Providers.Usb\BorgStudio.Providers.Usb.csproj" />
+    <ProjectReference Include="..\..\src\BorgStudio.Providers.RsyncNet\BorgStudio.Providers.RsyncNet.csproj" />
+    <ProjectReference Include="..\..\src\BorgStudio.Providers.BorgBase\BorgStudio.Providers.BorgBase.csproj" />
+    <ProjectReference Include="..\..\src\BorgStudio.Providers.Sftp\BorgStudio.Providers.Sftp.csproj" />
+    <ProjectReference Include="..\..\src\BorgStudio.Providers.NetworkDisk\BorgStudio.Providers.NetworkDisk.csproj" />
   </ItemGroup>
 
   <!-- The sample plugin's build output, as it would be installed: test output/plugins/BorgStudio.SamplePlugin/ -->

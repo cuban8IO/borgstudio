@@ -215,6 +215,10 @@ public partial class MainViewModel
     /// <summary>Removes the passphrase of a repository being deleted, wherever it is kept.</summary>
     private async Task RemovePassphraseAsync(RepositoryConfig repository)
     {
+        // The provider's secrets (e.g. an API token) go with it; in a locked vault they stay until removed by hand.
+        if (_services.Vault.State == VaultState.Unlocked)
+            RepositorySecrets.Remove(_services.Vault, repository.Id, _services.Plugins.FindRepositoryProvider(repository.ProviderId));
+
         if (repository.PassphraseMode == PassphraseMode.Vault && _services.Vault.State != VaultState.Unlocked)
         {
             _pendingVaultRemovals.Add(repository.Id);

@@ -14,9 +14,14 @@ using BorgStudio.Core.Settings;
 using BorgStudio.Core.Updates;
 using BorgStudio.Core.Ssh;
 using BorgStudio.Plugins;
+using BorgStudio.Providers.BorgBase;
 using BorgStudio.Providers.Hetzner;
 using BorgStudio.Providers.Local;
+using BorgStudio.Providers.NetworkDisk;
+using BorgStudio.Providers.RsyncNet;
+using BorgStudio.Providers.Sftp;
 using BorgStudio.Providers.Ssh;
+using BorgStudio.Providers.Usb;
 
 namespace BorgStudio.Tests.TestSupport;
 
@@ -33,6 +38,9 @@ public sealed class FakeBorg : IProcessRunner
     public List<(IReadOnlyList<string> Arguments, string? Passphrase)> Calls { get; } = [];
 
     public List<IReadOnlyDictionary<string, string?>> Environments { get; } = [];
+
+    /// <summary>The folder each call (of <see cref="RunAsync"/>) started in, in the order of <see cref="Calls"/>.</summary>
+    public List<string?> WorkingDirectories { get; } = [];
 
     /// <summary>Content of the private key file ssh would have used, read during each SSH call.</summary>
     public List<string> KeysDuringCalls { get; } = [];
@@ -79,6 +87,14 @@ public sealed class FakeBorg : IProcessRunner
         var wsl = fileName == WslExecutable;
         if (wsl)
         {
+            // Mounting Windows drives inside WSL: says which of the drives it mounted.
+            if (arguments is ["-u", "root", "-e", "sh", "-c", var driveScript] && driveScript.Contains("/mnt/$d", StringComparison.Ordinal))
+            {
+                RootCommands.Add(driveScript);
+                var letters = System.Text.RegularExpressions.Regex.Match(driveScript, "for d in ([a-z ]+);").Groups[1].Value
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                return Result(0, string.Join('\n', letters.Where(letter => WslDrivesMissing.Contains(letter[0]))));
+            }
             if (arguments is ["-u", "root", "-e", ..])
             {
                 RootCommands.Add(string.Join(' ', arguments.Skip(3)));
@@ -95,9 +111,38 @@ public sealed class FakeBorg : IProcessRunner
             }
         }
 
+        // sshfs in the foreground: "runs" until its folder is unmounted.
+        if (fileName == "sshfs")
+            return RunSshfs(arguments, cancellationToken);
+
+        // borg on an SFTP folder: the guard lets it start only on a mounted folder (inside the pid wrapper, or on its own).
+        if (fileName == "sh" && arguments is ["-c", _, "sh", "-c", var wrapped, ..] && wrapped.Contains("BORGSTUDIO_NOT_MOUNTED", StringComparison.Ordinal))
+            arguments = arguments.Skip(2).ToList();
+        if (fileName == "sh" && arguments is ["-c", var guard, var guarded, ..] && guard.Contains("BORGSTUDIO_NOT_MOUNTED", StringComparison.Ordinal))
+        {
+            GuardedMounts.Add(guarded);
+            if (!SftpMounts.ContainsKey(guarded) || SftpVanished)
+                return Task.FromResult<ProcessResult?>(new ProcessResult(97, "", "BORGSTUDIO_NOT_MOUNTED\n"));
+            fileName = arguments[3];
+            arguments = arguments.Skip(4).ToList();
+        }
+
         // The shell scripts around mounting.
         if (fileName == "sh" && arguments is ["-c", var script, "sh", ..])
             return MountShell(script, arguments.Skip(3).ToList(), wsl);
+
+        // Low priority: borg runs under "nice -n 10" (inside the sh wrapper, or on its own).
+        if (fileName == "sh" && arguments is ["-c", _, "nice", "-n", _, BorgPath, ..])
+        {
+            NiceCalls.Add(arguments[6]);
+            arguments = [arguments[0], arguments[1], .. arguments.Skip(5)];
+        }
+        else if (fileName == "nice" && arguments is ["-n", _, BorgPath, ..])
+        {
+            NiceCalls.Add(arguments[3]);
+            fileName = BorgPath;
+            arguments = arguments.Skip(3).ToList();
+        }
 
         // Interruptible calls run borg through a small sh wrapper (on Linux/macOS).
         if (fileName == "sh" && arguments is ["-c", _, BorgPath, ..])
@@ -109,6 +154,7 @@ public sealed class FakeBorg : IProcessRunner
         var passphrase = environment?.GetValueOrDefault("BORG_PASSPHRASE");
         Environments.Add(environment ?? new Dictionary<string, string?>());
         Calls.Add((arguments, passphrase));
+        WorkingDirectories.Add(workingDirectory);
         if (environment?.GetValueOrDefault("BORG_RSH") is { } rsh
             && System.Text.RegularExpressions.Regex.Match(rsh, "-i '(?<path>[^']+)'") is { Success: true } match)
         {
@@ -139,6 +185,14 @@ public sealed class FakeBorg : IProcessRunner
             return Unmount(mountPoint);
         if (arguments[0] == "compact")
             return CompactAsync(standardErrorLine, cancellationToken);
+        if (arguments[0] == "check")
+            return CheckAsync(arguments, environment, standardErrorLine, cancellationToken);
+        if (arguments[0] == "diff")
+            return DiffAsync(standardOutputLine, cancellationToken);
+        if (arguments[0] is "rename" or "delete" or "recreate")
+            return ChangeArchives(arguments);
+        if (arguments[0] == "export-tar")
+            return ExportTarAsync(arguments, standardErrorLine, cancellationToken);
 
         if (arguments is ["list", ..] && arguments.Contains("--json-lines"))
             return ContentsAsync(arguments, standardOutputLine, cancellationToken);
@@ -161,6 +215,8 @@ public sealed class FakeBorg : IProcessRunner
         return arguments[0] switch
         {
             "init" => Result(0, ""),
+            "break-lock" when BreakLockError is not null => Error(BreakLockError),
+            "break-lock" => Result(0, ""),
             "key" => Result(0, ""),
             "info" when EncryptionMode is null => Error(InfoError),
             "info" when EncryptionMode != "none" && CorrectPassphrase is not null && passphrase != CorrectPassphrase
@@ -179,7 +235,7 @@ public sealed class FakeBorg : IProcessRunner
         var start = archive.Start.ToString("yyyy-MM-ddTHH:mm:ss.ffffff", CultureInfo.InvariantCulture);
         return details
             ? $$$"""{"name": "{{{archive.Name}}}", "id": "{{{id}}}", "start": "{{{start}}}", "duration": {{{index * 10}}}.5, "hostname": "host", "stats": {"original_size": {{{index * 1_000_000}}}, "compressed_size": {{{index * 500_000}}}, "deduplicated_size": {{{index * 1000}}}, "nfiles": {{{index * 100}}}}}"""
-            : $$"""{"archive": "{{archive.Name}}", "barchive": "{{archive.Name}}", "name": "{{archive.Name}}", "id": "{{id}}", "start": "{{start}}", "time": "{{start}}"}""";
+            : $$"""{"archive": "{{archive.Name}}", "barchive": "{{archive.Name}}", "name": "{{archive.Name}}", "id": "{{id}}", "start": "{{start}}", "time": "{{start}}", "comment": "{{Comments.GetValueOrDefault(archive.Name, "")}}"}""";
     }
 
     /// <summary>Three progress lines, the warnings, then the final statistics.</summary>
@@ -248,6 +304,7 @@ public sealed class FakeBorg : IProcessRunner
             .Where(entry => prefixes.Count == 0 || prefixes.Any(prefix => entry.Path == prefix || entry.Path.StartsWith(prefix + "/", StringComparison.Ordinal)))
             .ToList();
         var total = files.Sum(file => file.Size);
+        var dryRun = list.Contains("--dry-run");
         standardErrorLine?.Invoke("""{"message": "Calculating total archive size for the progress indicator (might take long for large archives)", "current": 0, "total": 0, "info": null, "operation": 1, "msgid": "extract", "type": "progress_percent", "finished": false, "time": 0}""");
         long done = 0;
         foreach (var file in files)
@@ -255,8 +312,14 @@ public sealed class FakeBorg : IProcessRunner
             cancellationToken.ThrowIfCancellationRequested();
             var segments = file.Path.Split('/').Skip(strip).ToArray();
             var destination = Path.Combine([workingDirectory ?? ".", .. segments]);
-            Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
-            File.WriteAllText(destination, "restored");
+            if (!dryRun)
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+                if (ExtractedContent is { } content)
+                    File.WriteAllBytes(destination, content(file.Path, file.Size));
+                else
+                    File.WriteAllText(destination, "restored");
+            }
             done += file.Size;
             standardErrorLine?.Invoke(System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object>
             {
@@ -360,6 +423,191 @@ public sealed class FakeBorg : IProcessRunner
         return Result(0, "");
     }
 
+    /// <summary>Where "export-tar -" writes its tar stream (set while <see cref="RunStreamingAsync"/> runs).</summary>
+    private Func<Stream, CancellationToken, Task>? _output;
+
+    public async Task<ProcessResult?> RunStreamingAsync(string fileName, IReadOnlyList<string> arguments, TimeSpan timeout,
+        Func<Stream, CancellationToken, Task> readOutput, IReadOnlyDictionary<string, string?>? environment = null,
+        CancellationToken cancellationToken = default, Action<string>? standardErrorLine = null, string? workingDirectory = null)
+    {
+        _output = readOutput;
+        try
+        {
+            return await RunAsync(fileName, arguments, timeout, environment, null, cancellationToken, standardErrorLine, null, workingDirectory);
+        }
+        finally
+        {
+            _output = null;
+        }
+    }
+
+    /// <summary>When set, "export-tar" fails with this message (as borg's error), e.g. a missing zstd.</summary>
+    public string? ExportError { get; set; }
+
+    /// <summary>Called after the progress of "export-tar" (e.g. to cancel in the middle).</summary>
+    public Action? DuringExport { get; set; }
+
+    /// <summary>
+    /// "export-tar": the archive's <see cref="Contents"/> (only the paths asked for, with --strip-components) as a tar – to
+    /// the stream for "-", into the file otherwise. Files hold their size in bytes of 'x'.
+    /// </summary>
+    private async Task<ProcessResult?> ExportTarAsync(IReadOnlyList<string> arguments, Action<string>? standardErrorLine,
+        CancellationToken cancellationToken)
+    {
+        if (ExportError is not null)
+            return new ProcessResult(2, "", $$"""{"type": "log_message", "levelname": "ERROR", "message": "{{ExportError}}", "msgid": "Error"}""");
+        var list = arguments.ToList();
+        var target = list.First(argument => argument.Contains("::", StringComparison.Ordinal));
+        var name = target[(target.IndexOf("::", StringComparison.Ordinal) + 2)..];
+        var file = list[list.IndexOf(target) + 1];
+        var strip = list.IndexOf("--strip-components") is var at and >= 0 ? int.Parse(list[at + 1], CultureInfo.InvariantCulture) : 0;
+        var prefixes = list.Where(argument => argument.StartsWith("pp:", StringComparison.Ordinal)).Select(argument => argument[3..]).ToList();
+        var entries = (Contents.GetValueOrDefault(name) ?? DefaultContents)
+            .Where(entry => prefixes.Count == 0 || prefixes.Any(prefix => entry.Path == prefix || entry.Path.StartsWith(prefix + "/", StringComparison.Ordinal)))
+            .ToList();
+        standardErrorLine?.Invoke("""{"message": "Calculating size", "current": 0, "total": 0, "info": null, "operation": 1, "msgid": "extract", "type": "progress_percent", "finished": false, "time": 0}""");
+        standardErrorLine?.Invoke(System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object>
+        {
+            ["message"] = "50% Processing", ["current"] = 1, ["total"] = 2, ["info"] = new[] { entries.FirstOrDefault().Path ?? "" },
+            ["operation"] = 1, ["msgid"] = "extract", ["type"] = "progress_percent", ["finished"] = false, ["time"] = 0,
+        }));
+        DuringExport?.Invoke();
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var tar = new MemoryStream();
+        await using (var writer = new System.Formats.Tar.TarWriter(tar, System.Formats.Tar.TarEntryFormat.Pax, leaveOpen: true))
+        {
+            foreach (var (type, path, size) in entries)
+            {
+                var stripped = string.Join('/', path.Split('/').Skip(strip));
+                if (stripped.Length == 0)
+                    continue;
+                System.Formats.Tar.PaxTarEntry entry = type switch
+                {
+                    "d" => new(System.Formats.Tar.TarEntryType.Directory, stripped + "/"),
+                    "l" => new(System.Formats.Tar.TarEntryType.SymbolicLink, stripped) { LinkName = "letter.txt" },
+                    _ => new(System.Formats.Tar.TarEntryType.RegularFile, stripped) { DataStream = new MemoryStream(Enumerable.Repeat((byte)'x', (int)size).ToArray()) },
+                };
+                entry.ModificationTime = new DateTimeOffset(2026, 11, 5, 10, 20, 30, TimeSpan.Zero);
+                await writer.WriteEntryAsync(entry, cancellationToken);
+            }
+        }
+        tar.Position = 0;
+        if (file == "-")
+            await _output!(tar, cancellationToken);
+        else
+            await File.WriteAllBytesAsync(file, tar.ToArray(), cancellationToken);
+        return new ProcessResult(0, "", "");
+    }
+
+    /// <summary>The archives' comments ("recreate --comment" sets them, "list" reports them).</summary>
+    public Dictionary<string, string> Comments { get; } = [];
+
+    /// <summary>When set, "rename", "delete" and "recreate" fail with this message id.</summary>
+    public string? ChangeError { get; set; }
+
+    /// <summary>"rename", "delete" (several archives at once) and "recreate --comment" on <see cref="Archives"/>.</summary>
+    private Task<ProcessResult?> ChangeArchives(IReadOnlyList<string> arguments)
+    {
+        if (ChangeError is not null)
+            return Error(ChangeError);
+        var target = arguments.First(argument => argument.Contains("::", StringComparison.Ordinal));
+        var first = target[(target.IndexOf("::", StringComparison.Ordinal) + 2)..];
+        var rest = arguments.SkipWhile(argument => argument != target).Skip(1).ToList();
+        int Index(string name) => Archives.FindIndex(archive => archive.Name == name);
+        switch (arguments[0])
+        {
+            case "rename":
+                if (Index(rest[0]) >= 0)
+                    return Error("Archive.AlreadyExists");
+                if (Index(first) is var index and >= 0)
+                    Archives[index] = (rest[0], Archives[index].Start);
+                if (Comments.Remove(first, out var comment))
+                    Comments[rest[0]] = comment;
+                break;
+            case "delete":
+                foreach (var name in rest.Prepend(first))
+                    Archives.RemoveAll(archive => archive.Name == name);
+                break;
+            default:
+                var text = arguments[arguments.ToList().IndexOf("--comment") + 1];
+                if (text.Length == 0)
+                    Comments.Remove(first);
+                else
+                    Comments[first] = text;
+                break;
+        }
+        return Result(0, "");
+    }
+
+    /// <summary>What "diff" prints (JSON lines, as borg 1.4 does).</summary>
+    public List<string> DiffLines { get; } = [];
+
+    /// <summary>When set, "diff" fails with this message id.</summary>
+    public string? DiffError { get; set; }
+
+    /// <summary>Awaited before "diff" prints anything (e.g. to close the window meanwhile).</summary>
+    public Func<CancellationToken, Task>? BeforeDiff { get; set; }
+
+    private async Task<ProcessResult?> DiffAsync(Action<string>? standardOutputLine, CancellationToken cancellationToken)
+    {
+        if (BeforeDiff is not null)
+            await BeforeDiff(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (DiffError is not null)
+            return await Error(DiffError);
+        foreach (var line in DiffLines)
+            standardOutputLine?.Invoke(line);
+        return await Result(0, "");
+    }
+
+    /// <summary>The borg commands that ran under nice (low priority).</summary>
+    public List<string> NiceCalls { get; } = [];
+
+    /// <summary>When set, "break-lock" fails with this message id.</summary>
+    public string? BreakLockError { get; set; }
+
+    /// <summary>What "extract" writes for a file (path in the archive, size); unset: the text "restored".</summary>
+    public Func<string, long, byte[]>? ExtractedContent { get; set; }
+
+    /// <summary>The damage "check" finds (logged as errors, exit code 1); "check --repair" repairs it.</summary>
+    public List<string> CheckProblems { get; } = [];
+
+    /// <summary>When set, "check" fails with this message id.</summary>
+    public string? CheckError { get; set; }
+
+    /// <summary>Called after the first progress line of "check" (e.g. to cancel in the middle).</summary>
+    public Action? DuringCheck { get; set; }
+
+    /// <summary>Like borg 1.4: segments, (verify-data: data,) archives – each half-way, then finished.</summary>
+    private Task<ProcessResult?> CheckAsync(IReadOnlyList<string> arguments, IReadOnlyDictionary<string, string?>? environment,
+        Action<string>? standardErrorLine, CancellationToken cancellationToken)
+    {
+        if (CheckError is not null)
+            return Error(CheckError);
+        var repair = arguments.Contains("--repair");
+        if (repair && environment?.GetValueOrDefault("BORG_CHECK_I_KNOW_WHAT_I_AM_DOING") != "YES")
+            return Error("CancelledByUser");
+
+        List<string> phases = ["repository.check", .. arguments.Contains("--verify-data") ? ["check.verify_data"] : Array.Empty<string>(),
+            "check.rebuild_refcounts"];
+        foreach (var phase in phases)
+        {
+            standardErrorLine?.Invoke(
+                $$"""{"message": "Checking 50.0%", "current": 1, "total": 2, "info": null, "operation": 1, "msgid": "{{phase}}", "type": "progress_percent", "finished": false, "time": 0}""");
+            if (phase == phases[0])
+                DuringCheck?.Invoke();
+            cancellationToken.ThrowIfCancellationRequested();
+            standardErrorLine?.Invoke($$"""{"operation": 1, "msgid": "{{phase}}", "type": "progress_percent", "finished": true, "time": 0}""");
+        }
+        foreach (var problem in CheckProblems)
+            standardErrorLine?.Invoke($$"""{"type": "log_message", "time": 0, "message": "{{problem}}", "levelname": "ERROR", "name": "borg.repository"}""");
+        var found = CheckProblems.Count > 0;
+        if (repair)
+            CheckProblems.Clear();
+        return Result(found ? 1 : 0, "");
+    }
+
     public static string ArchiveId(string name) =>
         Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(name)));
 
@@ -378,6 +626,9 @@ public sealed class FakeBorg : IProcessRunner
 
     /// <summary>What ran as root in WSL.</summary>
     public List<string> RootCommands { get; } = [];
+
+    /// <summary>Windows drives WSL has not mounted (attached after it started).</summary>
+    public HashSet<char> WslDrivesMissing { get; } = [];
 
     /// <summary>When set, "mount" fails with this message id (or with this text from FUSE, if it has blanks).</summary>
     public string? MountError { get; set; }
@@ -431,9 +682,50 @@ public sealed class FakeBorg : IProcessRunner
         return Result(0, "");
     }
 
+    // --- sshfs (SFTP folders) ---
+
+    /// <summary>SFTP folders mounted now (mount point → sshfs "running" until unmounted).</summary>
+    public Dictionary<string, TaskCompletionSource<ProcessResult?>> SftpMounts { get; } = [];
+
+    public List<IReadOnlyList<string>> SshfsCalls { get; } = [];
+
+    public List<string> SftpUnmounts { get; } = [];
+
+    /// <summary>Mount points borg's guard looked at before borg started.</summary>
+    public List<string> GuardedMounts { get; } = [];
+
+    public bool SshfsMissing { get; set; }
+
+    /// <summary>sshfs fails with this on standard error.</summary>
+    public string? SshfsError { get; set; }
+
+    /// <summary>The folder is gone while sshfs still runs (the guard must stop borg).</summary>
+    public bool SftpVanished { get; set; }
+
+    private Task<ProcessResult?> RunSshfs(IReadOnlyList<string> arguments, CancellationToken cancellationToken)
+    {
+        SshfsCalls.Add(arguments);
+        if (SshfsError is { } error)
+            return Task.FromResult<ProcessResult?>(new ProcessResult(1, "", error));
+        var running = new TaskCompletionSource<ProcessResult?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        SftpMounts[arguments[^1]] = running;
+        return running.Task.WaitAsync(cancellationToken);
+    }
+
     private Task<ProcessResult?> MountShell(string script, IReadOnlyList<string> arguments, bool wsl)
     {
         var path = arguments.FirstOrDefault() ?? "";
+        if (script.Contains(".borgstudio/sftp", StringComparison.Ordinal))
+            return SshfsMissing ? Result(3, "BORGSTUDIO_SSHFS_MISSING\n") : Result(0, $"READY /home/me/.borgstudio/sftp/{path}\n");
+        if (script.StartsWith("fusermount -u \"$1\"", StringComparison.Ordinal))
+        {
+            SftpUnmounts.Add(path);
+            if (SftpMounts.Remove(path, out var sshfs))
+                sshfs.TrySetResult(new ProcessResult(0, "", ""));
+            return Result(0, "");
+        }
+        if (script.EndsWith("is_mounted \"$1\"", StringComparison.Ordinal) && SftpMounts.ContainsKey(path))
+            return Result(0, "");
         if (script.Contains("mkdir -p", StringComparison.Ordinal))
         {
             var mountPoint = "/home/me/" + path;
@@ -542,6 +834,12 @@ public sealed class TestServices : IDisposable
     /// <summary>The programs system notifications start (notify-send: the notifier pretends to be on Linux).</summary>
     public RecordingProcesses NotifyProcesses { get; } = new();
 
+    /// <summary>What the conditions of scheduled runs find (battery, connection, target).</summary>
+    public FakeSystemState SystemState { get; } = new();
+
+    /// <summary>What the jobs' commands start (nothing really runs; results by program name).</summary>
+    public RecordingProcesses HookProcesses { get; } = new();
+
     /// <summary>What webhooks post.</summary>
     public FakeHttpHandler Http { get; } = new();
 
@@ -553,8 +851,18 @@ public sealed class TestServices : IDisposable
     /// <summary>Cheap key derivation: the tests check the logic, not the cost.</summary>
     public static readonly KdfParameters FastKdf = new(64, 1, 1);
 
+    /// <summary>Network disks: logging in attaches <see cref="FakeNetworkDisks.Volume"/> to <see cref="Drives"/>.</summary>
+    public FakeNetworkDisks NetworkDisks { get; }
+
+    /// <summary>BorgBase's GraphQL API.</summary>
+    public FakeBorgBase BorgBaseApi { get; } = new();
+
+    /// <summary>The drives the USB provider searches and ejects.</summary>
+    public FakeDrives Drives { get; } = new();
+
     public TestServices(bool keychainAvailable = true, bool wsl = false)
     {
+        NetworkDisks = new FakeNetworkDisks(Drives);
         if (!keychainAvailable)
             Secrets = new FakeSecretStore(available: false);
         Store = new RepositoryStore(Directory.Combine("repositories.json"));
@@ -562,7 +870,7 @@ public sealed class TestServices : IDisposable
         Vault = new Vault(Directory.Combine("vault.json"), FastKdf, Time);
         Settings = new SettingsStore(Directory.Combine("settings.json"));
         Jobs = new BackupJobStore(Directory.Combine("jobs.json"));
-        var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new SshProviderPlugin(), new HetznerProviderPlugin()], "no-plugins-here");
+        var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new UsbProviderPlugin(Drives), new NetworkDiskProviderPlugin(NetworkDisks, Drives), new SshProviderPlugin(), new SftpProviderPlugin(), new HetznerProviderPlugin(), new RsyncNetProviderPlugin(), new BorgBaseProviderPlugin(BorgBaseApi)], "no-plugins-here");
         Archives = new ArchiveCache(Directory.Combine("archives"), Vault);
         Durations = new DurationHistory(Directory.Combine("durations.json"));
         System.IO.Directory.CreateDirectory(AppFolder);
@@ -578,7 +886,9 @@ public sealed class TestServices : IDisposable
             Updates,
             Scheduler,
             Autostart,
-            Notifier);
+            Notifier,
+            new HookRunner(HookProcesses, FakeBorg.WslExecutable),
+            SystemState);
     }
 
     public KnownHostsFile KnownHosts => new(SshKeys.KnownHostsFile);
@@ -661,6 +971,19 @@ public sealed class FakeDialogs : IDialogService
 
     public Task<string?> AskNewPinAsync() => Task.FromResult(NewPins.Count > 0 ? NewPins.Dequeue() : null);
 
+    /// <summary>Answers to text prompts (names, comments); none left: cancelled.</summary>
+    public Queue<string?> TextAnswers { get; } = [];
+
+    /// <summary>What the text prompts were filled in with.</summary>
+    public List<string> TextInitials { get; } = [];
+
+    public Task<string?> AskTextAsync(string title, string prompt, string initial)
+    {
+        Shown.Add(title);
+        TextInitials.Add(initial);
+        return Task.FromResult(TextAnswers.Count > 0 ? TextAnswers.Dequeue() : null);
+    }
+
     public Task<string?> AskSecretAsync(string title, string prompt, string? error = null)
     {
         SecretErrors.Add(error);
@@ -734,6 +1057,93 @@ public sealed class FakeDialogs : IDialogService
         await versions.Begin();
         if (Versions is not null)
             await Versions(versions);
+    }
+
+    /// <summary>The file "chosen" as the export's target; <c>null</c>: cancelled.</summary>
+    public string? ExportFile { get; set; }
+
+    public List<ArchiveExportViewModel> Exports { get; } = [];
+
+    public Task<string?> PickArchiveExportFileAsync(string title, string suggestedName)
+    {
+        Shown.Add(title);
+        TextInitials.Add(suggestedName);
+        return Task.FromResult(ExportFile);
+    }
+
+    /// <summary>Public keys shown to add by hand; answered with <see cref="PublicKeyAdded"/>.</summary>
+    public List<(string Instructions, string PublicKey)> PublicKeys { get; } = [];
+
+    public bool PublicKeyAdded { get; set; } = true;
+
+    public Task<bool> ShowPublicKeyAsync(string title, string instructions, string publicKey)
+    {
+        PublicKeys.Add((instructions, publicKey));
+        return Task.FromResult(PublicKeyAdded);
+    }
+
+    /// <summary>The questions asked on top (title, message); answered with <see cref="OnTopAnswer"/>.</summary>
+    public List<(string Title, string Message)> OnTop { get; } = [];
+
+    public bool OnTopAnswer { get; set; } = true;
+
+    /// <summary>Set: the question stays open until this completes (or it is taken away).</summary>
+    public Task? OnTopOpenUntil { get; set; }
+
+    public async Task<bool> AskOnTopAsync(string title, string message, string confirmText, string cancelText, CancellationToken cancellationToken)
+    {
+        OnTop.Add((title, message));
+        if (OnTopOpenUntil is { } open)
+        {
+            try
+            {
+                await open.WaitAsync(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
+        }
+        return OnTopAnswer;
+    }
+
+    /// <summary>Like the window: the export starts when it opens; "open" until it has finished.</summary>
+    public async Task ShowArchiveExportAsync(ArchiveExportViewModel export)
+    {
+        Exports.Add(export);
+        export.Dialogs = this;
+        await export.Begin();
+    }
+
+    /// <summary>The view models whose windows were brought to the front (from the list of running tasks).</summary>
+    public List<object> BroughtToFront { get; } = [];
+
+    public void BringToFront(object viewModel) => BroughtToFront.Add(viewModel);
+
+    /// <summary>The comparison choices "shown"; <see cref="PickCompare"/> may change the choice (default: as preset), <c>false</c> cancels.</summary>
+    public List<ArchiveComparePickerViewModel> ComparePickers { get; } = [];
+
+    public Func<ArchiveComparePickerViewModel, bool>? PickCompare { get; set; }
+
+    public Task<bool> PickArchivesToCompareAsync(ArchiveComparePickerViewModel picker)
+    {
+        ComparePickers.Add(picker);
+        return Task.FromResult(PickCompare?.Invoke(picker) ?? true);
+    }
+
+    /// <summary>The comparisons "shown"; <see cref="Diff"/> runs while one is open (default: until borg is done).</summary>
+    public List<ArchiveDiffViewModel> Diffs { get; } = [];
+
+    public Func<ArchiveDiffViewModel, Task>? Diff { get; set; }
+
+    public async Task ShowArchiveDiffAsync(ArchiveDiffViewModel diff)
+    {
+        Diffs.Add(diff);
+        if (Diff is not null)
+            await Diff(diff);
+        else
+            while (diff.IsLoading)
+                await Task.Delay(10);
     }
 
     public Task<bool> ConfirmPruneAsync(PrunePreviewViewModel preview)
@@ -878,12 +1288,16 @@ public sealed class FakeSystemScheduler : ISystemScheduler
     /// <summary>The time of the daily check in the last update; <c>null</c>: none.</summary>
     public TimeOnly? DailyCheck { get; private set; }
 
+    /// <summary>The repositories with check schedules in the last update.</summary>
+    public IReadOnlyList<RepositoryConfig> ScheduledChecks { get; private set; } = [];
+
     public Task ApplyAsync(IReadOnlyList<BackupJob> jobs, string executable, TimeOnly? dailyCheck = null,
-        CancellationToken cancellationToken = default)
+        IReadOnlyList<RepositoryConfig>? repositories = null, CancellationToken cancellationToken = default)
     {
         if (Error is not null)
             throw new SchedulerException(Error);
         Applied.Add(jobs);
+        ScheduledChecks = [.. (repositories ?? []).Where(repository => repository.Check.IsScheduled)];
         DailyCheck = dailyCheck;
         Executable = executable;
         return Task.CompletedTask;
@@ -940,5 +1354,209 @@ public sealed class FakeHttpHandler : HttpMessageHandler
         lock (Requests)
             Requests.Add(new Request(request.Method, request.RequestUri!, headers, body));
         return new HttpResponseMessage(Status) { Content = new StringContent(ResponseBody) };
+    }
+}
+
+/// <summary>The computer's state for the conditions of scheduled runs, as a test sets it.</summary>
+public sealed class FakeSystemState : ISystemState
+{
+    public bool? OnBattery { get; set; } = false;
+
+    public bool? Metered { get; set; } = false;
+
+    public bool? Wired { get; set; } = true;
+
+    public bool Reachable { get; set; } = true;
+
+    /// <summary>Whether a location counts as reached over the network; by default servers only.</summary>
+    public Func<BorgStudio.Plugins.RepositoryLocation, bool> NetworkTarget { get; set; } = location => location.Ssh is not null;
+
+    public int Looks { get; private set; }
+
+    public Task<bool?> IsOnBatteryAsync(CancellationToken cancellationToken = default)
+    {
+        Looks++;
+        return Task.FromResult(OnBattery);
+    }
+
+    public Task<bool?> IsMeteredAsync(CancellationToken cancellationToken = default) => Task.FromResult(Metered);
+
+    public Task<bool?> IsWiredAsync(CancellationToken cancellationToken = default) => Task.FromResult(Wired);
+
+    public Task<bool> IsReachableAsync(BorgStudio.Plugins.RepositoryLocation location, CancellationToken cancellationToken = default) =>
+        Task.FromResult(Reachable);
+
+    public bool IsNetworkTarget(BorgStudio.Plugins.RepositoryLocation location) => NetworkTarget(location);
+}
+
+/// <summary>Drives as folders of the test; ejecting is recorded (and can be refused).</summary>
+public sealed class FakeDrives : IDriveSystem
+{
+    public List<DriveRoot> Attached { get; } = [];
+
+    /// <summary>Folders on external drives (everything below them counts).</summary>
+    public List<string> External { get; } = [];
+
+    public List<string> Ejected { get; } = [];
+
+    /// <summary>The answer to ejecting; <c>null</c>: ejected.</summary>
+    public string? EjectProblem { get; set; }
+
+    public IReadOnlyList<DriveRoot> Roots() => Attached;
+
+    public Task<bool> IsExternalAsync(string path, CancellationToken cancellationToken = default) =>
+        Task.FromResult(External.Any(root => path.StartsWith(root, StringComparison.OrdinalIgnoreCase)));
+
+    public Task<string?> EjectAsync(string path, CancellationToken cancellationToken = default)
+    {
+        Ejected.Add(path);
+        return Task.FromResult(EjectProblem);
+    }
+
+    /// <summary>The drives' UUIDs by root; a root without one has none (like a card without serial number).</summary>
+    public Dictionary<string, string> VolumeIds { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+    public Dictionary<string, string> Labels { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+    public Task<string?> VolumeIdAsync(string root, CancellationToken cancellationToken = default) =>
+        Task.FromResult(VolumeIds.GetValueOrDefault(root));
+
+    public string Label(string root) => Labels.GetValueOrDefault(root) ?? "";
+
+    public long? Size(string root) => 64L << 30;
+}
+
+/// <summary>Plays BorgBase's GraphQL API: SSH keys and repositories of one account; requests are recorded.</summary>
+public sealed class FakeBorgBase : HttpMessageHandler
+{
+    public const string Token = "borgbase-test-token";
+
+    public List<(string Query, System.Text.Json.Nodes.JsonObject? Variables, string? Token)> Requests { get; } = [];
+
+    public List<(string Id, string KeyData)> Keys { get; } = [];
+
+    public List<FakeBorgBaseRepo> Repos { get; } = [];
+
+    public double DiskUsageMb { get; set; } = 1500;
+
+    public int StorageLimitMb { get; set; } = 10000;
+
+    public IEnumerable<string> Operations => Requests.Select(request => request.Query.Split('{', '(')[0].Trim() + " "
+        + System.Text.RegularExpressions.Regex.Match(request.Query, @"\{\s*(\w+)").Groups[1].Value);
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var body = System.Text.Json.Nodes.JsonNode.Parse(await request.Content!.ReadAsStringAsync(cancellationToken))!.AsObject();
+        var query = body["query"]!.GetValue<string>();
+        var variables = body["variables"] as System.Text.Json.Nodes.JsonObject;
+        var token = request.Headers.Authorization?.Parameter;
+        Requests.Add((query, variables, token));
+        if (token != Token)
+            return new HttpResponseMessage(System.Net.HttpStatusCode.Unauthorized);
+
+        System.Text.Json.Nodes.JsonObject data;
+        if (query.Contains("sshList"))
+            data = new() { ["sshList"] = new System.Text.Json.Nodes.JsonArray([.. Keys.Select(key => (System.Text.Json.Nodes.JsonNode)new System.Text.Json.Nodes.JsonObject { ["id"] = key.Id, ["keyData"] = key.KeyData })]) };
+        else if (query.Contains("sshAdd"))
+        {
+            var id = (Keys.Count + 100).ToString(CultureInfo.InvariantCulture);
+            Keys.Add((id, variables!["keyData"]!.GetValue<string>()));
+            data = new() { ["sshAdd"] = new System.Text.Json.Nodes.JsonObject { ["keyAdded"] = new System.Text.Json.Nodes.JsonObject { ["id"] = id } } };
+        }
+        else if (query.Contains("repoList"))
+            data = new() { ["repoList"] = new System.Text.Json.Nodes.JsonArray([.. Repos.Select(repo => (System.Text.Json.Nodes.JsonNode)repo.Json())]) };
+        else if (query.Contains("repoAdd"))
+        {
+            var repo = new FakeBorgBaseRepo($"r{Repos.Count + 1}", variables!["name"]!.GetValue<string>(), $"abcd{Repos.Count + 1}")
+            {
+                Region = variables["region"]!.GetValue<string>(),
+            };
+            repo.FullAccessKeys.AddRange(variables["keys"]!.AsArray().Select(key => key!.GetValue<string>()));
+            Repos.Add(repo);
+            data = new() { ["repoAdd"] = new System.Text.Json.Nodes.JsonObject { ["repoAdded"] = repo.Json() } };
+        }
+        else if (query.Contains("repoEdit"))
+        {
+            var repo = Repos.Single(candidate => candidate.Id == variables!["id"]!.GetValue<string>());
+            repo.FullAccessKeys.Clear();
+            repo.FullAccessKeys.AddRange(variables!["keys"]!.AsArray().Select(key => key!.GetValue<string>()));
+            data = new() { ["repoEdit"] = new System.Text.Json.Nodes.JsonObject { ["repoEdited"] = new System.Text.Json.Nodes.JsonObject { ["id"] = repo.Id } } };
+        }
+        else if (query.Contains("repo(repoId"))
+        {
+            var repo = Repos.Single(candidate => candidate.Id == variables!["id"]!.GetValue<string>());
+            data = new() { ["repo"] = new System.Text.Json.Nodes.JsonObject { ["currentUsage"] = repo.UsageMb, ["quota"] = repo.QuotaMb, ["quotaEnabled"] = repo.QuotaMb > 0 } };
+        }
+        else if (query.Contains("me"))
+            data = new() { ["me"] = new System.Text.Json.Nodes.JsonObject { ["diskUsage"] = DiskUsageMb, ["storageLimitMb"] = StorageLimitMb } };
+        else
+            return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
+
+        return new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+        {
+            Content = new StringContent(new System.Text.Json.Nodes.JsonObject { ["data"] = data }.ToJsonString()),
+        };
+    }
+}
+
+public sealed record FakeBorgBaseRepo(string Id, string Name, string Login)
+{
+    public const string Ed25519 = "SHA256:BorgBaseEd25519FingerprintAAAAAAAAAAAAAAAAAA";
+
+    public string Region { get; init; } = "eu";
+
+    public List<string> FullAccessKeys { get; } = [];
+
+    public double UsageMb { get; set; } = 250;
+
+    public int QuotaMb { get; set; }
+
+    public System.Text.Json.Nodes.JsonObject Json() => new()
+    {
+        ["id"] = Id,
+        ["name"] = Name,
+        ["repoPath"] = $"{Login}@{Login}.repo.borgbase.com:repo",
+        ["fullAccessKeyList"] = new System.Text.Json.Nodes.JsonArray([.. FullAccessKeys.Select(key => (System.Text.Json.Nodes.JsonNode)new System.Text.Json.Nodes.JsonObject { ["id"] = key })]),
+        ["server"] = new System.Text.Json.Nodes.JsonObject { ["fingerprintEd25519"] = Ed25519, ["fingerprintEcdsa"] = "", ["fingerprintRsa"] = "ab:cd:ef" },
+    };
+}
+
+/// <summary>Plays network disks: set up and logged in to by id; logging in attaches a volume (a folder of the test).</summary>
+public sealed class FakeNetworkDisks(FakeDrives drives) : INetworkDiskSystem
+{
+    public List<(NetworkDiskTarget Target, string Id, string? ChapSecret)> SetUps { get; } = [];
+
+    public List<string> Connects { get; } = [];
+
+    public List<string> Disconnects { get; } = [];
+
+    /// <summary>The volume that appears when logged in; <c>null</c>: nothing appears.</summary>
+    public string? Volume { get; set; }
+
+    public string? SetUpRefusal { get; set; }
+
+    public Task SetUpAsync(NetworkDiskTarget target, string id, string? chapSecret, CancellationToken cancellationToken)
+    {
+        if (SetUpRefusal is { } refusal)
+            throw new RepositoryUnavailableException(refusal);
+        SetUps.Add((target, id, chapSecret));
+        return Task.CompletedTask;
+    }
+
+    public Task ConnectAsync(NetworkDiskTarget target, string id, CancellationToken cancellationToken)
+    {
+        if (!SetUps.Any(setUp => setUp.Id == id))
+            throw new RepositoryUnavailableException("not set up");
+        Connects.Add(id);
+        if (Volume is { } volume && !drives.Attached.Any(root => root.Path == volume))
+            drives.Attached.Add(new DriveRoot(volume, IsNetwork: false));
+        return Task.CompletedTask;
+    }
+
+    public Task<string?> DisconnectAsync(NetworkDiskTarget target, string id, CancellationToken cancellationToken)
+    {
+        Disconnects.Add(id);
+        drives.Attached.RemoveAll(root => root.Path == Volume);
+        return Task.FromResult<string?>(null);
     }
 }

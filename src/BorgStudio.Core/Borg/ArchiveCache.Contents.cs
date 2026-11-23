@@ -152,6 +152,8 @@ public sealed partial class ArchiveCache
         using (var writer = new StreamWriter(gzip, new UTF8Encoding(false)))
         {
             writer.WriteLine(JsonSerializer.Serialize(new ContentsHeader(ContentsFormat, ContentsVersion), JsonOptions));
+            if (tree.IsRelative)
+                writer.WriteLine(JsonSerializer.Serialize(new object?[] { (int)ArchiveEntryKind.Directory, ".", 0, null, null }));
             foreach (var node in tree.All())
             {
                 if (node.IsImplicit)

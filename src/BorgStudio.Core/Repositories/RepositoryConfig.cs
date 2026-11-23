@@ -69,6 +69,15 @@ public sealed record RepositoryConfig
     /// </summary>
     public long? StorageCapacity { get; init; }
 
+    /// <summary>How much its backups may take of the connection and of this computer.</summary>
+    public TransferLimits Limits { get; init; } = new();
+
+    /// <summary>When the repository is checked by itself (<c>borg check</c>).</summary>
+    public Checks.CheckPolicy Check { get; init; } = new();
+
+    /// <summary>Backing up when the drive is attached (USB drive repositories).</summary>
+    public PlugInBackup PlugIn { get; init; } = new();
+
     /// <summary>Older versions: the key file borg logged in with. Moved into the vault, then cleared.</summary>
     [JsonPropertyName("sshKeyFile")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

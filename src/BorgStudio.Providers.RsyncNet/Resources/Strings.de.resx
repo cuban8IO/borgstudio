@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Texts of the local provider, English (default). German: Strings.de.resx. -->
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="DisplayName" xml:space="preserve">
+    <value>rsync.net</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>Cloud-Speicher bei rsync.net, erreichbar über SSH.</value>
+  </data>
+  <data name="HostLabel" xml:space="preserve">
+    <value>Server</value>
+  </data>
+  <data name="HostHint" xml:space="preserve">
+    <value>z. B. zh1234.rsync.net, aus der Willkommens-E-Mail.</value>
+  </data>
+  <data name="HostRequired" xml:space="preserve">
+    <value>Bitte den Server angeben.</value>
+  </data>
+  <data name="HostInvalid" xml:space="preserve">
+    <value>Der Server sollte so aussehen: zh1234.rsync.net.</value>
+  </data>
+  <data name="UserLabel" xml:space="preserve">
+    <value>Login-Name</value>
+  </data>
+  <data name="UserHint" xml:space="preserve">
+    <value>Aus der Willkommens-E-Mail.</value>
+  </data>
+  <data name="UserRequired" xml:space="preserve">
+    <value>Bitte den Login-Namen angeben.</value>
+  </data>
+  <data name="UserInvalid" xml:space="preserve">
+    <value>Der Login-Name darf nur Buchstaben, Ziffern, Punkte, Binde- und Unterstriche enthalten.</value>
+  </data>
+  <data name="PathLabel" xml:space="preserve">
+    <value>Ordner im Konto</value>
+  </data>
+  <data name="PathHint" xml:space="preserve">
+    <value>Relativ zum Home-Verzeichnis, z. B. borg/laptop</value>
+  </data>
+  <data name="PathRequired" xml:space="preserve">
+    <value>Bitte einen Ordner angeben.</value>
+  </data>
+  <data name="PathNotRelative" xml:space="preserve">
+    <value>Bitte den Ordner relativ zum Home-Ordner angeben (ohne führenden /).</value>
+  </data>
+  <data name="PathInvalid" xml:space="preserve">
+    <value>Der Ordner darf nur Buchstaben, Ziffern und . _ + - / enthalten (kein „..“).</value>
+  </data>
+  <data name="RemoteBorgLabel" xml:space="preserve">
+    <value>borg auf dem Server</value>
+  </data>
+  <data name="RemoteBorgHint" xml:space="preserve">
+    <value>Das borg, das rsync.net für dieses Repository ausführt.</value>
+  </data>
+  <data name="RemoteBorgInvalid" xml:space="preserve">
+    <value>Bitte die borg-Version auf dem Server wählen.</value>
+  </data>
+  <data name="Borg14" xml:space="preserve">
+    <value>borg 1.4 (borg14)</value>
+  </data>
+  <data name="Borg12" xml:space="preserve">
+    <value>borg 1.2 (borg12)</value>
+  </data>
+</root>

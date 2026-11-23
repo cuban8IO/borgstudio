@@ -48,7 +48,14 @@
                     <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="vm:ProviderOptionViewModel">
                             <StackPanel Margin="4,6" Spacing="2">
-                                <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    <Border IsVisible="{Binding IsUntested}" Background="{DynamicResource ChartWarnBrush}"
+                                            CornerRadius="3" Padding="5,1" VerticalAlignment="Center"
+                                            ToolTip.Tip="{x:Static res:Strings.EditorProviderUntestedTip}">
+                                        <TextBlock Text="{x:Static res:Strings.EditorProviderUntested}" FontSize="11" Foreground="Black" />
+                                    </Border>
+                                </StackPanel>
                                 <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Opacity="0.75" />
                             </StackPanel>
                         </DataTemplate>
@@ -76,9 +83,10 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:FieldViewModel">
                                 <StackPanel Spacing="4">
-                                    <TextBlock Text="{Binding Label}" />
+                                    <TextBlock Text="{Binding Label}" IsVisible="{Binding !IsToggle}" />
+                                    <CheckBox Content="{Binding Label}" IsChecked="{Binding IsOn}" IsVisible="{Binding IsToggle}" />
                                     <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding IsTextInput}">
-                                        <TextBox Text="{Binding Value}" />
+                                        <TextBox Text="{Binding Value}" PasswordChar="{Binding PasswordChar}" />
                                         <Button Grid.Column="1" Margin="8,0,0,0" IsVisible="{Binding IsFolder}"
                                                 Content="{x:Static res:Strings.EditorBrowse}" Click="BrowseFolder_Click" />
                                     </Grid>
@@ -90,6 +98,16 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
+
+                    <Border IsVisible="{Binding ShowConvertToUsb}" Background="{StaticResource BpSurface2Brush}" BorderBrush="{StaticResource BpLineBrush}"
+                            BorderThickness="1" CornerRadius="6" Padding="12">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="{x:Static res:Strings.EditorConvertToUsbHint}" TextWrapping="Wrap" />
+                            <Button Content="{x:Static res:Strings.EditorConvertToUsb}" Command="{Binding ConvertToUsbCommand}" />
+                        </StackPanel>
+                    </Border>
+                    <TextBlock Text="{x:Static res:Strings.EditorConvertedToUsb}" IsVisible="{Binding ConvertedToUsb}"
+                               Foreground="{StaticResource BpGreenBrush}" TextWrapping="Wrap" />
 
                     <StackPanel Spacing="4" IsVisible="{Binding ShowModeChoice}">
                         <RadioButton GroupName="Mode" IsChecked="{Binding !CreateNew}"
@@ -134,7 +152,7 @@
                         <RadioButton GroupName="SshKey" IsChecked="{Binding KeyChoiceKeep}" IsVisible="{Binding ShowKeepKeyOption}"
                                      Content="{x:Static res:Strings.EditorKeyKeep}" />
                         <RadioButton GroupName="SshKey" IsChecked="{Binding KeyChoiceGenerate}">
-                            <TextBlock Text="{x:Static res:Strings.EditorKeyGenerate}" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding KeyGenerateText}" TextWrapping="Wrap" />
                         </RadioButton>
                         <RadioButton GroupName="SshKey" IsChecked="{Binding KeyChoiceExisting}">
                             <TextBlock Text="{x:Static res:Strings.EditorKeyExisting}" TextWrapping="Wrap" />
@@ -148,7 +166,7 @@
                                 <Button Grid.Column="1" Margin="8,0,0,0" Content="{x:Static res:Strings.KeysImport}"
                                         Command="{Binding ImportKeyCommand}" />
                             </Grid>
-                            <CheckBox IsChecked="{Binding InstallExistingKey}" Margin="0,4,0,0">
+                            <CheckBox IsChecked="{Binding InstallExistingKey}" Margin="0,4,0,0" IsVisible="{Binding !IsProvisioned}">
                                 <TextBlock Text="{x:Static res:Strings.EditorInstallExistingKey}" TextWrapping="Wrap" />
                             </CheckBox>
                         </StackPanel>
@@ -158,14 +176,51 @@
                             <TextBlock Text="{x:Static res:Strings.EditorServerPassword}" />
                             <TextBox Text="{Binding ServerPassword}" PasswordChar="•" />
                             <TextBlock Text="{x:Static res:Strings.EditorServerPasswordHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
-                            <CheckBox IsChecked="{Binding RestrictKey}" Margin="0,4,0,0">
+                            <CheckBox IsChecked="{Binding RestrictKey}" Margin="0,4,0,0" IsVisible="{Binding !IsSftpMount}">
                                 <TextBlock Text="{x:Static res:Strings.EditorRestrictKey}" TextWrapping="Wrap" />
                             </CheckBox>
-                            <TextBlock Text="{x:Static res:Strings.EditorRestrictKeyHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                            <TextBlock Text="{x:Static res:Strings.EditorRestrictKeyHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap"
+                                       IsVisible="{Binding !IsSftpMount}" />
                         </StackPanel>
                         <TextBlock Text="{Binding SharedKeyWarning}" IsVisible="{Binding HasSharedKeyWarning}" TextWrapping="Wrap"
                                    FontSize="12" Foreground="{DynamicResource WarningBorder}" />
                     </StackPanel>
+
+                    <StackPanel Spacing="6" IsVisible="{Binding IsUsb}">
+                        <CheckBox IsChecked="{Binding PlugInEnabled}">
+                            <TextBlock Text="{x:Static res:Strings.EditorPlugIn}" TextWrapping="Wrap" />
+                        </CheckBox>
+                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="28,0,0,0" IsEnabled="{Binding PlugInEnabled}">
+                            <TextBlock Text="{x:Static res:Strings.EditorPlugInAtMost}" VerticalAlignment="Center" />
+                            <NumericUpDown Value="{Binding PlugInHours}" Minimum="0" Maximum="720" Increment="1" FormatString="0" Width="120" />
+                            <TextBlock Text="{x:Static res:Strings.EditorPlugInHours}" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock Text="{x:Static res:Strings.EditorPlugInHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" Margin="28,0,0,0" />
+                        <TextBlock Text="{x:Static res:Strings.EditorPlugInNeedsBackground}" IsVisible="{Binding PlugInNeedsBackground}"
+                                   FontSize="12" Foreground="{DynamicResource WarningBorder}" TextWrapping="Wrap" Margin="28,0,0,0" />
+                    </StackPanel>
+
+                    <Expander Header="{x:Static res:Strings.EditorChecks}" HorizontalAlignment="Stretch">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="{x:Static res:Strings.EditorChecksIntro}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                            <CheckBox IsChecked="{Binding CheckAfterBackup}">
+                                <TextBlock Text="{x:Static res:Strings.EditorCheckAfterBackup}" TextWrapping="Wrap" />
+                            </CheckBox>
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="28,0,0,4" IsEnabled="{Binding CheckAfterBackup}">
+                                <TextBlock Text="{x:Static res:Strings.EditorCheckInterval}" VerticalAlignment="Center" />
+                                <NumericUpDown Value="{Binding CheckIntervalDays}" Minimum="1" Maximum="365" Increment="1" FormatString="0" Width="120" />
+                                <TextBlock Text="{x:Static res:Strings.EditorCheckIntervalDays}" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <TextBlock Text="{x:Static res:Strings.EditorCheckSchedules}" Margin="0,8,0,0" />
+                            <ItemsControl ItemsSource="{Binding CheckSchedules}" />
+                            <Button Content="{x:Static res:Strings.JobEditorAddSchedule}" Command="{Binding AddCheckScheduleCommand}" HorizontalAlignment="Left" />
+                            <CheckBox IsChecked="{Binding CheckCatchUp}" IsVisible="{Binding HasCheckSchedules}">
+                                <TextBlock Text="{x:Static res:Strings.JobEditorCatchUp}" TextWrapping="Wrap" />
+                            </CheckBox>
+                            <TextBlock Text="{x:Static res:Strings.EditorCheckSchedulesHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap"
+                                       IsVisible="{Binding HasCheckSchedules}" />
+                        </StackPanel>
+                    </Expander>
 
                     <Expander Header="{x:Static res:Strings.EditorAdvanced}" HorizontalAlignment="Stretch">
                         <StackPanel Spacing="4">
@@ -180,6 +235,32 @@
                                 <TextBlock Text="%" VerticalAlignment="Center" />
                             </StackPanel>
                             <TextBlock Text="{x:Static res:Strings.EditorStorageWarnHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+
+                            <!-- Limits -->
+                            <TextBlock Text="{x:Static res:Strings.EditorLimits}" FontWeight="SemiBold" Margin="0,12,0,0" />
+                            <StackPanel Spacing="6" IsVisible="{Binding IsSsh}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <CheckBox IsChecked="{Binding LimitUpload}" Content="{x:Static res:Strings.EditorUploadLimit}" VerticalAlignment="Center" />
+                                    <NumericUpDown Value="{Binding UploadLimit}" Minimum="0.1" Maximum="10000" Increment="1" FormatString="0.#" Width="120"
+                                                   IsEnabled="{Binding LimitUpload}" />
+                                    <TextBlock Text="MB/s" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <StackPanel Margin="28,0,0,0" Spacing="6" IsEnabled="{Binding LimitUpload}">
+                                    <CheckBox IsChecked="{Binding UploadOnlyBetween}" Content="{x:Static res:Strings.EditorUploadOnlyBetween}" />
+                                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="28,0,0,0" IsEnabled="{Binding UploadOnlyBetween}">
+                                        <TimePicker SelectedTime="{Binding UploadFrom}" ClockIdentifier="24HourClock" MinuteIncrement="15" MinWidth="0" Width="150" />
+                                        <TextBlock Text="{x:Static res:Strings.EditorUploadAnd}" VerticalAlignment="Center" />
+                                        <TimePicker SelectedTime="{Binding UploadTo}" ClockIdentifier="24HourClock" MinuteIncrement="15" MinWidth="0" Width="150" />
+                                    </StackPanel>
+                                </StackPanel>
+                                <TextBlock Text="{x:Static res:Strings.EditorUploadLimitHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <TextBlock Text="{x:Static res:Strings.EditorUploadLimitLocal}" FontSize="12" Opacity="0.7" TextWrapping="Wrap"
+                                       IsVisible="{Binding !IsSsh}" />
+                            <CheckBox IsChecked="{Binding LowPriority}">
+                                <TextBlock Text="{x:Static res:Strings.EditorLowPriority}" TextWrapping="Wrap" />
+                            </CheckBox>
+                            <TextBlock Text="{x:Static res:Strings.EditorLowPriorityHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
 
                             <StackPanel Spacing="4" IsVisible="{Binding IsSsh}" Margin="0,10,0,0">
                                 <TextBlock Text="{x:Static res:Strings.EditorStorageCapacity}" TextWrapping="Wrap" />

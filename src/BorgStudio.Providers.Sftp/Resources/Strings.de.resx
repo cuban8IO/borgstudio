@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Texts of the local provider, English (default). German: Strings.de.resx. -->
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="DisplayName" xml:space="preserve">
+    <value>SFTP-Server (ohne borg)</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>Server oder NAS mit SFTP, aber ohne borg. Wird mit sshfs eingehängt.</value>
+  </data>
+  <data name="HostLabel" xml:space="preserve">
+    <value>Server</value>
+  </data>
+  <data name="HostHint" xml:space="preserve">
+    <value>Hostname oder IP-Adresse.</value>
+  </data>
+  <data name="HostRequired" xml:space="preserve">
+    <value>Bitte den Server angeben.</value>
+  </data>
+  <data name="HostInvalid" xml:space="preserve">
+    <value>Der Servername ist ungültig.</value>
+  </data>
+  <data name="PortLabel" xml:space="preserve">
+    <value>Port</value>
+  </data>
+  <data name="PortInvalid" xml:space="preserve">
+    <value>Der Port muss eine Zahl von 1 bis 65535 sein.</value>
+  </data>
+  <data name="UserLabel" xml:space="preserve">
+    <value>Login-Name</value>
+  </data>
+  <data name="UserRequired" xml:space="preserve">
+    <value>Bitte den Login-Namen angeben.</value>
+  </data>
+  <data name="UserInvalid" xml:space="preserve">
+    <value>Der Login-Name darf nur Buchstaben, Ziffern, Punkte, Binde- und Unterstriche enthalten.</value>
+  </data>
+  <data name="PathLabel" xml:space="preserve">
+    <value>Repository-Ordner</value>
+  </data>
+  <data name="PathHint" xml:space="preserve">
+    <value>Relativ zum Home-Verzeichnis, z. B. backups/laptop, oder absolut.</value>
+  </data>
+  <data name="PathRequired" xml:space="preserve">
+    <value>Bitte den Repository-Ordner angeben.</value>
+  </data>
+  <data name="PathInvalid" xml:space="preserve">
+    <value>Der Ordner darf kein „..“ enthalten und muss einen Ordner unterhalb des Home- oder Wurzelordners nennen.</value>
+  </data>
+</root>

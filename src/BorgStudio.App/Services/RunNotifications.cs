@@ -65,6 +65,102 @@ public sealed class RunNotifications(AppServices services)
         return results;
     }
 
+    /// <summary>Reports a check that found damage, and the first one without damage after that.</summary>
+    public async Task<IReadOnlyList<ChannelResult>> NotifyCheckAsync(RepositoryConfig repository, Core.Checks.CheckRecord record, Vault vault,
+        CancellationToken cancellationToken = default)
+    {
+        if (services.Notifier is not { } notifier)
+            return [];
+        var decision = Policy.DecideCheck(repository.Id, record.Outcome, record.Automatic);
+        var settings = services.Settings.Load().Notifications;
+        if (decision is null || !settings.AnyEnabled || (decision.IsRepeat && settings.SuppressRepeats))
+            return [];
+
+        var message = ComposeCheck(decision.Event, repository.Name, record);
+        var secrets = new NotificationSecrets(vault, services.SecretStore);
+        var results = await notifier.SendAsync(settings, message, secrets.Get, cancellationToken);
+        foreach (var result in results)
+            AppLog.Write(LogFile, $"{repository.Name}: {decision.Event} → {result.Channel}: {result.Error ?? "sent"}", services.Jobs.DataDirectory);
+        return results;
+    }
+
+    /// <summary>Reports a failed restore test (or one that could not run by itself), and the first good one after it.</summary>
+    public async Task<IReadOnlyList<ChannelResult>> NotifyRestoreTestAsync(BackupJob job, string? repository, Core.Checks.RestoreTestRecord record,
+        Vault vault, CancellationToken cancellationToken = default)
+    {
+        if (services.Notifier is not { } notifier || !job.Notify)
+            return [];
+        var decision = Policy.DecideRestoreTest(job.Id, record.Outcome, record.Automatic);
+        var settings = services.Settings.Load().Notifications;
+        if (decision is null || !settings.AnyEnabled || (decision.IsRepeat && settings.SuppressRepeats))
+            return [];
+
+        var message = ComposeRestoreTest(decision.Event, job, repository, record);
+        var secrets = new NotificationSecrets(vault, services.SecretStore);
+        var results = await notifier.SendAsync(settings, message, secrets.Get, cancellationToken);
+        foreach (var result in results)
+            AppLog.Write(LogFile, $"{job.Name}: restore test {decision.Event} → {result.Channel}: {result.Error ?? "sent"}", services.Jobs.DataDirectory);
+        return results;
+    }
+
+    public static NotificationMessage ComposeRestoreTest(NotificationEvent notificationEvent, BackupJob job, string? repository,
+        Core.Checks.RestoreTestRecord record)
+    {
+        var lines = new List<string>();
+        if (repository is not null)
+            lines.Add(BorgTexts.Format(Strings.NotifyLineRepository, repository));
+        lines.Add(BorgTexts.RestoreTest(record));
+        if (notificationEvent == NotificationEvent.CheckFailed)
+        {
+            lines.AddRange(record.Problems.Take(5).Select(file => BorgTexts.RestoredFile(file)));
+            if (record.Error is { } error)
+                lines.Add(BorgTexts.Format(Strings.NotifyLineReason, error));
+        }
+        lines.Add(BorgTexts.Format(Strings.NotifyLineComputer, Environment.MachineName));
+        var title = BorgTexts.Format(notificationEvent switch
+        {
+            NotificationEvent.CheckFailed when record.Outcome == Core.Checks.RestoreTestOutcome.NotRun => Strings.NotifyTitleRestoreTestNotRun,
+            NotificationEvent.CheckFailed => Strings.NotifyTitleRestoreTestFailed,
+            _ => Strings.NotifyTitleRestoreTestRecovered,
+        }, job.Name);
+        return new NotificationMessage(notificationEvent, title, string.Join("\n", lines))
+        {
+            Job = job.Name,
+            JobId = job.Id,
+            Repository = repository,
+            RestoreTest = record,
+        };
+    }
+
+    public static NotificationMessage ComposeCheck(NotificationEvent notificationEvent, string repository, Core.Checks.CheckRecord record)
+    {
+        var lines = new List<string>
+        {
+            BorgTexts.Format(Strings.NotifyLineCheck, record.Started.ToLocalTime().ToString("g", CultureInfo.CurrentCulture),
+                BorgTexts.CheckDepth(record.Depth), BorgTexts.Duration(record.Duration)),
+        };
+        if (notificationEvent == NotificationEvent.CheckFailed && record.Outcome == Core.Checks.CheckOutcome.Failed)
+        {
+            lines.Add(BorgTexts.Format(Strings.NotifyLineReason, record.Error ?? ""));
+            lines.Add(Strings.NotifyCheckNotRunHint);
+        }
+        else if (notificationEvent == NotificationEvent.CheckFailed)
+        {
+            lines.AddRange(record.Messages.Take(5));
+            if (record.Messages.Count > 5)
+                lines.Add(BorgTexts.Format(Strings.NotifyLineMoreMessages, record.Messages.Count - 5));
+            lines.Add(Strings.NotifyCheckFailedHint);
+        }
+        lines.Add(BorgTexts.Format(Strings.NotifyLineComputer, Environment.MachineName));
+        var title = BorgTexts.Format(notificationEvent switch
+        {
+            NotificationEvent.CheckFailed when record.Outcome == Core.Checks.CheckOutcome.Failed => Strings.NotifyTitleCheckNotRun,
+            NotificationEvent.CheckFailed => Strings.NotifyTitleCheckFailed,
+            _ => Strings.NotifyTitleCheckRecovered,
+        }, repository);
+        return new NotificationMessage(notificationEvent, title, string.Join("\n", lines)) { Repository = repository, Check = record };
+    }
+
     public static NotificationMessage ComposeStorage(NotificationEvent notificationEvent, string repository, StorageUsage? usage)
     {
         var lines = new List<string>();

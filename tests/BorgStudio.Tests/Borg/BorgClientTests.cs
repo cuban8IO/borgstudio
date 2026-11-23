@@ -206,6 +206,9 @@ public class BorgClientTests
             IReadOnlyDictionary<string, string?>? environment = null, string? standardInput = null,
             CancellationToken cancellationToken = default, Action<string>? standardErrorLine = null, Action<string>? standardOutputLine = null, string? workingDirectory = null)
         {
+            // Mounting the drive inside WSL first (E: is not the system drive).
+            if (arguments is ["-u", "root", ..])
+                return new ProcessResult(0, "", "");
             if (arguments.Contains("kill"))
             {
                 Kills.Add(arguments);
@@ -293,6 +296,13 @@ public class BorgClientTests
         var standardError = fuseLine + "\n" + ErrorLine("RTError", "Runtime Error: FUSE mount failed");
 
         Assert.Equal(expected, BorgClient.ParseError(standardError).Kind);
+    }
+
+    [Fact]
+    public void The_process_id_line_of_an_interruptible_call_is_not_part_of_the_error()
+    {
+        Assert.Null(BorgClient.ParseError("BORGSTUDIO_PID 517\n").Message);
+        Assert.Equal("Killed", BorgClient.ParseError("BORGSTUDIO_PID 517\nKilled\n").Message);
     }
 
     [Fact]

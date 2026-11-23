@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Texts of the local provider, English (default). German: Strings.de.resx. -->
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="DisplayName" xml:space="preserve">
+    <value>USB or external drive</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>External disk or USB stick. Found again even under another drive letter.</value>
+  </data>
+  <data name="PathLabel" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="PathHint" xml:space="preserve">
+    <value>The repository folder on the drive, e.g. E:\Backups\laptop</value>
+  </data>
+  <data name="PathRequired" xml:space="preserve">
+    <value>Please choose a folder.</value>
+  </data>
+  <data name="PathNotAbsolute" xml:space="preserve">
+    <value>Please enter the full path of the folder.</value>
+  </data>
+  <data name="EjectLabel" xml:space="preserve">
+    <value>Eject safely after automatic runs</value>
+  </data>
+  <data name="EjectHint" xml:space="preserve">
+    <value>After scheduled backups and checks.</value>
+  </data>
+  <data name="NotFound" xml:space="preserve">
+    <value>The drive with this repository is not attached (last seen at {0}).</value>
+  </data>
+  <data name="NotFoundUnknownId" xml:space="preserve">
+    <value>The repository folder {0} was not found – is the drive attached?</value>
+  </data>
+  <data name="EjectNotExternal" xml:space="preserve">
+    <value>{0} was not ejected: it is not a removable or external drive.</value>
+  </data>
+  <data name="EjectFailed" xml:space="preserve">
+    <value>{0} could not be ejected: {1}</value>
+  </data>
+  <data name="EjectVetoed" xml:space="preserve">
+    <value>it is still in use</value>
+  </data>
+</root>

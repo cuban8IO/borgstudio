@@ -41,6 +41,9 @@ public enum BorgErrorKind
     /// <summary>The repository's disk or server ran out of space.</summary>
     NoSpace,
 
+    /// <summary>A repository on an SFTP server needs sshfs where borg runs, and it is not installed.</summary>
+    SshfsMissing,
+
     Other,
 }
 
@@ -89,7 +92,11 @@ public sealed record BorgCreateResult(string ArchiveName, long OriginalSize, lon
 /// <summary>An archive in a repository.</summary>
 /// <param name="Duration">How long creating it took; <c>null</c> until details are loaded.</param>
 /// <param name="Stats">Its sizes; <c>null</c> until details are loaded.</param>
-public sealed record BorgArchive(string Name, string Id, DateTimeOffset Start, TimeSpan? Duration = null, BorgArchiveStats? Stats = null);
+public sealed record BorgArchive(string Name, string Id, DateTimeOffset Start, TimeSpan? Duration = null, BorgArchiveStats? Stats = null)
+{
+    /// <summary>The archive's comment (<c>borg create/recreate --comment</c>); <c>null</c> if it has none.</summary>
+    public string? Comment { get; init; }
+}
 
 /// <param name="DeduplicatedSize">What only this archive needs in the repository (its share of the repository).</param>
 public sealed record BorgArchiveStats(long OriginalSize, long CompressedSize, long DeduplicatedSize, long Files);

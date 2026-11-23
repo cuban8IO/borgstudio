@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using BorgStudio.App.Resources;
 using BorgStudio.App.Services;
+using BorgStudio.Core.Backups;
 using BorgStudio.Core.Borg;
 using BorgStudio.Core.Progress;
 using BorgStudio.Core.Repositories;
@@ -9,6 +10,7 @@ using BorgStudio.Core.Secrets;
 using BorgStudio.Core.Security;
 using BorgStudio.Core.Ssh;
 using BorgStudio.Plugins;
+using BorgStudio.Providers.Usb;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -54,6 +56,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         _borg = borg;
         _existing = existing;
         _otherRepositories = otherRepositories ?? [];
+        CheckSchedules.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasCheckSchedules));
         _id = existing?.Id ?? Guid.NewGuid();
         _passphrases = new PassphraseStore(services);
         Dialogs = services.Dialogs;
@@ -83,10 +86,88 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             ? (capacity / (double)Gigabyte).ToString("0.##", System.Globalization.CultureInfo.CurrentCulture)
             : "";
         KeyChoice = existing.SshKeyId is null ? SshKeyChoice.Generate : SshKeyChoice.Keep;
-        RestrictKey = existing.SshKeyId is null || existing.SshKeyRestricted;
+        RestrictKey = (existing.SshKeyId is null || existing.SshKeyRestricted) && !IsSftpMount;
+        UploadLimit = existing.Limits.UploadMegabytesPerSecond is { } limit ? (decimal)limit : null;
+        LimitUpload = UploadLimit is not null;
+        UploadOnlyBetween = existing.Limits.OnlyBetween;
+        UploadFrom = existing.Limits.From.ToTimeSpan();
+        UploadTo = existing.Limits.To.ToTimeSpan();
+        LowPriority = existing.Limits.LowPriority;
+        CheckAfterBackup = existing.Check.AfterBackup;
+        CheckIntervalDays = existing.Check.IntervalDays;
+        foreach (var schedule in existing.Check.Schedules)
+            CheckSchedules.Add(new ScheduleItemViewModel(schedule, RemoveCheckSchedule));
+        CheckCatchUp = existing.Check.CatchUp;
+        PlugInEnabled = existing.PlugIn.Enabled;
+        PlugInHours = existing.PlugIn.MinimumHours;
         CreateFields(SelectedProvider.Provider, existing.ProviderValues);
         Page = EditorPage.Details;
         RefreshKeys();
+        Loading = FindOutIfConvertibleAsync(existing);
+    }
+
+    // --- USB drive: backing up when it is attached ---
+
+    /// <summary>A USB drive repository: it can back up when the drive is attached.</summary>
+    public bool IsUsb => SelectedProvider?.Provider is UsbRepositoryProvider;
+
+    [ObservableProperty]
+    public partial bool PlugInEnabled { get; set; }
+
+    [ObservableProperty]
+    public partial decimal? PlugInHours { get; set; } = PlugInBackup.DefaultMinimumHours;
+
+    /// <summary>Attaching is only noticed while BorgStudio runs in the background.</summary>
+    public bool PlugInNeedsBackground => _services.Settings.Load().ScheduleRunner != Core.Settings.ScheduleRunner.Background;
+
+    private PlugInBackup PlugInPolicy => IsUsb
+        ? new PlugInBackup { Enabled = PlugInEnabled, MinimumHours = (int)Math.Clamp(PlugInHours ?? PlugInBackup.DefaultMinimumHours, 0, 720) }
+        : new PlugInBackup();
+
+    /// <summary>What the editor looks up after opening (tests wait for it).</summary>
+    internal Task Loading { get; } = Task.CompletedTask;
+
+    // --- Local folder on an external drive -> USB drive ---
+
+    /// <summary>A local repository on a removable or external drive: it can be kept as a USB drive repository instead.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowConvertToUsb))]
+    public partial bool CanConvertToUsb { get; private set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowConvertToUsb))]
+    public partial bool ConvertedToUsb { get; private set; }
+
+    public bool ShowConvertToUsb => CanConvertToUsb && !ConvertedToUsb;
+
+    private UsbRepositoryProvider? UsbProvider =>
+        Providers.Select(option => option.Provider).OfType<UsbRepositoryProvider>().FirstOrDefault();
+
+    private async Task FindOutIfConvertibleAsync(RepositoryConfig existing)
+    {
+        if (existing.ProviderId != "local" || UsbProvider is not { } usb
+            || existing.ProviderValues.GetValueOrDefault(UsbRepositoryProvider.PathKey) is not { Length: > 0 } path)
+            return;
+        try
+        {
+            CanConvertToUsb = await usb.Drives.IsExternalAsync(path);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            CanConvertToUsb = false;
+        }
+    }
+
+    /// <summary>"Als USB-Laufwerk führen": the same folder, from now on looked for by the repository ID; saved with "Speichern".</summary>
+    [RelayCommand]
+    private void ConvertToUsb()
+    {
+        if (Providers.FirstOrDefault(option => option.Provider is UsbRepositoryProvider) is not { } usb)
+            return;
+        var path = Fields.FirstOrDefault(field => field.Key == UsbRepositoryProvider.PathKey)?.Value ?? "";
+        SelectedProvider = usb;
+        CreateFields(usb.Provider, new Dictionary<string, string> { [UsbRepositoryProvider.PathKey] = path });
+        ConvertedToUsb = true;
     }
 
     public enum EditorPage
@@ -120,7 +201,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(NextCommand))]
-    [NotifyPropertyChangedFor(nameof(IsSsh))]
+    [NotifyPropertyChangedFor(nameof(IsSsh), nameof(IsUsb), nameof(IsProvisioned), nameof(ShowInstallOptions), nameof(KeyGenerateText), nameof(IsSftpMount))]
     public partial ProviderOptionViewModel? SelectedProvider { get; set; }
 
     // --- Page 2: details ---
@@ -259,7 +340,39 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
     public partial bool InstallExistingKey { get; set; }
 
     /// <summary>Server password and restriction: for a generated key, or a key from the list that is to be installed.</summary>
-    public bool ShowInstallOptions => KeyChoice == SshKeyChoice.Generate || (KeyChoice == SshKeyChoice.Existing && InstallExistingKey);
+    public bool ShowInstallOptions => !IsProvisioned
+        && (KeyChoice == SshKeyChoice.Generate || (KeyChoice == SshKeyChoice.Existing && InstallExistingKey));
+
+    /// <summary>The service sets up keys itself (or the user does, in its web interface): no server password, no restriction.</summary>
+    public bool IsProvisioned => SelectedProvider?.Provider is ISshKeyProvisioner;
+
+    /// <summary>
+    /// A server with SFTP only, mounted with sshfs: its key must not be restricted to borg serve (that would block SFTP).
+    /// </summary>
+    public bool IsSftpMount => SelectedProvider?.Provider is { UsesSsh: true } provider && SampleLocation(provider)?.MountOverSftp == true;
+
+    private static RepositoryLocation? SampleLocation(IRepositoryProvider provider)
+    {
+        try
+        {
+            return provider.GetLocation(provider.Fields.ToDictionary(field => field.Key, field => field.DefaultValue ?? "x"));
+        }
+        catch (Exception exception) when (exception is ArgumentException or FormatException or KeyNotFoundException)
+        {
+            return null;
+        }
+    }
+
+    partial void OnSelectedProviderChanged(ProviderOptionViewModel? value)
+    {
+        if (IsSftpMount)
+            RestrictKey = false;
+    }
+
+    /// <summary>"Neuen Schlüssel erzeugen …": with the server password, or registered at the service.</summary>
+    public string KeyGenerateText => IsProvisioned
+        ? BorgTexts.Format(Strings.EditorKeyGenerateProvisioned, SelectedProvider!.DisplayName)
+        : Strings.EditorKeyGenerate;
 
     /// <summary>
     /// The chosen key is already used by another repository on the same account and one of them is restricted to its
@@ -375,6 +488,69 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
 
     private int WarnPercent => (int)Math.Clamp(StorageWarnPercent ?? 0, 0, 90);
 
+    // --- Limits ---
+
+    /// <summary>Uploads to the server are limited (server repositories only).</summary>
+    [ObservableProperty]
+    public partial bool LimitUpload { get; set; }
+
+    /// <summary>MB/s.</summary>
+    [ObservableProperty]
+    public partial decimal? UploadLimit { get; set; }
+
+    [ObservableProperty]
+    public partial bool UploadOnlyBetween { get; set; }
+
+    [ObservableProperty]
+    public partial TimeSpan? UploadFrom { get; set; } = new TimeSpan(8, 0, 0);
+
+    [ObservableProperty]
+    public partial TimeSpan? UploadTo { get; set; } = new TimeSpan(18, 0, 0);
+
+    [ObservableProperty]
+    public partial bool LowPriority { get; set; }
+
+    private Core.Repositories.TransferLimits Limits => new()
+    {
+        UploadMegabytesPerSecond = IsSsh && LimitUpload && UploadLimit is > 0 and var limit ? (double)limit : null,
+        OnlyBetween = UploadOnlyBetween,
+        From = TimeOnly.FromTimeSpan(UploadFrom is { } from && from >= TimeSpan.Zero && from < TimeSpan.FromDays(1) ? from : new TimeSpan(8, 0, 0)),
+        To = TimeOnly.FromTimeSpan(UploadTo is { } to && to >= TimeSpan.Zero && to < TimeSpan.FromDays(1) ? to : new TimeSpan(18, 0, 0)),
+        LowPriority = LowPriority,
+    };
+
+    // --- Checks ---
+
+    /// <summary>Check after a backup when the last check is older than <see cref="CheckIntervalDays"/>.</summary>
+    [ObservableProperty]
+    public partial bool CheckAfterBackup { get; set; }
+
+    [ObservableProperty]
+    public partial decimal? CheckIntervalDays { get; set; } = new Core.Checks.CheckPolicy().IntervalDays;
+
+    /// <summary>When the repository is checked by itself, besides after backups.</summary>
+    public ObservableCollection<ScheduleItemViewModel> CheckSchedules { get; } = [];
+
+    public bool HasCheckSchedules => CheckSchedules.Count > 0;
+
+    [ObservableProperty]
+    public partial bool CheckCatchUp { get; set; } = true;
+
+    [RelayCommand]
+    private void AddCheckSchedule() =>
+        CheckSchedules.Add(new ScheduleItemViewModel(new BackupSchedule { Kind = ScheduleKind.MonthlyWeekday, Time = new TimeOnly(3, 0) },
+            RemoveCheckSchedule));
+
+    private void RemoveCheckSchedule(ScheduleItemViewModel schedule) => CheckSchedules.Remove(schedule);
+
+    private Core.Checks.CheckPolicy CheckPolicy => new()
+    {
+        AfterBackup = CheckAfterBackup,
+        IntervalDays = (int)Math.Clamp(CheckIntervalDays ?? 30, 1, 365),
+        Schedules = [.. CheckSchedules.Select(schedule => schedule.ToSchedule())],
+        CatchUp = CheckCatchUp,
+    };
+
     public ObservableCollection<string> Errors { get; } = [];
 
     [ObservableProperty]
@@ -419,7 +595,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
     {
         Errors.Clear();
         var provider = SelectedProvider!.Provider;
-        var values = Fields.ToDictionary(field => field.Key, field => field.Value.Trim());
+        var values = EnteredValues(provider);
 
         var problems = Validate(provider, values);
         if (problems.Count > 0)
@@ -434,7 +610,7 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             if (_existing is not null)
                 await SaveChangesAsync(_existing, provider, values);
             else
-                await AddAsync(provider, values);
+                await AddPreparedAsync(provider, values);
         }
         finally
         {
@@ -489,6 +665,10 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
 
         if (IsSsh)
         {
+            if (KeyChoice == SshKeyChoice.Existing && SelectedKey is null && IsProvisioned)
+                problems.Add(Strings.EditorKeyRequired);
+            if (IsProvisioned)
+                return problems;
             if (KeyChoice == SshKeyChoice.Generate && ServerPassword.Length == 0 && !HasInstalledKeyFor(provider, values))
                 problems.Add(Strings.EditorServerPasswordRequired);
             if (KeyChoice == SshKeyChoice.Existing && SelectedKey is null)
@@ -508,7 +688,15 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             return;
         }
 
-        var location = provider.GetLocation(values);
+        // A service that sets up the key (and the repository) itself: first, as it decides where the repository is.
+        if (provider is ISshKeyProvisioner provisioner)
+        {
+            if (!await UnlockVaultAsync() || await ProvisionAsync(provisioner, values) is not { } provisioned)
+                return;
+            values = provisioned;
+        }
+
+        var location = _editorLocation ?? provider.GetLocation(values);
         var borgVersion = SelectedBorgVersion.Value;
         if (RepositoryFormat.Resolve(borgVersion, location) == 2)
         {
@@ -544,6 +732,9 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         if (!info.Succeeded)
         {
             Errors.Add(BorgTexts.Describe(info.Error!));
+            // Some services do not run the forced command of a restricted key (rsync.net does not document it).
+            if (login.Restricted && info.Error!.Kind is BorgErrorKind.ConnectionFailed or BorgErrorKind.SshAuthenticationFailed or BorgErrorKind.Other)
+                Errors.Add(Strings.EditorRestrictedKeyRefused);
             return;
         }
 
@@ -562,6 +753,9 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             SshKeyRestricted = login.Restricted,
             StorageWarnPercent = WarnPercent,
             StorageCapacity = IsSsh ? StorageCapacity : null,
+            Check = CheckPolicy,
+            PlugIn = PlugInPolicy,
+            Limits = Limits,
         };
 
         if (repository.PassphraseMode is PassphraseMode.Vault or PassphraseMode.Stored
@@ -571,20 +765,31 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             return;
         }
 
-        if (!SaveNewKey(login))
+        if (!SaveNewKey(login) || !await StoreSecretsAsync(repository.Id))
             return;
         Result = new RepositoryEditorResult(repository, CreateNew);
     }
 
     private async Task SaveChangesAsync(RepositoryConfig existing, IRepositoryProvider provider, IReadOnlyDictionary<string, string> values)
     {
+        if (provider is IRepositoryPreparation preparation)
+        {
+            if (await PrepareAsync(preparation, values) is not { } prepared)
+                return;
+            values = prepared;
+        }
+
         var repository = existing with
         {
+            ProviderId = provider.Id,
             Name = Name.Trim(),
             ProviderValues = values,
             BorgVersion = SelectedBorgVersion.Value,
             StorageWarnPercent = WarnPercent,
             StorageCapacity = IsSsh ? StorageCapacity : null,
+            Check = CheckPolicy,
+            PlugIn = PlugInPolicy,
+            Limits = Limits,
         };
 
         SshLogin? login = null;
@@ -592,6 +797,13 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         {
             if (!await UnlockVaultAsync())
                 return;
+            if (provider is ISshKeyProvisioner provisioner)
+            {
+                if (await ProvisionAsync(provisioner, values) is not { } provisioned)
+                    return;
+                values = provisioned;
+                repository = repository with { ProviderValues = provisioned };
+            }
             login = await PrepareSshLoginAsync(provider.GetLocation(values));
             if (login is null)
                 return;
@@ -606,6 +818,8 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
 
         // A replaced key stays in the key list (other repositories may use it); it can be deleted there.
         if (login is not null && !SaveNewKey(login))
+            return;
+        if (!await StoreSecretsAsync(repository.Id))
             return;
 
         Result = new RepositoryEditorResult(repository, Created: false);
@@ -629,6 +843,11 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             return null;
         }
 
+        // Set up by the service (or by hand) before: nothing to install.
+        if (endpoint.KeyInstallation == SshKeyInstallation.Provider && _provisioned is { } provisioned)
+            return new SshLogin(new SshAccess(provisioned.Key.PrivateKey, knownHosts), provisioned.Key.Id, Restricted: false,
+                provisioned.IsNew ? provisioned.Key : null);
+
         var remoteBorg = SshTrustDialog.RemoteBorg(location);
         if (KeyChoice == SshKeyChoice.Existing)
         {
@@ -651,6 +870,128 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
 
         _newKey = new InstalledKey(endpoint, remoteBorg, key, RestrictKey);
         return new SshLogin(new SshAccess(key.PrivateKey, knownHosts), key.Id, RestrictKey, key);
+    }
+
+    /// <summary>Where a provider that had to connect first put the repository (<see cref="AddPreparedAsync"/>).</summary>
+    private RepositoryLocation? _editorLocation;
+
+    /// <summary>
+    /// Adding: a provider that has to set something up first (e.g. an iSCSI target) does so now – it may ask for
+    /// administrator rights – and is connected for the time the repository is created or checked; then disconnected again.
+    /// </summary>
+    private async Task AddPreparedAsync(IRepositoryProvider provider, IReadOnlyDictionary<string, string> values)
+    {
+        if (provider is not IRepositoryPreparation preparation)
+        {
+            await AddAsync(provider, values);
+            return;
+        }
+        if (await PrepareAsync(preparation, values) is not { } prepared)
+            return;
+        values = prepared;
+
+        RepositoryConnection? connection = null;
+        if (provider is IRepositoryConnector connector)
+        {
+            Busy(Strings.EditorConnecting, "connect");
+            try
+            {
+                connection = await connector.ConnectAsync(new RepositoryConnectRequest(values), CancellationToken.None);
+            }
+            catch (RepositoryUnavailableException exception)
+            {
+                Errors.Add(exception.Message);
+                return;
+            }
+            if (connection.UpdatedValues is { } updated)
+                values = updated;
+        }
+
+        _editorLocation = connection?.Location;
+        try
+        {
+            await AddAsync(provider, values);
+        }
+        finally
+        {
+            _editorLocation = null;
+            if (connection is not null && await connection.DisconnectAsync() is { } problem)
+                Errors.Add(problem);
+        }
+    }
+
+    /// <summary>Lets the provider set up what it needs; the values to keep, or <c>null</c> with the reason in <see cref="Errors"/>.</summary>
+    private async Task<IReadOnlyDictionary<string, string>?> PrepareAsync(IRepositoryPreparation preparation, IReadOnlyDictionary<string, string> values)
+    {
+        Busy(Strings.EditorPreparing, operation: null);
+        try
+        {
+            var prepared = await preparation.PrepareAsync(new RepositoryPreparationRequest(values, EnteredSecrets(), _id), CancellationToken.None);
+            var merged = new Dictionary<string, string>(values);
+            foreach (var (name, value) in prepared)
+                merged[name] = value;
+            return merged;
+        }
+        catch (RepositoryUnavailableException exception)
+        {
+            Errors.Add(exception.Message);
+            return null;
+        }
+    }
+
+    /// <summary>The login key the service was given (<see cref="ProvisionAsync"/>); new ones are saved with the repository.</summary>
+    private (SshKeyEntry Key, bool IsNew)? _provisioned;
+
+    /// <summary>
+    /// Gives the login key to the service – through its API, or by the user in its web interface (the key is shown to copy).
+    /// Returns the values to keep (the service may have added the repository's address); <c>null</c> with the reason in
+    /// <see cref="Errors"/>.
+    /// </summary>
+    private async Task<IReadOnlyDictionary<string, string>?> ProvisionAsync(ISshKeyProvisioner provisioner, IReadOnlyDictionary<string, string> values)
+    {
+        var key = KeyChoice == SshKeyChoice.Existing ? SelectedKey!.Key
+            : _provisioned is { IsNew: true } earlier ? earlier.Key
+            : SshKeyEntry.Generate(Name.Trim(), KeyComment(), DateTimeOffset.Now);
+        var isNew = KeyChoice != SshKeyChoice.Existing;
+
+        Busy(Strings.InstallingKey, "provision-key");
+        IReadOnlyDictionary<string, string>? provisioned;
+        try
+        {
+            provisioned = await provisioner.ProvisionAsync(
+                new SshKeyProvisionRequest(values, EnteredSecrets(), key.PublicKey, KeyComment(), Name.Trim(), CreateNew), CancellationToken.None);
+        }
+        catch (RepositoryUnavailableException exception)
+        {
+            Errors.Add(exception.Message);
+            return null;
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or System.Text.Json.JsonException)
+        {
+            Errors.Add(BorgTexts.Format(Strings.EditorProvisionFailed, exception.Message));
+            return null;
+        }
+
+        if (provisioned is null)
+        {
+            // No API: the user adds the key in the service's web interface.
+            FinishBusyStep();
+            Progress.Stop();
+            if (!await Dialogs.ShowPublicKeyAsync(Strings.EditorAddKeyTitle,
+                    BorgTexts.Format(Strings.EditorAddKeyByHand, SelectedProvider!.DisplayName), key.PublicKey))
+            {
+                Errors.Add(Strings.EditorAddKeyCancelled);
+                return null;
+            }
+            provisioned = values;
+        }
+
+        _provisioned = (key, isNew);
+        // Keeps what the user entered; the service may add values (e.g. the address it created).
+        var merged = new Dictionary<string, string>(values);
+        foreach (var (name, value) in provisioned)
+            merged[name] = value;
+        return merged;
     }
 
     /// <summary>Adds <paramref name="publicKey"/> to the server with the server password; <c>false</c> with the reason in <see cref="Errors"/>.</summary>
@@ -748,10 +1089,71 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         return false;
     }
 
-    private void CreateFields(IRepositoryProvider provider, IReadOnlyDictionary<string, string>? values) =>
+    private void CreateFields(IRepositoryProvider provider, IReadOnlyDictionary<string, string>? values)
+    {
         Fields = provider.Fields
             .Select(field => new FieldViewModel(field, values?.GetValueOrDefault(field.Key)))
             .ToList();
+        FillSecrets(provider);
+    }
+
+    /// <summary>
+    /// The secret fields (e.g. an API token): this repository's, or – for a new one – one another repository of the same
+    /// provider uses (the same account, most likely). Only while the vault is open.
+    /// </summary>
+    private void FillSecrets(IRepositoryProvider provider)
+    {
+        _secretsRead = false;
+        if (_services.Vault.State != Core.Security.VaultState.Unlocked)
+            return;
+        var source = _existing?.ProviderId == provider.Id
+            ? _existing
+            : _services.RepositoryStore.Load().Repositories.FirstOrDefault(repository => repository.ProviderId == provider.Id
+                && RepositorySecrets.Read(_services.Vault, repository, provider).Count > 0);
+        var secrets = source is null ? new Dictionary<string, string>() : RepositorySecrets.Read(_services.Vault, source, provider);
+        foreach (var field in Fields.Where(field => field.IsSecret))
+            if (secrets.TryGetValue(field.Key, out var secret))
+                field.Value = secret;
+        _secretsRead = true;
+    }
+
+    /// <summary>Whether the secret fields show what is stored (an empty one then means "remove").</summary>
+    private bool _secretsRead;
+
+    /// <summary>The entered values without the secrets – plus values the provider keeps itself (no field of their own).</summary>
+    private Dictionary<string, string> EnteredValues(IRepositoryProvider provider)
+    {
+        var values = new Dictionary<string, string>();
+        if (_existing?.ProviderId == provider.Id)
+            foreach (var (key, value) in _existing.ProviderValues.Where(pair => provider.Fields.All(field => field.Key != pair.Key)))
+                values[key] = value;
+        foreach (var field in Fields.Where(field => !field.IsSecret))
+            values[field.Key] = field.Value.Trim();
+        return values;
+    }
+
+    private Dictionary<string, string> EnteredSecrets() =>
+        Fields.Where(field => field.IsSecret && field.Value.Trim().Length > 0).ToDictionary(field => field.Key, field => field.Value.Trim());
+
+    /// <summary>Stores the secret fields in the vault (removing cleared ones); <c>false</c> with the reason in <see cref="Errors"/>.</summary>
+    private async Task<bool> StoreSecretsAsync(Guid repositoryId)
+    {
+        var secretFields = Fields.Where(field => field.IsSecret).ToList();
+        if (secretFields.Count == 0 || (!_secretsRead && secretFields.All(field => field.Value.Trim().Length == 0)))
+            return true;
+        if (!await UnlockVaultAsync())
+            return false;
+        try
+        {
+            RepositorySecrets.Write(_services.Vault, repositoryId, secretFields.ToDictionary(field => field.Key, field => field.Value.Trim()));
+            return true;
+        }
+        catch (Core.Security.VaultLockedException)
+        {
+            Errors.Add(Strings.VaultNotUnlocked);
+            return false;
+        }
+    }
 
     private void ShowErrors(IEnumerable<string> problems)
     {
@@ -794,6 +1196,8 @@ public sealed class ProviderOptionViewModel(IRepositoryProvider provider)
     public string DisplayName => Provider.DisplayName;
 
     public string Description => Provider.Description;
+
+    public bool IsUntested => Provider.IsUntested;
 }
 
 /// <summary>One input of the selected provider.</summary>
@@ -811,15 +1215,34 @@ public sealed partial class FieldViewModel(ProviderField providerField, string? 
 
     public bool IsChoice => providerField.Kind == ProviderFieldKind.Choice;
 
-    public bool IsTextInput => !IsChoice;
+    public bool IsToggle => providerField.Kind == ProviderFieldKind.Toggle;
+
+    public bool IsSecret => providerField.Kind == ProviderFieldKind.Secret;
+
+    /// <summary>Hides what is typed into a secret field.</summary>
+    public char PasswordChar => IsSecret ? '•' : '\0';
+
+    public bool IsTextInput => !IsChoice && !IsToggle;
+
+    /// <summary>A switch's state (<see cref="Value"/> is "true" or "false").</summary>
+    public bool IsOn
+    {
+        get => bool.TryParse(Value, out var on) && on;
+        set => Value = value ? "true" : "false";
+    }
 
     public IReadOnlyList<Option<string>> Options { get; } =
         providerField.Options.Select(option => new Option<string>(option.Value, option.Label)).ToList();
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SelectedOption))]
+    [NotifyPropertyChangedFor(nameof(SelectedOption), nameof(IsOn))]
     public partial string Value { get; set; } = value ?? providerField.DefaultValue
-        ?? (providerField.Kind == ProviderFieldKind.Choice ? providerField.Options.FirstOrDefault()?.Value : null) ?? "";
+        ?? (providerField.Kind switch
+        {
+            ProviderFieldKind.Choice => providerField.Options.FirstOrDefault()?.Value,
+            ProviderFieldKind.Toggle => "false",
+            _ => null,
+        }) ?? "";
 
     /// <summary>The option matching <see cref="Value"/> (choice fields).</summary>
     public Option<string>? SelectedOption

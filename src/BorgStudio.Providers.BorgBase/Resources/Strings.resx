@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Texts of the local provider, English (default). German: Strings.de.resx. -->
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="DisplayName" xml:space="preserve">
+    <value>BorgBase</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>borg hosting at BorgBase. With an API token, repository and key are set up automatically.</value>
+  </data>
+  <data name="TokenLabel" xml:space="preserve">
+    <value>API token</value>
+  </data>
+  <data name="TokenHint" xml:space="preserve">
+    <value>Optional. From Account → API on borgbase.com (“Create Only” is enough).</value>
+  </data>
+  <data name="RepoLabel" xml:space="preserve">
+    <value>Repository</value>
+  </data>
+  <data name="RepoHint" xml:space="preserve">
+    <value>With a token: its name at BorgBase. Without: its address (ssh://…).</value>
+  </data>
+  <data name="RepoRequired" xml:space="preserve">
+    <value>Please enter the repository's name or address.</value>
+  </data>
+  <data name="RegionLabel" xml:space="preserve">
+    <value>Region</value>
+  </data>
+  <data name="RegionHint" xml:space="preserve">
+    <value>Only for new repositories.</value>
+  </data>
+  <data name="RegionEu" xml:space="preserve">
+    <value>Europe</value>
+  </data>
+  <data name="RegionUs" xml:space="preserve">
+    <value>USA</value>
+  </data>
+  <data name="AddressNeeded" xml:space="preserve">
+    <value>Without an API token, please enter the repository's address from BorgBase (ssh://…).</value>
+  </data>
+  <data name="RepoNotFound" xml:space="preserve">
+    <value>BorgBase has no repository “{0}”. Choose “Create a new repository” to have it created.</value>
+  </data>
+  <data name="TokenRefused" xml:space="preserve">
+    <value>BorgBase refused the API token (expired, or without the needed permission).</value>
+  </data>
+  <data name="ApiError" xml:space="preserve">
+    <value>BorgBase: {0}</value>
+  </data>
+</root>

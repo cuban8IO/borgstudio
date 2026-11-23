@@ -1,0 +1,79 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:BorgStudio.App.ViewModels"
+        xmlns:res="using:BorgStudio.App.Resources"
+        x:Class="BorgStudio.App.Views.ArchiveDiffWindow"
+        x:DataType="vm:ArchiveDiffViewModel"
+        Title="{Binding Title}"
+        Width="980" Height="680" MinWidth="560" MinHeight="360"
+        WindowStartupLocation="CenterOwner">
+
+    <DockPanel Margin="20">
+        <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,12">
+            <TextBlock Text="{x:Static res:Strings.DiffHeader}" FontSize="16" FontWeight="SemiBold" />
+            <SelectableTextBlock Text="{Binding Title}" TextWrapping="Wrap" Opacity="0.8" />
+        </StackPanel>
+
+        <Button DockPanel.Dock="Bottom" Content="{x:Static res:Strings.Close}" Command="{Binding CloseCommand}" HorizontalAlignment="Right"
+                IsCancel="True" Margin="0,12,0,0" />
+
+        <!-- While borg compares -->
+        <StackPanel DockPanel.Dock="Top" Spacing="6" IsVisible="{Binding IsLoading}">
+            <ProgressBar IsIndeterminate="True" />
+            <TextBlock Text="{Binding LoadingText}" Opacity="0.8" />
+        </StackPanel>
+        <TextBlock DockPanel.Dock="Top" Text="{Binding Error}" TextWrapping="Wrap" IsVisible="{Binding HasError}"
+                   Foreground="{DynamicResource ErrorForeground}" />
+
+        <StackPanel DockPanel.Dock="Top" Spacing="8" IsVisible="{Binding !IsLoading}" Margin="0,0,0,8">
+            <TextBlock Text="{Binding SummaryText}" FontWeight="SemiBold" />
+            <TextBlock Text="{Binding SizeText}" FontSize="12" Opacity="0.75" />
+            <WrapPanel>
+                <WrapPanel.Styles>
+                    <Style Selector="WrapPanel > :is(Control)">
+                        <Setter Property="Margin" Value="0,0,10,4" />
+                        <Setter Property="VerticalAlignment" Value="Center" />
+                    </Style>
+                </WrapPanel.Styles>
+                <ComboBox ItemsSource="{Binding KindOptions}" SelectedItem="{Binding SelectedKind}" MinWidth="160" />
+                <TextBox Text="{Binding Search}" PlaceholderText="{x:Static res:Strings.DiffSearch}" Width="280" />
+                <CheckBox IsChecked="{Binding ShowMetadata}" Content="{x:Static res:Strings.DiffShowMetadata}" />
+            </WrapPanel>
+            <TextBlock Text="{Binding MoreText}" FontSize="12" Opacity="0.75" IsVisible="{Binding HasMoreText}" />
+            <TextBlock Text="{x:Static res:Strings.DiffNoChanges}" IsVisible="{Binding IsEmpty}" />
+        </StackPanel>
+
+        <ListBox ItemsSource="{Binding Items}" IsVisible="{Binding !IsLoading}">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:ArchiveDiffItemViewModel">
+                    <Grid ColumnDefinitions="90,*,150">
+                        <Border Padding="6,1" CornerRadius="3" HorizontalAlignment="Left" VerticalAlignment="Center"
+                                Classes.added="{Binding IsAdded}" Classes.removed="{Binding IsRemoved}" Classes.modified="{Binding IsModified}">
+                            <Border.Styles>
+                                <Style Selector="Border">
+                                    <Setter Property="Background" Value="{DynamicResource ChartTrackBrush}" />
+                                </Style>
+                                <Style Selector="Border.added">
+                                    <Setter Property="Background" Value="{DynamicResource ChartOkBrush}" />
+                                </Style>
+                                <Style Selector="Border.removed">
+                                    <Setter Property="Background" Value="{DynamicResource ChartFailBrush}" />
+                                </Style>
+                                <Style Selector="Border.modified">
+                                    <Setter Property="Background" Value="{DynamicResource ChartSeriesBrush}" />
+                                </Style>
+                            </Border.Styles>
+                            <TextBlock Text="{Binding KindText}" FontSize="11" />
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0">
+                            <TextBlock Text="{Binding Path}" TextTrimming="LeadingCharacterEllipsis" ToolTip.Tip="{Binding Path}" FontSize="13" />
+                            <TextBlock Text="{Binding DetailsText}" FontSize="11" Opacity="0.7" IsVisible="{Binding HasDetails}"
+                                       TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="2" Text="{Binding SizeText}" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="13" />
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </DockPanel>
+</Window>

@@ -14,6 +14,16 @@ public enum ProviderFieldKind
 
     /// <summary>One of <see cref="ProviderField.Options"/>, picked from a list.</summary>
     Choice,
+
+    /// <summary>A switch: the value is <c>"true"</c> or <c>"false"</c> (default <c>"false"</c>). <see cref="ProviderField.Required"/> is ignored.</summary>
+    Toggle,
+
+    /// <summary>
+    /// A secret such as an API token: entered hidden, kept in BorgStudio's vault instead of with the repository. It is not
+    /// part of the values <see cref="IRepositoryProvider.Validate"/> and <see cref="IRepositoryProvider.GetLocation"/> get,
+    /// only of the <c>Secrets</c> of the requests that need it.
+    /// </summary>
+    Secret,
 }
 
 /// <summary>One input a <see cref="IRepositoryProvider"/> needs from the user.</summary>

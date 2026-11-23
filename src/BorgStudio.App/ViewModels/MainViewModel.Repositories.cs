@@ -19,7 +19,8 @@ public partial class MainViewModel
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelection), nameof(ListedRepository), nameof(ShowsRepository))]
     [NotifyCanExecuteChangedFor(nameof(TestRepositoryCommand), nameof(ExportKeyCommand), nameof(EditRepositoryCommand),
-        nameof(RemoveRepositoryCommand), nameof(FreeSpaceCommand), nameof(MeasureStorageCommand))]
+        nameof(RemoveRepositoryCommand), nameof(FreeSpaceCommand), nameof(MeasureStorageCommand), nameof(CheckRepositoryCommand),
+        nameof(CheckRepositoryFullCommand), nameof(RepairRepositoryCommand), nameof(BreakLockCommand))]
     public partial RepositoryItemViewModel? SelectedRepository { get; set; }
 
     public bool HasRepositories => Repositories.Count > 0;
@@ -33,8 +34,9 @@ public partial class MainViewModel
     /// <summary>A borg command is running for the selected repository.</summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddRepositoryCommand), nameof(TestRepositoryCommand), nameof(ExportKeyCommand),
-        nameof(EditRepositoryCommand), nameof(RemoveRepositoryCommand), nameof(RunJobCommand), nameof(CleanUpJobCommand),
-        nameof(FreeSpaceCommand), nameof(MeasureStorageCommand))]
+        nameof(EditRepositoryCommand), nameof(RemoveRepositoryCommand), nameof(RunJobCommand), nameof(CleanUpJobCommand), nameof(TestRestoreCommand),
+        nameof(FreeSpaceCommand), nameof(MeasureStorageCommand), nameof(CheckRepositoryCommand), nameof(CheckRepositoryFullCommand),
+        nameof(RepairRepositoryCommand), nameof(BreakLockCommand))]
     public partial bool IsWorking { get; private set; }
 
     /// <summary>Progress of the running repository operation (overview tab).</summary>
@@ -74,6 +76,11 @@ public partial class MainViewModel
         SaveRepositories();
         SelectedRepository = item;
         item.ShowResult(result.Created ? Strings.RepositoryCreated : Strings.RepositoryConnected, isError: false);
+        if (item.Config.Check.IsScheduled)
+        {
+            await PrepareUnattendedAsync(item.Config.Id);
+            ApplySchedules();
+        }
 
         if (result.Created && item.IsEncrypted
             && await _services.Dialogs.ConfirmAsync(Strings.BackupKeyTitle,
@@ -93,8 +100,15 @@ public partial class MainViewModel
         if (editor.Result is not { } result)
             return;
 
+        var before = item.Config;
         item.Config = result.Repository;
         SaveRepositories();
+        if (!before.Check.IsScheduled && item.Config.Check.IsScheduled)
+            await PrepareUnattendedAsync(item.Config.Id);
+        // The check's entry in the system's scheduler follows its times (and the name in its description).
+        if (before.Check.IsScheduled || item.Config.Check.IsScheduled)
+            ApplySchedules();
+        RefreshChecks(item.Config.Id);
         RefreshStorage(item.Config.Id);
         RefreshKeyNames();
     }
@@ -121,6 +135,8 @@ public partial class MainViewModel
         Repositories.Remove(item);
         SaveRepositories();
         RemoveJobsOf(item.Config.Id);
+        if (item.Config.Check.IsScheduled)
+            ApplySchedules();
         SelectedRepository = Repositories.Count == 0 ? null : Repositories[Math.Min(index, Repositories.Count - 1)];
 
         await OfferToDeleteUnusedKeyAsync(item.Config.SshKeyId);
@@ -146,7 +162,7 @@ public partial class MainViewModel
     private async Task TestRepositoryAsync()
     {
         var item = SelectedRepository!;
-        if (!TryGetLocation(item, out var location))
+        if (await ConnectAsync(item) is not { } location)
             return;
         if (await GetSshAccessAsync(item, location) is not { } ssh)
             return;
@@ -184,7 +200,7 @@ public partial class MainViewModel
     private async Task ExportKeyAsync()
     {
         var item = SelectedRepository!;
-        if (!TryGetLocation(item, out var location))
+        if (await ConnectAsync(item) is not { } location)
             return;
         if (await GetSshAccessAsync(item, location) is not { } ssh)
             return;
@@ -205,15 +221,37 @@ public partial class MainViewModel
 
     private bool CanExportKey() => CanRunBorg() && SelectedRepository!.IsEncrypted;
 
-    /// <summary>The location, if borg 1 can handle it; otherwise the reason is shown on the item.</summary>
-    private static bool TryGetLocation(RepositoryItemViewModel item, out RepositoryLocation location)
+    /// <summary>
+    /// Where borg finds the repository now – looked for first if its provider needs that (a USB drive that got another
+    /// letter: the new place is kept). <c>null</c> if it cannot be reached or borg 1 cannot handle it; the reason is
+    /// shown on the item.
+    /// </summary>
+    /// <remarks>
+    /// Released right away: what the window does with a repository needs no connection kept open so far (a drive is
+    /// only ejected after automatic runs).
+    /// </remarks>
+    private async Task<RepositoryLocation?> ConnectAsync(RepositoryItemViewModel item)
     {
-        location = item.Location!;
-        if (RepositoryFormat.Resolve(item.Config.BorgVersion, location) != 2)
-            return true;
+        RepositoryLease? lease;
+        try
+        {
+            lease = await _services.Connections.ConnectAsync(item.Config);
+        }
+        catch (RepositoryUnavailableException exception)
+        {
+            item.ShowResult(exception.Message, isError: true);
+            return null;
+        }
+        if (lease is null)
+            return null;
+        await lease.ReleaseAsync();
+        if (lease.Repository != item.Config)
+            item.Config = lease.Repository;
 
+        if (RepositoryFormat.Resolve(item.Config.BorgVersion, lease.Location) != 2)
+            return lease.Location;
         item.ShowResult(Strings.Borg2NotSupported, isError: true);
-        return false;
+        return null;
     }
 
     /// <summary>
@@ -305,11 +343,13 @@ public partial class MainViewModel
         var key = DurationHistory.Key(item.Config.Id, operation);
         IsWorking = true;
         Work.Start(workingText, _services.Durations.Get(key), cancel);
+        using var task = Tasks.Track(ProgressTask(workingText.TrimEnd(' ', '…', '.'), item.Name, Work, () => ShowJob(item.Config.Id)));
         try
         {
             var result = await Task.Run(work);
             if (result.Succeeded)
                 _services.Durations.Record(key, Work.Elapsed);
+            NoteLock(item, result.Error);
             return result;
         }
         finally

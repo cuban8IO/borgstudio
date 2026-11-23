@@ -275,6 +275,12 @@
   <data name="EditorChooseProvider" xml:space="preserve">
     <value>Wo liegt das Repository?</value>
   </data>
+  <data name="EditorProviderUntested" xml:space="preserve">
+    <value>Ungetestet</value>
+  </data>
+  <data name="EditorProviderUntestedTip" xml:space="preserve">
+    <value>Noch nicht mit einem echten Dienst oder Ziel getestet.</value>
+  </data>
   <data name="EditorName" xml:space="preserve">
     <value>Name</value>
   </data>
@@ -358,7 +364,7 @@
     <value>An diesem Ort gibt es bereits ein Repository oder andere Daten.</value>
   </data>
   <data name="BorgErrorLocked" xml:space="preserve">
-    <value>Das Repository ist gesperrt – ein anderer borg-Prozess verwendet es.</value>
+    <value>Das Repository ist gesperrt – ein anderer borg-Prozess verwendet es. Ist die Sperre zurückgeblieben (z. B. nach einem Absturz), kannst du sie in der Übersicht des Repositorys mit „Sperre lösen …“ entfernen.</value>
   </data>
   <data name="BorgErrorConnectionFailed" xml:space="preserve">
     <value>Die Verbindung zum Repository ist fehlgeschlagen.</value>
@@ -1671,6 +1677,75 @@ BorgStudio kann das jetzt eintragen (als root in WSL, ohne Passwort). Das entspr
   <data name="MountsHeader" xml:space="preserve">
     <value>Eingehängte Archive</value>
   </data>
+  <data name="TasksNone" xml:space="preserve">
+    <value>Keine laufenden Aufgaben</value>
+  </data>
+  <data name="TasksOne" xml:space="preserve">
+    <value>1 Aufgabe</value>
+  </data>
+  <data name="TasksMany" xml:space="preserve">
+    <value>{0} Aufgaben</value>
+  </data>
+  <data name="TasksRemaining" xml:space="preserve">
+    <value>{0} · noch ca. {1}</value>
+  </data>
+  <data name="TasksHeader" xml:space="preserve">
+    <value>Laufende Aufgaben</value>
+  </data>
+  <data name="TasksEmpty" xml:space="preserve">
+    <value>Gerade läuft und wartet nichts.</value>
+  </data>
+  <data name="TasksTip" xml:space="preserve">
+    <value>Laufende und wartende Aufgaben – Klick zeigt die Liste</value>
+  </data>
+  <data name="TaskShow" xml:space="preserve">
+    <value>Anzeigen</value>
+  </data>
+  <data name="TaskArchives" xml:space="preserve">
+    <value>Archivliste laden</value>
+  </data>
+  <data name="TaskMount" xml:space="preserve">
+    <value>Archiv einhängen</value>
+  </data>
+  <data name="TaskBackup" xml:space="preserve">
+    <value>Backup „{0}“</value>
+  </data>
+  <data name="TaskCheck" xml:space="preserve">
+    <value>Prüfung von „{0}“</value>
+  </data>
+  <data name="TaskBrowse" xml:space="preserve">
+    <value>Archiv „{0}“</value>
+  </data>
+  <data name="TaskRestore" xml:space="preserve">
+    <value>Wiederherstellen aus „{0}“</value>
+  </data>
+  <data name="TaskExport" xml:space="preserve">
+    <value>Export nach „{0}“</value>
+  </data>
+  <data name="TaskCompare" xml:space="preserve">
+    <value>Vergleich „{0}“ mit „{1}“</value>
+  </data>
+  <data name="TaskEntriesRead" xml:space="preserve">
+    <value>{0:N0} Einträge gelesen</value>
+  </data>
+  <data name="TaskUpdate" xml:space="preserve">
+    <value>Update herunterladen</value>
+  </data>
+  <data name="TaskQueued" xml:space="preserve">
+    <value>In der Warteschlange</value>
+  </data>
+  <data name="TaskWaiting" xml:space="preserve">
+    <value>Wartet – {0} Nächster Versuch um {1}.</value>
+  </data>
+  <data name="TaskWaitingCondition" xml:space="preserve">
+    <value>Eine Bedingung des Jobs ist nicht erfüllt.</value>
+  </data>
+  <data name="TaskElsewhere" xml:space="preserve">
+    <value>Aufgabenplanung · läuft seit {0}</value>
+  </data>
+  <data name="TaskElsewhereWaiting" xml:space="preserve">
+    <value>Aufgabenplanung · wartet: {0}</value>
+  </data>
   <data name="MountOpen" xml:space="preserve">
     <value>Öffnen</value>
   </data>
@@ -2014,7 +2089,7 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
     <value>BorgStudio läuft weiter</value>
   </data>
   <data name="TrayHintMessage" xml:space="preserve">
-    <value>BorgStudio läuft im Infobereich weiter, damit geplante Sicherungen starten können. Ein Klick auf das Symbol öffnet das Fenster wieder; beenden lässt sich BorgStudio über „BorgStudio beenden“ im Menü des Symbols.</value>
+    <value>BorgStudio läuft im Infobereich weiter. Ein Klick auf das Symbol öffnet das Fenster wieder; dort gibt es auch Schnellaktionen. Beenden lässt sich BorgStudio über „BorgStudio beenden“ im Menü des Symbols.</value>
   </data>
   <data name="SettingsSchedules" xml:space="preserve">
     <value>Geplante Sicherungen</value>
@@ -2593,7 +2668,7 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
     <value>nach den nächsten Sicherungen</value>
   </data>
   <data name="DashEarliestFull" xml:space="preserve">
-    <value>Frühestens voll</value>
+    <value>Speicher zuerst voll</value>
   </data>
   <data name="DashNotForeseeable" xml:space="preserve">
     <value>nicht absehbar</value>
@@ -2614,7 +2689,7 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
     <value>~{0} J.</value>
   </data>
   <data name="DashRepositoriesTitle" xml:space="preserve">
-    <value>Repositories – Probleme zuerst</value>
+    <value>Zustand der Repositories</value>
   </data>
   <data name="DashOpenTip" xml:space="preserve">
     <value>Repository öffnen</value>
@@ -2663,5 +2738,992 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
   </data>
   <data name="DashFullBy" xml:space="preserve">
     <value>voll ~{0}</value>
+  </data>
+  <data name="CheckHeader" xml:space="preserve">
+    <value>Integritätsprüfung</value>
+  </data>
+  <data name="CheckRun" xml:space="preserve">
+    <value>Prüfen</value>
+  </data>
+  <data name="CheckRunTip" xml:space="preserve">
+    <value>borg check: prüft das Repository und die Metadaten der Archive</value>
+  </data>
+  <data name="CheckRunFull" xml:space="preserve">
+    <value>Gründlich prüfen …</value>
+  </data>
+  <data name="CheckRunFullTip" xml:space="preserve">
+    <value>borg check --verify-data: liest und entschlüsselt zusätzlich alle Daten</value>
+  </data>
+  <data name="Repair" xml:space="preserve">
+    <value>Reparieren …</value>
+  </data>
+  <data name="RepairTip" xml:space="preserve">
+    <value>borg check --repair: repariert, was borg reparieren kann</value>
+  </data>
+  <data name="CheckFullTitle" xml:space="preserve">
+    <value>Gründlich prüfen</value>
+  </data>
+  <data name="CheckFullMessageRemote" xml:space="preserve">
+    <value>Eine gründliche Prüfung lädt alle Daten des Repositorys herunter und entschlüsselt sie – das dauert lange und belastet die Verbindung.</value>
+  </data>
+  <data name="CheckFullMessageLocal" xml:space="preserve">
+    <value>Eine gründliche Prüfung liest alle Daten des Repositorys und entschlüsselt sie – das kann lange dauern.</value>
+  </data>
+  <data name="CheckFullSize" xml:space="preserve">
+    <value>Das Repository umfasst etwa {0}.</value>
+  </data>
+  <data name="CheckFullSizeUnknown" xml:space="preserve">
+    <value>Seine Größe ist noch nicht bekannt („Messen“ beim Speicher zeigt sie).</value>
+  </data>
+  <data name="CheckFullConfirm" xml:space="preserve">
+    <value>Gründlich prüfen</value>
+  </data>
+  <data name="RepairTitle" xml:space="preserve">
+    <value>Repository reparieren</value>
+  </data>
+  <data name="RepairMessage" xml:space="preserve">
+    <value>borg check --repair versucht, „{0}“ zu reparieren. Beschädigte Daten, die sich nicht retten lassen, werden entfernt oder durch Nullen ersetzt – Dateien in den Archiven können dabei verloren gehen oder unbrauchbar werden. Lege nach Möglichkeit vorher eine Kopie des Repositorys an (seinen Ordner oder auf dem Server) und suche die Ursache (Festplatte, Arbeitsspeicher, Verbindung).</value>
+  </data>
+  <data name="RepairContinue" xml:space="preserve">
+    <value>Weiter …</value>
+  </data>
+  <data name="RepairConfirmMessage" xml:space="preserve">
+    <value>Wirklich jetzt reparieren? Das lässt sich nicht rückgängig machen.</value>
+  </data>
+  <data name="RepairConfirm" xml:space="preserve">
+    <value>Reparieren</value>
+  </data>
+  <data name="CheckBusy" xml:space="preserve">
+    <value>Gerade arbeitet eine Sicherung oder eine andere Prüfung mit diesem Repository. Versuche es noch einmal, wenn sie fertig ist.</value>
+  </data>
+  <data name="CheckPhaseSegments" xml:space="preserve">
+    <value>Segmente des Repositorys werden geprüft</value>
+  </data>
+  <data name="CheckPhaseData" xml:space="preserve">
+    <value>Alle Daten werden gelesen und entschlüsselt</value>
+  </data>
+  <data name="CheckPhaseArchives" xml:space="preserve">
+    <value>Archive werden geprüft</value>
+  </data>
+  <data name="CheckWorking" xml:space="preserve">
+    <value>Repository wird geprüft …</value>
+  </data>
+  <data name="CheckWorkingFull" xml:space="preserve">
+    <value>Repository wird gründlich geprüft …</value>
+  </data>
+  <data name="CheckWorkingRepair" xml:space="preserve">
+    <value>Repository wird repariert …</value>
+  </data>
+  <data name="CheckResultOk" xml:space="preserve">
+    <value>Prüfung beendet: keine Fehler gefunden.</value>
+  </data>
+  <data name="CheckResultProblems" xml:space="preserve">
+    <value>Prüfung beendet: borg hat Fehler gefunden ({0} Meldungen, siehe „Integritätsprüfung“).</value>
+  </data>
+  <data name="CheckResultCancelled" xml:space="preserve">
+    <value>Prüfung abgebrochen.</value>
+  </data>
+  <data name="CheckResultFailed" xml:space="preserve">
+    <value>Die Prüfung konnte nicht laufen: {0}</value>
+  </data>
+  <data name="CheckStateOk" xml:space="preserve">
+    <value>Keine Fehler gefunden</value>
+  </data>
+  <data name="CheckStateProblems" xml:space="preserve">
+    <value>Fehler gefunden</value>
+  </data>
+  <data name="CheckStateNever" xml:space="preserve">
+    <value>Noch nie geprüft</value>
+  </data>
+  <data name="CheckLast" xml:space="preserve">
+    <value>Zuletzt geprüft {0} · {1} · Dauer {2}</value>
+  </data>
+  <data name="CheckNeverHint" xml:space="preserve">
+    <value>Eine Prüfung liest das Repository und findet Schäden früh – bevor du eine Wiederherstellung brauchst.</value>
+  </data>
+  <data name="CheckAttemptCancelled" xml:space="preserve">
+    <value>Der letzte Versuch ({0}) wurde abgebrochen.</value>
+  </data>
+  <data name="CheckAttemptFailed" xml:space="preserve">
+    <value>Der letzte Versuch ({0}) ist gescheitert: {1}</value>
+  </data>
+  <data name="CheckMessagesHeader" xml:space="preserve">
+    <value>Meldungen von borg ({0})</value>
+  </data>
+  <data name="CheckProblemsHint" xml:space="preserve">
+    <value>Suche zuerst die Ursache (Festplatte, Arbeitsspeicher, Verbindung). „Reparieren“ behebt, was borg beheben kann – beschädigte Daten können dabei verloren gehen.</value>
+  </data>
+  <data name="CheckDepthNormal" xml:space="preserve">
+    <value>normal</value>
+  </data>
+  <data name="CheckDepthFull" xml:space="preserve">
+    <value>gründlich</value>
+  </data>
+  <data name="CheckDepthRepair" xml:space="preserve">
+    <value>Reparatur</value>
+  </data>
+  <data name="NotifyEventCheckFailed" xml:space="preserve">
+    <value>Fehlern bei der Prüfung</value>
+  </data>
+  <data name="NotifyTitleCheckFailed" xml:space="preserve">
+    <value>Prüfung hat Fehler gefunden: {0}</value>
+  </data>
+  <data name="NotifyTitleCheckRecovered" xml:space="preserve">
+    <value>Prüfung wieder ohne Fehler: {0}</value>
+  </data>
+  <data name="NotifyLineCheck" xml:space="preserve">
+    <value>Geprüft: {0} · {1} · Dauer {2}</value>
+  </data>
+  <data name="NotifyLineMoreMessages" xml:space="preserve">
+    <value>… und {0} weitere Meldungen</value>
+  </data>
+  <data name="NotifyCheckFailedHint" xml:space="preserve">
+    <value>Öffne das Repository in BorgStudio, um alle Meldungen und die Möglichkeiten zu sehen.</value>
+  </data>
+  <data name="DashCheckProblems" xml:space="preserve">
+    <value>Prüfung hat Fehler gefunden</value>
+  </data>
+  <data name="DashChecked" xml:space="preserve">
+    <value>geprüft {0}</value>
+  </data>
+  <data name="DashNeverChecked" xml:space="preserve">
+    <value>nie geprüft</value>
+  </data>
+  <data name="NotifyTitleCheckNotRun" xml:space="preserve">
+    <value>Prüfung konnte nicht laufen: {0}</value>
+  </data>
+  <data name="NotifyCheckNotRunHint" xml:space="preserve">
+    <value>BorgStudio versucht es zum nächsten Termin wieder. Bis dahin ist der Zustand des Repositorys nicht bekannt.</value>
+  </data>
+  <data name="ScheduleMonthlyWeekday" xml:space="preserve">
+    <value>Monatlich (Wochentag)</value>
+  </data>
+  <data name="ScheduleMonthlyDay" xml:space="preserve">
+    <value>Monatlich (Datum)</value>
+  </data>
+  <data name="ScheduleOnWeekday" xml:space="preserve">
+    <value>am</value>
+  </data>
+  <data name="ScheduleOnDay" xml:space="preserve">
+    <value>am</value>
+  </data>
+  <data name="ScheduleWeekFirst" xml:space="preserve">
+    <value>ersten</value>
+  </data>
+  <data name="ScheduleWeekSecond" xml:space="preserve">
+    <value>zweiten</value>
+  </data>
+  <data name="ScheduleWeekThird" xml:space="preserve">
+    <value>dritten</value>
+  </data>
+  <data name="ScheduleWeekFourth" xml:space="preserve">
+    <value>vierten</value>
+  </data>
+  <data name="ScheduleWeekLast" xml:space="preserve">
+    <value>letzten</value>
+  </data>
+  <data name="ScheduleDayOfMonth" xml:space="preserve">
+    <value>{0}.</value>
+  </data>
+  <data name="ScheduleLastDayOfMonth" xml:space="preserve">
+    <value>letzten Tag</value>
+  </data>
+  <data name="EditorChecks" xml:space="preserve">
+    <value>Integritätsprüfung</value>
+  </data>
+  <data name="EditorChecksIntro" xml:space="preserve">
+    <value>Automatische Prüfungen sind normale Prüfungen (Repository und Metadaten der Archive). Eine gründliche Prüfung läuft nur, wenn du sie startest.</value>
+  </data>
+  <data name="EditorCheckAfterBackup" xml:space="preserve">
+    <value>Nach einem Backup in dieses Repository prüfen</value>
+  </data>
+  <data name="EditorCheckInterval" xml:space="preserve">
+    <value>wenn seit</value>
+  </data>
+  <data name="EditorCheckIntervalDays" xml:space="preserve">
+    <value>Tagen nicht geprüft</value>
+  </data>
+  <data name="EditorCheckSchedules" xml:space="preserve">
+    <value>Zusätzlich zu festen Zeiten prüfen:</value>
+  </data>
+  <data name="EditorCheckSchedulesHint" xml:space="preserve">
+    <value>Die Aufgabenplanung des Systems startet die Prüfung, auch wenn BorgStudio geschlossen ist (solange du angemeldet bist). Eine Prüfung wartet, bis ein Backup in das Repository fertig ist.</value>
+  </data>
+  <data name="CheckPlan" xml:space="preserve">
+    <value>Automatisch: {0}</value>
+  </data>
+  <data name="CheckPlanNone" xml:space="preserve">
+    <value>Wird nicht automatisch geprüft – einstellbar unter „Bearbeiten“ → „Integritätsprüfung“.</value>
+  </data>
+  <data name="CheckPlanAfterBackup" xml:space="preserve">
+    <value>nach einem Backup, wenn seit {0} Tagen nicht geprüft</value>
+  </data>
+  <data name="CheckPlanScheduled" xml:space="preserve">
+    <value>nach Zeitplan, nächste {0}</value>
+  </data>
+  <data name="CheckHealthNotRun" xml:space="preserve">
+    <value>Die letzte automatische Prüfung konnte nicht laufen.</value>
+  </data>
+  <data name="CheckHealthOverdue" xml:space="preserve">
+    <value>Die Prüfung ist überfällig.</value>
+  </data>
+  <data name="DashCheckNotRun" xml:space="preserve">
+    <value>Prüfung konnte nicht laufen</value>
+  </data>
+  <data name="DashCheckOverdue" xml:space="preserve">
+    <value>Prüfung überfällig</value>
+  </data>
+  <data name="ScheduleMonthlyWeekdayText" xml:space="preserve">
+    <value>Monatlich am {0} {1}, {2}</value>
+  </data>
+  <data name="ScheduleMonthlyDayText" xml:space="preserve">
+    <value>Monatlich am {0}, {1}</value>
+  </data>
+  <data name="RestoreTestWorking" xml:space="preserve">
+    <value>Wiederherstellung wird getestet …</value>
+  </data>
+  <data name="RestoreTestTitle" xml:space="preserve">
+    <value>Test-Wiederherstellung: {0}</value>
+  </data>
+  <data name="RestoreTestNoArchive" xml:space="preserve">
+    <value>Der Job hat noch keine Sicherung.</value>
+  </data>
+  <data name="RestoreTestOk" xml:space="preserve">
+    <value>erfolgreich</value>
+  </data>
+  <data name="RestoreTestFailed" xml:space="preserve">
+    <value>fehlgeschlagen</value>
+  </data>
+  <data name="RestoreTestNotRun" xml:space="preserve">
+    <value>konnte nicht laufen</value>
+  </data>
+  <data name="RestoreTestWholeArchive" xml:space="preserve">
+    <value>ganzes Archiv gelesen</value>
+  </data>
+  <data name="RestoreTestFiles" xml:space="preserve">
+    <value>{0} Dateien ({1})</value>
+  </data>
+  <data name="RestoreTestFilesCompared" xml:space="preserve">
+    <value>{0} Dateien ({1}), {2} verglichen</value>
+  </data>
+  <data name="RestoreTestLine" xml:space="preserve">
+    <value>Test-Wiederherstellung {0}: {1} – {2}</value>
+  </data>
+  <data name="RestoreTestLineShort" xml:space="preserve">
+    <value>Test-Wiederherstellung {0}: {1}</value>
+  </data>
+  <data name="RestoredFileDifferent" xml:space="preserve">
+    <value>Weicht von der unveränderten Quelle ab: {0}</value>
+  </data>
+  <data name="RestoredFileMissing" xml:space="preserve">
+    <value>Nicht vollständig wiederhergestellt: {0}</value>
+  </data>
+  <data name="NotifyTitleRestoreTestFailed" xml:space="preserve">
+    <value>Test-Wiederherstellung fehlgeschlagen: {0}</value>
+  </data>
+  <data name="NotifyTitleRestoreTestNotRun" xml:space="preserve">
+    <value>Test-Wiederherstellung konnte nicht laufen: {0}</value>
+  </data>
+  <data name="NotifyTitleRestoreTestRecovered" xml:space="preserve">
+    <value>Test-Wiederherstellung wieder erfolgreich: {0}</value>
+  </data>
+  <data name="DashRestoreTestFailed" xml:space="preserve">
+    <value>{0}: Test-Wiederherstellung fehlgeschlagen</value>
+  </data>
+  <data name="DashRestoreTestNotRun" xml:space="preserve">
+    <value>{0}: Test-Wiederherstellung konnte nicht laufen</value>
+  </data>
+  <data name="RestoreTestModeOff" xml:space="preserve">
+    <value>Aus</value>
+  </data>
+  <data name="RestoreTestModeRead" xml:space="preserve">
+    <value>Stichprobe wiederherstellen</value>
+  </data>
+  <data name="RestoreTestModeCompare" xml:space="preserve">
+    <value>Stichprobe wiederherstellen und vergleichen</value>
+  </data>
+  <data name="RestoreTestModeWholeArchive" xml:space="preserve">
+    <value>Ganzes Archiv probelesen</value>
+  </data>
+  <data name="JobEditorRestoreTest" xml:space="preserve">
+    <value>Test-Wiederherstellung</value>
+  </data>
+  <data name="JobEditorRestoreTestFiles" xml:space="preserve">
+    <value>Dateien</value>
+  </data>
+  <data name="JobEditorRestoreTestHint" xml:space="preserve">
+    <value>Läuft mit den automatischen Prüfungen des Repositorys, wenn die Test-Wiederherstellung unter Extras → Einstellungen eingeschaltet ist. Eine Stichprobe wird in einen temporären Ordner wiederhergestellt und danach gelöscht; verglichen werden Dateien, die sich an der Quelle seitdem nicht geändert haben. Das ganze Archiv probezulesen lädt es vollständig herunter.</value>
+  </data>
+  <data name="JobTestRestore" xml:space="preserve">
+    <value>Wiederherstellung testen</value>
+  </data>
+  <data name="JobTestRestoreTip" xml:space="preserve">
+    <value>Stellt das neueste Archiv des Jobs probeweise wieder her (wie im Job eingestellt, sonst eine Stichprobe mit Vergleich)</value>
+  </data>
+  <data name="SettingsRestoreTestHeader" xml:space="preserve">
+    <value>Test-Wiederherstellung</value>
+  </data>
+  <data name="SettingsRestoreTestIntro" xml:space="preserve">
+    <value>Eine Sicherung ist nur so gut wie ihre Wiederherstellung: Mit den automatischen Prüfungen stellt BorgStudio das neueste Archiv der Jobs probeweise wieder her, die eine Test-Wiederherstellung eingestellt haben.</value>
+  </data>
+  <data name="SettingsRestoreTestEnabled" xml:space="preserve">
+    <value>Test-Wiederherstellung mit den automatischen Prüfungen ausführen</value>
+  </data>
+  <data name="SettingsRestoreTestTotal" xml:space="preserve">
+    <value>Stichprobe höchstens</value>
+  </data>
+  <data name="SettingsRestoreTestPerFile" xml:space="preserve">
+    <value>Je Datei höchstens</value>
+  </data>
+  <data name="SettingsRestoreTestComparison" xml:space="preserve">
+    <value>Byte für Byte verglichen werden Dateien, deren Quelle unverändert ist nach</value>
+  </data>
+  <data name="SettingsRestoreTestSizeAndTime" xml:space="preserve">
+    <value>Größe und Änderungszeit</value>
+  </data>
+  <data name="SettingsRestoreTestSizeOnly" xml:space="preserve">
+    <value>nur Größe (vergleicht mehr, meldet aber auch Dateien, die sich seitdem bei gleicher Größe geändert haben)</value>
+  </data>
+  <data name="BreakLock" xml:space="preserve">
+    <value>Sperre lösen …</value>
+  </data>
+  <data name="BreakLockTip" xml:space="preserve">
+    <value>borg break-lock: entfernt eine zurückgebliebene Sperre (nach einem Absturz oder einer abgebrochenen Verbindung)</value>
+  </data>
+  <data name="BreakLockTitle" xml:space="preserve">
+    <value>Sperre lösen</value>
+  </data>
+  <data name="BreakLockMessage" xml:space="preserve">
+    <value>borg hat „{0}“ als gesperrt gemeldet. Löse die Sperre nur, wenn sicher kein borg mehr mit dem Repository arbeitet – weder auf diesem noch auf einem anderen Rechner, der dasselbe Repository nutzt. Schreibt noch ein borg hinein, kann das Lösen der Sperre das Repository beschädigen.</value>
+  </data>
+  <data name="BreakLockConfirm" xml:space="preserve">
+    <value>Sperre lösen</value>
+  </data>
+  <data name="BreakLockBusy" xml:space="preserve">
+    <value>BorgStudio arbeitet gerade selbst mit diesem Repository (Sicherung oder Prüfung). Warte, bis das fertig ist.</value>
+  </data>
+  <data name="BreakLockWorking" xml:space="preserve">
+    <value>Sperre wird gelöst …</value>
+  </data>
+  <data name="BreakLockDone" xml:space="preserve">
+    <value>Sperre gelöst. Starte den abgebrochenen Vorgang neu.</value>
+  </data>
+  <data name="BreakLockHolderExclusive" xml:space="preserve">
+    <value>{0} (Prozess {1}, schreibend)</value>
+  </data>
+  <data name="BreakLockHolderShared" xml:space="preserve">
+    <value>{0} (Prozess {1}, lesend)</value>
+  </data>
+  <data name="BreakLockHeldSince" xml:space="preserve">
+    <value>Gesperrt von {0} seit {1}.</value>
+  </data>
+  <data name="BreakLockHeld" xml:space="preserve">
+    <value>Gesperrt von {0}.</value>
+  </data>
+  <data name="BreakLockThisComputer" xml:space="preserve">
+    <value>Das ist dieser Rechner: Dort räumt borg Sperren beendeter Prozesse selbst auf, der Prozess läuft also vermutlich noch (vielleicht hängt er). Löse die Sperre erst, wenn er beendet ist.</value>
+  </data>
+  <data name="HookBeforeWorking" xml:space="preserve">
+    <value>Befehl vor dem Backup läuft …</value>
+  </data>
+  <data name="HookAfterWorking" xml:space="preserve">
+    <value>Befehl nach dem Backup läuft …</value>
+  </data>
+  <data name="HookStageBefore" xml:space="preserve">
+    <value>Befehl vor dem Backup</value>
+  </data>
+  <data name="HookStageAfter" xml:space="preserve">
+    <value>Befehl nach dem Backup</value>
+  </data>
+  <data name="HookFailedExit" xml:space="preserve">
+    <value>{0} fehlgeschlagen (Exit-Code {1})</value>
+  </data>
+  <data name="HookNotStarted" xml:space="preserve">
+    <value>{0} konnte nicht gestartet werden ({1} nicht gefunden)</value>
+  </data>
+  <data name="HookStopped" xml:space="preserve">
+    <value>{0} wurde abgebrochen</value>
+  </data>
+  <data name="HookShellPowerShell" xml:space="preserve">
+    <value>PowerShell</value>
+  </data>
+  <data name="HookShellCmd" xml:space="preserve">
+    <value>Eingabeaufforderung (cmd)</value>
+  </data>
+  <data name="HookShellWsl" xml:space="preserve">
+    <value>WSL (sh)</value>
+  </data>
+  <data name="JobEditorHooks" xml:space="preserve">
+    <value>Befehle</value>
+  </data>
+  <data name="JobEditorHookShell" xml:space="preserve">
+    <value>Ausführen in</value>
+  </data>
+  <data name="JobEditorHookBefore" xml:space="preserve">
+    <value>Vor dem Backup (z. B. Datenbank-Dump):</value>
+  </data>
+  <data name="JobEditorHookContinue" xml:space="preserve">
+    <value>Trotzdem sichern, wenn dieser Befehl fehlschlägt (mit Warnung)</value>
+  </data>
+  <data name="JobEditorHookAfter" xml:space="preserve">
+    <value>Nach dem Backup (z. B. Dienst wieder starten):</value>
+  </data>
+  <data name="JobEditorHookAfterSuccess" xml:space="preserve">
+    <value>Nur nach erfolgreichem Backup</value>
+  </data>
+  <data name="JobEditorHookAfterAlways" xml:space="preserve">
+    <value>Immer, auch nach fehlgeschlagenem oder abgebrochenem Backup</value>
+  </data>
+  <data name="JobEditorHooksHint" xml:space="preserve">
+    <value>Läuft bei jedem Backup des Jobs – von Hand, geplant und über den Webhook – ohne Zeitlimit. Umgebungsvariablen: BORGSTUDIO_JOB, BORGSTUDIO_REPOSITORY, BORGSTUDIO_SCHEDULED; nach dem Backup zusätzlich BORGSTUDIO_OUTCOME (succeeded, warnings, failed, cancelled) und BORGSTUDIO_ARCHIVE. Die ganze Ausgabe steht in logs/hooks.log im Datenordner.</value>
+  </data>
+  <data name="EditorLimits" xml:space="preserve">
+    <value>Begrenzen</value>
+  </data>
+  <data name="EditorUploadLimit" xml:space="preserve">
+    <value>Upload begrenzen auf</value>
+  </data>
+  <data name="EditorUploadOnlyBetween" xml:space="preserve">
+    <value>nur bei Sicherungen mit Start zwischen</value>
+  </data>
+  <data name="EditorUploadAnd" xml:space="preserve">
+    <value>und</value>
+  </data>
+  <data name="EditorUploadLimitHint" xml:space="preserve">
+    <value>borgs --upload-ratelimit: lässt anderen Platz auf der Leitung. Ohne Zeitfenster gilt die Grenze immer; ein Fenster, das vor seinem Beginn endet, geht über Mitternacht (z. B. 22:00–06:00).</value>
+  </data>
+  <data name="EditorUploadLimitLocal" xml:space="preserve">
+    <value>borg kann nur den Upload zu einem Server begrenzen – nicht das Schreiben auf eine Platte oder Netzwerkfreigabe. Dort hilft die niedrige Priorität.</value>
+  </data>
+  <data name="EditorLowPriority" xml:space="preserve">
+    <value>Niedrige Priorität: andere Programme haben Vorrang</value>
+  </data>
+  <data name="EditorLowPriorityHint" xml:space="preserve">
+    <value>borg läuft mit nice (unter Linux und in WSL auch für die Platte). Der Rechner bleibt flüssig, Sicherungen dauern länger. Keine feste Rate.</value>
+  </data>
+  <data name="SkipOnBattery" xml:space="preserve">
+    <value>Der Rechner lief im Akkubetrieb.</value>
+  </data>
+  <data name="SkipMetered" xml:space="preserve">
+    <value>Die Verbindung war getaktet.</value>
+  </data>
+  <data name="SkipNotWired" xml:space="preserve">
+    <value>Es gab keine Kabelverbindung (nur WLAN).</value>
+  </data>
+  <data name="SkipTargetUnreachable" xml:space="preserve">
+    <value>Der Server antwortete nicht oder der Ordner war nicht da.</value>
+  </data>
+  <data name="ConditionNotOnBattery" xml:space="preserve">
+    <value>im Netzbetrieb</value>
+  </data>
+  <data name="ConditionNotMetered" xml:space="preserve">
+    <value>nicht über getaktete Verbindung</value>
+  </data>
+  <data name="ConditionWiredOnly" xml:space="preserve">
+    <value>über LAN-Kabel</value>
+  </data>
+  <data name="ConditionTargetReachable" xml:space="preserve">
+    <value>wenn das Ziel erreichbar ist</value>
+  </data>
+  <data name="JobConditions" xml:space="preserve">
+    <value>Startet nur {0}</value>
+  </data>
+  <data name="JobEditorConditions" xml:space="preserve">
+    <value>Geplante Läufe starten nur:</value>
+  </data>
+  <data name="JobEditorNotOnBattery" xml:space="preserve">
+    <value>im Netzbetrieb, nicht im Akkubetrieb</value>
+  </data>
+  <data name="JobEditorNotMetered" xml:space="preserve">
+    <value>nicht über eine getaktete Verbindung (unter macOS nicht verfügbar)</value>
+  </data>
+  <data name="JobEditorWiredOnly" xml:space="preserve">
+    <value>über LAN-Kabel, nicht über WLAN</value>
+  </data>
+  <data name="JobEditorTargetReachable" xml:space="preserve">
+    <value>wenn der Server antwortet bzw. der Ordner da ist – sonst übersprungen statt fehlgeschlagen</value>
+  </data>
+  <data name="JobEditorConditionsHint" xml:space="preserve">
+    <value>Die Bedingungen zur Verbindung gelten für Repositories auf einem Server oder einer Netzwerkfreigabe. Ein zurückgehaltener Lauf wird alle 15 Minuten erneut versucht, bis zum nächsten geplanten Termin, dann gilt er als übersprungen. Läufe von Hand und über den Webhook starten immer.</value>
+  </data>
+  <data name="ArchivesCompare" xml:space="preserve">
+    <value>Vergleichen …</value>
+  </data>
+  <data name="ArchivesCompareTip" xml:space="preserve">
+    <value>borg diff: zwei beliebige Archive wählen und sehen, was sich geändert hat</value>
+  </data>
+  <data name="ArchivesComparePrevious" xml:space="preserve">
+    <value>Mit Vorgänger vergleichen</value>
+  </data>
+  <data name="ArchivesComparePreviousTip" xml:space="preserve">
+    <value>Was sich seit dem vorigen Archiv desselben Jobs geändert hat</value>
+  </data>
+  <data name="DiffHeader" xml:space="preserve">
+    <value>Vergleich</value>
+  </data>
+  <data name="DiffTitle" xml:space="preserve">
+    <value>{0} → {1}</value>
+  </data>
+  <data name="DiffLoading" xml:space="preserve">
+    <value>borg vergleicht die Archive … bisher {0} Änderungen</value>
+  </data>
+  <data name="DiffKindAll" xml:space="preserve">
+    <value>Alle Änderungen</value>
+  </data>
+  <data name="DiffKindAdded" xml:space="preserve">
+    <value>Nur neue</value>
+  </data>
+  <data name="DiffKindModified" xml:space="preserve">
+    <value>Nur geänderte</value>
+  </data>
+  <data name="DiffKindRemoved" xml:space="preserve">
+    <value>Nur gelöschte</value>
+  </data>
+  <data name="DiffKindAddedShort" xml:space="preserve">
+    <value>neu</value>
+  </data>
+  <data name="DiffKindModifiedShort" xml:space="preserve">
+    <value>geändert</value>
+  </data>
+  <data name="DiffKindRemovedShort" xml:space="preserve">
+    <value>gelöscht</value>
+  </data>
+  <data name="DiffKindMetadataShort" xml:space="preserve">
+    <value>Metadaten</value>
+  </data>
+  <data name="DiffFolder" xml:space="preserve">
+    <value>Ordner</value>
+  </data>
+  <data name="DiffSearch" xml:space="preserve">
+    <value>In Pfaden suchen …</value>
+  </data>
+  <data name="DiffShowMetadata" xml:space="preserve">
+    <value>Auch reine Änderungen an Rechten, Besitzer und Zeiten</value>
+  </data>
+  <data name="DiffSummary" xml:space="preserve">
+    <value>{0} neu · {1} geändert · {2} gelöscht · {3} nur Metadaten</value>
+  </data>
+  <data name="DiffSizes" xml:space="preserve">
+    <value>Neue Dateien: {0} · gelöschte Dateien: {1} · bei geänderten Dateien nennt borg die hinzugekommenen und entfernten Daten</value>
+  </data>
+  <data name="DiffMore" xml:space="preserve">
+    <value>Zeigt {0} von {1} – Filter oder Suche grenzen ein.</value>
+  </data>
+  <data name="DiffNoChanges" xml:space="preserve">
+    <value>Keine Unterschiede.</value>
+  </data>
+  <data name="ArchiveRename" xml:space="preserve">
+    <value>Umbenennen …</value>
+  </data>
+  <data name="ArchiveRenameTitle" xml:space="preserve">
+    <value>Archiv umbenennen</value>
+  </data>
+  <data name="ArchiveRenamePrompt" xml:space="preserve">
+    <value>Neuer Name für „{0}“:</value>
+  </data>
+  <data name="ArchiveRenaming" xml:space="preserve">
+    <value>Wird umbenannt …</value>
+  </data>
+  <data name="ArchiveNameEmpty" xml:space="preserve">
+    <value>Der Name darf nicht leer sein.</value>
+  </data>
+  <data name="ArchiveNameInvalid" xml:space="preserve">
+    <value>Der Name darf weder „/“ noch „::“ enthalten.</value>
+  </data>
+  <data name="ArchiveNameExists" xml:space="preserve">
+    <value>Es gibt schon ein Archiv „{0}“.</value>
+  </data>
+  <data name="ArchiveComment" xml:space="preserve">
+    <value>Kommentar …</value>
+  </data>
+  <data name="ArchiveCommentTip" xml:space="preserve">
+    <value>borg recreate --comment: eine Notiz im Archiv (z. B. „vor dem Update“)</value>
+  </data>
+  <data name="ArchiveCommentTitle" xml:space="preserve">
+    <value>Kommentar zum Archiv</value>
+  </data>
+  <data name="ArchiveCommentPrompt" xml:space="preserve">
+    <value>Kommentar zu „{0}“ (leer: keiner):</value>
+  </data>
+  <data name="ArchiveCommenting" xml:space="preserve">
+    <value>Kommentar wird gespeichert …</value>
+  </data>
+  <data name="ArchiveKeep" xml:space="preserve">
+    <value>Behalten</value>
+  </data>
+  <data name="ArchiveKeepTip" xml:space="preserve">
+    <value>Behält das Archiv dauerhaft: „keep-“ vor dem Namen, damit das Aufräumen des Jobs es nicht mehr löscht</value>
+  </data>
+  <data name="ArchiveRelease" xml:space="preserve">
+    <value>Nicht mehr behalten</value>
+  </data>
+  <data name="ArchiveReleaseTip" xml:space="preserve">
+    <value>Gibt dem Archiv seinen Namen zurück: Das Aufräumen des Jobs entscheidet wieder darüber</value>
+  </data>
+  <data name="ArchiveKeeping" xml:space="preserve">
+    <value>Wird behalten …</value>
+  </data>
+  <data name="ArchiveReleasing" xml:space="preserve">
+    <value>Namen werden zurückgegeben …</value>
+  </data>
+  <data name="ArchiveKept" xml:space="preserve">
+    <value>behalten</value>
+  </data>
+  <data name="ArchiveKeptTip" xml:space="preserve">
+    <value>Dauerhaft behalten: Das Aufräumen des Jobs lässt es in Ruhe</value>
+  </data>
+  <data name="ArchiveDelete" xml:space="preserve">
+    <value>Löschen …</value>
+  </data>
+  <data name="ArchiveDeleteTip" xml:space="preserve">
+    <value>borg delete: löscht die markierten Archive endgültig</value>
+  </data>
+  <data name="ArchiveDeleteTitle" xml:space="preserve">
+    <value>Archive löschen</value>
+  </data>
+  <data name="ArchiveDeleteMessage" xml:space="preserve">
+    <value>{0} Archiv(e) endgültig löschen? Sie lassen sich danach nicht wiederherstellen.
+
+{1}</value>
+  </data>
+  <data name="ArchiveDeleteMore" xml:space="preserve">
+    <value>… und {0} weitere</value>
+  </data>
+  <data name="ArchiveDeleting" xml:space="preserve">
+    <value>Wird gelöscht …</value>
+  </data>
+  <data name="ArchiveCompactTitle" xml:space="preserve">
+    <value>Speicher freigeben</value>
+  </data>
+  <data name="ArchiveCompactMessage" xml:space="preserve">
+    <value>Die Archive sind gelöscht. Ihr Platz wird erst frei, wenn das Repository verdichtet wird (borg compact). Jetzt freigeben?</value>
+  </data>
+  <data name="ArchiveManage" xml:space="preserve">
+    <value>Verwalten ▾</value>
+  </data>
+  <data name="ArchiveManageTip" xml:space="preserve">
+    <value>Markierte Archive umbenennen, kommentieren, behalten oder löschen</value>
+  </data>
+  <data name="ArchiveExport" xml:space="preserve">
+    <value>Exportieren …</value>
+  </data>
+  <data name="ArchiveExportTip" xml:space="preserve">
+    <value>borg export-tar: das Archiv als eine Datei – zip, tar.gz, tar.zst oder tar</value>
+  </data>
+  <data name="ArchiveExportSelection" xml:space="preserve">
+    <value>Auswahl exportieren …</value>
+  </data>
+  <data name="ArchiveExportSelectionTip" xml:space="preserve">
+    <value>Die ausgewählten Dateien und Ordner als eine Datei (zip, tar.gz, tar.zst, tar)</value>
+  </data>
+  <data name="ArchiveExportTitle" xml:space="preserve">
+    <value>Exportieren</value>
+  </data>
+  <data name="ArchiveExportPickTitle" xml:space="preserve">
+    <value>Exportieren nach</value>
+  </data>
+  <data name="ArchiveExportTarget" xml:space="preserve">
+    <value>Nach</value>
+  </data>
+  <data name="ArchiveExportWhatArchive" xml:space="preserve">
+    <value>Archiv „{0}“</value>
+  </data>
+  <data name="ArchiveExportWhatOne" xml:space="preserve">
+    <value>„{0}“ aus „{1}“</value>
+  </data>
+  <data name="ArchiveExportWhatSome" xml:space="preserve">
+    <value>{0} Einträge aus „{1}“</value>
+  </data>
+  <data name="ArchiveExportPreparing" xml:space="preserve">
+    <value>borg ermittelt die Größe …</value>
+  </data>
+  <data name="ArchiveExportWorking" xml:space="preserve">
+    <value>Wird exportiert …</value>
+  </data>
+  <data name="ArchiveExportDone" xml:space="preserve">
+    <value>Exportiert nach {0} ({1}).</value>
+  </data>
+  <data name="ArchiveExportSkippedLinks" xml:space="preserve">
+    <value>{0} Verknüpfungen wurden ausgelassen – zip-Dateien können keine enthalten (tar schon).</value>
+  </data>
+  <data name="ArchiveExportCancelled" xml:space="preserve">
+    <value>Export abgebrochen – es ist keine Datei zurückgeblieben.</value>
+  </data>
+  <data name="ArchiveExportFailed" xml:space="preserve">
+    <value>Der Export ist fehlgeschlagen: {0}</value>
+  </data>
+  <data name="ArchiveExportZstdMissing" xml:space="preserve">
+    <value>tar.zst braucht das Programm zstd dort, wo borg läuft (z. B. in WSL: sudo apt install zstd). Oder wähle zip oder tar.gz.</value>
+  </data>
+  <data name="ArchiveExportOpenFolder" xml:space="preserve">
+    <value>Ordner öffnen</value>
+  </data>
+  <data name="EditorConvertToUsb" xml:space="preserve">
+    <value>Als USB-Laufwerk führen</value>
+  </data>
+  <data name="EditorConvertToUsbHint" xml:space="preserve">
+    <value>Dieser Ordner liegt auf einem Wechsel- oder externen Laufwerk. Als USB-Laufwerk geführt, findet BorgStudio das Repository an seiner ID auch unter einem anderen Laufwerksbuchstaben und kann das Laufwerk nach automatischen Läufen auswerfen. Daten, Jobs und Verlauf bleiben, wie sie sind.</value>
+  </data>
+  <data name="EditorConvertedToUsb" xml:space="preserve">
+    <value>Wird nach dem Speichern als USB-Laufwerk geführt.</value>
+  </data>
+  <data name="EditorPlugIn" xml:space="preserve">
+    <value>Beim Anstecken sichern</value>
+  </data>
+  <data name="EditorPlugInAtMost" xml:space="preserve">
+    <value>höchstens alle</value>
+  </data>
+  <data name="EditorPlugInHours" xml:space="preserve">
+    <value>Stunden</value>
+  </data>
+  <data name="EditorPlugInHint" xml:space="preserve">
+    <value>Fragt kurz nach und lässt dann alle Jobs des Repositorys laufen. Nicht erneut innerhalb dieser Zeit nach einer erfolgreichen automatischen Sicherung – von Hand gestartete zählen nicht (0: jedes Mal).</value>
+  </data>
+  <data name="EditorPlugInNeedsBackground" xml:space="preserve">
+    <value>Fragt nur, solange BorgStudio geöffnet ist (Fenster oder Infobereich). Damit es ab der Anmeldung fragt: „BorgStudio im Hintergrund“ wählen (Extras → Einstellungen → Geplante Sicherungen).</value>
+  </data>
+  <data name="PlugInTitle" xml:space="preserve">
+    <value>Laufwerk angesteckt</value>
+  </data>
+  <data name="PlugInQuestion" xml:space="preserve">
+    <value>Das Laufwerk von „{0}“ wurde angesteckt. Jetzt sichern?
+
+Jobs: {1}</value>
+  </data>
+  <data name="PlugInBackUp" xml:space="preserve">
+    <value>Jetzt sichern</value>
+  </data>
+  <data name="PlugInNotNow" xml:space="preserve">
+    <value>Nicht jetzt</value>
+  </data>
+  <data name="EditorRestrictedKeyRefused" xml:space="preserve">
+    <value>Der Server nimmt auf borg beschränkte Schlüssel möglicherweise nicht an. Versuche es noch einmal ohne „Schlüssel auf borg und dieses Repository beschränken“.</value>
+  </data>
+  <data name="EditorProvisionFailed" xml:space="preserve">
+    <value>Der Dienst war nicht erreichbar: {0}</value>
+  </data>
+  <data name="EditorAddKeyTitle" xml:space="preserve">
+    <value>Login-Schlüssel hinzufügen</value>
+  </data>
+  <data name="EditorAddKeyByHand" xml:space="preserve">
+    <value>Füge diesen öffentlichen Schlüssel in der Weboberfläche von {0} hinzu und gib ihm Zugriff auf das Repository (bei BorgBase: Account → SSH Keys → Add Key, dann in den Einstellungen des Repositorys unter „Full Access“). Klicke danach auf „Hinzugefügt“.</value>
+  </data>
+  <data name="EditorAddKeyCancelled" xml:space="preserve">
+    <value>Der Schlüssel wurde nicht hinzugefügt – es wurde nichts gespeichert.</value>
+  </data>
+  <data name="PublicKeyCopy" xml:space="preserve">
+    <value>Kopieren</value>
+  </data>
+  <data name="PublicKeyCopied" xml:space="preserve">
+    <value>Kopiert.</value>
+  </data>
+  <data name="PublicKeyAdded" xml:space="preserve">
+    <value>Hinzugefügt</value>
+  </data>
+  <data name="EditorKeyGenerateProvisioned" xml:space="preserve">
+    <value>Neuen Schlüssel erzeugen und bei {0} hinterlegen (per API oder von Hand)</value>
+  </data>
+  <data name="BorgErrorSshfsMissing" xml:space="preserve">
+    <value>Das Repository liegt auf einem SFTP-Server und braucht sshfs dort, wo borg läuft. Installiere es – in WSL oder unter Linux: sudo apt install sshfs; unter macOS: macFUSE und sshfs (z. B. brew install --cask macfuse, danach brew install gromgit/fuse/sshfs-mac).</value>
+  </data>
+  <data name="EditorPreparing" xml:space="preserve">
+    <value>Verbindung wird eingerichtet … (dein System fragt eventuell einmal nach Administratorrechten)</value>
+  </data>
+  <data name="EditorConnecting" xml:space="preserve">
+    <value>Wird verbunden …</value>
+  </data>
+  <data name="DevelopmentVersion" xml:space="preserve">
+    <value>Entwicklungsversion</value>
+  </data>
+  <data name="CompareTitle" xml:space="preserve">
+    <value>Archive vergleichen</value>
+  </data>
+  <data name="CompareIntro" xml:space="preserve">
+    <value>Zeigt, was sich vom älteren zum neueren Archiv geändert hat.</value>
+  </data>
+  <data name="CompareOlder" xml:space="preserve">
+    <value>Älter</value>
+  </data>
+  <data name="CompareNewer" xml:space="preserve">
+    <value>Neuer</value>
+  </data>
+  <data name="CompareSwap" xml:space="preserve">
+    <value>⇅ Tauschen</value>
+  </data>
+  <data name="CompareRun" xml:space="preserve">
+    <value>Vergleichen</value>
+  </data>
+  <data name="CompareSameArchive" xml:space="preserve">
+    <value>Bitte zwei verschiedene Archive wählen.</value>
+  </data>
+  <data name="ArchiveChecked" xml:space="preserve">
+    <value>✓ geprüft</value>
+  </data>
+  <data name="ArchiveCheckedThoroughly" xml:space="preserve">
+    <value>✓✓ gründlich geprüft</value>
+  </data>
+  <data name="ArchiveCheckedTip" xml:space="preserve">
+    <value>Von der Prüfung am {0} erfasst: nichts gefunden.</value>
+  </data>
+  <data name="ArchiveCheckedThoroughlyTip" xml:space="preserve">
+    <value>Von der gründlichen Prüfung am {0} erfasst (alle Daten gelesen): nichts gefunden.</value>
+  </data>
+  <data name="ArchiveCheckDamaged" xml:space="preserve">
+    <value>✗ Prüfung: Fehler</value>
+  </data>
+  <data name="ArchiveCheckDamagedTip" xml:space="preserve">
+    <value>Die Prüfung am {0} hat Schäden im Repository gefunden – siehe Tab „Prüfung“.</value>
+  </data>
+  <data name="ArchiveRestoreTested" xml:space="preserve">
+    <value>↺ Test-Wiederherstellung OK</value>
+  </data>
+  <data name="ArchiveRestoreTestedTip" xml:space="preserve">
+    <value>Am {0} zur Probe wiederhergestellt: alles kam zurück.</value>
+  </data>
+  <data name="ArchiveRestoreTestFailed" xml:space="preserve">
+    <value>↺ Test-Wiederherstellung fehlgeschlagen</value>
+  </data>
+  <data name="ArchiveRestoreTestFailedTip" xml:space="preserve">
+    <value>Die Test-Wiederherstellung am {0} ist fehlgeschlagen – siehe Job.</value>
+  </data>
+  <data name="DashCheckNever" xml:space="preserve">
+    <value>Noch nie geprüft</value>
+  </data>
+  <data name="DashStatusBackups" xml:space="preserve">
+    <value>Sicherung</value>
+  </data>
+  <data name="DashStatusCheck" xml:space="preserve">
+    <value>Integritätsprüfung</value>
+  </data>
+  <data name="DashStatusRestore" xml:space="preserve">
+    <value>Test-Wiederherstellung</value>
+  </data>
+  <data name="DashStatusLast" xml:space="preserve">
+    <value>In Ordnung, zuletzt {0}</value>
+  </data>
+  <data name="DashStatusChecked" xml:space="preserve">
+    <value>In Ordnung, geprüft {0}</value>
+  </data>
+  <data name="DashStatusCheckedFull" xml:space="preserve">
+    <value>In Ordnung, gründlich geprüft {0}</value>
+  </data>
+  <data name="DashStatusRestoreOk" xml:space="preserve">
+    <value>In Ordnung</value>
+  </data>
+  <data name="DashStatusRestoreFailed" xml:space="preserve">
+    <value>Fehlgeschlagen ({0})</value>
+  </data>
+  <data name="DashStatusRestoreNotRun" xml:space="preserve">
+    <value>Konnte nicht laufen ({0})</value>
+  </data>
+  <data name="DashStatusRestoreNone" xml:space="preserve">
+    <value>Nicht eingerichtet</value>
+  </data>
+  <data name="JobEditorScheduleEveryMinutes" xml:space="preserve">
+    <value>Alle paar Minuten</value>
+  </data>
+  <data name="ScheduleOneMinute" xml:space="preserve">
+    <value>jede Minute</value>
+  </data>
+  <data name="ScheduleMinutes" xml:space="preserve">
+    <value>alle {0} Minuten</value>
+  </data>
+  <data name="ScheduleEveryMinute" xml:space="preserve">
+    <value>Jede Minute</value>
+  </data>
+  <data name="ScheduleEveryMinutes" xml:space="preserve">
+    <value>Alle {0} Minuten</value>
+  </data>
+  <data name="RestoreOriginalUnavailableDrive" xml:space="preserve">
+    <value>Nicht möglich: Dieses Archiv stammt von einem Wechselmedium, seine Pfade beziehen sich auf den Datenträger. In einen Ordner wiederherstellen – z. B. auf dem Datenträger selbst.</value>
+  </data>
+  <data name="SkipSourceMissing" xml:space="preserve">
+    <value>Der zu sichernde Datenträger war nicht angeschlossen.</value>
+  </data>
+  <data name="SourceDriveMissingTitle" xml:space="preserve">
+    <value>Datenträger nicht angeschlossen</value>
+  </data>
+  <data name="SourceDriveMissing" xml:space="preserve">
+    <value>„{0}“ ist nicht angeschlossen. Datenträger anstecken und die Sicherung erneut starten.</value>
+  </data>
+  <data name="SourceDriveUnnamed" xml:space="preserve">
+    <value>Wechselmedium</value>
+  </data>
+  <data name="SourceDriveWhole" xml:space="preserve">
+    <value>Wechselmedium „{0}“ (ganz)</value>
+  </data>
+  <data name="SourceDriveFolders" xml:space="preserve">
+    <value>Wechselmedium „{0}“: {1}</value>
+  </data>
+  <data name="PlugInSourceQuestion" xml:space="preserve">
+    <value>„{0}“ wurde angesteckt. Jetzt sichern?
+
+Jobs: {1}</value>
+  </data>
+  <data name="JobEditorSourceKind" xml:space="preserve">
+    <value>Was gesichert wird</value>
+  </data>
+  <data name="JobEditorSourceFolders" xml:space="preserve">
+    <value>Ordner auf diesem Computer</value>
+  </data>
+  <data name="JobEditorSourceDrive" xml:space="preserve">
+    <value>Ein Wechselmedium (USB-Stick, externe Platte, Speicherkarte) – genau dieser Datenträger, egal unter welchem Buchstaben</value>
+  </data>
+  <data name="JobEditorDrive" xml:space="preserve">
+    <value>Datenträger</value>
+  </data>
+  <data name="JobEditorDriveNone" xml:space="preserve">
+    <value>Kein Wechselmedium angesteckt</value>
+  </data>
+  <data name="JobEditorDriveRefresh" xml:space="preserve">
+    <value>Aktualisieren</value>
+  </data>
+  <data name="JobEditorDriveOption" xml:space="preserve">
+    <value>{0} ({1}, {2})</value>
+  </data>
+  <data name="JobEditorDriveNotAttached" xml:space="preserve">
+    <value>{0} (nicht angeschlossen)</value>
+  </data>
+  <data name="JobEditorDriveHint" xml:space="preserve">
+    <value>BorgStudio erkennt den Datenträger an seiner UUID bzw. Seriennummer. Die Archive enthalten die Pfade auf dem Datenträger (z. B. „DCIM/…“), egal unter welchem Buchstaben er hängt. Ist er zur geplanten Zeit nicht angesteckt, wartet der Lauf darauf und wird übersprungen, wenn er nicht kommt.</value>
+  </data>
+  <data name="JobEditorDriveIdFile" xml:space="preserve">
+    <value>Dieser Datenträger hat keine lesbare UUID. Beim Speichern legt BorgStudio eine kleine versteckte Datei (.borgstudio-id) darauf, um ihn wiederzuerkennen.</value>
+  </data>
+  <data name="JobEditorDriveWhole" xml:space="preserve">
+    <value>Den ganzen Datenträger</value>
+  </data>
+  <data name="JobEditorDriveSome" xml:space="preserve">
+    <value>Nur diese Ordner darauf:</value>
+  </data>
+  <data name="JobEditorDriveFolders" xml:space="preserve">
+    <value>Ordner auf dem Datenträger</value>
+  </data>
+  <data name="JobEditorAddDriveFolder" xml:space="preserve">
+    <value>Ordner hinzufügen …</value>
+  </data>
+  <data name="JobEditorDriveFolderNeedsDrive" xml:space="preserve">
+    <value>Zuerst den Datenträger anstecken und auswählen.</value>
+  </data>
+  <data name="JobEditorDriveFolderOutside" xml:space="preserve">
+    <value>{0} liegt nicht auf dem gewählten Datenträger ({1}).</value>
+  </data>
+  <data name="JobEditorDriveRequired" xml:space="preserve">
+    <value>Bitte einen Datenträger auswählen (vorher anstecken).</value>
+  </data>
+  <data name="JobEditorDriveFoldersRequired" xml:space="preserve">
+    <value>Bitte mindestens einen Ordner auf dem Datenträger hinzufügen oder den ganzen Datenträger sichern.</value>
+  </data>
+  <data name="JobEditorDriveIdFailed" xml:space="preserve">
+    <value>Die Kennungsdatei konnte nicht auf {0} geschrieben werden: {1}</value>
+  </data>
+  <data name="JobEditorDrivePlugIn" xml:space="preserve">
+    <value>Beim Anstecken fragen „Jetzt sichern?“</value>
+  </data>
+  <data name="JobEditorDrivePlugInHint" xml:space="preserve">
+    <value>Fragt, solange BorgStudio geöffnet ist (Fenster oder Infobereich) – mit „BorgStudio im Hintergrund“ ab der Anmeldung (Extras → Einstellungen → Geplante Sicherungen). Nicht erneut innerhalb dieser Zeit nach einer erfolgreichen automatischen Sicherung – von Hand gestartete zählen nicht (0: jedes Mal).</value>
+  </data>
+  <data name="JobEditorDriveEject" xml:space="preserve">
+    <value>Datenträger nach automatischen Läufen auswerfen (geplant oder beim Anstecken)</value>
   </data>
 </root>

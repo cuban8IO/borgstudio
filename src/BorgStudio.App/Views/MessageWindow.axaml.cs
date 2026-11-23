@@ -21,7 +21,14 @@ public partial class MessageWindow : Window
         CancelButton.IsVisible = cancelText is not null;
     }
 
-    private void Confirm_Click(object? sender, RoutedEventArgs e) => Close(true);
+    /// <summary>The confirm button closed it (for windows shown without <c>ShowDialog</c>).</summary>
+    public bool Confirmed { get; private set; }
+
+    private void Confirm_Click(object? sender, RoutedEventArgs e)
+    {
+        Confirmed = true;
+        Close(true);
+    }
 
     private void Cancel_Click(object? sender, RoutedEventArgs e) => Close(false);
 }

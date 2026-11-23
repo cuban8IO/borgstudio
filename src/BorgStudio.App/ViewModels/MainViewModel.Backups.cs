@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using BorgStudio.App.Resources;
+using BorgStudio.App.Services;
 using BorgStudio.Core.Backups;
 using BorgStudio.Core.Borg;
 using BorgStudio.Core.Notifications;
@@ -22,7 +23,7 @@ public partial class MainViewModel
     public bool HasRepositoryJobs => RepositoryJobs.Count > 0;
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(EditJobCommand), nameof(DeleteJobCommand), nameof(RunJobCommand), nameof(CleanUpJobCommand))]
+    [NotifyCanExecuteChangedFor(nameof(EditJobCommand), nameof(DeleteJobCommand), nameof(RunJobCommand), nameof(CleanUpJobCommand), nameof(TestRestoreCommand))]
     public partial BackupJobItemViewModel? SelectedJob { get; set; }
 
     /// <summary>The running backup, or the last one (with its outcome) until the next starts.</summary>
@@ -35,7 +36,8 @@ public partial class MainViewModel
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(RunJobCommand), nameof(CancelBackupCommand), nameof(DeleteJobCommand), nameof(EditJobCommand),
         nameof(TestRepositoryCommand), nameof(ExportKeyCommand), nameof(RemoveRepositoryCommand), nameof(EditRepositoryCommand),
-        nameof(CleanUpJobCommand), nameof(FreeSpaceCommand), nameof(MeasureStorageCommand))]
+        nameof(CleanUpJobCommand), nameof(TestRestoreCommand), nameof(FreeSpaceCommand), nameof(MeasureStorageCommand), nameof(CheckRepositoryCommand),
+        nameof(CheckRepositoryFullCommand), nameof(RepairRepositoryCommand), nameof(BreakLockCommand))]
     public partial bool IsBackupRunning { get; private set; }
 
     /// <summary>Completes when the running backup (if any) has ended.</summary>
@@ -71,7 +73,7 @@ public partial class MainViewModel
         RepositoryJobs.Clear();
         if (SelectedRepository is { } repository)
             foreach (var job in _jobs.Where(job => job.RepositoryId == repository.Config.Id))
-                RepositoryJobs.Add(new BackupJobItemViewModel(job));
+                RepositoryJobs.Add(new BackupJobItemViewModel(job, RestoreTestStore.Get(job.Id).FirstOrDefault()));
         SelectedJob = RepositoryJobs.FirstOrDefault(item => item.Job.Id == selected) ?? RepositoryJobs.FirstOrDefault();
         OnPropertyChanged(nameof(HasRepositoryJobs));
         NewJobCommand.NotifyCanExecuteChanged();
@@ -96,6 +98,8 @@ public partial class MainViewModel
         _services.Archives.Remove(repositoryId);
         _services.Durations.Remove(repositoryId);
         StorageStore.Remove(repositoryId);
+        CheckStore.Remove(repositoryId);
+        NotificationPolicy.ForDataDirectory(_services.Jobs.DataDirectory).ForgetRepository(repositoryId);
     }
 
     // --- New / edit / delete ---
@@ -103,7 +107,7 @@ public partial class MainViewModel
     [RelayCommand(CanExecute = nameof(CanAddJob))]
     private async Task NewJobAsync()
     {
-        var editor = new BackupJobEditorViewModel(SelectedRepository!.Config, Borg, _services.Dialogs);
+        var editor = new BackupJobEditorViewModel(SelectedRepository!.Config, Borg, _services.Dialogs, drives: SourceDriveLocator.For(_services));
         await _services.Dialogs.ShowBackupJobEditorAsync(editor);
         if (editor.Result is not { } job)
             return;
@@ -120,7 +124,8 @@ public partial class MainViewModel
     [RelayCommand(CanExecute = nameof(CanChangeJob))]
     private async Task EditJobAsync()
     {
-        var editor = new BackupJobEditorViewModel(SelectedRepository!.Config, Borg, _services.Dialogs, SelectedJob!.Job);
+        var editor = new BackupJobEditorViewModel(SelectedRepository!.Config, Borg, _services.Dialogs, SelectedJob!.Job,
+            SourceDriveLocator.For(_services));
         await _services.Dialogs.ShowBackupJobEditorAsync(editor);
         if (editor.Result is not { } job)
             return;
@@ -144,6 +149,7 @@ public partial class MainViewModel
         _jobs.RemoveAll(existing => existing.Id == job.Id);
         SaveJobs();
         Runner.History.Remove(job.Id);
+        RestoreTestStore.Remove(job.Id);
         NotificationPolicy.ForDataDirectory(_services.Jobs.DataDirectory).Forget(job.Id);
         RefreshRepositoryJobs();
     }
@@ -170,7 +176,15 @@ public partial class MainViewModel
     private async Task RunBackupAsync(BackupJob job)
     {
         var item = Repositories.FirstOrDefault(repository => repository.Config.Id == job.RepositoryId);
-        if (item is null || !TryGetLocation(item, out var location))
+        if (item is null)
+            return;
+        // The drive to back up has to be attached – told before anything else is asked.
+        if (job.Drive is { } drive && (SourceDriveLocator.For(_services) is not { } drives || await drives.FindAsync(drive) is null))
+        {
+            await _services.Dialogs.ShowMessageAsync(Strings.SourceDriveMissingTitle, BorgTexts.Format(Strings.SourceDriveMissing, BorgTexts.DriveName(drive)));
+            return;
+        }
+        if (await ConnectAsync(item) is not { } location)
             return;
         if (!await ReleaseMountsAsync(item.Config.Id, item.Name))
             return;
@@ -184,8 +198,19 @@ public partial class MainViewModel
             return;
 
         var borg = Borg!;
-        var result = await RunWithCardAsync(job, (report, cancellationToken) =>
-            Runner.RunAsync(new BackupRunRequest(borg, location, job, passphrase.Value, ssh.Access), report, cancellationToken));
+        Core.Checks.CheckRecord? check = null;
+        var checks = new RepositoryChecks(_services);
+        var throttle = Throttle(item.Config, location);
+        var result = await RunWithCardAsync(job, async (report, cancellationToken) =>
+        {
+            var backup = await Runner.RunAsync(new BackupRunRequest(borg, location, job, passphrase.Value, ssh.Access, Throttle: throttle), report,
+                cancellationToken);
+            // Checked after the backup, if the repository's policy says one is due (with the jobs' restore tests).
+            if (backup.Summary.Outcome is BackupOutcome.Succeeded or BackupOutcome.Warnings)
+                check = await checks.CheckAfterBackupAsync(item.Config, new UnattendedAccess(borg, location, passphrase.Value, ssh.Access, throttle), report,
+                    cancellationToken);
+            return backup;
+        });
         var summary = result.Summary;
         // Turned away (another run is busy): that one measures and reports.
         if (summary.SkipReason == BackupSkipReason.RepositoryBusy)
@@ -193,7 +218,15 @@ public partial class MainViewModel
         var usage = await MeasureAfterBackupAsync(item.Config, borg, location, passphrase.Value, ssh.Access, result.Repository);
         await NotifyRunAsync(job, summary);
         await NotifyStorageAsync(item.Config, usage);
+        if (check is not null)
+            await NotifyCheckAsync(item.Config, check);
+        foreach (var (tested, test) in checks.LastRestoreTests)
+            await NotifyRestoreTestAsync(tested, item.Name, test);
     }
+
+    /// <summary>The repository's limits for a run starting now (the upload limit only for a server).</summary>
+    private static Core.Repositories.BorgThrottle Throttle(Core.Repositories.RepositoryConfig repository, Plugins.RepositoryLocation location) =>
+        repository.Limits.ThrottleAt(DateTime.Now, location.Ssh is not null);
 
     /// <summary>
     /// Runs a backup with its card in the window: progress, the expected total, cancelling. The window's own runs and the
@@ -203,6 +236,7 @@ public partial class MainViewModel
         Func<IBackupRunReport, CancellationToken, Task<BackupRunResult>> start)
     {
         var run = new BackupRunViewModel(job);
+        using var task = Tasks.Track(BackupTask(run, job));
         CurrentBackup = run;
         IsBackupRunning = true;
         using var cancellation = new CancellationTokenSource();
@@ -245,13 +279,24 @@ public partial class MainViewModel
         IsBackupRunning = false;
         if (summary.Outcome != BackupOutcome.Skipped)
             ArchivesChanged(job.RepositoryId);
-        // A scheduled run in the background has measured the storage meanwhile.
+        if (Repositories.FirstOrDefault(repository => repository.Config.Id == job.RepositoryId) is { } runItem
+            && summary.Outcome is not (BackupOutcome.Skipped or BackupOutcome.Cancelled))
+        {
+            if (summary.RepositoryLocked)
+                runItem.LockedSince = DateTimeOffset.Now;
+            else if (summary.Outcome != BackupOutcome.Failed)
+                runItem.LockedSince = null;
+            BreakLockCommand.NotifyCanExecuteChanged();
+        }
+        // A scheduled run in the background has measured the storage meanwhile (and may have checked the repository).
+        RefreshChecks(job.RepositoryId);
         RefreshStorage(job.RepositoryId);
         return result;
     }
 
     /// <summary>Runs backups and clean-ups – the same for the window, the background and scheduled runs.</summary>
-    internal BackupRunner Runner => _runner ??= new BackupRunner(_services.BorgClient, _services.Jobs, _services.Durations, BorgTexts.Describe);
+    internal BackupRunner Runner => _runner ??= new BackupRunner(_services.BorgClient, _services.Jobs, _services.Durations, BorgTexts.Describe,
+        hooks: _services.Hooks, describeHook: BorgTexts.HookProblem, sourceDrives: SourceDriveLocator.For(_services));
 
     private BackupRunner? _runner;
 
@@ -280,7 +325,16 @@ public partial class MainViewModel
     {
         try
         {
-            var size = await Task.Run(() => SourceScanner.Scan(job.Sources, job.Exclusions, cancellationToken), cancellationToken);
+            var (sources, exclusions) = (job.Sources, job.Exclusions);
+            // A drive: its folders (or all of it) where it is attached now; its exclusion folders are relative to its root.
+            if (job.Drive is { } drive)
+            {
+                if (SourceDriveLocator.For(_services) is not { } drives || await drives.FindAsync(drive, cancellationToken) is not { } root)
+                    return;
+                sources = drive.IsWholeDrive ? [root] : [.. drive.Folders.Select(folder => Path.Combine(root, folder))];
+                exclusions = exclusions with { Folders = [.. exclusions.Folders.Select(folder => Path.Combine(root, folder))] };
+            }
+            var size = await Task.Run(() => SourceScanner.Scan(sources, exclusions, cancellationToken), cancellationToken);
             OnViewModelThread(() => run.SetEstimate(size.Bytes));
         }
         catch (OperationCanceledException)
@@ -298,6 +352,10 @@ public partial class MainViewModel
             {
                 BackupRunPhase.Pruning => RunPhase.Pruning,
                 BackupRunPhase.Compacting => RunPhase.Compacting,
+                BackupRunPhase.Checking => RunPhase.Checking,
+                BackupRunPhase.RestoreTesting => RunPhase.RestoreTesting,
+                BackupRunPhase.HookBefore => RunPhase.HookBefore,
+                BackupRunPhase.HookAfter => RunPhase.HookAfter,
                 _ => RunPhase.Backup,
             }, expected));
 
@@ -312,13 +370,26 @@ public partial class MainViewModel
 }
 
 /// <summary>A job in the "Backup jobs" tab.</summary>
-public sealed class BackupJobItemViewModel(BackupJob job)
+public sealed class BackupJobItemViewModel(BackupJob job, Core.Checks.RestoreTestRecord? lastRestoreTest = null)
 {
     public BackupJob Job { get; } = job;
 
+    /// <summary>The job's last restore test; <c>null</c> if it never had one.</summary>
+    public Core.Checks.RestoreTestRecord? LastRestoreTest { get; } = lastRestoreTest;
+
+    /// <summary>"Test-Wiederherstellung 20.11.2026 14:03: erfolgreich – 20 Dateien (84 MB), 14 verglichen".</summary>
+    public string RestoreTestText => LastRestoreTest is { } test ? BorgTexts.RestoreTest(test) : "";
+
+    public bool HasRestoreTest => LastRestoreTest is not null;
+
+    public bool RestoreTestFailed => LastRestoreTest?.Outcome == Core.Checks.RestoreTestOutcome.Failed;
+
+    public bool RestoreTestNotRun => LastRestoreTest?.Outcome == Core.Checks.RestoreTestOutcome.NotRun;
+
     public string Name => Job.Name;
 
-    public string SourcesText => string.Join(", ", Job.Sources);
+    /// <summary>"C:\Users\me\Documents, D:\Fotos" – or for a drive "Wechselmedium „KAMERA“: DCIM, Videos".</summary>
+    public string SourcesText => Job.Drive is { } drive ? BorgTexts.DriveSources(drive) : string.Join(", ", Job.Sources);
 
     public string LastRunText => Job.LastRun switch
     {
@@ -343,6 +414,11 @@ public sealed class BackupJobItemViewModel(BackupJob job)
     public bool HasRetention => Job.Retention is { HasRules: true };
 
     public bool IsScheduled => Job.IsScheduled;
+
+    /// <summary>"Startet nur: im Netzbetrieb, über LAN"; empty without conditions (or schedule).</summary>
+    public string ConditionsText => Job.IsScheduled ? BorgTexts.Conditions(Job.Conditions) ?? "" : "";
+
+    public bool HasConditions => ConditionsText.Length > 0;
 
     /// <summary>"Täglich 20:00 · Mo, Di 12:30 · nächster Lauf: Mo., 17.11. 20:00".</summary>
     public string ScheduleText => !Job.IsScheduled ? Strings.JobNotScheduled

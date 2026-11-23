@@ -115,13 +115,83 @@ public sealed class NotificationPolicy(string stateFile)
         }
     }
 
+    /// <summary>
+    /// The event for a check: <see cref="NotificationEvent.CheckFailed"/> when it found damage (a repeat while the damage
+    /// stays) or – started by itself – could not run (a repeat until one runs); <see cref="NotificationEvent.Recovered"/>
+    /// for the first check without damage after either. <c>null</c> otherwise: a check by hand that could not run, or was
+    /// stopped, tells nothing new (the user saw it), nor does a check that could not run while damage is known.
+    /// </summary>
+    public NotificationDecision? DecideCheck(Guid repositoryId, Checks.CheckOutcome outcome, bool automatic = false) =>
+        Decide(CheckKey(repositoryId), outcome, automatic);
+
+    /// <summary>
+    /// The same for a job's restore test: a failed one is reported like damage found by a check, one that could not run
+    /// (started by itself) like a check that could not run; a stopped one not at all.
+    /// </summary>
+    public NotificationDecision? DecideRestoreTest(Guid jobId, Checks.RestoreTestOutcome outcome, bool automatic = false) =>
+        Decide(RestoreTestKey(jobId), outcome switch
+        {
+            Checks.RestoreTestOutcome.Ok => Checks.CheckOutcome.Ok,
+            Checks.RestoreTestOutcome.Failed => Checks.CheckOutcome.ProblemsFound,
+            Checks.RestoreTestOutcome.NotRun => Checks.CheckOutcome.Failed,
+            _ => Checks.CheckOutcome.Cancelled,
+        }, automatic);
+
+    private NotificationDecision? Decide(string key, Checks.CheckOutcome outcome, bool automatic)
+    {
+        var notRun = automatic && outcome == Checks.CheckOutcome.Failed;
+        if (outcome is not (Checks.CheckOutcome.Ok or Checks.CheckOutcome.ProblemsFound) && !notRun)
+            return null;
+        lock (Gate)
+        {
+            var states = Load();
+            var previous = states.GetValueOrDefault(key);
+            if (outcome == Checks.CheckOutcome.Ok)
+            {
+                if (previous is null)
+                    return null;
+                states.Remove(key);
+                Save(states);
+                return new NotificationDecision(NotificationEvent.Recovered, false);
+            }
+            if (notRun && previous == Damaged)
+                return null;
+            var current = notRun ? NotRun : Damaged;
+            if (current != previous)
+            {
+                states[key] = current;
+                Save(states);
+            }
+            return new NotificationDecision(NotificationEvent.CheckFailed, current == previous);
+        }
+    }
+
+    private const string Damaged = "damaged";
+
+    private const string NotRun = "not-run";
+
+    /// <summary>The repository was removed.</summary>
+    public void ForgetRepository(Guid repositoryId)
+    {
+        lock (Gate)
+        {
+            var states = Load();
+            if (states.Remove(CheckKey(repositoryId)) | states.Remove($"storage-{repositoryId:N}"))
+                Save(states);
+        }
+    }
+
+    private static string CheckKey(Guid repositoryId) => $"check-{repositoryId:N}";
+
+    private static string RestoreTestKey(Guid jobId) => $"restore-test-{jobId:N}";
+
     /// <summary>The job was deleted.</summary>
     public void Forget(Guid jobId)
     {
         lock (Gate)
         {
             var problems = Load();
-            if (problems.Remove(jobId.ToString("N")) | problems.Remove(OverdueKey(jobId)))
+            if (problems.Remove(jobId.ToString("N")) | problems.Remove(OverdueKey(jobId)) | problems.Remove(RestoreTestKey(jobId)))
                 Save(problems);
         }
     }

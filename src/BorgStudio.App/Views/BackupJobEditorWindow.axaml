@@ -37,8 +37,52 @@
                     <TextBlock Text="{x:Static res:Strings.JobEditorNameHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
                 </StackPanel>
 
+                <!-- What to back up: folders on this computer or a removable drive -->
+                <StackPanel Spacing="6" IsVisible="{Binding CanBackUpDrive}">
+                    <TextBlock Text="{x:Static res:Strings.JobEditorSourceKind}" FontWeight="SemiBold" />
+                    <RadioButton GroupName="SourceKind" IsChecked="{Binding IsFolderSource}" Content="{x:Static res:Strings.JobEditorSourceFolders}" />
+                    <RadioButton GroupName="SourceKind" IsChecked="{Binding IsDriveSource}">
+                        <TextBlock Text="{x:Static res:Strings.JobEditorSourceDrive}" TextWrapping="Wrap" />
+                    </RadioButton>
+                </StackPanel>
+
+                <!-- A removable drive -->
+                <StackPanel Spacing="6" IsVisible="{Binding IsDriveSource}">
+                    <TextBlock Text="{x:Static res:Strings.JobEditorDrive}" FontWeight="SemiBold" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <ComboBox ItemsSource="{Binding AttachedDrives}" SelectedItem="{Binding SelectedDrive}" HorizontalAlignment="Stretch"
+                                  PlaceholderText="{x:Static res:Strings.JobEditorDriveNone}" />
+                        <Button Grid.Column="1" Content="{x:Static res:Strings.JobEditorDriveRefresh}" Command="{Binding RefreshDrivesCommand}"
+                                Margin="8,0,0,0" />
+                    </Grid>
+                    <TextBlock Text="{x:Static res:Strings.JobEditorDriveHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                    <TextBlock Text="{x:Static res:Strings.JobEditorDriveIdFile}" FontSize="12" TextWrapping="Wrap"
+                               Foreground="{DynamicResource WarningBorder}" IsVisible="{Binding DriveNeedsIdFile}" />
+                    <RadioButton GroupName="DriveScope" IsChecked="{Binding WholeDrive}" Content="{x:Static res:Strings.JobEditorDriveWhole}" />
+                    <RadioButton GroupName="DriveScope" IsChecked="{Binding SomeDriveFolders}" Content="{x:Static res:Strings.JobEditorDriveSome}" />
+                    <StackPanel Spacing="6" Margin="28,0,0,0" IsVisible="{Binding SomeDriveFolders}">
+                        <ListBox ItemsSource="{Binding DriveFolders}" SelectedItem="{Binding SelectedDriveFolder}" MinHeight="50" MaxHeight="130" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Content="{x:Static res:Strings.JobEditorAddDriveFolder}" Command="{Binding AddDriveFolderCommand}" />
+                            <Button Content="{x:Static res:Strings.Remove}" Command="{Binding RemoveDriveFolderCommand}" CommandParameter="{x:Null}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <CheckBox IsChecked="{Binding DrivePlugIn}" Margin="0,6,0,0">
+                        <TextBlock Text="{x:Static res:Strings.JobEditorDrivePlugIn}" TextWrapping="Wrap" />
+                    </CheckBox>
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="28,0,0,0" IsEnabled="{Binding DrivePlugIn}">
+                        <TextBlock Text="{x:Static res:Strings.EditorPlugInAtMost}" VerticalAlignment="Center" />
+                        <NumericUpDown Value="{Binding DrivePlugInHours}" Minimum="0" Maximum="720" Increment="1" FormatString="0" Width="120" />
+                        <TextBlock Text="{x:Static res:Strings.EditorPlugInHours}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Text="{x:Static res:Strings.JobEditorDrivePlugInHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" Margin="28,0,0,0" />
+                    <CheckBox IsChecked="{Binding DriveEject}">
+                        <TextBlock Text="{x:Static res:Strings.JobEditorDriveEject}" TextWrapping="Wrap" />
+                    </CheckBox>
+                </StackPanel>
+
                 <!-- Sources -->
-                <StackPanel Spacing="6">
+                <StackPanel Spacing="6" IsVisible="{Binding IsFolderSource}">
                     <TextBlock Text="{x:Static res:Strings.JobEditorSources}" FontWeight="SemiBold" />
                     <ListBox ItemsSource="{Binding Sources}" SelectedItem="{Binding SelectedSource}" MinHeight="70" MaxHeight="160" />
                     <StackPanel Orientation="Horizontal" Spacing="8">
@@ -84,49 +128,27 @@
                 <!-- Schedules -->
                 <StackPanel Spacing="6">
                     <TextBlock Text="{x:Static res:Strings.JobEditorSchedules}" FontWeight="SemiBold" />
-                    <ItemsControl ItemsSource="{Binding Schedules}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="vm:ScheduleItemViewModel">
-                                <Border Classes="card" Padding="10,8" Margin="0,0,0,6">
-                                    <StackPanel Spacing="8">
-                                        <WrapPanel>
-                                            <WrapPanel.Styles>
-                                                <Style Selector="WrapPanel > :is(Control)">
-                                                    <Setter Property="Margin" Value="0,0,8,4" />
-                                                    <Setter Property="VerticalAlignment" Value="Center" />
-                                                </Style>
-                                            </WrapPanel.Styles>
-                                            <ComboBox ItemsSource="{Binding KindOptions}" SelectedItem="{Binding SelectedKind}" MinWidth="150" />
-                                            <NumericUpDown Value="{Binding Hours}" Minimum="1" Maximum="12" Increment="1" FormatString="0"
-                                                           Width="110" IsVisible="{Binding IsEveryHours}" />
-                                            <TextBlock Text="{x:Static res:Strings.JobEditorScheduleHours}" IsVisible="{Binding IsEveryHours}" />
-                                            <TextBlock Text="{Binding TimeLabel}" />
-                                            <TimePicker SelectedTime="{Binding Time}" ClockIdentifier="24HourClock" MinuteIncrement="5" />
-                                            <Button Content="{x:Static res:Strings.JobEditorRemoveSchedule}" Command="{Binding RemoveCommand}" />
-                                        </WrapPanel>
-                                        <ItemsControl ItemsSource="{Binding Days}" IsVisible="{Binding IsWeekdays}">
-                                            <ItemsControl.ItemsPanel>
-                                                <ItemsPanelTemplate>
-                                                    <StackPanel Orientation="Horizontal" Spacing="4" />
-                                                </ItemsPanelTemplate>
-                                            </ItemsControl.ItemsPanel>
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate x:DataType="vm:ScheduleDayViewModel">
-                                                    <ToggleButton Content="{Binding Label}" IsChecked="{Binding IsChecked}" MinWidth="44" />
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </StackPanel>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                    <ItemsControl ItemsSource="{Binding Schedules}" />
                     <Button Content="{x:Static res:Strings.JobEditorAddSchedule}" Command="{Binding AddScheduleCommand}" HorizontalAlignment="Left" />
                     <CheckBox IsChecked="{Binding CatchUp}" IsVisible="{Binding HasSchedules}">
                         <TextBlock Text="{x:Static res:Strings.JobEditorCatchUp}" TextWrapping="Wrap" />
                     </CheckBox>
                     <TextBlock Text="{x:Static res:Strings.JobEditorSchedulesHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap"
                                IsVisible="{Binding HasSchedules}" />
+                    <StackPanel Spacing="4" IsVisible="{Binding HasSchedules}" Margin="0,6,0,0">
+                        <TextBlock Text="{x:Static res:Strings.JobEditorConditions}" />
+                        <CheckBox IsChecked="{Binding NotOnBattery}" Content="{x:Static res:Strings.JobEditorNotOnBattery}" />
+                        <CheckBox IsChecked="{Binding NotMetered}" IsEnabled="{Binding CanTellMetered}">
+                            <TextBlock Text="{x:Static res:Strings.JobEditorNotMetered}" TextWrapping="Wrap" />
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding WiredOnly}">
+                            <TextBlock Text="{x:Static res:Strings.JobEditorWiredOnly}" TextWrapping="Wrap" />
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding TargetReachable}">
+                            <TextBlock Text="{x:Static res:Strings.JobEditorTargetReachable}" TextWrapping="Wrap" />
+                        </CheckBox>
+                        <TextBlock Text="{x:Static res:Strings.JobEditorConditionsHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                    </StackPanel>
                     <CheckBox IsChecked="{Binding Notify}">
                         <TextBlock Text="{x:Static res:Strings.JobEditorNotify}" TextWrapping="Wrap" />
                     </CheckBox>
@@ -138,6 +160,45 @@
                     <CheckBox IsChecked="{Binding WebhookTrigger}">
                         <TextBlock Text="{x:Static res:Strings.JobEditorWebhook}" TextWrapping="Wrap" />
                     </CheckBox>
+                </StackPanel>
+
+                <!-- Commands before and after -->
+                <StackPanel Spacing="6">
+                    <TextBlock Text="{x:Static res:Strings.JobEditorHooks}" FontWeight="SemiBold" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="{x:Static res:Strings.JobEditorHookShell}" VerticalAlignment="Center" />
+                        <ComboBox ItemsSource="{Binding HookShellOptions}" SelectedItem="{Binding SelectedHookShell}" MinWidth="200" />
+                    </StackPanel>
+                    <TextBlock Text="{x:Static res:Strings.JobEditorHookBefore}" Margin="0,4,0,0" />
+                    <TextBox Text="{Binding HookBefore}" AcceptsReturn="True" TextWrapping="NoWrap" MinHeight="60" MaxHeight="160"
+                             FontFamily="Cascadia Code, Consolas, Menlo, monospace" FontSize="12" />
+                    <CheckBox IsChecked="{Binding HookContinueOnFailure}">
+                        <TextBlock Text="{x:Static res:Strings.JobEditorHookContinue}" TextWrapping="Wrap" />
+                    </CheckBox>
+                    <TextBlock Text="{x:Static res:Strings.JobEditorHookAfter}" Margin="0,4,0,0" />
+                    <TextBox Text="{Binding HookAfter}" AcceptsReturn="True" TextWrapping="NoWrap" MinHeight="60" MaxHeight="160"
+                             FontFamily="Cascadia Code, Consolas, Menlo, monospace" FontSize="12" />
+                    <RadioButton GroupName="HookAfter" IsChecked="{Binding HookAfterOnSuccess}" Content="{x:Static res:Strings.JobEditorHookAfterSuccess}" />
+                    <RadioButton GroupName="HookAfter" IsChecked="{Binding HookAfterAlways}" Content="{x:Static res:Strings.JobEditorHookAfterAlways}" />
+                    <TextBlock Text="{x:Static res:Strings.JobEditorHooksHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                </StackPanel>
+
+                <!-- Restore test -->
+                <StackPanel Spacing="6">
+                    <TextBlock Text="{x:Static res:Strings.JobEditorRestoreTest}" FontWeight="SemiBold" />
+                    <WrapPanel>
+                        <WrapPanel.Styles>
+                            <Style Selector="WrapPanel > :is(Control)">
+                                <Setter Property="Margin" Value="0,0,8,4" />
+                                <Setter Property="VerticalAlignment" Value="Center" />
+                            </Style>
+                        </WrapPanel.Styles>
+                        <ComboBox ItemsSource="{Binding RestoreTestOptions}" SelectedItem="{Binding SelectedRestoreTest}" MinWidth="260" />
+                        <NumericUpDown Value="{Binding RestoreTestFiles}" Minimum="1" Maximum="1000" Increment="5" FormatString="0" Width="120"
+                                       IsVisible="{Binding IsRestoreTestSample}" />
+                        <TextBlock Text="{x:Static res:Strings.JobEditorRestoreTestFiles}" IsVisible="{Binding IsRestoreTestSample}" />
+                    </WrapPanel>
+                    <TextBlock Text="{x:Static res:Strings.JobEditorRestoreTestHint}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
                 </StackPanel>
 
                 <!-- Clean-up -->

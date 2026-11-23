@@ -35,9 +35,14 @@ public sealed record AppServices(
     Updater Updates,
     ISystemScheduler? Scheduler = null,
     IAutostart? Autostart = null,
-    Notifier? Notifier = null)
+    Notifier? Notifier = null,
+    HookRunner? Hooks = null,
+    ISystemState? SystemState = null)
 {
     public SshHostTrust SshTrust => new(Ssh, new KnownHostsFile(SshKeys.KnownHostsFile));
+
+    /// <summary>Finds or connects repositories before borg uses them (USB drives); shared by everything in this process.</summary>
+    public RepositoryConnections Connections { get; init; } = new(Plugins, RepositoryStore);
 }
 
 public partial class MainViewModel : ViewModelBase
@@ -59,8 +64,16 @@ public partial class MainViewModel : ViewModelBase
         // Created right away: it follows PIN changes and vault resets from now on.
         ScheduledAccess = CreateScheduledAccess(services);
         InitializeVault();
+        SelectedArchives.CollectionChanged += (_, _) =>
+        {
+            OnSelectedArchivesChanged();
+            NotifyArchiveChangeCommands();
+        };
+        // "Vergleichen …" needs two archives in the list.
+        Archives.CollectionChanged += (_, _) => CompareArchivesCommand.NotifyCanExecuteChanged();
         LoadRepositories();
         LoadJobs();
+        RefreshChecks();
         RefreshStorage();
         // The app starts with the overview of all repositories.
         IsOverviewShown = HasRepositories;
@@ -83,11 +96,11 @@ public partial class MainViewModel : ViewModelBase
     public AppServices Services => _services;
 
     /// <summary>Window title with the app version, e.g. "BorgStudio 0.2.0".</summary>
-    public string Title { get; } = $"BorgStudio {AppVersion.Current}";
+    public string Title { get; } = AppVersion.Title;
 
     /// <summary>The borg used for all repository operations; <c>null</c> until found.</summary>
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(TestRepositoryCommand), nameof(ExportKeyCommand), nameof(RunJobCommand), nameof(CleanUpJobCommand),
+    [NotifyCanExecuteChangedFor(nameof(TestRepositoryCommand), nameof(ExportKeyCommand), nameof(RunJobCommand), nameof(CleanUpJobCommand), nameof(TestRestoreCommand),
         nameof(FreeSpaceCommand), nameof(MeasureStorageCommand), nameof(MountArchiveCommand), nameof(MountRepositoryCommand))]
     public partial BorgInstallation? Borg { get; private set; }
 
@@ -180,6 +193,21 @@ public partial class MainViewModel : ViewModelBase
         public Task ShowRestoreAsync(RestoreViewModel restore) => Task.CompletedTask;
         public Task ShowArchiveSearchAsync(ArchiveSearchViewModel search) => Task.CompletedTask;
         public Task ShowFileVersionsAsync(FileVersionsViewModel versions) => Task.CompletedTask;
+
+        public Task ShowArchiveDiffAsync(ArchiveDiffViewModel diff) => Task.CompletedTask;
+
+        public Task<bool> PickArchivesToCompareAsync(ArchiveComparePickerViewModel picker) => Task.FromResult(false);
+
+        public Task<string?> PickArchiveExportFileAsync(string title, string suggestedName) => Task.FromResult<string?>(null);
+
+        public Task ShowArchiveExportAsync(ArchiveExportViewModel export) => Task.CompletedTask;
+
+        public Task<bool> ShowPublicKeyAsync(string title, string instructions, string publicKey) => Task.FromResult(false);
+
+        public Task<bool> AskOnTopAsync(string title, string message, string confirmText, string cancelText,
+            CancellationToken cancellationToken) => Task.FromResult(false);
+
+        public Task<string?> AskTextAsync(string title, string prompt, string initial) => Task.FromResult<string?>(null);
         public Task CopyToClipboardAsync(string text) => Task.CompletedTask;
         public Task OpenFolderAsync(string path) => Task.CompletedTask;
         public void RestartApp(System.Diagnostics.ProcessStartInfo? instead = null) { }

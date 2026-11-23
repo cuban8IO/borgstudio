@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using BorgStudio.Core.Borg;
+using BorgStudio.Core.Plugins;
 using BorgStudio.Core.Repositories;
 using BorgStudio.Plugins;
 
@@ -12,12 +13,16 @@ namespace BorgStudio.Core.Storage;
 /// that is not restricted to <c>borg serve</c>); otherwise the repository's size from borg against the capacity entered
 /// for it.
 /// </summary>
-public sealed partial class StorageProbe(BorgClient borg, TimeProvider? time = null)
+/// <param name="plugins">Where the repository's provider is found – it may know the account's quota (<see cref="IStorageQuotaSource"/>).</param>
+public sealed partial class StorageProbe(BorgClient borg, TimeProvider? time = null, PluginCatalog? plugins = null)
 {
     private readonly TimeProvider _time = time ?? TimeProvider.System;
 
     /// <summary>Asks the disk directly (tests replace it).</summary>
     internal Func<string, (long Total, long Free)?> DiskSpace { get; init; } = Disk.Space;
+
+    /// <summary>The provider's secrets of a repository that can be read now (e.g. an API token for the quota).</summary>
+    public Func<RepositoryConfig, IReadOnlyDictionary<string, string>>? Secrets { get; init; }
 
     /// <summary>The usage now; <c>null</c> if nothing could be found out (e.g. the server is not reachable).</summary>
     public async Task<StorageUsage?> MeasureAsync(RepositoryConfig repository, BorgInstallation installation, RepositoryLocation location,
@@ -29,6 +34,12 @@ public sealed partial class StorageProbe(BorgClient borg, TimeProvider? time = n
     public async Task<StorageUsage?> MeasureDirectAsync(RepositoryConfig repository, BorgInstallation installation, RepositoryLocation location,
         SshAccess? ssh, CancellationToken cancellationToken = default)
     {
+        if (await QuotaAsync(repository, installation, location, ssh, cancellationToken) is { } quota)
+            return new StorageUsage
+            {
+                Measured = _time.GetUtcNow(), Source = StorageSource.Server, Total = quota.TotalBytes,
+                Free = Math.Max(0, quota.TotalBytes - quota.UsedBytes),
+            };
         if (location.Ssh is null)
         {
             if (DiskSpace(location.Url) is { } disk)
@@ -63,6 +74,32 @@ public sealed partial class StorageProbe(BorgClient borg, TimeProvider? time = n
                 Repository = stats,
             }
             : new StorageUsage { Measured = _time.GetUtcNow(), Source = StorageSource.RepositoryOnly, RepositorySize = size, Repository = stats });
+    }
+
+    /// <summary>The quota the provider knows; <c>null</c> if it knows none (or failed).</summary>
+    private async Task<StorageQuota?> QuotaAsync(RepositoryConfig repository, BorgInstallation installation, RepositoryLocation location,
+        SshAccess? ssh, CancellationToken cancellationToken)
+    {
+        if (plugins?.FindRepositoryProvider(repository.ProviderId) is not IStorageQuotaSource source)
+            return null;
+        Func<string, CancellationToken, Task<string?>>? run = null;
+        if (location.Ssh is not null && ssh is not null && !repository.SshKeyRestricted)
+            run = async (command, token) =>
+                await borg.RunSshCommandAsync(installation, location, ssh, command, token) is { ExitCode: 0 } result ? result.StandardOutput : null;
+        try
+        {
+            return await source.GetQuotaAsync(new StorageQuotaRequest(repository.ProviderValues)
+                {
+                    RunCommandAsync = run,
+                    Secrets = Secrets?.Invoke(repository) ?? new Dictionary<string, string>(),
+                }, cancellationToken)
+                is { TotalBytes: > 0 } quota ? quota : null;
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            // A plugin's failure: measured otherwise.
+            return null;
+        }
     }
 
     private async Task<(long Total, long Free)?> ServerSpaceAsync(BorgInstallation installation, RepositoryLocation location,

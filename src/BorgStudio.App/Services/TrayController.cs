@@ -41,12 +41,7 @@ public sealed class TrayController
 
     private void Update()
     {
-        if (!_main.IsBackgroundMode)
-        {
-            Remove();
-            return;
-        }
-
+        // Always there while BorgStudio runs: quick actions, and where a closed window goes.
         if (_icon is null)
             Create();
         var state = _main.TrayState;
@@ -106,16 +101,6 @@ public sealed class TrayController
         }
         if (jobs.Count == 0)
             menu.Items.Add(new NativeMenuItem(Strings.TrayNoJobs) { IsEnabled = false });
-    }
-
-    private void Remove()
-    {
-        if (_icon is null)
-            return;
-        _icon.IsVisible = false;
-        TrayIcon.SetIcons(_application, []);
-        _icon.Dispose();
-        _icon = null;
     }
 
     private WindowIcon Icon(TrayState state)

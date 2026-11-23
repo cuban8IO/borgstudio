@@ -26,6 +26,7 @@ internal static class BorgTexts
             BorgErrorKind.MountNotAllowed => Strings.BorgErrorMountNotAllowed,
             BorgErrorKind.MountUnavailable => Strings.BorgErrorMountUnavailable,
             BorgErrorKind.NoSpace => Strings.BorgErrorNoSpace,
+            BorgErrorKind.SshfsMissing => Strings.BorgErrorSshfsMissing,
             _ => Strings.BorgErrorOther,
         };
 
@@ -63,11 +64,32 @@ internal static class BorgTexts
                 string.Join(", ", schedule.Days.Distinct().OrderBy(day => ((int)day + 6) % 7)
                     .Select(day => CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(day))), time),
             Core.Backups.ScheduleKind.EveryHours => Format(Strings.ScheduleEveryHours, schedule.Hours, time),
+            Core.Backups.ScheduleKind.EveryMinutes => schedule.Minutes == 1 ? Strings.ScheduleEveryMinute : Format(Strings.ScheduleEveryMinutes, schedule.Minutes),
+            Core.Backups.ScheduleKind.MonthlyWeekday => Format(Strings.ScheduleMonthlyWeekdayText, schedule.Week switch
+            {
+                1 => Strings.ScheduleWeekFirst,
+                2 => Strings.ScheduleWeekSecond,
+                3 => Strings.ScheduleWeekThird,
+                4 => Strings.ScheduleWeekFourth,
+                _ => Strings.ScheduleWeekLast,
+            }, CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(schedule.Weekday), time),
+            Core.Backups.ScheduleKind.MonthlyDay => Format(Strings.ScheduleMonthlyDayText,
+                schedule.DayOfMonth == Core.Backups.BackupSchedule.Last ? Strings.ScheduleLastDayOfMonth : Format(Strings.ScheduleDayOfMonth, schedule.DayOfMonth),
+                time),
             _ => Format(Strings.ScheduleDaily, time),
         };
     }
 
     /// <summary>Why a run did not start.</summary>
+    /// <summary>The drive's name ("KAMERA"), or "Wechselmedium" if it has none.</summary>
+    public static string DriveName(Core.Backups.SourceDrive drive) =>
+        string.IsNullOrWhiteSpace(drive.Label) ? Strings.SourceDriveUnnamed : drive.Label;
+
+    /// <summary>"Wechselmedium „KAMERA“ (ganz)" or "Wechselmedium „KAMERA“: DCIM, Videos".</summary>
+    public static string DriveSources(Core.Backups.SourceDrive drive) => drive.IsWholeDrive
+        ? Format(Strings.SourceDriveWhole, DriveName(drive))
+        : Format(Strings.SourceDriveFolders, DriveName(drive), string.Join(", ", drive.Folders));
+
     public static string SkipReason(Core.Backups.BackupSkipReason reason) => reason switch
     {
         Core.Backups.BackupSkipReason.RepositoryBusy => Strings.SkipRepositoryBusy,
@@ -78,8 +100,28 @@ internal static class BorgTexts
         Core.Backups.BackupSkipReason.BorgMissing => Strings.SkipBorgMissing,
         Core.Backups.BackupSkipReason.RepositoryMissing => Strings.SkipRepositoryMissing,
         Core.Backups.BackupSkipReason.SshKeyMissing => Strings.SkipSshKeyMissing,
+        Core.Backups.BackupSkipReason.OnBattery => Strings.SkipOnBattery,
+        Core.Backups.BackupSkipReason.MeteredConnection => Strings.SkipMetered,
+        Core.Backups.BackupSkipReason.NotWired => Strings.SkipNotWired,
+        Core.Backups.BackupSkipReason.TargetUnreachable => Strings.SkipTargetUnreachable,
+        Core.Backups.BackupSkipReason.SourceMissing => Strings.SkipSourceMissing,
         _ => Strings.SkipHostUnknown,
     };
+
+    /// <summary>"Nur im Netzbetrieb, nur über LAN" – the job's conditions; <c>null</c> without any.</summary>
+    public static string? Conditions(Core.Backups.RunConditions conditions)
+    {
+        var parts = new List<string>();
+        if (conditions.NotOnBattery)
+            parts.Add(Strings.ConditionNotOnBattery);
+        if (conditions.NotMetered)
+            parts.Add(Strings.ConditionNotMetered);
+        if (conditions.WiredOnly)
+            parts.Add(Strings.ConditionWiredOnly);
+        if (conditions.TargetReachable)
+            parts.Add(Strings.ConditionTargetReachable);
+        return parts.Count == 0 ? null : Format(Strings.JobConditions, string.Join(", ", parts));
+    }
 
     public static string BackupOutcome(Core.Backups.BackupOutcome outcome) => outcome switch
     {
@@ -199,6 +241,67 @@ internal static class BorgTexts
 
     /// <summary>"3,4 MB/s".</summary>
     public static string Rate(double bytesPerSecond) => Size((long)bytesPerSecond) + "/s";
+
+    /// <summary>"normal", "gründlich", "Reparatur".</summary>
+    public static string CheckDepth(Core.Checks.CheckDepth depth) => depth switch
+    {
+        Core.Checks.CheckDepth.Full => Strings.CheckDepthFull,
+        Core.Checks.CheckDepth.Repair => Strings.CheckDepthRepair,
+        _ => Strings.CheckDepthNormal,
+    };
+
+    /// <summary>"Erfolgreich", "Fehlgeschlagen", "Nicht gelaufen", "Abgebrochen".</summary>
+    public static string RestoreTestOutcome(Core.Checks.RestoreTestOutcome outcome) => outcome switch
+    {
+        Core.Checks.RestoreTestOutcome.Ok => Strings.RestoreTestOk,
+        Core.Checks.RestoreTestOutcome.Failed => Strings.RestoreTestFailed,
+        Core.Checks.RestoreTestOutcome.NotRun => Strings.RestoreTestNotRun,
+        _ => Strings.OutcomeCancelled,
+    };
+
+    /// <summary>"Test-Wiederherstellung 20.11.2026 14:03: erfolgreich – 20 Dateien (84 MB), 14 verglichen".</summary>
+    public static string RestoreTest(Core.Checks.RestoreTestRecord record)
+    {
+        var when = record.Started.ToLocalTime().ToString("g", CultureInfo.CurrentCulture);
+        var what = record.Mode == Core.Checks.RestoreTestMode.WholeArchive
+            ? Strings.RestoreTestWholeArchive
+            : Format(record.Mode == Core.Checks.RestoreTestMode.Compare ? Strings.RestoreTestFilesCompared : Strings.RestoreTestFiles,
+                record.Files.Count, Size(record.Bytes), record.Compared);
+        return record.Outcome is Core.Checks.RestoreTestOutcome.Ok or Core.Checks.RestoreTestOutcome.Failed
+            ? Format(Strings.RestoreTestLine, when, RestoreTestOutcome(record.Outcome), what)
+            : Format(Strings.RestoreTestLineShort, when, RestoreTestOutcome(record.Outcome));
+    }
+
+    /// <summary>The test in a few lines: what was restored, which files had problems, why it could not run.</summary>
+    public static string RestoreTestDetails(Core.Checks.RestoreTestRecord record)
+    {
+        var lines = new List<string> { RestoreTest(record) };
+        lines.AddRange(record.Problems.Take(10).Select(RestoredFile));
+        if (record.Error is { } error)
+            lines.Add(error);
+        return string.Join("\n", lines);
+    }
+
+    /// <summary>"Weicht ab: home/me/a.txt".</summary>
+    public static string RestoredFile(Core.Checks.RestoredFile file) => Format(file.Result switch
+    {
+        Core.Checks.RestoredFileResult.Different => Strings.RestoredFileDifferent,
+        Core.Checks.RestoredFileResult.Missing => Strings.RestoredFileMissing,
+        _ => "{0}",
+    }, file.Path);
+
+    /// <summary>"Befehl vor dem Backup fehlgeschlagen (Exit-Code 3): pg_dump: connection refused".</summary>
+    public static string HookProblem(Core.Backups.HookProblem problem)
+    {
+        var stage = problem.Stage == Core.Backups.HookStage.Before ? Strings.HookStageBefore : Strings.HookStageAfter;
+        var text = problem switch
+        {
+            { ExitCode: { } code } => Format(Strings.HookFailedExit, stage, code),
+            { Error: { } program } => Format(Strings.HookNotStarted, stage, program),
+            _ => Format(Strings.HookStopped, stage),
+        };
+        return problem.Output.Count > 0 ? text + ": " + problem.Output[^1] : text;
+    }
 
     /// <summary>"0:42", "12:05", "1:02:03".</summary>
     public static string Duration(TimeSpan duration) =>

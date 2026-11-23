@@ -34,6 +34,16 @@ public sealed class BorgClientIntegrationTests : IDisposable
     }
 
     [BorgFact]
+    public async Task The_usb_drive_provider_recognizes_the_repository_by_the_id_borg_reports()
+    {
+        await _client.InitAsync(Borg, Location(), BorgEncryption.RepokeyBlake2, Passphrase);
+        var info = await _client.InfoAsync(Borg, Location(), Passphrase);
+
+        Assert.True(global::BorgStudio.Providers.Usb.RepositoryFinder.IsRepository(Location().Url, info.Value!.Id));
+        Assert.False(global::BorgStudio.Providers.Usb.RepositoryFinder.IsRepository(Location().Url, "0" + info.Value.Id[1..]));
+    }
+
+    [BorgFact]
     public async Task Wrong_passphrase()
     {
         await _client.InitAsync(Borg, Location(), BorgEncryption.RepokeyBlake2, Passphrase);
@@ -423,6 +433,201 @@ public sealed class BorgClientIntegrationTests : IDisposable
         // A wrong passphrase stops borg before it is mounted.
         var wrong = await _client.MountAsync(Borg, Location(), "mounted", BorgClient.MountFolder(name, "mounted", "all"), "wrong");
         Assert.Equal(BorgErrorKind.PassphraseWrong, wrong.Error?.Kind);
+    }
+
+    [BorgFact]
+    public async Task Checks_finds_damage_and_repairs_it()
+    {
+        await _client.InitAsync(Borg, Location(), BorgEncryption.RepokeyBlake2, Passphrase);
+        var source = _directory.Combine("source");
+        Directory.CreateDirectory(source);
+        File.WriteAllBytes(Path.Combine(source, "data.bin"), System.Security.Cryptography.RandomNumberGenerator.GetBytes(2_000_000));
+        Assert.True((await _client.CreateAsync(Borg, Location(), "one", [source], [], Passphrase)).Succeeded);
+
+        var phases = new List<CheckPhase>();
+        var healthy = await _client.CheckAsync(Borg, Location(), Core.Checks.CheckDepth.Full, Passphrase,
+            progress: new SynchronousProgress<BorgCheckProgress>(update => phases.Add(update.Phase)));
+        Assert.True(healthy.Succeeded, healthy.Error?.ToString());
+        Assert.False(healthy.Value!.ProblemsFound);
+        Assert.Equal([CheckPhase.Segments, CheckPhase.Data, CheckPhase.Archives], phases.Distinct());
+
+        // Flip bytes in the middle of the segment that holds the file's data.
+        var segment = new DirectoryInfo(Path.Combine(Location().Url, "data")).EnumerateFiles("*", SearchOption.AllDirectories)
+            .MaxBy(file => file.Length)!;
+        var bytes = File.ReadAllBytes(segment.FullName);
+        bytes[bytes.Length / 2] ^= 0xFF;
+        File.WriteAllBytes(segment.FullName, bytes);
+
+        var damaged = await _client.CheckAsync(Borg, Location(), Core.Checks.CheckDepth.Normal, Passphrase);
+        Assert.True(damaged.Succeeded, damaged.Error?.ToString());
+        Assert.True(damaged.Value!.ProblemsFound);
+        Assert.Contains(damaged.Value.Messages, message => message.Contains("errors found", StringComparison.Ordinal));
+
+        var repaired = await _client.CheckAsync(Borg, Location(), Core.Checks.CheckDepth.Repair, Passphrase);
+        Assert.True(repaired.Succeeded, repaired.Error?.ToString());
+
+        var after = await _client.CheckAsync(Borg, Location(), Core.Checks.CheckDepth.Normal, Passphrase);
+        Assert.True(after.Succeeded, after.Error?.ToString());
+        Assert.False(after.Value!.ProblemsFound, string.Join("\n", after.Value.Messages));
+    }
+
+    [BorgFact]
+    public async Task Restores_a_sample_on_trial_and_finds_a_changed_file()
+    {
+        await _client.InitAsync(Borg, Location(), BorgEncryption.RepokeyBlake2, Passphrase);
+        var source = _directory.Combine("source");
+        Directory.CreateDirectory(Path.Combine(source, "sub"));
+        for (var number = 0; number < 5; number++)
+            File.WriteAllText(Path.Combine(source, "sub", $"file {number}.txt"), new string((char)('a' + number), 1000 + number));
+        Assert.True((await _client.CreateAsync(Borg, Location(), "trial", [source], [], Passphrase)).Succeeded);
+        var temporary = _directory.Combine("temp");
+        Directory.CreateDirectory(temporary);
+        var tester = new Core.Checks.RestoreTester(_client);
+        var settings = new Core.Checks.RestoreTestSettings { Enabled = true };
+
+        var good = await tester.RunAsync(Borg, Location(), "trial", Passphrase, null, Core.Checks.RestoreTestMode.Compare, 10, settings, temporary);
+
+        Assert.Equal(Core.Checks.RestoreTestOutcome.Ok, good.Outcome);
+        Assert.Equal(5, good.Files.Count);
+        Assert.Equal(5, good.Compared);
+        Assert.Empty(Directory.GetFileSystemEntries(temporary));
+
+        // The same size and time, other content: the backup no longer matches its "unchanged" source.
+        var changed = Path.Combine(source, "sub", "file 2.txt");
+        var time = File.GetLastWriteTimeUtc(changed);
+        File.WriteAllText(changed, new string('z', 1002));
+        File.SetLastWriteTimeUtc(changed, time);
+        var bad = await tester.RunAsync(Borg, Location(), "trial", Passphrase, null, Core.Checks.RestoreTestMode.Compare, 10, settings, temporary);
+        Assert.Equal(Core.Checks.RestoreTestOutcome.Failed, bad.Outcome);
+        Assert.EndsWith("file 2.txt", Assert.Single(bad.Problems).Path);
+
+        var whole = await tester.RunAsync(Borg, Location(), "trial", Passphrase, null, Core.Checks.RestoreTestMode.WholeArchive, 0, settings, temporary);
+        Assert.Equal(Core.Checks.RestoreTestOutcome.Ok, whole.Outcome);
+    }
+
+    [BorgFact]
+    public async Task Releases_a_lock_another_computer_left_behind()
+    {
+        await _client.InitAsync(Borg, Location(), BorgEncryption.RepokeyBlake2, Passphrase);
+        // What a crashed borg on another computer leaves: its lock folder and roster entry (borg cannot tell it is stale).
+        Directory.CreateDirectory(Path.Combine(Location().Url, "lock.exclusive"));
+        File.WriteAllText(Path.Combine(Location().Url, "lock.exclusive", "other-computer@123456789.4711-0"), "");
+        File.WriteAllText(Path.Combine(Location().Url, "lock.roster"), """{"exclusive": [["other-computer@123456789", 4711, 0]]}""");
+
+        var locked = await _client.ListArchivesAsync(Borg, Location(), Passphrase);
+        Assert.Equal(BorgErrorKind.Locked, locked.Error?.Kind);
+        Assert.Equal("other-computer", Assert.Single(RepositoryLockInfo.Read(Location().Url)!.Holders).Host);
+
+        var released = await _client.BreakLockAsync(Borg, Location());
+
+        Assert.True(released.Succeeded, released.Error?.ToString());
+        Assert.Null(RepositoryLockInfo.Read(Location().Url));
+        Assert.True((await _client.ListArchivesAsync(Borg, Location(), Passphrase)).Succeeded);
+    }
+
+    [BorgFact]
+    public async Task Backs_up_with_low_priority_and_an_upload_limit()
+    {
+        await _client.InitAsync(Borg, Location(), BorgEncryption.RepokeyBlake2, Passphrase);
+        var source = _directory.Combine("source");
+        Directory.CreateDirectory(source);
+        File.WriteAllText(Path.Combine(source, "a.txt"), "hello");
+
+        // borg takes the limit for any repository (it only matters for servers) and runs under nice.
+        var created = await _client.CreateAsync(Borg, Location(), "limited", [source], [], Passphrase,
+            throttle: new Core.Repositories.BorgThrottle(1024, LowPriority: true));
+
+        Assert.True(created.Succeeded, created.Error?.ToString());
+        Assert.Equal("limited", created.Value!.ArchiveName);
+    }
+
+    [BorgFact]
+    public async Task Compares_two_archives()
+    {
+        await _client.InitAsync(Borg, Location(), BorgEncryption.RepokeyBlake2, Passphrase);
+        var source = _directory.Combine("source");
+        Directory.CreateDirectory(source);
+        File.WriteAllText(Path.Combine(source, "kept.txt"), "same");
+        File.WriteAllText(Path.Combine(source, "changed.txt"), "before");
+        File.WriteAllText(Path.Combine(source, "gone.txt"), "bye");
+        Assert.True((await _client.CreateAsync(Borg, Location(), "one", [source], [], Passphrase)).Succeeded);
+        File.WriteAllText(Path.Combine(source, "changed.txt"), "after, and longer");
+        File.Delete(Path.Combine(source, "gone.txt"));
+        File.WriteAllText(Path.Combine(source, "new.txt"), "hello");
+        Assert.True((await _client.CreateAsync(Borg, Location(), "two", [source], [], Passphrase)).Succeeded);
+
+        var diff = await _client.DiffAsync(Borg, Location(), "one", "two", Passphrase);
+
+        Assert.True(diff.Succeeded, diff.Error?.ToString());
+        var byName = diff.Value!.Where(entry => entry.Kind != DiffKind.Metadata).ToDictionary(entry => Path.GetFileName(entry.Path), entry => entry.Kind);
+        Assert.Equal(DiffKind.Modified, byName["changed.txt"]);
+        Assert.Equal(DiffKind.Removed, byName["gone.txt"]);
+        Assert.Equal(DiffKind.Added, byName["new.txt"]);
+        Assert.False(byName.ContainsKey("kept.txt"));
+    }
+
+    [BorgFact]
+    public async Task Renames_comments_and_deletes_archives()
+    {
+        await _client.InitAsync(Borg, Location(), BorgEncryption.RepokeyBlake2, Passphrase);
+        var source = _directory.Combine("source");
+        Directory.CreateDirectory(source);
+        File.WriteAllText(Path.Combine(source, "a.txt"), "a");
+        foreach (var name in new[] { "one", "two", "three" })
+            Assert.True((await _client.CreateAsync(Borg, Location(), name, [source], [], Passphrase)).Succeeded);
+
+        Assert.True((await _client.RenameArchiveAsync(Borg, Location(), "one", "keep-one", Passphrase)).Succeeded);
+        Assert.False((await _client.RenameArchiveAsync(Borg, Location(), "two", "three", Passphrase)).Succeeded);
+        var commented = await _client.SetArchiveCommentAsync(Borg, Location(), "three", "before the update", Passphrase);
+        Assert.True(commented.Succeeded, commented.Error?.ToString());
+
+        var listed = (await _client.ListArchivesAsync(Borg, Location(), Passphrase)).Value!;
+        Assert.Equal(["keep-one", "three", "two"], listed.Select(archive => archive.Name).Order());
+        Assert.Equal("before the update", listed.Single(archive => archive.Name == "three").Comment);
+        Assert.Null(listed.Single(archive => archive.Name == "two").Comment);
+
+        Assert.True((await _client.DeleteArchivesAsync(Borg, Location(), ["two", "three"], Passphrase)).Succeeded);
+        Assert.Equal(["keep-one"], (await _client.ListArchivesAsync(Borg, Location(), Passphrase)).Value!.Select(archive => archive.Name));
+    }
+
+    [BorgFact]
+    public async Task Exports_an_archive_as_zip_and_tar_gz_byte_for_byte()
+    {
+        await _client.InitAsync(Borg, Location(), BorgEncryption.RepokeyBlake2, Passphrase);
+        var source = _directory.Combine("source");
+        Directory.CreateDirectory(Path.Combine(source, "sub"));
+        var data = System.Security.Cryptography.RandomNumberGenerator.GetBytes(3_000_000);
+        File.WriteAllBytes(Path.Combine(source, "sub", "data.bin"), data);
+        File.WriteAllText(Path.Combine(source, "note.txt"), "hello");
+        Assert.True((await _client.CreateAsync(Borg, Location(), "export", [source], [], Passphrase)).Succeeded);
+        var sub = BorgClient.BorgPath(Borg, Path.Combine(source, "sub"))!.TrimStart('/');
+        var exports = _directory.Combine("exports");
+        Directory.CreateDirectory(exports);
+        var progress = new List<BorgExtractProgress>();
+
+        var zipFile = Path.Combine(exports, "sub.zip");
+        var zipped = await _client.ExportAsync(Borg, Location(), "export", [sub], sub.Split('/').Length - 1, zipFile, ExportFormat.Zip, Passphrase,
+            progress: new SynchronousProgress<BorgExtractProgress>(progress.Add));
+
+        Assert.True(zipped.Succeeded, zipped.Error?.ToString());
+        Assert.NotEmpty(progress);
+        using (var zip = System.IO.Compression.ZipFile.OpenRead(zipFile))
+        {
+            var entry = zip.GetEntry("sub/data.bin")!;
+            using var stream = entry.Open();
+            using var copy = new MemoryStream();
+            await stream.CopyToAsync(copy);
+            Assert.Equal(data, copy.ToArray());
+        }
+
+        var tgz = Path.Combine(exports, "all.tar.gz");
+        Assert.True((await _client.ExportAsync(Borg, Location(), "export", [], 0, tgz, ExportFormat.TarGz, Passphrase)).Succeeded);
+        await using var gzip = new System.IO.Compression.GZipStream(File.OpenRead(tgz), System.IO.Compression.CompressionMode.Decompress);
+        var reader = new System.Formats.Tar.TarReader(gzip);
+        var names = new List<string>();
+        while (await reader.GetNextEntryAsync() is { } item)
+            names.Add(item.Name);
+        Assert.Contains(names, name => name.EndsWith("note.txt", StringComparison.Ordinal));
     }
 
     /// <summary>Calls the progress callback right away (Progress&lt;T&gt; would post it to a thread pool).</summary>

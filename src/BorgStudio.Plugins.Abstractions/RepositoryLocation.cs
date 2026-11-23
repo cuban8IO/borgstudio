@@ -15,6 +15,12 @@ public sealed record RepositoryLocation(string Url)
     /// and to set up the login key. <c>null</c> for local repositories.
     /// </summary>
     public SshEndpoint? Ssh { get; init; }
+
+    /// <summary>
+    /// The server only offers SFTP (no borg on it): BorgStudio mounts the folder holding the repository with sshfs, using
+    /// <see cref="Ssh"/> to log in, and borg works on it like on a local folder. Needs borg in WSL, on Linux or on macOS.
+    /// </summary>
+    public bool MountOverSftp { get; init; }
 }
 
 /// <summary>An SSH server holding a repository.</summary>
@@ -53,4 +59,16 @@ public enum SshKeyInstallation
 
     /// <summary>Over SFTP – for servers whose shell is restricted (no redirections), e.g. storage services.</summary>
     Sftp,
+
+    /// <summary>
+    /// Through <see cref="SshEndpoint.InstallKeyCommand"/>, restricted keys too: the command reads the whole line from
+    /// standard input and appends it (e.g. <c>dd of=.ssh/authorized_keys oflag=append conv=notrunc</c>).
+    /// </summary>
+    Command,
+
+    /// <summary>
+    /// By the provider itself (<see cref="ISshKeyProvisioner"/>) or by the user in the service's web interface – the
+    /// service has no password login.
+    /// </summary>
+    Provider,
 }

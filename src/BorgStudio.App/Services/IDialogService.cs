@@ -24,6 +24,9 @@ public interface IDialogService
     /// <summary>Asks for some other secret (e.g. the password of a key file); <c>null</c> if cancelled.</summary>
     Task<string?> AskSecretAsync(string title, string prompt, string? error = null);
 
+    /// <summary>Asks for a line of text (a name, a comment), filled in with <paramref name="initial"/>; <c>null</c> if cancelled.</summary>
+    Task<string?> AskTextAsync(string title, string prompt, string initial);
+
     /// <summary>Asks where to save a file; <c>null</c> if cancelled.</summary>
     /// <param name="defaultExtension">Added if the name has none; <c>null</c> for files without extension.</param>
     Task<string?> PickSaveFileAsync(string title, string suggestedFileName, string? defaultExtension = "txt");
@@ -68,4 +71,34 @@ public interface IDialogService
 
     /// <summary>Shows the versions of a file until the user closes it (looking through the archives starts with it).</summary>
     Task ShowFileVersionsAsync(FileVersionsViewModel versions);
+
+    /// <summary>Where to export an archive to: the file type chosen (zip, tar.gz, tar.zst, tar) gives the extension.</summary>
+    Task<string?> PickArchiveExportFileAsync(string title, string suggestedName);
+
+    /// <summary>An archive exported; the export starts with the window.</summary>
+    Task ShowArchiveExportAsync(ArchiveExportViewModel export);
+
+    /// <summary>
+    /// A question that may come while the window is hidden (BorgStudio in the background): shown on its own, on top.
+    /// <c>true</c> for the confirm button; <c>false</c> when it is declined, closed or <paramref name="cancellationToken"/>
+    /// takes it away.
+    /// </summary>
+    /// <summary>
+    /// Shows a public key to add by hand (e.g. in a service's web interface), with a button to copy it; <c>true</c> once
+    /// the user says it is added.
+    /// </summary>
+    Task<bool> ShowPublicKeyAsync(string title, string instructions, string publicKey);
+
+    Task<bool> AskOnTopAsync(string title, string message, string confirmText, string cancelText, CancellationToken cancellationToken);
+
+    /// <summary>Lets the user choose the two archives to compare; <c>true</c> for "Vergleichen".</summary>
+    Task<bool> PickArchivesToCompareAsync(ArchiveComparePickerViewModel picker);
+
+    /// <summary>Two archives compared; returns when the window is closed.</summary>
+    Task ShowArchiveDiffAsync(ArchiveDiffViewModel diff);
+
+    /// <summary>Brings the open window showing <paramref name="viewModel"/> to the front (from the list of running tasks).</summary>
+    void BringToFront(object viewModel)
+    {
+    }
 }

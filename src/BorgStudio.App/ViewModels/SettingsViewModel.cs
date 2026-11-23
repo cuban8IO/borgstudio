@@ -43,6 +43,11 @@ public sealed partial class SettingsViewModel : ViewModelBase
         _triggerPort = trigger.Port;
         _triggerAllowNetwork = trigger.AllowNetwork;
         _triggerToken = ReadTriggerToken();
+        var restoreTest = main.Settings.RestoreTest;
+        _restoreTestEnabled = restoreTest.Enabled;
+        _restoreTestTotalMegabytes = restoreTest.MaxTotalBytes / Megabyte;
+        _restoreTestFileMegabytes = restoreTest.MaxFileBytes / Megabyte;
+        _restoreTestSizeOnly = restoreTest.Comparison == Core.Checks.RestoreTestComparison.SizeOnly;
         main.PropertyChanged += OnMainPropertyChanged;
         Refresh();
     }
@@ -144,7 +149,7 @@ public sealed partial class SettingsViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private Task CheckForUpdatesNowAsync() => Dialogs.ShowUpdateAsync(new UpdateViewModel(_main, Dialogs, known: null));
+    private Task CheckForUpdatesNowAsync() => _main.ShowUpdateWindowAsync(new UpdateViewModel(_main, Dialogs, known: null), Dialogs);
 
     private static string LanguageName(CultureInfo culture)
     {
@@ -267,6 +272,85 @@ public sealed partial class SettingsViewModel : ViewModelBase
             if (SetProperty(ref _triggerAllowNetwork, value))
                 ApplyTriggerSettings();
         }
+    }
+
+    // --- Restore tests ---
+
+    private const long Megabyte = 1024L * 1024;
+
+    private bool _restoreTestEnabled;
+    private decimal? _restoreTestTotalMegabytes;
+    private decimal? _restoreTestFileMegabytes;
+    private bool _restoreTestSizeOnly;
+
+    /// <summary>Restore tests run with the automatic checks (for the jobs that have one).</summary>
+    public bool RestoreTestEnabled
+    {
+        get => _restoreTestEnabled;
+        set
+        {
+            if (SetProperty(ref _restoreTestEnabled, value))
+                ApplyRestoreTestSettings();
+        }
+    }
+
+    /// <summary>A sample takes at most this many MB altogether.</summary>
+    public decimal? RestoreTestTotalMegabytes
+    {
+        get => _restoreTestTotalMegabytes;
+        set
+        {
+            if (SetProperty(ref _restoreTestTotalMegabytes, value))
+                ApplyRestoreTestSettings();
+        }
+    }
+
+    /// <summary>Larger files (MB) are not picked.</summary>
+    public decimal? RestoreTestFileMegabytes
+    {
+        get => _restoreTestFileMegabytes;
+        set
+        {
+            if (SetProperty(ref _restoreTestFileMegabytes, value))
+                ApplyRestoreTestSettings();
+        }
+    }
+
+    /// <summary>Files count as unchanged by their size alone (otherwise size and modification time).</summary>
+    public bool RestoreTestSizeOnly
+    {
+        get => _restoreTestSizeOnly;
+        set
+        {
+            if (SetProperty(ref _restoreTestSizeOnly, value))
+            {
+                OnPropertyChanged(nameof(RestoreTestSizeAndTime));
+                ApplyRestoreTestSettings();
+            }
+        }
+    }
+
+    public bool RestoreTestSizeAndTime
+    {
+        get => !_restoreTestSizeOnly;
+        set
+        {
+            if (value)
+                RestoreTestSizeOnly = false;
+        }
+    }
+
+    private void ApplyRestoreTestSettings()
+    {
+        var settings = new Core.Checks.RestoreTestSettings
+        {
+            Enabled = _restoreTestEnabled,
+            MaxTotalBytes = (long)Math.Clamp(_restoreTestTotalMegabytes ?? 1024, 1, 1024 * 1024) * Megabyte,
+            MaxFileBytes = (long)Math.Clamp(_restoreTestFileMegabytes ?? 100, 1, 1024 * 1024) * Megabyte,
+            Comparison = _restoreTestSizeOnly ? Core.Checks.RestoreTestComparison.SizeOnly : Core.Checks.RestoreTestComparison.SizeAndTime,
+        };
+        if (settings != _main.Settings.RestoreTest)
+            _main.UpdateSettings(_main.Settings with { RestoreTest = settings });
     }
 
     /// <summary>The token (shown in a password box, copyable).</summary>

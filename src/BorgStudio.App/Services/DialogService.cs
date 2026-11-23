@@ -7,9 +7,34 @@ using BorgStudio.App.Views;
 
 namespace BorgStudio.App.Services;
 
-/// <summary>Dialogs shown modally over <paramref name="owner"/>.</summary>
+/// <summary>
+/// Dialogs shown modally over <paramref name="owner"/>. The windows of longer work (archive browser, search, versions,
+/// comparison, export, update) opened from the main window leave it usable: they stay in front of it, and the status
+/// bar's list of running tasks can bring them back or stop their work.
+/// </summary>
 public sealed class DialogService(Window owner) : IDialogService
 {
+    /// <summary>Over the main window: shown beside it (it stays usable); over any other window: modally, as dialogs are.</summary>
+    private Task ShowWorkWindowAsync(Window window)
+    {
+        if (owner is not MainWindow)
+            return window.ShowDialog(owner);
+        var closed = new TaskCompletionSource();
+        window.Closed += (_, _) => closed.TrySetResult();
+        window.Show(owner);
+        return closed.Task;
+    }
+
+    public void BringToFront(object viewModel)
+    {
+        if (Avalonia.Application.Current?.ApplicationLifetime is not Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+            || desktop.Windows.FirstOrDefault(window => ReferenceEquals(window.DataContext, viewModel)) is not { } found)
+            return;
+        if (found.WindowState == WindowState.Minimized)
+            found.WindowState = WindowState.Normal;
+        found.Activate();
+    }
+
     public Task<bool> ConfirmAsync(string title, string message, string confirmText, string? cancelText = null) =>
         new MessageWindow(title, message, confirmText, cancelText ?? Strings.Cancel).ShowDialog<bool>(owner);
 
@@ -27,6 +52,9 @@ public sealed class DialogService(Window owner) : IDialogService
 
     public Task<string?> AskSecretAsync(string title, string prompt, string? error = null) =>
         new PassphraseWindow(title, prompt, error).ShowDialog<string?>(owner);
+
+    public Task<string?> AskTextAsync(string title, string prompt, string initial) =>
+        new TextInputWindow(title, prompt, initial).ShowDialog<string?>(owner);
 
     public async Task<string?> PickSaveFileAsync(string title, string suggestedFileName, string? defaultExtension = "txt")
     {
@@ -75,7 +103,7 @@ public sealed class DialogService(Window owner) : IDialogService
     }
 
     public Task ShowUpdateAsync(UpdateViewModel update) =>
-        new UpdateWindow { DataContext = update }.ShowDialog(owner);
+        ShowWorkWindowAsync(new UpdateWindow { DataContext = update });
 
     public Task ShowRepositoryEditorAsync(RepositoryEditorViewModel editor) =>
         new RepositoryEditorWindow { DataContext = editor }.ShowDialog(owner);
@@ -87,14 +115,63 @@ public sealed class DialogService(Window owner) : IDialogService
         new PrunePreviewWindow { DataContext = preview }.ShowDialog<bool>(owner);
 
     public Task ShowArchiveBrowserAsync(ArchiveBrowserViewModel browser) =>
-        new ArchiveBrowserWindow { DataContext = browser }.ShowDialog(owner);
+        ShowWorkWindowAsync(new ArchiveBrowserWindow { DataContext = browser });
 
     public Task ShowRestoreAsync(RestoreViewModel restore) =>
         new RestoreWindow { DataContext = restore }.ShowDialog(owner);
 
     public Task ShowArchiveSearchAsync(ArchiveSearchViewModel search) =>
-        new ArchiveSearchWindow { DataContext = search }.ShowDialog(owner);
+        ShowWorkWindowAsync(new ArchiveSearchWindow { DataContext = search });
 
     public Task ShowFileVersionsAsync(FileVersionsViewModel versions) =>
-        new FileVersionsWindow { DataContext = versions }.ShowDialog(owner);
+        ShowWorkWindowAsync(new FileVersionsWindow { DataContext = versions });
+
+    public async Task<string?> PickArchiveExportFileAsync(string title, string suggestedName)
+    {
+        var file = await owner.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = title,
+            SuggestedFileName = suggestedName,
+            DefaultExtension = "zip",
+            ShowOverwritePrompt = true,
+            FileTypeChoices =
+            [
+                new FilePickerFileType("zip") { Patterns = ["*.zip"] },
+                new FilePickerFileType("tar.gz") { Patterns = ["*.tar.gz"] },
+                new FilePickerFileType("tar.zst") { Patterns = ["*.tar.zst"] },
+                new FilePickerFileType("tar") { Patterns = ["*.tar"] },
+            ],
+        });
+        return file?.TryGetLocalPath();
+    }
+
+    public Task<bool> ShowPublicKeyAsync(string title, string instructions, string publicKey) =>
+        new PublicKeyWindow(title, instructions, publicKey).ShowDialog<bool>(owner);
+
+    public async Task<bool> AskOnTopAsync(string title, string message, string confirmText, string cancelText,
+        CancellationToken cancellationToken)
+    {
+        var window = new MessageWindow(title, message, confirmText, cancelText)
+        {
+            Topmost = true,
+            ShowInTaskbar = true,
+            WindowStartupLocation = WindowStartupLocation.CenterScreen,
+        };
+        var closed = new TaskCompletionSource();
+        window.Closed += (_, _) => closed.TrySetResult();
+        await using var away = cancellationToken.Register(() => Avalonia.Threading.Dispatcher.UIThread.Post(window.Close));
+        window.Show();
+        window.Activate();
+        await closed.Task;
+        return window.Confirmed;
+    }
+
+    public Task ShowArchiveExportAsync(ArchiveExportViewModel export) =>
+        ShowWorkWindowAsync(new ArchiveExportWindow { DataContext = export });
+
+    public Task<bool> PickArchivesToCompareAsync(ArchiveComparePickerViewModel picker) =>
+        new ArchiveCompareWindow { DataContext = picker }.ShowDialog<bool>(owner);
+
+    public Task ShowArchiveDiffAsync(ArchiveDiffViewModel diff) =>
+        ShowWorkWindowAsync(new ArchiveDiffWindow { DataContext = diff });
 }

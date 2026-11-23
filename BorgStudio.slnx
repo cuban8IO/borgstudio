@@ -6,9 +6,14 @@
     <Project Path="src/BorgStudio.App/BorgStudio.App.csproj" />
     <Project Path="src/BorgStudio.Core/BorgStudio.Core.csproj" />
     <Project Path="src/BorgStudio.Plugins.Abstractions/BorgStudio.Plugins.Abstractions.csproj" />
+    <Project Path="src/BorgStudio.Providers.BorgBase/BorgStudio.Providers.BorgBase.csproj" />
     <Project Path="src/BorgStudio.Providers.Hetzner/BorgStudio.Providers.Hetzner.csproj" />
     <Project Path="src/BorgStudio.Providers.Local/BorgStudio.Providers.Local.csproj" />
+    <Project Path="src/BorgStudio.Providers.NetworkDisk/BorgStudio.Providers.NetworkDisk.csproj" />
+    <Project Path="src/BorgStudio.Providers.RsyncNet/BorgStudio.Providers.RsyncNet.csproj" />
+    <Project Path="src/BorgStudio.Providers.Sftp/BorgStudio.Providers.Sftp.csproj" />
     <Project Path="src/BorgStudio.Providers.Ssh/BorgStudio.Providers.Ssh.csproj" />
+    <Project Path="src/BorgStudio.Providers.Usb/BorgStudio.Providers.Usb.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/BorgStudio.Tests/BorgStudio.Tests.csproj" />

@@ -86,7 +86,7 @@ public sealed class WebhookSender(HttpClient http)
         {
             ["title"] = message.Title,
             ["message"] = message.Body,
-            ["priority"] = message.Event is NotificationEvent.Failed or NotificationEvent.StorageFull ? 8 : 5,
+            ["priority"] = message.Event is NotificationEvent.Failed or NotificationEvent.StorageFull or NotificationEvent.CheckFailed ? 8 : 5,
         }),
         _ => (url, Json(message)),
     };
@@ -108,10 +108,10 @@ public sealed class WebhookSender(HttpClient http)
             ["topic"] = topic,
             ["title"] = message.Title,
             ["message"] = message.Body,
-            ["priority"] = message.Event is NotificationEvent.Failed or NotificationEvent.StorageFull ? 4 : 3,
+            ["priority"] = message.Event is NotificationEvent.Failed or NotificationEvent.StorageFull or NotificationEvent.CheckFailed ? 4 : 3,
             ["tags"] = new JsonArray(message.Event switch
             {
-                NotificationEvent.Failed or NotificationEvent.StorageFull => "x",
+                NotificationEvent.Failed or NotificationEvent.StorageFull or NotificationEvent.CheckFailed => "x",
                 NotificationEvent.Warnings or NotificationEvent.Skipped or NotificationEvent.StorageLow or NotificationEvent.Overdue => "warning",
                 _ => "white_check_mark",
             }),
@@ -142,6 +142,30 @@ public sealed class WebhookSender(HttpClient http)
                 ["free"] = storage.Free,
                 ["repositorySize"] = storage.RepositorySize,
                 ["source"] = storage.Source.ToString(),
+            };
+        }
+        if (message.Check is { } check)
+        {
+            body["check"] = new JsonObject
+            {
+                ["outcome"] = check.Outcome.ToString(),
+                ["depth"] = check.Depth.ToString(),
+                ["started"] = check.Started.ToString("O"),
+                ["durationSeconds"] = Math.Round(check.Duration.TotalSeconds),
+                ["messages"] = new JsonArray([.. check.Messages.Take(20).Select(text => (JsonNode?)JsonValue.Create(text))]),
+            };
+        }
+        if (message.RestoreTest is { } test)
+        {
+            body["restoreTest"] = new JsonObject
+            {
+                ["outcome"] = test.Outcome.ToString(),
+                ["mode"] = test.Mode.ToString(),
+                ["archive"] = test.Archive,
+                ["files"] = test.Files.Count,
+                ["compared"] = test.Compared,
+                ["problems"] = new JsonArray([.. test.Problems.Take(20).Select(file => (JsonNode?)JsonValue.Create(file.Path))]),
+                ["error"] = test.Error,
             };
         }
         if (message.Run is { } run)
@@ -176,12 +200,13 @@ public sealed class WebhookSender(HttpClient http)
         NotificationEvent.StorageFull => "storage-full",
         NotificationEvent.Overdue => "overdue",
         NotificationEvent.Summary => "summary",
+        NotificationEvent.CheckFailed => "check-failed",
         _ => notificationEvent.ToString().ToLowerInvariant(),
     };
 
     private static int Color(NotificationEvent notificationEvent) => notificationEvent switch
     {
-        NotificationEvent.Failed or NotificationEvent.StorageFull => 0xD64545,
+        NotificationEvent.Failed or NotificationEvent.StorageFull or NotificationEvent.CheckFailed => 0xD64545,
         NotificationEvent.Warnings or NotificationEvent.StorageLow or NotificationEvent.Overdue => 0xFF9800,
         NotificationEvent.Skipped => 0x9C9C9C,
         _ => 0x01FF95,
