@@ -211,6 +211,16 @@ To try the update locally, publish two versions (`-p:Version=0.0.1` and `0.0.2`)
 release JSON with the newer package and its `SHA256SUMS` from a local web server and start the older one with
 `BORGSTUDIO_UPDATE_FEED` set to the JSON's URL.
 
+The screenshots of the product page (`site/images/en` and `site/images/de`) come from the real windows, filled with
+made-up example data and fake borg, rendered without a screen:
+
+```bash
+dotnet run -c Release --project tools/BorgStudio.Screenshots -- en site/images/en
+dotnet run -c Release --project tools/BorgStudio.Screenshots -- de site/images/de
+```
+
+Further arguments name single pictures, e.g. `-- en site/images/en dashboard compare`.
+
 Portable package for one platform, e.g. Linux:
 
 ```bash
