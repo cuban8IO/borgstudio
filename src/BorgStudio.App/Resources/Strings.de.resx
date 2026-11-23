@@ -3402,10 +3402,10 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
     <value>Stunden</value>
   </data>
   <data name="EditorPlugInHint" xml:space="preserve">
-    <value>Fragt kurz nach und lässt dann alle Jobs des Repositorys laufen. Nicht erneut innerhalb dieser Zeit nach einer erfolgreichen Sicherung (0: jedes Mal).</value>
+    <value>Fragt kurz nach und lässt dann alle Jobs des Repositorys laufen. Nicht erneut innerhalb dieser Zeit nach einer erfolgreichen automatischen Sicherung – von Hand gestartete zählen nicht (0: jedes Mal).</value>
   </data>
   <data name="EditorPlugInNeedsBackground" xml:space="preserve">
-    <value>Funktioniert nur, wenn BorgStudio im Hintergrund läuft (Extras → Einstellungen → Geplante Sicherungen: „BorgStudio im Hintergrund“).</value>
+    <value>Fragt nur, solange BorgStudio geöffnet ist (Fenster oder Infobereich). Damit es ab der Anmeldung fragt: „BorgStudio im Hintergrund“ wählen (Extras → Einstellungen → Geplante Sicherungen).</value>
   </data>
   <data name="PlugInTitle" xml:space="preserve">
     <value>Laufwerk angesteckt</value>
@@ -3558,5 +3558,97 @@ Jobs: {1}</value>
   </data>
   <data name="ScheduleEveryMinutes" xml:space="preserve">
     <value>Alle {0} Minuten</value>
+  </data>
+  <data name="RestoreOriginalUnavailableDrive" xml:space="preserve">
+    <value>Nicht möglich: Dieses Archiv stammt von einem Wechselmedium, seine Pfade beziehen sich auf den Datenträger. In einen Ordner wiederherstellen – z. B. auf dem Datenträger selbst.</value>
+  </data>
+  <data name="SkipSourceMissing" xml:space="preserve">
+    <value>Der zu sichernde Datenträger war nicht angeschlossen.</value>
+  </data>
+  <data name="SourceDriveMissingTitle" xml:space="preserve">
+    <value>Datenträger nicht angeschlossen</value>
+  </data>
+  <data name="SourceDriveMissing" xml:space="preserve">
+    <value>„{0}“ ist nicht angeschlossen. Datenträger anstecken und die Sicherung erneut starten.</value>
+  </data>
+  <data name="SourceDriveUnnamed" xml:space="preserve">
+    <value>Wechselmedium</value>
+  </data>
+  <data name="SourceDriveWhole" xml:space="preserve">
+    <value>Wechselmedium „{0}“ (ganz)</value>
+  </data>
+  <data name="SourceDriveFolders" xml:space="preserve">
+    <value>Wechselmedium „{0}“: {1}</value>
+  </data>
+  <data name="PlugInSourceQuestion" xml:space="preserve">
+    <value>„{0}“ wurde angesteckt. Jetzt sichern?
+
+Jobs: {1}</value>
+  </data>
+  <data name="JobEditorSourceKind" xml:space="preserve">
+    <value>Was gesichert wird</value>
+  </data>
+  <data name="JobEditorSourceFolders" xml:space="preserve">
+    <value>Ordner auf diesem Computer</value>
+  </data>
+  <data name="JobEditorSourceDrive" xml:space="preserve">
+    <value>Ein Wechselmedium (USB-Stick, externe Platte, Speicherkarte) – genau dieser Datenträger, egal unter welchem Buchstaben</value>
+  </data>
+  <data name="JobEditorDrive" xml:space="preserve">
+    <value>Datenträger</value>
+  </data>
+  <data name="JobEditorDriveNone" xml:space="preserve">
+    <value>Kein Wechselmedium angesteckt</value>
+  </data>
+  <data name="JobEditorDriveRefresh" xml:space="preserve">
+    <value>Aktualisieren</value>
+  </data>
+  <data name="JobEditorDriveOption" xml:space="preserve">
+    <value>{0} ({1}, {2})</value>
+  </data>
+  <data name="JobEditorDriveNotAttached" xml:space="preserve">
+    <value>{0} (nicht angeschlossen)</value>
+  </data>
+  <data name="JobEditorDriveHint" xml:space="preserve">
+    <value>BorgStudio erkennt den Datenträger an seiner UUID bzw. Seriennummer. Die Archive enthalten die Pfade auf dem Datenträger (z. B. „DCIM/…“), egal unter welchem Buchstaben er hängt. Ist er zur geplanten Zeit nicht angesteckt, wartet der Lauf darauf und wird übersprungen, wenn er nicht kommt.</value>
+  </data>
+  <data name="JobEditorDriveIdFile" xml:space="preserve">
+    <value>Dieser Datenträger hat keine lesbare UUID. Beim Speichern legt BorgStudio eine kleine versteckte Datei (.borgstudio-id) darauf, um ihn wiederzuerkennen.</value>
+  </data>
+  <data name="JobEditorDriveWhole" xml:space="preserve">
+    <value>Den ganzen Datenträger</value>
+  </data>
+  <data name="JobEditorDriveSome" xml:space="preserve">
+    <value>Nur diese Ordner darauf:</value>
+  </data>
+  <data name="JobEditorDriveFolders" xml:space="preserve">
+    <value>Ordner auf dem Datenträger</value>
+  </data>
+  <data name="JobEditorAddDriveFolder" xml:space="preserve">
+    <value>Ordner hinzufügen …</value>
+  </data>
+  <data name="JobEditorDriveFolderNeedsDrive" xml:space="preserve">
+    <value>Zuerst den Datenträger anstecken und auswählen.</value>
+  </data>
+  <data name="JobEditorDriveFolderOutside" xml:space="preserve">
+    <value>{0} liegt nicht auf dem gewählten Datenträger ({1}).</value>
+  </data>
+  <data name="JobEditorDriveRequired" xml:space="preserve">
+    <value>Bitte einen Datenträger auswählen (vorher anstecken).</value>
+  </data>
+  <data name="JobEditorDriveFoldersRequired" xml:space="preserve">
+    <value>Bitte mindestens einen Ordner auf dem Datenträger hinzufügen oder den ganzen Datenträger sichern.</value>
+  </data>
+  <data name="JobEditorDriveIdFailed" xml:space="preserve">
+    <value>Die Kennungsdatei konnte nicht auf {0} geschrieben werden: {1}</value>
+  </data>
+  <data name="JobEditorDrivePlugIn" xml:space="preserve">
+    <value>Beim Anstecken fragen „Jetzt sichern?“</value>
+  </data>
+  <data name="JobEditorDrivePlugInHint" xml:space="preserve">
+    <value>Fragt, solange BorgStudio geöffnet ist (Fenster oder Infobereich) – mit „BorgStudio im Hintergrund“ ab der Anmeldung (Extras → Einstellungen → Geplante Sicherungen). Nicht erneut innerhalb dieser Zeit nach einer erfolgreichen automatischen Sicherung – von Hand gestartete zählen nicht (0: jedes Mal).</value>
+  </data>
+  <data name="JobEditorDriveEject" xml:space="preserve">
+    <value>Datenträger nach automatischen Läufen auswerfen (geplant oder beim Anstecken)</value>
   </data>
 </root>

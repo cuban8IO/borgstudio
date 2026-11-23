@@ -16,4 +16,16 @@ public interface IDriveSystem
 
     /// <summary>Ejects the drive holding <paramref name="path"/> safely; a message why not, or <c>null</c> when it is ejected.</summary>
     Task<string?> EjectAsync(string path, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// The identity of the file system on the drive at <paramref name="root"/>: its UUID or serial number, as the system
+    /// reports it (e.g. "8A3F-12C4"); <c>null</c> if it has none that can be read.
+    /// </summary>
+    Task<string?> VolumeIdAsync(string root, CancellationToken cancellationToken = default);
+
+    /// <summary>The drive's name ("KAMERA"); empty if it has none.</summary>
+    string Label(string root);
+
+    /// <summary>The drive's size in bytes; <c>null</c> if unknown.</summary>
+    long? Size(string root);
 }

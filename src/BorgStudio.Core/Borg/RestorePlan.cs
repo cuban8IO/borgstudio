@@ -61,7 +61,7 @@ public sealed class RestorePlan
     /// borg on Windows has no way back.
     /// </summary>
     public static bool CanRestoreToOriginal(IReadOnlyList<ArchiveNode> items, BorgRuntime runtime) =>
-        items.Count > 0 && runtime switch
+        items.Count > 0 && !items.Any(ArchiveTree.IsRelativeNode) && runtime switch
         {
             BorgRuntime.Wsl => items.All(item => Drive(item) is not null),
             BorgRuntime.Native => !OperatingSystem.IsWindows(),

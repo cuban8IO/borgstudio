@@ -79,6 +79,52 @@ public sealed class SystemDrives : IDriveSystem
             : Format(Strings.EjectFailed, name, unmounted.Output.Trim());
     }
 
+    public async Task<string?> VolumeIdAsync(string root, CancellationToken cancellationToken = default)
+    {
+        if (OperatingSystem.IsWindows())
+            return VolumeSerialOnWindows(root);
+        if (OperatingSystem.IsMacOS())
+            return await RunAsync("diskutil", ["info", MountRoot(root)], cancellationToken) is { ExitCode: 0 } info
+                ? DiskUtil.VolumeUuid(info.Output)
+                : null;
+        // findmnt asks udev, so no root rights are needed; lsblk as a fallback.
+        if (await RunAsync("findmnt", ["-n", "-o", "UUID", "--target", root], cancellationToken) is { ExitCode: 0 } found
+            && found.Output.Trim() is { Length: > 0 } uuid)
+            return uuid.Split('\n')[0].Trim();
+        return await LinuxDeviceAsync(root, cancellationToken) is { } device
+               && await RunAsync("lsblk", ["-no", "UUID", device], cancellationToken) is { ExitCode: 0 } listed
+               && listed.Output.Trim() is { Length: > 0 } fallback
+            ? fallback.Split('\n')[0].Trim()
+            : null;
+    }
+
+    public string Label(string root)
+    {
+        try
+        {
+            if (OperatingSystem.IsWindows())
+                return new DriveInfo(root).VolumeLabel;
+            // Linux and macOS mount a drive under its name (/media/me/KAMERA, /Volumes/KAMERA).
+            return Path.GetFileName(root.TrimEnd('/'));
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            return "";
+        }
+    }
+
+    public long? Size(string root)
+    {
+        try
+        {
+            return new DriveInfo(root).TotalSize;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            return null;
+        }
+    }
+
     /// <summary>The root of the drive or mount point holding <paramref name="path"/>.</summary>
     public static string MountRoot(string path)
     {
@@ -137,7 +183,25 @@ public sealed class SystemDrives : IDriveSystem
         public static bool IsExternal(string info) => info.Split('\n').Select(line => line.Split(':', 2)).Where(parts => parts.Length == 2)
             .Any(parts => (parts[0].Trim(), parts[1].Trim()) is ("Device Location", "External") or ("Removable Media", "Removable")
                 or ("Protocol", "USB") or ("Protocol", "FireWire") or ("Protocol", "Secure Digital"));
+
+        /// <summary>diskutil info: "Volume UUID: 1C6E…"; <c>null</c> if there is none.</summary>
+        public static string? VolumeUuid(string info) => info.Split('\n').Select(line => line.Split(':', 2)).Where(parts => parts.Length == 2)
+            .Where(parts => parts[0].Trim() == "Volume UUID").Select(parts => parts[1].Trim()).FirstOrDefault(value => value.Length > 0);
     }
+
+    // --- Windows: the file system's serial number ("8A3F-12C4", as dir shows it) ---
+
+    private static string? VolumeSerialOnWindows(string root)
+    {
+        var path = Path.GetPathRoot(Path.GetFullPath(root)) ?? root;
+        if (!GetVolumeInformationW(path, null, 0, out var serial, out _, out _, null, 0) || serial == 0)
+            return null;
+        return $"{serial >> 16:X4}-{serial & 0xFFFF:X4}";
+    }
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern bool GetVolumeInformationW(string rootPath, StringBuilder? volumeName, int volumeNameSize, out uint serialNumber,
+        out uint maximumComponentLength, out uint fileSystemFlags, StringBuilder? fileSystemName, int fileSystemNameSize);
 
     // --- Windows ---
 

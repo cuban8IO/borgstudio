@@ -51,6 +51,7 @@ public sealed partial class RestoreViewModel : ViewModelBase
             : BorgTexts.Format(Strings.RestoreWhatSelection, items.Count, archiveName, size);
         CanRestoreToOriginal = RestorePlan.CanRestoreToOriginal(items, runtime);
         OriginalUnavailableText = CanRestoreToOriginal ? null
+            : items.Any(ArchiveTree.IsRelativeNode) ? Strings.RestoreOriginalUnavailableDrive
             : runtime == BorgRuntime.Wsl ? Strings.RestoreOriginalUnavailableWsl : Strings.RestoreOriginalUnavailableNative;
         UpdateExample();
     }
