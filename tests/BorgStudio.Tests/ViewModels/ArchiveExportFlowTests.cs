@@ -63,11 +63,14 @@ public sealed class ArchiveExportFlowTests : IDisposable
         var export = Assert.Single(Dialogs.Exports);
         Assert.True(export.Succeeded, export.ResultText);
         Assert.Equal(Path.Combine(Exports, "backup.zip"), export.TargetFile);
-        Assert.Equal(["export-tar", "--log-json", "--progress", $"{_test.Directory.Combine("Disk")}::Documents-host-2026-11-01", "-"], ExportCall);
+        // The folders above what was backed up ("home/me") are left out – found with a borg list first.
+        Assert.Equal(["export-tar", "--log-json", "--progress", "--strip-components", "2",
+            $"{_test.Directory.Combine("Disk")}::Documents-host-2026-11-01", "-"], ExportCall);
+        Assert.Contains(_test.Borg.Calls, call => call.Arguments[0] == "list" && call.Arguments.Contains("--json-lines"));
         using var zip = ZipFile.OpenRead(export.TargetFile);
-        Assert.Equal(["home/me/Documents/", "home/me/Documents/Invoices/", "home/me/Documents/Invoices/invoice-2026.pdf", "home/me/Documents/letter.txt"],
+        Assert.Equal(["Documents/", "Documents/Invoices/", "Documents/Invoices/invoice-2026.pdf", "Documents/letter.txt"],
             zip.Entries.Select(entry => entry.FullName).Order(StringComparer.Ordinal));
-        Assert.Equal(50_000, zip.GetEntry("home/me/Documents/Invoices/invoice-2026.pdf")!.Length);
+        Assert.Equal(50_000, zip.GetEntry("Documents/Invoices/invoice-2026.pdf")!.Length);
         Assert.Contains(BorgTexts.Format(Strings.ArchiveExportSkippedLinks, "1"), export.ResultText);
         Assert.Equal("Documents-host-2026-11-01", Dialogs.TextInitials[^1]);
     }
@@ -84,8 +87,8 @@ public sealed class ArchiveExportFlowTests : IDisposable
             var names = new List<string>();
             while (await reader.GetNextEntryAsync() is { } entry)
                 names.Add(entry.Name);
-            Assert.Contains("home/me/Documents/letter.txt", names);
-            Assert.Contains("home/me/Documents/latest", names); // tar keeps links
+            Assert.Contains("Documents/letter.txt", names);
+            Assert.Contains("Documents/latest", names); // tar keeps links
         }
 
         Dialogs.ExportFile = Path.Combine(Exports, "backup.tar");
@@ -174,5 +177,44 @@ public sealed class ArchiveExportFlowTests : IDisposable
         Assert.Equal(2, MainViewModel.SharedFolderDepth(["home/me/a", "home/me/b/c"]));
         Assert.Equal(0, MainViewModel.SharedFolderDepth(["home/a", "srv/b"]));
         Assert.Equal(3, MainViewModel.SharedFolderDepth(["home/me/Documents/letter.txt"]));
+    }
+
+    [Theory]
+    [InlineData(new[] { "mnt/c/Users/me/Documents", "mnt/c/Users/me/Documents/a.txt", "mnt/c/Users/me/Documents/x/b.txt" }, 4)]
+    [InlineData(new[] { "mnt/c/Users/me/Documents/a.txt", "mnt/c/Users/me/Pictures/b.jpg" }, 4)]
+    [InlineData(new[] { "home/me/a.txt", "srv/data/b.txt" }, 0)]
+    [InlineData(new[] { "a.txt" }, 0)]
+    [InlineData(new[] { "home/me", "home/me/a.txt" }, 1)]
+    public void A_whole_archive_leaves_out_the_folders_above_what_was_backed_up(string[] paths, int expected)
+    {
+        var shared = new MainViewModel.SharedFolders();
+        var tree = new ArchiveTree();
+        foreach (var path in paths)
+        {
+            shared.Add(path);
+            tree.Add(new BorgItem(path, path.Contains('.') ? ArchiveEntryKind.File : ArchiveEntryKind.Directory, 0, DateTimeOffset.UnixEpoch));
+        }
+
+        Assert.Equal(expected, shared.Depth);
+        Assert.Equal(expected, MainViewModel.SharedFolderDepth(tree.Complete()));
+    }
+
+    [Fact]
+    public async Task A_whole_archive_whose_contents_are_cached_needs_no_extra_borg_list()
+    {
+        var main = await StartAsync();
+        var archive = main.Archives[0].Archive;
+        var tree = new ArchiveTree();
+        tree.Add(new BorgItem("home/me/Documents", ArchiveEntryKind.Directory, 0, DateTimeOffset.UnixEpoch));
+        tree.Add(new BorgItem("home/me/Documents/letter.txt", ArchiveEntryKind.File, 10, DateTimeOffset.UnixEpoch));
+        _test.Archives.SaveContents(_repository.Id, archive.Id, tree.Complete());
+        var lists = _test.Borg.Calls.Count(call => call.Arguments[0] == "list" && call.Arguments.Contains("--json-lines"));
+        Dialogs.ExportFile = Path.Combine(Exports, "backup.tar");
+
+        await main.ExportArchiveCommand.ExecuteAsync(null);
+
+        Assert.True(Dialogs.Exports[^1].Succeeded);
+        Assert.Equal(["--strip-components", "2"], ExportCall.SkipWhile(argument => argument != "--strip-components").Take(2));
+        Assert.Equal(lists, _test.Borg.Calls.Count(call => call.Arguments[0] == "list" && call.Arguments.Contains("--json-lines")));
     }
 }

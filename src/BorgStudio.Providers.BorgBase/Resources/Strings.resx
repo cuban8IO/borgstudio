@@ -50,7 +50,7 @@
     <value>Without an API token, please enter the repository's address from BorgBase (ssh://…).</value>
   </data>
   <data name="RepoNotFound" xml:space="preserve">
-    <value>BorgBase has no repository „{0}“. Choose “Create a new repository” to have it created.</value>
+    <value>BorgBase has no repository “{0}”. Choose “Create a new repository” to have it created.</value>
   </data>
   <data name="TokenRefused" xml:space="preserve">
     <value>BorgBase refused the API token (expired, or without the needed permission).</value>

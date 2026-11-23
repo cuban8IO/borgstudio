@@ -1006,6 +1006,9 @@ public sealed partial class BorgClient(IProcessRunner processRunner, string? wsl
             }
             catch (Exception exception) when (exception is JsonException or KeyNotFoundException or InvalidOperationException)
             {
+                // The wrapper's own process id line is BorgStudio's, not borg's – never part of the message.
+                if (line.StartsWith(PidMarker, StringComparison.Ordinal))
+                    continue;
                 plainText.Add(line);
                 allText.Add(line);
             }
