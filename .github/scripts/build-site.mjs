@@ -27,7 +27,7 @@ rmSync(out, { recursive: true, force: true });
 cpSync(source, out, { recursive: true, filter: (path) => !/[\\/]i18n([\\/]|$)/.test(path) });
 
 const pages = {
-  en: { url: siteUrl, description: "Desktop app for BorgBackup: deduplicated, encrypted backups to a disk, an SSH server or a Hetzner Storage Box; browse archives and restore files." },
+  en: { url: siteUrl, description: "Desktop app for BorgBackup: deduplicated, encrypted backups to a USB disk, an SSH or SFTP server, a Hetzner Storage Box or BorgBase; browse archives and restore files." },
   de: { url: `${siteUrl}de/`, description: de["meta.appDescription"] },
 };
 

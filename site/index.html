@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>BorgStudio – BorgBackup without the command line</title>
-  <meta name="description" content="BorgStudio is a desktop app for BorgBackup: deduplicated, encrypted backups to a disk, your server or a Hetzner Storage Box – and every file back in a few clicks. Windows, macOS, Linux.">
+  <meta name="description" content="BorgStudio is a desktop app for BorgBackup: deduplicated, encrypted backups to a USB disk, your server or NAS, a Hetzner Storage Box or BorgBase – and every file back in a few clicks. Windows, macOS, Linux.">
   <link rel="canonical" href="https://borgstudio.cuban8io.net/">
   <link rel="alternate" hreflang="en" href="https://borgstudio.cuban8io.net/">
   <link rel="alternate" hreflang="de" href="https://borgstudio.cuban8io.net/de/">
@@ -53,7 +53,7 @@
       <div class="hero-text">
         <p class="badge"><span class="dot"></span> <span data-i18n="hero.badge">Version</span> <span class="js-version">–</span></p>
         <h1 data-i18n="hero.title">Backups you can trust.<br><span class="accent">Without the command line.</span></h1>
-        <p class="lead" data-i18n="hero.lead">BorgStudio is a desktop app for <a href="https://www.borgbackup.org/">BorgBackup</a>: deduplicated, encrypted backups to a disk, your own server or a Hetzner Storage Box – and every file back in a few clicks.</p>
+        <p class="lead" data-i18n="hero.lead">BorgStudio is a desktop app for <a href="https://www.borgbackup.org/">BorgBackup</a>: deduplicated, encrypted backups to a USB disk, your NAS or server, a Hetzner Storage Box or BorgBase – and every file back in a few clicks.</p>
         <div class="cta">
           <a class="button primary js-primary-download" href="#download" data-i18n="hero.download">Download</a>
           <a class="button" href="#examples" data-i18n="hero.examples">See examples</a>
@@ -91,7 +91,7 @@
         <article class="card">
           <div class="icon">⌂</div>
           <h3 data-i18n="adv.4.title">Your data stays yours</h3>
-          <p data-i18n="adv.4.text">No account, no cloud service of ours, no telemetry. Your backups go where you decide: a USB disk, your NAS, any SSH server or a Storage Box.</p>
+          <p data-i18n="adv.4.text">No account, no cloud service of ours, no telemetry. Your backups go where you decide: a USB disk, your NAS, any SSH or SFTP server, a Storage Box or BorgBase.</p>
         </article>
         <article class="card">
           <div class="icon">⧉</div>
@@ -115,15 +115,42 @@
       <div class="feature">
         <div class="feature-text">
           <h3 data-i18n="feat.1.title">Backup jobs – by hand or on a schedule</h3>
-          <p data-i18n="feat.1.text">Pick folders, leave out caches, build output and recycle bins with one click, choose the compression. Run a job with live progress, or let it run daily, on chosen weekdays or every few hours – through the system's task scheduler, or by BorgStudio itself in the notification area.</p>
+          <p data-i18n="feat.1.text">Pick folders – or a USB stick, recognized under any drive letter – leave out caches, build output and recycle bins with one click, choose the compression. Run a job with live progress, or let it run every few minutes or hours, daily, on chosen weekdays or monthly – through the system's task scheduler, or by BorgStudio itself in the notification area.</p>
           <ul class="ticks">
             <li data-i18n="feat.1.a">Several jobs per repository, several schedules per job</li>
             <li data-i18n="feat.1.b">Old archives cleaned up automatically (daily, weekly, monthly …)</li>
             <li data-i18n="feat.1.c">Missed times are made up for once the computer is back</li>
-            <li data-i18n="feat.1.d">Files that could not be read are listed, not hidden</li>
+            <li data-i18n="feat.1.d">Commands before and after, an upload limit, and conditions such as mains power or a cable connection</li>
+            <li data-i18n="feat.1.e">Files that could not be read are listed, not hidden</li>
           </ul>
         </div>
         <img class="shot" data-shot="job-editor" src="images/en/job-editor.png" width="640" height="1020" alt="The backup job editor with its schedules" loading="lazy">
+      </div>
+
+      <div class="feature reverse">
+        <div class="feature-text">
+          <h3 data-i18n="feat.9.title">Backups you can count on – checked and restored on trial</h3>
+          <p data-i18n="feat.9.text">A backup is only as good as its restore. BorgStudio checks each repository's integrity with borg check – by hand, after backups or on a schedule, also thoroughly down to every byte – and restores a sample of files on trial to compare them with the originals.</p>
+          <ul class="ticks">
+            <li data-i18n="feat.9.a">Integrity check and restore test per repository and job, with their history</li>
+            <li data-i18n="feat.9.b">Marks in the archive list: checked, restore test OK</li>
+            <li data-i18n="feat.9.c">A lock left behind by a crashed run can be released safely</li>
+          </ul>
+        </div>
+        <img class="shot" data-shot="main-overview" src="images/en/main-overview.png" width="1180" height="760" alt="A repository with its storage and its last integrity check" loading="lazy">
+      </div>
+
+      <div class="feature">
+        <div class="feature-text">
+          <h3 data-i18n="feat.10.title">Back up where you like</h3>
+          <p data-i18n="feat.10.text">A folder or an external drive, a USB stick that is found again under any drive letter, your own server or NAS over SSH, a server that only offers SFTP, a Hetzner Storage Box or BorgBase. BorgStudio sets up the login key for you and checks the server's fingerprint.</p>
+          <ul class="ticks">
+            <li data-i18n="feat.10.a">Back up automatically when the USB drive is attached</li>
+            <li data-i18n="feat.10.b">BorgBase: repository and key set up through its API</li>
+            <li data-i18n="feat.10.c">Existing borg repositories can be connected as they are</li>
+          </ul>
+        </div>
+        <img class="shot" data-shot="providers" src="images/en/providers.png" width="640" height="820" alt="Choosing where a new repository goes" loading="lazy">
       </div>
 
       <div class="feature reverse">
@@ -170,18 +197,44 @@
 
       <div class="feature reverse">
         <div class="feature-text">
+          <h3 data-i18n="feat.11.title">Compare, sort out, export</h3>
+          <p data-i18n="feat.11.text">What changed since yesterday? Compare two archives and see new, changed and deleted files. Rename archives, add a comment, keep one for good or delete it – and export an archive or a selection as zip or tar.</p>
+          <ul class="ticks">
+            <li data-i18n="feat.11.a">Filter by kind of change and search in the paths</li>
+            <li data-i18n="feat.11.b">Kept archives are left alone when cleaning up</li>
+            <li data-i18n="feat.11.c">Export as zip, tar, tar.gz or tar.zst</li>
+          </ul>
+        </div>
+        <img class="shot" data-shot="compare" src="images/en/compare.png" width="1000" height="640" alt="Comparing two archives" loading="lazy">
+      </div>
+
+      <div class="feature">
+        <div class="feature-text">
           <h3 data-i18n="feat.4.title">Restore safely</h3>
           <p data-i18n="feat.4.text">Into a folder of your choice or back to the original place. Before writing anything, BorgStudio checks what would be overwritten – and names files that changed after the backup.</p>
         </div>
         <img class="shot" data-shot="restore" src="images/en/restore.png" width="640" height="400" alt="The restore dialog" loading="lazy">
       </div>
 
-      <div class="feature">
+      <div class="feature reverse">
         <div class="feature-text">
           <h3 data-i18n="feat.5.title">Mount an archive as a folder</h3>
           <p data-i18n="feat.5.text">Need just one file? Mount the archive – or the whole repository – and open it in Explorer, Finder or your file manager. Read-only, so nothing can go wrong.</p>
         </div>
         <img class="shot" data-shot="mounts" src="images/en/mounts.png" width="1180" height="720" alt="Mounted archives in the status bar" loading="lazy">
+      </div>
+
+      <div class="feature">
+        <div class="feature-text">
+          <h3 data-i18n="feat.12.title">Always in view what is running</h3>
+          <p data-i18n="feat.12.text">The status bar shows what BorgStudio is working on and how long it will take: backups, checks, restores, exports and searches, queued runs and those started by the task scheduler. Each with its progress, a way to show it and, where possible, to cancel it.</p>
+          <ul class="ticks">
+            <li data-i18n="feat.12.a">Remaining time estimated from earlier runs</li>
+            <li data-i18n="feat.12.b">Runs held back by a condition, with the reason</li>
+            <li data-i18n="feat.12.c">Long work in its own window – the main window stays usable</li>
+          </ul>
+        </div>
+        <img class="shot" data-shot="tasks" src="images/en/tasks.png" width="1180" height="720" alt="The list of running tasks in the status bar" loading="lazy">
       </div>
 
       <div class="feature reverse">
@@ -214,9 +267,10 @@
           <p class="tag" data-i18n="ex.2.tag">Local copy</p>
           <h3 data-i18n="ex.2.title">Photos → USB disk</h3>
           <ol>
-            <li data-i18n="ex.2.a">Add a repository in a folder on the disk, e.g. <code>D:\Backups\borg</code>.</li>
+            <li data-i18n="ex.2.a">Add a repository, choose <em>USB or external drive</em> and a folder on the disk, e.g. <code>D:\Backups\borg</code> – found again under any drive letter.</li>
             <li data-i18n="ex.2.b">Create a job “Photos” with fast <code>lz4</code> compression – photos hardly compress anyway.</li>
             <li data-i18n="ex.2.c">Keep every archive: deduplication makes another backup of unchanged photos almost free.</li>
+            <li data-i18n="ex.2.d">Switch on <em>Back up when the drive is attached</em> – plugging it in is enough.</li>
           </ol>
         </article>
         <article class="example">
@@ -326,7 +380,11 @@
       </details>
       <details>
         <summary data-i18n="faq.5.q">Are scheduled backups possible?</summary>
-        <p data-i18n="faq.5.a">Yes. Each job can have several schedules – daily, on chosen weekdays or every few hours. The system's task scheduler starts them even while BorgStudio is closed, or BorgStudio runs them itself from the notification area. Missed times are made up for, and BorgStudio can tell you when something goes wrong.</p>
+        <p data-i18n="faq.5.a">Yes. Each job can have several schedules – every few minutes or hours, daily, on chosen weekdays or monthly. The system's task scheduler starts them even while BorgStudio is closed, or BorgStudio runs them itself from the notification area. Missed times are made up for, and BorgStudio can tell you when something goes wrong.</p>
+      </details>
+      <details>
+        <summary data-i18n="faq.8.q">Where can my backups be stored?</summary>
+        <p data-i18n="faq.8.a">In a local folder or on an external drive, on a USB stick or disk, on your own server or NAS over SSH, on a server that only offers SFTP, on a Hetzner Storage Box or at BorgBase. borg itself must run on the computer (on Windows inside WSL) and, for SSH, on the server – except for SFTP servers.</p>
       </details>
       <details>
         <summary data-i18n="faq.7.q">Is there a warranty?</summary>
