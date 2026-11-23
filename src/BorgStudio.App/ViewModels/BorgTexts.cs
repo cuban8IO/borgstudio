@@ -81,6 +81,15 @@ internal static class BorgTexts
     }
 
     /// <summary>Why a run did not start.</summary>
+    /// <summary>The drive's name ("KAMERA"), or "Wechselmedium" if it has none.</summary>
+    public static string DriveName(Core.Backups.SourceDrive drive) =>
+        string.IsNullOrWhiteSpace(drive.Label) ? Strings.SourceDriveUnnamed : drive.Label;
+
+    /// <summary>"Wechselmedium „KAMERA“ (ganz)" or "Wechselmedium „KAMERA“: DCIM, Videos".</summary>
+    public static string DriveSources(Core.Backups.SourceDrive drive) => drive.IsWholeDrive
+        ? Format(Strings.SourceDriveWhole, DriveName(drive))
+        : Format(Strings.SourceDriveFolders, DriveName(drive), string.Join(", ", drive.Folders));
+
     public static string SkipReason(Core.Backups.BackupSkipReason reason) => reason switch
     {
         Core.Backups.BackupSkipReason.RepositoryBusy => Strings.SkipRepositoryBusy,
@@ -95,6 +104,7 @@ internal static class BorgTexts
         Core.Backups.BackupSkipReason.MeteredConnection => Strings.SkipMetered,
         Core.Backups.BackupSkipReason.NotWired => Strings.SkipNotWired,
         Core.Backups.BackupSkipReason.TargetUnreachable => Strings.SkipTargetUnreachable,
+        Core.Backups.BackupSkipReason.SourceMissing => Strings.SkipSourceMissing,
         _ => Strings.SkipHostUnknown,
     };
 

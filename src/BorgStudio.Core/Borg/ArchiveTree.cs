@@ -129,6 +129,20 @@ public sealed class ArchiveTree
 
     public ArchiveNode Root { get; } = new("", ArchiveEntryKind.Directory, null) { IsImplicit = true };
 
+    /// <summary>
+    /// The archive was made from inside a folder (a removable drive's root): its paths are relative to that folder, not to
+    /// the computer's root – there is no "original place" to write them back to.
+    /// </summary>
+    public bool IsRelative => !Root.IsImplicit;
+
+    /// <summary>Whether <paramref name="node"/> belongs to an archive with relative paths (see <see cref="IsRelative"/>).</summary>
+    public static bool IsRelativeNode(ArchiveNode node)
+    {
+        while (node.Parent is { } parent)
+            node = parent;
+        return !node.IsImplicit;
+    }
+
     /// <summary>Entries borg listed.</summary>
     public long EntryCount { get; private set; }
 
@@ -143,6 +157,13 @@ public sealed class ArchiveTree
         var key = Normalize(item.Path);
         if (key.Length == 0)
             return;
+        // "." is the folder borg started in (a drive backed up from its root): the archive's paths are relative to it.
+        if (key == ".")
+        {
+            Root.IsImplicit = false;
+            EntryCount++;
+            return;
+        }
 
         var slash = key.LastIndexOf('/');
         var parentKey = slash < 0 ? "" : key[..slash];

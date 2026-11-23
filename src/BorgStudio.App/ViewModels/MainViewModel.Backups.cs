@@ -107,7 +107,7 @@ public partial class MainViewModel
     [RelayCommand(CanExecute = nameof(CanAddJob))]
     private async Task NewJobAsync()
     {
-        var editor = new BackupJobEditorViewModel(SelectedRepository!.Config, Borg, _services.Dialogs);
+        var editor = new BackupJobEditorViewModel(SelectedRepository!.Config, Borg, _services.Dialogs, drives: SourceDriveLocator.For(_services));
         await _services.Dialogs.ShowBackupJobEditorAsync(editor);
         if (editor.Result is not { } job)
             return;
@@ -124,7 +124,8 @@ public partial class MainViewModel
     [RelayCommand(CanExecute = nameof(CanChangeJob))]
     private async Task EditJobAsync()
     {
-        var editor = new BackupJobEditorViewModel(SelectedRepository!.Config, Borg, _services.Dialogs, SelectedJob!.Job);
+        var editor = new BackupJobEditorViewModel(SelectedRepository!.Config, Borg, _services.Dialogs, SelectedJob!.Job,
+            SourceDriveLocator.For(_services));
         await _services.Dialogs.ShowBackupJobEditorAsync(editor);
         if (editor.Result is not { } job)
             return;
@@ -175,7 +176,15 @@ public partial class MainViewModel
     private async Task RunBackupAsync(BackupJob job)
     {
         var item = Repositories.FirstOrDefault(repository => repository.Config.Id == job.RepositoryId);
-        if (item is null || await ConnectAsync(item) is not { } location)
+        if (item is null)
+            return;
+        // The drive to back up has to be attached – told before anything else is asked.
+        if (job.Drive is { } drive && (SourceDriveLocator.For(_services) is not { } drives || await drives.FindAsync(drive) is null))
+        {
+            await _services.Dialogs.ShowMessageAsync(Strings.SourceDriveMissingTitle, BorgTexts.Format(Strings.SourceDriveMissing, BorgTexts.DriveName(drive)));
+            return;
+        }
+        if (await ConnectAsync(item) is not { } location)
             return;
         if (!await ReleaseMountsAsync(item.Config.Id, item.Name))
             return;
@@ -287,7 +296,7 @@ public partial class MainViewModel
 
     /// <summary>Runs backups and clean-ups – the same for the window, the background and scheduled runs.</summary>
     internal BackupRunner Runner => _runner ??= new BackupRunner(_services.BorgClient, _services.Jobs, _services.Durations, BorgTexts.Describe,
-        hooks: _services.Hooks, describeHook: BorgTexts.HookProblem);
+        hooks: _services.Hooks, describeHook: BorgTexts.HookProblem, sourceDrives: SourceDriveLocator.For(_services));
 
     private BackupRunner? _runner;
 
@@ -316,7 +325,16 @@ public partial class MainViewModel
     {
         try
         {
-            var size = await Task.Run(() => SourceScanner.Scan(job.Sources, job.Exclusions, cancellationToken), cancellationToken);
+            var (sources, exclusions) = (job.Sources, job.Exclusions);
+            // A drive: its folders (or all of it) where it is attached now; its exclusion folders are relative to its root.
+            if (job.Drive is { } drive)
+            {
+                if (SourceDriveLocator.For(_services) is not { } drives || await drives.FindAsync(drive, cancellationToken) is not { } root)
+                    return;
+                sources = drive.IsWholeDrive ? [root] : [.. drive.Folders.Select(folder => Path.Combine(root, folder))];
+                exclusions = exclusions with { Folders = [.. exclusions.Folders.Select(folder => Path.Combine(root, folder))] };
+            }
+            var size = await Task.Run(() => SourceScanner.Scan(sources, exclusions, cancellationToken), cancellationToken);
             OnViewModelThread(() => run.SetEstimate(size.Bytes));
         }
         catch (OperationCanceledException)
@@ -370,7 +388,8 @@ public sealed class BackupJobItemViewModel(BackupJob job, Core.Checks.RestoreTes
 
     public string Name => Job.Name;
 
-    public string SourcesText => string.Join(", ", Job.Sources);
+    /// <summary>"C:\Users\me\Documents, D:\Fotos" – or for a drive "Wechselmedium „KAMERA“: DCIM, Videos".</summary>
+    public string SourcesText => Job.Drive is { } drive ? BorgTexts.DriveSources(drive) : string.Join(", ", Job.Sources);
 
     public string LastRunText => Job.LastRun switch
     {

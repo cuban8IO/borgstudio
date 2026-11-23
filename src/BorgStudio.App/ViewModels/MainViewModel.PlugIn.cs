@@ -8,9 +8,10 @@ using BorgStudio.Providers.Usb;
 namespace BorgStudio.App.ViewModels;
 
 /// <summary>
-/// Backing up when a USB drive is attached (BorgStudio in the background): every few seconds the drives are listed; on a
-/// new one, each USB drive repository that wants it and is found there asks "Jetzt sichern?" – on yes all its jobs run
-/// one after the other, and the drive stays connected until the last one is done (then it is ejected, if wanted).
+/// Backing up when a drive is attached (while BorgStudio runs, with its window or in the notification area): every few
+/// seconds the drives are listed; on a new one, each USB drive repository that wants it and is found there – and each job
+/// backing up that very drive – asks "Jetzt sichern?". On yes all its jobs run one after the other, and the drive stays
+/// connected until the last one is done (then it is ejected, if wanted).
 /// </summary>
 public partial class MainViewModel
 {
@@ -50,8 +51,9 @@ public partial class MainViewModel
         foreach (var (_, (root, away)) in _plugInQuestions.Where(question => !now.Contains(question.Value.Root)).ToList())
             away.Cancel();
 
+        // Asked whenever BorgStudio runs (window or notification area), whichever way schedules are run.
         var attached = now.Where(root => !before.Contains(root)).ToList();
-        if (attached.Count == 0 || !IsBackgroundMode)
+        if (attached.Count == 0)
             return;
         foreach (var repository in Repositories.Select(item => item.Config)
                      .Where(config => config.ProviderId == UsbRepositoryProvider.ProviderId && config.PlugIn.Enabled))
@@ -61,6 +63,68 @@ public partial class MainViewModel
             var run = PlugInAsync(repository, attached);
             _plugInRun = Task.WhenAll(_plugInRun, run);
         }
+
+        // Jobs backing up a drive that was just attached.
+        if (_jobs.Any(job => job.Drive is { PlugIn.Enabled: true }) && SourceDriveLocator.For(_services) is { } sources)
+            _plugInRun = Task.WhenAll(_plugInRun, Task.WhenAll(attached.Select(root => PlugInSourceAsync(sources, root))));
+    }
+
+    private readonly HashSet<string> _plugInDrivesBusy = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// A drive was attached that jobs back up (and want to be asked for): "Back up now?" – on yes they all run, the drive
+    /// held until the last one is done, then ejected if one of them wants that.
+    /// </summary>
+    private async Task PlugInSourceAsync(SourceDriveLocator sources, string root)
+    {
+        string? key = null;
+        try
+        {
+            var ids = await sources.IdsAsync(root);
+            var jobs = _jobs.Where(job => job.Drive is { PlugIn.Enabled: true } drive && ids.Contains(drive.Id)
+                                          && !BackedUpRecently(drive.PlugIn.MinimumHours, [job])).ToList();
+            if (jobs.Count == 0 || !_plugInDrivesBusy.Add(key = jobs[0].Drive!.Id))
+            {
+                key = null;
+                return;
+            }
+
+            var name = BorgTexts.DriveName(jobs[0].Drive!);
+            using var away = new CancellationTokenSource();
+            var question = Guid.NewGuid();
+            _plugInQuestions[question] = (root, away);
+            bool backUp;
+            try
+            {
+                backUp = await _services.Dialogs.AskOnTopAsync(Strings.PlugInTitle,
+                    BorgTexts.Format(Strings.PlugInSourceQuestion, name, string.Join(", ", jobs.Select(job => job.Name))),
+                    Strings.PlugInBackUp, Strings.PlugInNotNow, away.Token);
+            }
+            finally
+            {
+                _plugInQuestions.Remove(question);
+            }
+            if (!backUp)
+            {
+                ScheduledRun.Log($"{name} (attached): not backed up now", _services.Jobs.DataDirectory);
+                return;
+            }
+
+            ScheduledRun.Log($"{name} (attached): backing up {jobs.Count} job(s)", _services.Jobs.DataDirectory);
+            using (SourceDriveLocator.Hold(root))
+                await Task.WhenAll(jobs.Select(job => QueueTriggeredRun(job.Id).Finished));
+            if (jobs.Any(job => job.Drive!.Eject) && await sources.EjectAsync(root) is { } problem)
+                ScheduledRun.Log($"{name}: {problem}", _services.Jobs.DataDirectory);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            ScheduledRun.Log($"{root} (attached): {exception}", _services.Jobs.DataDirectory);
+        }
+        finally
+        {
+            if (key is not null)
+                _plugInDrivesBusy.Remove(key);
+        }
     }
 
     private async Task PlugInAsync(RepositoryConfig repository, IReadOnlyList<string> attached)
@@ -68,7 +132,7 @@ public partial class MainViewModel
         try
         {
             var jobs = _jobs.Where(job => job.RepositoryId == repository.Id).ToList();
-            if (jobs.Count == 0 || BackedUpRecently(repository, jobs))
+            if (jobs.Count == 0 || BackedUpRecently(repository.PlugIn.MinimumHours, jobs))
                 return;
             // On one of the drives just attached? (Looked for without holding the drive: "Nicht jetzt" leaves it attached.)
             if (await FindOnAttachedAsync(repository, attached) is not { } root)
@@ -124,13 +188,15 @@ public partial class MainViewModel
         }
     }
 
-    /// <summary>A job of the repository backed up successfully within its <see cref="PlugInBackup.MinimumHours"/>.</summary>
-    private bool BackedUpRecently(RepositoryConfig repository, IEnumerable<BackupJob> jobs)
-    {
-        var hours = repository.PlugIn.MinimumHours;
-        return hours > 0 && jobs.Any(job => job.LastRun is { Outcome: BackupOutcome.Succeeded or BackupOutcome.Warnings } run
-            && Clock() - run.Started.LocalDateTime < TimeSpan.FromHours(hours));
-    }
+    /// <summary>
+    /// One of the jobs backed up successfully by itself (on a schedule, when attached …) within the last
+    /// <paramref name="hours"/> (<see cref="PlugInBackup.MinimumHours"/>). Backups started by hand don't count: right after
+    /// trying a job out, attaching the drive still asks.
+    /// </summary>
+    private bool BackedUpRecently(int hours, IEnumerable<BackupJob> jobs) =>
+        hours > 0 && jobs.Any(job => Runner.History.Get(job.Id).Append(job.LastRun).Any(run =>
+            run is { Automatic: true, Outcome: BackupOutcome.Succeeded or BackupOutcome.Warnings }
+            && Clock() - run.Started.LocalDateTime < TimeSpan.FromHours(hours)));
 
     /// <summary>The attached drive the repository is on; <c>null</c> if it is elsewhere (it was attached before) or not found.</summary>
     private async Task<string?> FindOnAttachedAsync(RepositoryConfig repository, IReadOnlyList<string> attached)

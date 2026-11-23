@@ -39,6 +39,9 @@ public sealed class FakeBorg : IProcessRunner
 
     public List<IReadOnlyDictionary<string, string?>> Environments { get; } = [];
 
+    /// <summary>The folder each call (of <see cref="RunAsync"/>) started in, in the order of <see cref="Calls"/>.</summary>
+    public List<string?> WorkingDirectories { get; } = [];
+
     /// <summary>Content of the private key file ssh would have used, read during each SSH call.</summary>
     public List<string> KeysDuringCalls { get; } = [];
 
@@ -151,6 +154,7 @@ public sealed class FakeBorg : IProcessRunner
         var passphrase = environment?.GetValueOrDefault("BORG_PASSPHRASE");
         Environments.Add(environment ?? new Dictionary<string, string?>());
         Calls.Add((arguments, passphrase));
+        WorkingDirectories.Add(workingDirectory);
         if (environment?.GetValueOrDefault("BORG_RSH") is { } rsh
             && System.Text.RegularExpressions.Regex.Match(rsh, "-i '(?<path>[^']+)'") is { Success: true } match)
         {
@@ -1408,6 +1412,18 @@ public sealed class FakeDrives : IDriveSystem
         Ejected.Add(path);
         return Task.FromResult(EjectProblem);
     }
+
+    /// <summary>The drives' UUIDs by root; a root without one has none (like a card without serial number).</summary>
+    public Dictionary<string, string> VolumeIds { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+    public Dictionary<string, string> Labels { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+    public Task<string?> VolumeIdAsync(string root, CancellationToken cancellationToken = default) =>
+        Task.FromResult(VolumeIds.GetValueOrDefault(root));
+
+    public string Label(string root) => Labels.GetValueOrDefault(root) ?? "";
+
+    public long? Size(string root) => 64L << 30;
 }
 
 /// <summary>Plays BorgBase's GraphQL API: SSH keys and repositories of one account; requests are recorded.</summary>
