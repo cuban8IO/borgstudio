@@ -117,6 +117,28 @@ public sealed class PlugInBackupFlowTests : IDisposable
     }
 
     [Fact]
+    public async Task A_backup_started_by_hand_does_not_hold_back_the_question()
+    {
+        _now = DateTime.Now;
+        _test.Drives.Attached.Add(new DriveRoot(Drive, IsNetwork: false));
+        Directory.CreateDirectory(Folder);
+        File.WriteAllText(Path.Combine(Folder, "config"), $"[repository]\nversion = 1\nid = {Id}\n");
+        var main = await StartAsync();
+        await main.RunJobCommand.ExecuteAsync(null);
+        Assert.Equal(1, Backups);
+        Assert.False(_test.Jobs.Load().Single(job => job.LastRun is not null).LastRun!.Automatic);
+
+        // Pulled and attached again right after trying it by hand: asked all the same.
+        _test.Drives.Attached.RemoveAt(1);
+        main.DriveTick();
+        await AttachAsync(main);
+
+        Assert.Single(_test.Dialogs.OnTop);
+        Assert.Equal(3, Backups);
+        Assert.All(_test.Jobs.Load(), job => Assert.True(job.LastRun!.Automatic));
+    }
+
+    [Fact]
     public async Task Not_now_leaves_the_drive_attached_and_backs_up_nothing()
     {
         var main = await StartAsync();

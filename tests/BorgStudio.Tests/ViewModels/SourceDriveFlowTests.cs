@@ -282,6 +282,30 @@ public sealed class SourceDriveFlowTests : IDisposable
     }
 
     [Fact]
+    public async Task Trying_the_job_by_hand_does_not_keep_attaching_from_asking()
+    {
+        var drive = new SourceDrive { Id = "volume:" + Uuid, Label = "KAMERA", PlugIn = new PlugInBackup { Enabled = true } };
+        _test.Jobs.Save([Job(drive, "Fotos")]);
+        _test.Settings.Save(new AppSettings { ScheduleRunner = ScheduleRunner.Background });
+        Attach(Stick);
+        var main = new MainViewModel(_test.Services) { SchedulerExecutable = "BorgStudio.exe", Clock = () => DateTime.Now };
+        await main.CheckBorgCommand.ExecuteAsync(null);
+        await main.SchedulesApplied;
+        main.DriveTick();
+        await main.RunJobCommand.ExecuteAsync(null);
+        Assert.Equal(BackupOutcome.Succeeded, _test.Jobs.Load()[0].LastRun!.Outcome);
+
+        Pull(Stick);
+        main.DriveTick();
+        Attach(Stick);
+        main.DriveTick();
+        await main.PlugInRun;
+
+        Assert.Single(_test.Dialogs.OnTop);
+        Assert.True(_test.Jobs.Load()[0].LastRun!.Automatic);
+    }
+
+    [Fact]
     public void Archives_of_a_drive_have_relative_paths_and_no_original_place()
     {
         var tree = new ArchiveTree();

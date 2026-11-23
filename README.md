@@ -131,7 +131,7 @@ it follows the system language (English if that is neither) or the choice under 
   "Safely remove hardware", Linux: `udisksctl`, macOS: `diskutil eject`) – also after several scheduled runs in a row
   only once, after the last. *Back up when the drive is attached* (per repository, BorgStudio in the background):
   BorgStudio asks, then runs all jobs of the repository one after the other; not again while a job backed up
-  successfully within the set hours (default 12). Inside WSL, BorgStudio mounts drives that
+  successfully by itself (scheduled or on attaching – not by hand) within the set hours (default 12). Inside WSL, BorgStudio mounts drives that
   were attached after WSL started (`mount -t drvfs`) and unmounts them again after borg is done.
 - **Removable drive as the source of a job:** the drive is recognized by its file system's UUID or serial number
   (Windows: the volume serial number, Linux: `findmnt`/`lsblk`, macOS: `diskutil`); a drive without one gets a small

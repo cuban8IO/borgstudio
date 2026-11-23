@@ -186,12 +186,15 @@ public partial class MainViewModel
         }
     }
 
-    /// <summary>One of the jobs backed up successfully within the last <paramref name="hours"/> (<see cref="PlugInBackup.MinimumHours"/>).</summary>
-    private bool BackedUpRecently(int hours, IEnumerable<BackupJob> jobs)
-    {
-        return hours > 0 && jobs.Any(job => job.LastRun is { Outcome: BackupOutcome.Succeeded or BackupOutcome.Warnings } run
-            && Clock() - run.Started.LocalDateTime < TimeSpan.FromHours(hours));
-    }
+    /// <summary>
+    /// One of the jobs backed up successfully by itself (on a schedule, when attached …) within the last
+    /// <paramref name="hours"/> (<see cref="PlugInBackup.MinimumHours"/>). Backups started by hand don't count: right after
+    /// trying a job out, attaching the drive still asks.
+    /// </summary>
+    private bool BackedUpRecently(int hours, IEnumerable<BackupJob> jobs) =>
+        hours > 0 && jobs.Any(job => Runner.History.Get(job.Id).Append(job.LastRun).Any(run =>
+            run is { Automatic: true, Outcome: BackupOutcome.Succeeded or BackupOutcome.Warnings }
+            && Clock() - run.Started.LocalDateTime < TimeSpan.FromHours(hours)));
 
     /// <summary>The attached drive the repository is on; <c>null</c> if it is elsewhere (it was attached before) or not found.</summary>
     private async Task<string?> FindOnAttachedAsync(RepositoryConfig repository, IReadOnlyList<string> attached)

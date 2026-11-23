@@ -83,13 +83,21 @@ public sealed class BackupRunner(BorgClient borg, BackupJobStore jobs, DurationH
         var job = request.Job;
         var started = _time.GetUtcNow();
 
+        // Kept with the job and in its history, marked as started by itself (schedule, webhook, attached drive) or by hand.
+        BackupRunSummary Keep(BackupRunSummary run, bool asLastRun = true)
+        {
+            run = run with { Automatic = request.Scheduled };
+            Record(job.Id, run, asLastRun);
+            return run;
+        }
+
         using var repositoryLock = RepositoryLock.TryAcquire(LockDirectory, job.RepositoryId);
         if (repositoryLock is null)
         {
             // By hand: the run that holds the lock records the job's outcome, this one only goes into the history.
             // Scheduled: a backup that did not happen is a failure of the job.
             var notRun = NotRun(BackupSkipReason.RepositoryBusy, request.Scheduled ? BackupOutcome.Failed : BackupOutcome.Skipped);
-            Record(job.Id, notRun, asLastRun: request.Scheduled);
+            notRun = Keep(notRun, asLastRun: request.Scheduled);
             return new BackupRunResult(notRun, []);
         }
 
@@ -101,7 +109,7 @@ public sealed class BackupRunner(BorgClient borg, BackupJobStore jobs, DurationH
             if (sourceRoot is null)
             {
                 var missing = NotRun(BackupSkipReason.SourceMissing, BackupOutcome.Skipped);
-                Record(job.Id, missing);
+                missing = Keep(missing);
                 return new BackupRunResult(missing, []);
             }
         }
@@ -116,7 +124,7 @@ public sealed class BackupRunner(BorgClient borg, BackupJobStore jobs, DurationH
             if (before.Cancelled)
             {
                 var stopped = new BackupRunSummary { Started = started, Duration = _time.GetUtcNow() - started, Outcome = BackupOutcome.Cancelled };
-                Record(job.Id, stopped);
+                stopped = Keep(stopped);
                 return new BackupRunResult(stopped, []);
             }
             if (!before.Succeeded)
@@ -133,7 +141,7 @@ public sealed class BackupRunner(BorgClient borg, BackupJobStore jobs, DurationH
                         Hook = beforeProblem,
                     };
                     failed = await RunAfterAsync(request, failed, report);
-                    Record(job.Id, failed);
+                    failed = Keep(failed);
                     return new BackupRunResult(failed, []);
                 }
             }
@@ -154,7 +162,7 @@ public sealed class BackupRunner(BorgClient borg, BackupJobStore jobs, DurationH
             summary = summary with { Outcome = BackupOutcome.Warnings, Message = DescribeHook(beforeProblem), Hook = beforeProblem };
         summary = await RunAfterAsync(request, summary, report);
 
-        Record(job.Id, summary);
+        summary = Keep(summary);
         // What compact freed is gone from the repository (the archives' totals shrink too, by an unknown amount).
         var repository = created.Value?.Repository is { } stats && summary.Cleanup?.FreedBytes is { } freed
             ? stats with { UniqueCompressedSize = Math.Max(0, stats.UniqueCompressedSize - freed) }

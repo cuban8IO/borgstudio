@@ -361,7 +361,7 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
 
     private BackupRunResult NotRun(BackupJob job, BackupSkipReason reason, BackupOutcome outcome = BackupOutcome.Failed)
     {
-        var summary = _runner.NotRun(reason, outcome);
+        var summary = _runner.NotRun(reason, outcome) with { Automatic = true };
         _runner.Record(job.Id, summary);
         return new BackupRunResult(summary, []);
     }

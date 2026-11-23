@@ -3422,7 +3422,7 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
     <value>hours</value>
   </data>
   <data name="EditorPlugInHint" xml:space="preserve">
-    <value>Asks first, then runs all jobs of the repository. Not again within this time after a successful backup (0: every time).</value>
+    <value>Asks first, then runs all jobs of the repository. Not again within this time after a successful automatic backup – backups started by hand don't count (0: every time).</value>
   </data>
   <data name="EditorPlugInNeedsBackground" xml:space="preserve">
     <value>Only works while BorgStudio runs in the background (Tools → Settings → Scheduled backups: “BorgStudio in the background”).</value>
@@ -3666,7 +3666,7 @@ Jobs: {1}</value>
     <value>Ask “Back up now?” when the drive is attached</value>
   </data>
   <data name="JobEditorDrivePlugInHint" xml:space="preserve">
-    <value>Only while BorgStudio runs in the background (Tools → Settings → Scheduled backups). Not asked again within this time after a successful backup (0: every time).</value>
+    <value>Only while BorgStudio runs in the background (Tools → Settings → Scheduled backups). Not asked again within this time after a successful automatic backup – backups started by hand don't count (0: every time).</value>
   </data>
   <data name="JobEditorDriveEject" xml:space="preserve">
     <value>Eject the drive after automatic runs (scheduled or on attaching)</value>

@@ -137,6 +137,9 @@ public sealed record BackupRunSummary
 
     /// <summary>The clean-up after the backup (prune + compact); <c>null</c> if the job has none or the backup failed.</summary>
     public CleanupSummary? Cleanup { get; init; }
+
+    /// <summary>Started without anyone clicking: by a schedule, the webhook or a drive being attached (not by hand).</summary>
+    public bool Automatic { get; init; }
 }
 
 /// <summary>The outcome of cleaning up a job's archives: <c>borg prune</c>, then <c>borg compact</c> if anything was deleted.</summary>
