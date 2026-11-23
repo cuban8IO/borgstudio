@@ -375,7 +375,7 @@
     <value>There already is a repository or other data at this location.</value>
   </data>
   <data name="BorgErrorLocked" xml:space="preserve">
-    <value>The repository is locked – another borg process is using it. If the lock was left behind (e.g. after a crash), „Release lock …“ in the repository's overview removes it.</value>
+    <value>The repository is locked – another borg process is using it. If the lock was left behind (e.g. after a crash), “Release lock …” in the repository's overview removes it.</value>
   </data>
   <data name="BorgErrorConnectionFailed" xml:space="preserve">
     <value>The connection to the repository failed.</value>
@@ -2727,7 +2727,7 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
     <value>Repair repository</value>
   </data>
   <data name="RepairMessage" xml:space="preserve">
-    <value>borg check --repair tries to repair „{0}“. Damaged data that cannot be saved is removed or replaced with zeros – files in the archives may get lost or broken. If you can, make a copy of the repository first (its folder, or on the server) and look for the cause (disk, memory, connection).</value>
+    <value>borg check --repair tries to repair “{0}”. Damaged data that cannot be saved is removed or replaced with zeros – files in the archives may get lost or broken. If you can, make a copy of the repository first (its folder, or on the server) and look for the cause (disk, memory, connection).</value>
   </data>
   <data name="RepairContinue" xml:space="preserve">
     <value>Continue …</value>
@@ -2763,7 +2763,7 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
     <value>Check finished: no errors found.</value>
   </data>
   <data name="CheckResultProblems" xml:space="preserve">
-    <value>Check finished: borg found errors ({0} messages, listed under „Integrity check“).</value>
+    <value>Check finished: borg found errors ({0} messages, listed under “Integrity check”).</value>
   </data>
   <data name="CheckResultCancelled" xml:space="preserve">
     <value>Check cancelled.</value>
@@ -2796,7 +2796,7 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
     <value>Messages from borg ({0})</value>
   </data>
   <data name="CheckProblemsHint" xml:space="preserve">
-    <value>Look for the cause first (disk, memory, connection). „Repair“ fixes what borg can – damaged data may get lost doing so.</value>
+    <value>Look for the cause first (disk, memory, connection). “Repair” fixes what borg can – damaged data may get lost doing so.</value>
   </data>
   <data name="CheckDepthNormal" xml:space="preserve">
     <value>normal</value>
@@ -2898,7 +2898,7 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
     <value>Automatically: {0}</value>
   </data>
   <data name="CheckPlanNone" xml:space="preserve">
-    <value>Not checked automatically – set it up under „Edit“ → „Integrity check“.</value>
+    <value>Not checked automatically – set it up under “Edit” → “Integrity check”.</value>
   </data>
   <data name="CheckPlanAfterBackup" xml:space="preserve">
     <value>after a backup, if not checked for {0} days</value>
@@ -3039,7 +3039,7 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
     <value>Release lock</value>
   </data>
   <data name="BreakLockMessage" xml:space="preserve">
-    <value>borg found „{0}“ locked. Release the lock only if no borg works on the repository any more – not on this computer, nor on another one using the same repository. If a borg still writes to it, releasing the lock can damage the repository.</value>
+    <value>borg found “{0}” locked. Release the lock only if no borg works on the repository any more – not on this computer, nor on another one using the same repository. If a borg still writes to it, releasing the lock can damage the repository.</value>
   </data>
   <data name="BreakLockConfirm" xml:space="preserve">
     <value>Release lock</value>
@@ -3264,7 +3264,7 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
     <value>Rename archive</value>
   </data>
   <data name="ArchiveRenamePrompt" xml:space="preserve">
-    <value>New name for „{0}“:</value>
+    <value>New name for “{0}”:</value>
   </data>
   <data name="ArchiveRenaming" xml:space="preserve">
     <value>Renaming …</value>
@@ -3273,22 +3273,22 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
     <value>The name must not be empty.</value>
   </data>
   <data name="ArchiveNameInvalid" xml:space="preserve">
-    <value>The name must not contain „/“ or „::“.</value>
+    <value>The name must not contain “/” or “::”.</value>
   </data>
   <data name="ArchiveNameExists" xml:space="preserve">
-    <value>There is an archive „{0}“ already.</value>
+    <value>There is an archive “{0}” already.</value>
   </data>
   <data name="ArchiveComment" xml:space="preserve">
     <value>Comment …</value>
   </data>
   <data name="ArchiveCommentTip" xml:space="preserve">
-    <value>borg recreate --comment: a note kept in the archive (e.g. „before the update“)</value>
+    <value>borg recreate --comment: a note kept in the archive (e.g. “before the update”)</value>
   </data>
   <data name="ArchiveCommentTitle" xml:space="preserve">
     <value>Archive comment</value>
   </data>
   <data name="ArchiveCommentPrompt" xml:space="preserve">
-    <value>Comment for „{0}“ (empty: none):</value>
+    <value>Comment for “{0}” (empty: none):</value>
   </data>
   <data name="ArchiveCommenting" xml:space="preserve">
     <value>Saving the comment …</value>
@@ -3297,7 +3297,7 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
     <value>Keep</value>
   </data>
   <data name="ArchiveKeepTip" xml:space="preserve">
-    <value>Keeps the archive for good: „keep-“ in front of its name, so its job's clean-up no longer deletes it</value>
+    <value>Keeps the archive for good: “keep-” in front of its name, so its job's clean-up no longer deletes it</value>
   </data>
   <data name="ArchiveRelease" xml:space="preserve">
     <value>Don't keep</value>
@@ -3371,13 +3371,13 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
     <value>Into</value>
   </data>
   <data name="ArchiveExportWhatArchive" xml:space="preserve">
-    <value>Archive „{0}“</value>
+    <value>Archive “{0}”</value>
   </data>
   <data name="ArchiveExportWhatOne" xml:space="preserve">
-    <value>„{0}“ from „{1}“</value>
+    <value>“{0}” from “{1}”</value>
   </data>
   <data name="ArchiveExportWhatSome" xml:space="preserve">
-    <value>{0} entries from „{1}“</value>
+    <value>{0} entries from “{1}”</value>
   </data>
   <data name="ArchiveExportPreparing" xml:space="preserve">
     <value>borg works out the size …</value>
@@ -3431,7 +3431,7 @@ Anyone logged in as you can then open the vault. BorgStudio itself stays locked 
     <value>Drive attached</value>
   </data>
   <data name="PlugInQuestion" xml:space="preserve">
-    <value>The drive of „{0}“ was attached. Back up now?
+    <value>The drive of “{0}” was attached. Back up now?
 
 Jobs: {1}</value>
   </data>
@@ -3517,7 +3517,7 @@ Jobs: {1}</value>
     <value>✗ check found damage</value>
   </data>
   <data name="ArchiveCheckDamagedTip" xml:space="preserve">
-    <value>The check on {0} found damage in the repository – see the „Prüfung“ tab.</value>
+    <value>The check on {0} found damage in the repository – see the “Integrity check” tab.</value>
   </data>
   <data name="ArchiveRestoreTested" xml:space="preserve">
     <value>↺ restore test OK</value>

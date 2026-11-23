@@ -299,6 +299,13 @@ public class BorgClientTests
     }
 
     [Fact]
+    public void The_process_id_line_of_an_interruptible_call_is_not_part_of_the_error()
+    {
+        Assert.Null(BorgClient.ParseError("BORGSTUDIO_PID 517\n").Message);
+        Assert.Equal("Killed", BorgClient.ParseError("BORGSTUDIO_PID 517\nKilled\n").Message);
+    }
+
+    [Fact]
     public void Borg_without_FUSE_support_cannot_mount()
     {
         var standardError = ErrorLine("Error", "borg mount not available: no FUSE support, BORG_FUSE_IMPL=pyfuse3,llfuse.");
