@@ -80,7 +80,7 @@ public partial class MainWindow : Window
         Activate();
     }
 
-    /// <summary>In the background closing only hides the window; the first time a hint says so.</summary>
+    /// <summary>Closing only hides the window; the first time a hint says so.</summary>
     private async Task HideToTrayAsync(MainViewModel viewModel)
     {
         if (!viewModel.Settings.TrayHintShown)
@@ -114,7 +114,8 @@ public partial class MainWindow : Window
 
     protected override void OnClosing(WindowClosingEventArgs e)
     {
-        if (_viewModel is { IsBackgroundMode: true } background && !_quitting && !_restart
+        // Closing hides the window in the notification area; "Quit" in the icon's menu ends BorgStudio.
+        if (_viewModel is { } background && !_quitting && !_restart
             && e.CloseReason is not (WindowCloseReason.OSShutdown or WindowCloseReason.ApplicationShutdown))
         {
             e.Cancel = true;

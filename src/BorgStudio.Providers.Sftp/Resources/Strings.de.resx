@@ -17,7 +17,7 @@
     <value>SFTP-Server (ohne borg)</value>
   </data>
   <data name="Description" xml:space="preserve">
-    <value>Ein Server oder Speicher, der nur SFTP anbietet. BorgStudio hängt den Ordner mit sshfs ein, und borg schreibt hinein wie in einen lokalen Ordner – langsamer als borg auf dem Server. Braucht sshfs dort, wo borg läuft (WSL, Linux, macOS).</value>
+    <value>Server oder NAS mit SFTP, aber ohne borg. Wird mit sshfs eingehängt.</value>
   </data>
   <data name="HostLabel" xml:space="preserve">
     <value>Server</value>
@@ -50,7 +50,7 @@
     <value>Repository-Ordner</value>
   </data>
   <data name="PathHint" xml:space="preserve">
-    <value>Relativ zum Home-Ordner des Logins (z. B. backups/laptop) oder absolut. Der übergeordnete Ordner muss existieren; der Ordner eines neuen Repositorys wird angelegt.</value>
+    <value>Relativ zum Home-Verzeichnis, z. B. backups/laptop, oder absolut.</value>
   </data>
   <data name="PathRequired" xml:space="preserve">
     <value>Bitte den Repository-Ordner angeben.</value>

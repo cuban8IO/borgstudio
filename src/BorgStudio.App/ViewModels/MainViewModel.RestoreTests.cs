@@ -66,6 +66,7 @@ public partial class MainViewModel
         run.FinishRestoreTest(record);
         IsBackupRunning = false;
         RefreshRepositoryJobs();
+        RefreshArchiveVerification(job.RepositoryId);
         RefreshDashboard();
         await NotifyRestoreTestAsync(job, item.Name, record);
     }

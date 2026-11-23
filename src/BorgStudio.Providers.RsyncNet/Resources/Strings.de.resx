@@ -17,13 +17,13 @@
     <value>rsync.net</value>
   </data>
   <data name="Description" xml:space="preserve">
-    <value>Cloud-Speicher bei rsync.net – borg läuft auf deren Server (borg 1.4 oder 1.2). Das Kontingent des Kontos erscheint in der Speicherübersicht.</value>
+    <value>Cloud-Speicher bei rsync.net, erreichbar über SSH.</value>
   </data>
   <data name="HostLabel" xml:space="preserve">
     <value>Server</value>
   </data>
   <data name="HostHint" xml:space="preserve">
-    <value>Der Hostname aus deiner Willkommens-E-Mail, z. B. zh1234.rsync.net („.rsync.net“ darf fehlen).</value>
+    <value>z. B. zh1234.rsync.net, aus der Willkommens-E-Mail.</value>
   </data>
   <data name="HostRequired" xml:space="preserve">
     <value>Bitte den Server angeben.</value>
@@ -35,7 +35,7 @@
     <value>Login-Name</value>
   </data>
   <data name="UserHint" xml:space="preserve">
-    <value>Der Login-Name aus deiner Willkommens-E-Mail.</value>
+    <value>Aus der Willkommens-E-Mail.</value>
   </data>
   <data name="UserRequired" xml:space="preserve">
     <value>Bitte den Login-Namen angeben.</value>
@@ -47,7 +47,7 @@
     <value>Ordner im Konto</value>
   </data>
   <data name="PathHint" xml:space="preserve">
-    <value>Relativ zum Home-Ordner des Kontos, z. B. borg/laptop. Wird bei einem neuen Repository angelegt.</value>
+    <value>Relativ zum Home-Verzeichnis, z. B. borg/laptop</value>
   </data>
   <data name="PathRequired" xml:space="preserve">
     <value>Bitte einen Ordner angeben.</value>
@@ -62,7 +62,7 @@
     <value>borg auf dem Server</value>
   </data>
   <data name="RemoteBorgHint" xml:space="preserve">
-    <value>rsync.net bietet borg 1.4 und 1.2. Wähle die Reihe des borg auf diesem Computer (1.4 für neue Repositories).</value>
+    <value>Das borg, das rsync.net für dieses Repository ausführt.</value>
   </data>
   <data name="RemoteBorgInvalid" xml:space="preserve">
     <value>Bitte die borg-Version auf dem Server wählen.</value>

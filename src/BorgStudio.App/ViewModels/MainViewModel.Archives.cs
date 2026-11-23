@@ -337,7 +337,29 @@ public partial class MainViewModel
             .OrderByDescending(job => job.Prefix.Length)
             .Select(job => job.Name)
             .FirstOrDefault();
-        return new ArchiveItemViewModel(archive, jobName);
+        return new ArchiveItemViewModel(archive, jobName) { Verification = ArchiveVerification.For(archive, item.LastVerdict, RestoreTestsByArchive(item)) };
+    }
+
+    /// <summary>The newest judged restore test of each archive of the repository's jobs, by archive name.</summary>
+    private Dictionary<string, Core.Checks.RestoreTestRecord> RestoreTestsByArchive(RepositoryItemViewModel item)
+    {
+        var tests = new Dictionary<string, Core.Checks.RestoreTestRecord>();
+        foreach (var job in _jobs.Where(job => job.RepositoryId == item.Config.Id))
+            foreach (var record in RestoreTestStore.Get(job.Id))
+                if (record.Archive is { } name && record.Outcome is Core.Checks.RestoreTestOutcome.Ok or Core.Checks.RestoreTestOutcome.Failed
+                    && (!tests.TryGetValue(name, out var known) || known.Started < record.Started))
+                    tests[name] = record;
+        return tests;
+    }
+
+    /// <summary>After a check or restore test: the marks of the archives shown.</summary>
+    internal void RefreshArchiveVerification(Guid repositoryId)
+    {
+        if (ListedRepository is not { } item || item.Config.Id != repositoryId)
+            return;
+        var tests = RestoreTestsByArchive(item);
+        foreach (var archive in Archives)
+            archive.Verification = ArchiveVerification.For(archive.Archive, item.LastVerdict, tests);
     }
 
     /// <summary>After a failed or cancelled check: the archives shown (from the cache) stay, with their status.</summary>
@@ -399,4 +421,77 @@ public sealed partial class ArchiveItemViewModel(BorgArchive archive, string? jo
 
     /// <summary>The details borg worked out; the comment comes from the list if the details have none.</summary>
     public void SetDetails(BorgArchive detailed) => Archive = detailed.Comment is null ? detailed with { Comment = Archive.Comment } : detailed;
+
+    // --- Checked and tested ---
+
+    /// <summary>What the repository's last check and the restore tests say about this archive.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsChecked), nameof(IsCheckDamaged), nameof(IsRestoreTested), nameof(IsRestoreTestFailed),
+        nameof(CheckBadgeText), nameof(CheckBadgeTip), nameof(RestoreBadgeTip))]
+    public partial ArchiveVerification Verification { get; set; } = ArchiveVerification.None;
+
+    public bool IsChecked => Verification.Check is ArchiveCheckState.Checked or ArchiveCheckState.CheckedThoroughly;
+
+    public bool IsCheckDamaged => Verification.Check == ArchiveCheckState.Damaged;
+
+    public bool IsRestoreTested => Verification.RestoreTest?.Outcome == Core.Checks.RestoreTestOutcome.Ok;
+
+    public bool IsRestoreTestFailed => Verification.RestoreTest?.Outcome == Core.Checks.RestoreTestOutcome.Failed;
+
+    public string CheckBadgeText => Verification.Check == ArchiveCheckState.CheckedThoroughly ? Strings.ArchiveCheckedThoroughly : Strings.ArchiveChecked;
+
+    public string CheckBadgeTip => Verification.CheckedAt is { } at
+        ? BorgTexts.Format(Verification.Check switch
+        {
+            ArchiveCheckState.CheckedThoroughly => Strings.ArchiveCheckedThoroughlyTip,
+            ArchiveCheckState.Damaged => Strings.ArchiveCheckDamagedTip,
+            _ => Strings.ArchiveCheckedTip,
+        }, at.ToLocalTime().ToString("g", CultureInfo.CurrentCulture))
+        : "";
+
+    public string RestoreBadgeTip => Verification.RestoreTest is { } test
+        ? BorgTexts.Format(test.Outcome == Core.Checks.RestoreTestOutcome.Ok ? Strings.ArchiveRestoreTestedTip : Strings.ArchiveRestoreTestFailedTip,
+            test.Started.ToLocalTime().ToString("g", CultureInfo.CurrentCulture))
+        : "";
+}
+
+public enum ArchiveCheckState
+{
+    /// <summary>Made after the last completed check, or never checked.</summary>
+    None,
+
+    /// <summary>There when the repository was last checked, and the check found nothing.</summary>
+    Checked,
+
+    /// <summary>As <see cref="Checked"/>, by a thorough check that read all data.</summary>
+    CheckedThoroughly,
+
+    /// <summary>The last completed check of the repository found damage.</summary>
+    Damaged,
+}
+
+/// <summary>An archive's marks: the repository's last check that covered it, and its last restore test.</summary>
+public sealed record ArchiveVerification(ArchiveCheckState Check, DateTimeOffset? CheckedAt, Core.Checks.RestoreTestRecord? RestoreTest)
+{
+    public static ArchiveVerification None { get; } = new(ArchiveCheckState.None, null, null);
+
+    /// <param name="verdict">The repository's last completed check.</param>
+    /// <param name="restoreTests">The newest test of each archive, by name.</param>
+    public static ArchiveVerification For(BorgArchive archive, Core.Checks.CheckRecord? verdict,
+        IReadOnlyDictionary<string, Core.Checks.RestoreTestRecord> restoreTests)
+    {
+        var check = verdict switch
+        {
+            null => ArchiveCheckState.None,
+            { Outcome: Core.Checks.CheckOutcome.ProblemsFound } => ArchiveCheckState.Damaged,
+            // Archives made after the check were not looked at (an archive whose time is unknown counts as older).
+            _ when archive.Start > verdict.Started => ArchiveCheckState.None,
+            { Depth: Core.Checks.CheckDepth.Full } => ArchiveCheckState.CheckedThoroughly,
+            _ => ArchiveCheckState.Checked,
+        };
+        var test = restoreTests.GetValueOrDefault(archive.Name) is { Outcome: Core.Checks.RestoreTestOutcome.Ok or Core.Checks.RestoreTestOutcome.Failed } judged
+            ? judged
+            : null;
+        return new ArchiveVerification(check, check == ArchiveCheckState.None ? null : verdict!.Started, test);
+    }
 }

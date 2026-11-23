@@ -1,0 +1,28 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:BorgStudio.App.ViewModels"
+        xmlns:res="using:BorgStudio.App.Resources"
+        x:Class="BorgStudio.App.Views.ArchiveCompareWindow"
+        x:DataType="vm:ArchiveComparePickerViewModel"
+        Title="{x:Static res:Strings.CompareTitle}"
+        Width="560" SizeToContent="Height" CanResize="False"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+
+    <StackPanel Margin="20" Spacing="12">
+        <TextBlock Text="{x:Static res:Strings.CompareIntro}" TextWrapping="Wrap" Opacity="0.8" />
+        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="8">
+            <TextBlock Text="{x:Static res:Strings.CompareOlder}" VerticalAlignment="Center" />
+            <ComboBox Grid.Column="1" ItemsSource="{Binding Options}" SelectedItem="{Binding Older}" HorizontalAlignment="Stretch" />
+            <Button Grid.Row="1" Grid.Column="1" Content="{x:Static res:Strings.CompareSwap}" Command="{Binding SwapCommand}" HorizontalAlignment="Left" />
+            <TextBlock Grid.Row="2" Text="{x:Static res:Strings.CompareNewer}" VerticalAlignment="Center" />
+            <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding Options}" SelectedItem="{Binding Newer}" HorizontalAlignment="Stretch" />
+        </Grid>
+        <TextBlock Text="{Binding Problem}" IsVisible="{Binding Problem, Converter={x:Static ObjectConverters.IsNotNull}}"
+                   Foreground="{DynamicResource WarningBorder}" TextWrapping="Wrap" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button Content="{x:Static res:Strings.CompareRun}" Classes="accent" IsDefault="True" IsEnabled="{Binding CanCompare}" Click="Compare_Click" />
+            <Button Content="{x:Static res:Strings.Cancel}" IsCancel="True" Click="Cancel_Click" />
+        </StackPanel>
+    </StackPanel>
+
+</Window>

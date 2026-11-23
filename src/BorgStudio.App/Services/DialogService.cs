@@ -144,6 +144,9 @@ public sealed class DialogService(Window owner) : IDialogService
     public Task ShowArchiveExportAsync(ArchiveExportViewModel export) =>
         new ArchiveExportWindow { DataContext = export }.ShowDialog(owner);
 
+    public Task<bool> PickArchivesToCompareAsync(ArchiveComparePickerViewModel picker) =>
+        new ArchiveCompareWindow { DataContext = picker }.ShowDialog<bool>(owner);
+
     public Task ShowArchiveDiffAsync(ArchiveDiffViewModel diff) =>
         new ArchiveDiffWindow { DataContext = diff }.ShowDialog(owner);
 }

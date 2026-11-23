@@ -17,19 +17,19 @@
     <value>BorgBase</value>
   </data>
   <data name="Description" xml:space="preserve">
-    <value>Hosting made for borg. With an API token BorgStudio creates the repository, registers the login key and shows the quota; without one, both are set up in BorgBase's web interface.</value>
+    <value>borg hosting at BorgBase. With an API token, repository and key are set up automatically.</value>
   </data>
   <data name="TokenLabel" xml:space="preserve">
     <value>API token</value>
   </data>
   <data name="TokenHint" xml:space="preserve">
-    <value>Created at borgbase.com under Account → API; “Create Only” is enough. Kept in the vault. Leave empty to set up the key by hand.</value>
+    <value>Optional. From Account → API on borgbase.com (“Create Only” is enough).</value>
   </data>
   <data name="RepoLabel" xml:space="preserve">
     <value>Repository</value>
   </data>
   <data name="RepoHint" xml:space="preserve">
-    <value>With a token: the repository's name at BorgBase (found, or created for a new repository). Without: its address from BorgBase, e.g. ssh://abcd1234@abcd1234.repo.borgbase.com/./repo</value>
+    <value>With a token: its name at BorgBase. Without: its address (ssh://…).</value>
   </data>
   <data name="RepoRequired" xml:space="preserve">
     <value>Please enter the repository's name or address.</value>
@@ -38,7 +38,7 @@
     <value>Region</value>
   </data>
   <data name="RegionHint" xml:space="preserve">
-    <value>Where BorgBase creates a new repository.</value>
+    <value>Only for new repositories.</value>
   </data>
   <data name="RegionEu" xml:space="preserve">
     <value>Europe</value>

@@ -69,6 +69,8 @@ public partial class MainViewModel : ViewModelBase
             OnSelectedArchivesChanged();
             NotifyArchiveChangeCommands();
         };
+        // "Vergleichen …" needs two archives in the list.
+        Archives.CollectionChanged += (_, _) => CompareArchivesCommand.NotifyCanExecuteChanged();
         LoadRepositories();
         LoadJobs();
         RefreshChecks();
@@ -94,7 +96,7 @@ public partial class MainViewModel : ViewModelBase
     public AppServices Services => _services;
 
     /// <summary>Window title with the app version, e.g. "BorgStudio 0.2.0".</summary>
-    public string Title { get; } = $"BorgStudio {AppVersion.Current}";
+    public string Title { get; } = AppVersion.Title;
 
     /// <summary>The borg used for all repository operations; <c>null</c> until found.</summary>
     [ObservableProperty]
@@ -193,6 +195,8 @@ public partial class MainViewModel : ViewModelBase
         public Task ShowFileVersionsAsync(FileVersionsViewModel versions) => Task.CompletedTask;
 
         public Task ShowArchiveDiffAsync(ArchiveDiffViewModel diff) => Task.CompletedTask;
+
+        public Task<bool> PickArchivesToCompareAsync(ArchiveComparePickerViewModel picker) => Task.FromResult(false);
 
         public Task<string?> PickArchiveExportFileAsync(string title, string suggestedName) => Task.FromResult<string?>(null);
 

@@ -2014,7 +2014,7 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
     <value>BorgStudio läuft weiter</value>
   </data>
   <data name="TrayHintMessage" xml:space="preserve">
-    <value>BorgStudio läuft im Infobereich weiter, damit geplante Sicherungen starten können. Ein Klick auf das Symbol öffnet das Fenster wieder; beenden lässt sich BorgStudio über „BorgStudio beenden“ im Menü des Symbols.</value>
+    <value>BorgStudio läuft im Infobereich weiter. Ein Klick auf das Symbol öffnet das Fenster wieder; dort gibt es auch Schnellaktionen. Beenden lässt sich BorgStudio über „BorgStudio beenden“ im Menü des Symbols.</value>
   </data>
   <data name="SettingsSchedules" xml:space="preserve">
     <value>Geplante Sicherungen</value>
@@ -3172,10 +3172,10 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
     <value>Die Bedingungen zur Verbindung gelten für Repositories auf einem Server oder einer Netzwerkfreigabe. Ein zurückgehaltener Lauf wird alle 15 Minuten erneut versucht, bis zum nächsten geplanten Termin, dann gilt er als übersprungen. Läufe von Hand und über den Webhook starten immer.</value>
   </data>
   <data name="ArchivesCompare" xml:space="preserve">
-    <value>Vergleichen</value>
+    <value>Vergleichen …</value>
   </data>
   <data name="ArchivesCompareTip" xml:space="preserve">
-    <value>borg diff: was sich zwischen den zwei markierten Archiven geändert hat (mit Strg oder Umschalt markieren)</value>
+    <value>borg diff: zwei beliebige Archive wählen und sehen, was sich geändert hat</value>
   </data>
   <data name="ArchivesComparePrevious" xml:space="preserve">
     <value>Mit Vorgänger vergleichen</value>
@@ -3402,7 +3402,7 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
     <value>Stunden</value>
   </data>
   <data name="EditorPlugInHint" xml:space="preserve">
-    <value>BorgStudio fragt kurz nach und lässt dann alle Jobs dieses Repositorys nacheinander laufen. Es fragt nicht, solange ein Job in dieser Zeit erfolgreich gesichert hat (0: jedes Mal).</value>
+    <value>Fragt kurz nach und lässt dann alle Jobs des Repositorys laufen. Nicht erneut innerhalb dieser Zeit nach einer erfolgreichen Sicherung (0: jedes Mal).</value>
   </data>
   <data name="EditorPlugInNeedsBackground" xml:space="preserve">
     <value>Funktioniert nur, wenn BorgStudio im Hintergrund läuft (Extras → Einstellungen → Geplante Sicherungen: „BorgStudio im Hintergrund“).</value>
@@ -3456,5 +3456,92 @@ Jobs: {1}</value>
   </data>
   <data name="EditorConnecting" xml:space="preserve">
     <value>Wird verbunden …</value>
+  </data>
+  <data name="DevelopmentVersion" xml:space="preserve">
+    <value>Entwicklungsversion</value>
+  </data>
+  <data name="CompareTitle" xml:space="preserve">
+    <value>Archive vergleichen</value>
+  </data>
+  <data name="CompareIntro" xml:space="preserve">
+    <value>Zeigt, was sich vom älteren zum neueren Archiv geändert hat.</value>
+  </data>
+  <data name="CompareOlder" xml:space="preserve">
+    <value>Älter</value>
+  </data>
+  <data name="CompareNewer" xml:space="preserve">
+    <value>Neuer</value>
+  </data>
+  <data name="CompareSwap" xml:space="preserve">
+    <value>⇅ Tauschen</value>
+  </data>
+  <data name="CompareRun" xml:space="preserve">
+    <value>Vergleichen</value>
+  </data>
+  <data name="CompareSameArchive" xml:space="preserve">
+    <value>Bitte zwei verschiedene Archive wählen.</value>
+  </data>
+  <data name="ArchiveChecked" xml:space="preserve">
+    <value>✓ geprüft</value>
+  </data>
+  <data name="ArchiveCheckedThoroughly" xml:space="preserve">
+    <value>✓✓ gründlich geprüft</value>
+  </data>
+  <data name="ArchiveCheckedTip" xml:space="preserve">
+    <value>Von der Prüfung am {0} erfasst: nichts gefunden.</value>
+  </data>
+  <data name="ArchiveCheckedThoroughlyTip" xml:space="preserve">
+    <value>Von der gründlichen Prüfung am {0} erfasst (alle Daten gelesen): nichts gefunden.</value>
+  </data>
+  <data name="ArchiveCheckDamaged" xml:space="preserve">
+    <value>✗ Prüfung: Fehler</value>
+  </data>
+  <data name="ArchiveCheckDamagedTip" xml:space="preserve">
+    <value>Die Prüfung am {0} hat Schäden im Repository gefunden – siehe Tab „Prüfung“.</value>
+  </data>
+  <data name="ArchiveRestoreTested" xml:space="preserve">
+    <value>↺ Test-Wiederherstellung OK</value>
+  </data>
+  <data name="ArchiveRestoreTestedTip" xml:space="preserve">
+    <value>Am {0} zur Probe wiederhergestellt: alles kam zurück.</value>
+  </data>
+  <data name="ArchiveRestoreTestFailed" xml:space="preserve">
+    <value>↺ Test-Wiederherstellung fehlgeschlagen</value>
+  </data>
+  <data name="ArchiveRestoreTestFailedTip" xml:space="preserve">
+    <value>Die Test-Wiederherstellung am {0} ist fehlgeschlagen – siehe Job.</value>
+  </data>
+  <data name="DashCheckNever" xml:space="preserve">
+    <value>Noch nie geprüft</value>
+  </data>
+  <data name="DashStatusBackups" xml:space="preserve">
+    <value>Sicherung</value>
+  </data>
+  <data name="DashStatusCheck" xml:space="preserve">
+    <value>Integritätsprüfung</value>
+  </data>
+  <data name="DashStatusRestore" xml:space="preserve">
+    <value>Test-Wiederherstellung</value>
+  </data>
+  <data name="DashStatusLast" xml:space="preserve">
+    <value>In Ordnung, zuletzt {0}</value>
+  </data>
+  <data name="DashStatusChecked" xml:space="preserve">
+    <value>In Ordnung, geprüft {0}</value>
+  </data>
+  <data name="DashStatusCheckedFull" xml:space="preserve">
+    <value>In Ordnung, gründlich geprüft {0}</value>
+  </data>
+  <data name="DashStatusRestoreOk" xml:space="preserve">
+    <value>In Ordnung</value>
+  </data>
+  <data name="DashStatusRestoreFailed" xml:space="preserve">
+    <value>Fehlgeschlagen ({0})</value>
+  </data>
+  <data name="DashStatusRestoreNotRun" xml:space="preserve">
+    <value>Konnte nicht laufen ({0})</value>
+  </data>
+  <data name="DashStatusRestoreNone" xml:space="preserve">
+    <value>Nicht eingerichtet</value>
   </data>
 </root>
