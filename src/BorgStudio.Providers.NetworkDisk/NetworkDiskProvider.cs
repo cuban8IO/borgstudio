@@ -52,6 +52,9 @@ public sealed class NetworkDiskProvider(INetworkDiskSystem? system = null, IDriv
 
     public string Description => Strings.Description;
 
+    /// <summary>Not yet tried against a real iSCSI or NVMe/TCP target.</summary>
+    public bool IsUntested => true;
+
     public IReadOnlyList<ProviderField> Fields =>
     [
         new(ProtocolKey, Strings.ProtocolLabel, ProviderFieldKind.Choice)

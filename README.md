@@ -15,11 +15,16 @@ The **[product page](https://borgstudio.cuban8io.net/)** shows what it does, the
 - **Backup jobs** with source folders – or a removable drive (USB stick, external disk, memory card), recognized
   wherever it is attached – exclusions and compression; live progress with upload speed and remaining time; cancelling
   keeps a checkpoint.
+- **Commands before and after** a job's backup (PowerShell, cmd, sh, bash, zsh), an **upload limit** and **low
+  priority** per repository, and **conditions** for scheduled runs (mains power, no metered connection, cable, target
+  reachable).
+- **Trust in backups**: integrity checks (`borg check`, also thorough) by hand, after backups or by schedule; restore
+  tests that restore a sample and compare it with the source; releasing a lock left behind.
 - **Running tasks** in the status bar: backups, checks, restores, exports, searches and downloads with their progress
   and the time still to go, queued and held back runs, and runs the system's task scheduler started – each with *Show*
   and, where possible, *Cancel*. The windows of longer work (archive browser, search, versions, comparison, export,
   update) leave the main window usable.
-- **Schedules**: daily, on chosen weekdays or every few hours – started by the system's task scheduler (also while
+- **Schedules**: every few minutes or hours, daily, on chosen weekdays or monthly – started by the system's task scheduler (also while
   BorgStudio is closed) or by BorgStudio itself in the background (notification area, start at login); missed times
   are made up for. Other programs can start jobs through an incoming webhook.
 - **Notifications** by system notification, e-mail and webhook (ntfy, Discord, Slack, Gotify, JSON) – failures,
@@ -28,7 +33,8 @@ The **[product page](https://borgstudio.cuban8io.net/)** shows what it does, the
   time with a forecast of when it will be full, what each backup newly stored and the activity of the last weeks.
 - **Cleaning up** old archives per job (daily, weekly, monthly, yearly …) with a preview, and freeing space.
 - **Archives**: list with size and own share, a browser with folder tree and search, search across all archives and
-  the versions of a file.
+  the versions of a file; compare two archives; rename, comment, keep and delete archives; export an archive or a
+  selection as zip, tar, tar.gz or tar.zst.
 - **Restore** files and folders into a folder or back to their original place, with a check for files that would be
   overwritten.
 - **Mount** an archive or the whole repository as a read-only folder and open it in the file manager.
@@ -226,6 +232,41 @@ Every pull request adds its change to the **Unreleased** section of the changelo
 section gets the new version number.
 
 ## Changelog
+
+### 0.5.0 – 2026-11-23
+
+**Added**
+- Integrity check per repository (`borg check`, thorough with `--verify-data`, repair after damage), with its history,
+  dashboard state and a "check errors" notification (#53). Automatic checks after backups or by schedule, and monthly
+  schedules for checks and jobs (#54).
+- Restore test per job: a random sample restored and compared byte by byte, or the whole archive read without writing;
+  with the automatic checks or by hand (#55).
+- Release a lock left behind (`borg break-lock`) after a warning that tells who holds it (#56).
+- Commands before and after a job's backup, with the shell chosen per system and selectable error handling (#57).
+- Upload limit (optionally only between two times) and low priority (`nice`) per repository (#58).
+- Conditions for scheduled runs: mains power, no metered connection, cable instead of Wi-Fi, target reachable (#59).
+- Archives: compare two archives (`borg diff`) (#60, #69); rename, comment, keep and delete archives (#61); export an
+  archive or a selection as zip, tar, tar.gz or tar.zst (#62).
+- New repository types: USB or external drive, found by the repository's ID wherever it is attached, with optional
+  ejecting (#63) and backing up when the drive is attached (#64); rsync.net (#65); BorgBase with API token, key setup and
+  quota (#66); SFTP-only servers mounted with sshfs (#67); network disks over iSCSI and NVMe/TCP (#68). Plugin API:
+  `IRepositoryConnector`, `IStorageQuotaSource`, `ISshKeyProvisioner`, `IRepositoryPreparation`, secret and toggle fields.
+- A removable drive as the source of a job, recognized under any letter or mount point (#72).
+- Schedules every few minutes (#70).
+- Running tasks in the status bar, with *Show* and *Cancel*; the windows of longer work no longer block the main
+  window (#73).
+- Repository types not yet tested against a real service or target (rsync.net, network disk) are marked "Untested"
+  when choosing where a repository is. Plugin API: `IRepositoryProvider.IsUntested`.
+
+**Changed**
+- The tray icon is shown whenever BorgStudio runs, and closing the window hides it there; archive marks for checks and
+  restore tests; three state lines per repository in "All repositories"; local builds name their commit in the title
+  (#69).
+- The archive list fits narrow windows (#70).
+
+**Fixed**
+- A killed borg no longer shows the internal process id line; English texts use English quotes; exporting a whole
+  archive leaves out the folders above what was backed up (#71).
 
 ### 0.4.0 – 2026-11-20
 

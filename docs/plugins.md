@@ -52,6 +52,8 @@ An `IRepositoryProvider` describes
 - `Validate(values)` – error messages for the entered values; empty when everything is fine.
 - `GetLocation(values)` – the borg repository URL (`/path` or `ssh://user@host:port/path`)
   plus extra borg arguments such as `--remote-path=borg-1.4`.
+- `IsUntested` (optional, `false` by default) – `true` puts an "Untested" badge next to the provider when the user
+  picks one, for providers not yet tried against a real service or target.
 
 Return all texts in `CultureInfo.CurrentUICulture` (BorgStudio itself ships English and German),
 for example from `.resx` files.

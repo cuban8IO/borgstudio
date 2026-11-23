@@ -48,7 +48,14 @@
                     <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="vm:ProviderOptionViewModel">
                             <StackPanel Margin="4,6" Spacing="2">
-                                <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    <Border IsVisible="{Binding IsUntested}" Background="{DynamicResource ChartWarnBrush}"
+                                            CornerRadius="3" Padding="5,1" VerticalAlignment="Center"
+                                            ToolTip.Tip="{x:Static res:Strings.EditorProviderUntestedTip}">
+                                        <TextBlock Text="{x:Static res:Strings.EditorProviderUntested}" FontSize="11" Foreground="Black" />
+                                    </Border>
+                                </StackPanel>
                                 <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Opacity="0.75" />
                             </StackPanel>
                         </DataTemplate>

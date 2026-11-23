@@ -36,4 +36,10 @@ public interface IRepositoryProvider
     /// and expects <see cref="RepositoryLocation.Ssh"/> to be set.
     /// </summary>
     bool UsesSsh => false;
+
+    /// <summary>
+    /// Whether the provider has not yet been tested against a real service or target.
+    /// BorgStudio then marks it as untested when the user picks where a repository is.
+    /// </summary>
+    bool IsUntested => false;
 }
