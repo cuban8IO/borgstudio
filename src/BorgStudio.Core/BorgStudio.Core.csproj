@@ -4,6 +4,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="BorgStudio.Tests" />
+    <InternalsVisibleTo Include="BorgStudio.Screenshots" />
   </ItemGroup>
 
   <ItemGroup>

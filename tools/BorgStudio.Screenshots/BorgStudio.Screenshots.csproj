@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Renders the screenshots of the product page (site/images/<language>/) from the real windows, with made-up example
+    data and fake borg (the test project's fakes), without a screen: Avalonia's headless platform with Skia.
+    Not part of the app or its packages. How to run it: see Program.cs.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <!-- The test project's SDK would add its own entry point. -->
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Headless" Version="12.1.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\BorgStudio.App\BorgStudio.App.csproj" />
+    <ProjectReference Include="..\..\tests\BorgStudio.Tests\BorgStudio.Tests.csproj" />
+  </ItemGroup>
+
+</Project>
