@@ -292,6 +292,12 @@
   <data name="EditorChooseProvider" xml:space="preserve">
     <value>Where is the repository?</value>
   </data>
+  <data name="EditorProviderUntested" xml:space="preserve">
+    <value>Untested</value>
+  </data>
+  <data name="EditorProviderUntestedTip" xml:space="preserve">
+    <value>Not yet tested against a real service or target.</value>
+  </data>
   <data name="EditorName" xml:space="preserve">
     <value>Name</value>
   </data>

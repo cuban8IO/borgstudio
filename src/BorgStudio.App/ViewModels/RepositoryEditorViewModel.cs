@@ -1196,6 +1196,8 @@ public sealed class ProviderOptionViewModel(IRepositoryProvider provider)
     public string DisplayName => Provider.DisplayName;
 
     public string Description => Provider.Description;
+
+    public bool IsUntested => Provider.IsUntested;
 }
 
 /// <summary>One input of the selected provider.</summary>

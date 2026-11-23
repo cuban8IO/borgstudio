@@ -90,6 +90,9 @@ public sealed partial class RsyncNetProvider : IRepositoryProvider, IStorageQuot
 
     public bool UsesSsh => true;
 
+    /// <summary>Built from rsync.net's documentation; not yet tried against a real rsync.net account.</summary>
+    public bool IsUntested => true;
+
     public IReadOnlyList<ProviderField> Fields =>
     [
         new(HostKey, Strings.HostLabel) { Hint = Strings.HostHint },
