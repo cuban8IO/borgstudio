@@ -3,6 +3,9 @@ namespace BorgStudio.Providers.NetworkDisk;
 /// <summary>Logging in to network disks on this computer; abstracted so the provider can be tested without one.</summary>
 public interface INetworkDiskSystem
 {
+    /// <summary>Why this computer cannot use <paramref name="protocol"/> (a message for the user), or <c>null</c> if it can.</summary>
+    string? Unsupported(NetworkDiskProtocol protocol);
+
     /// <summary>
     /// Sets up, with administrator rights asked for once, what logging in and out of the target needs later without them.
     /// Throws <see cref="Plugins.RepositoryUnavailableException"/> with a message for the user when it cannot.

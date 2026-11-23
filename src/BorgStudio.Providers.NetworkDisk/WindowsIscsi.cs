@@ -18,6 +18,10 @@ public sealed class WindowsIscsi : INetworkDiskSystem
 
     public static string TaskName(string id, string action) => $"NetworkDisk-{id}-{action}";
 
+    /// <summary>Windows clients have no NVMe/TCP initiator.</summary>
+    public string? Unsupported(NetworkDiskProtocol protocol) =>
+        protocol == NetworkDiskProtocol.NvmeTcp ? Strings.UnsupportedNvmeWindows : null;
+
     public async Task SetUpAsync(NetworkDiskTarget target, string id, string? chapSecret, CancellationToken cancellationToken)
     {
         var log = Path.Combine(Path.GetTempPath(), $"borgstudio-network-disk-{id}.log");
