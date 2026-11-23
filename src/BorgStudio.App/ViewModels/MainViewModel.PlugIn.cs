@@ -8,9 +8,10 @@ using BorgStudio.Providers.Usb;
 namespace BorgStudio.App.ViewModels;
 
 /// <summary>
-/// Backing up when a USB drive is attached (BorgStudio in the background): every few seconds the drives are listed; on a
-/// new one, each USB drive repository that wants it and is found there asks "Jetzt sichern?" – on yes all its jobs run
-/// one after the other, and the drive stays connected until the last one is done (then it is ejected, if wanted).
+/// Backing up when a drive is attached (while BorgStudio runs, with its window or in the notification area): every few
+/// seconds the drives are listed; on a new one, each USB drive repository that wants it and is found there – and each job
+/// backing up that very drive – asks "Jetzt sichern?". On yes all its jobs run one after the other, and the drive stays
+/// connected until the last one is done (then it is ejected, if wanted).
 /// </summary>
 public partial class MainViewModel
 {
@@ -50,8 +51,9 @@ public partial class MainViewModel
         foreach (var (_, (root, away)) in _plugInQuestions.Where(question => !now.Contains(question.Value.Root)).ToList())
             away.Cancel();
 
+        // Asked whenever BorgStudio runs (window or notification area), whichever way schedules are run.
         var attached = now.Where(root => !before.Contains(root)).ToList();
-        if (attached.Count == 0 || !IsBackgroundMode)
+        if (attached.Count == 0)
             return;
         foreach (var repository in Repositories.Select(item => item.Config)
                      .Where(config => config.ProviderId == UsbRepositoryProvider.ProviderId && config.PlugIn.Enabled))

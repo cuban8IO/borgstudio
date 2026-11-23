@@ -3405,7 +3405,7 @@ Wer als du angemeldet ist, kann den Tresor dann öffnen. BorgStudio selbst bleib
     <value>Fragt kurz nach und lässt dann alle Jobs des Repositorys laufen. Nicht erneut innerhalb dieser Zeit nach einer erfolgreichen automatischen Sicherung – von Hand gestartete zählen nicht (0: jedes Mal).</value>
   </data>
   <data name="EditorPlugInNeedsBackground" xml:space="preserve">
-    <value>Funktioniert nur, wenn BorgStudio im Hintergrund läuft (Extras → Einstellungen → Geplante Sicherungen: „BorgStudio im Hintergrund“).</value>
+    <value>Fragt nur, solange BorgStudio geöffnet ist (Fenster oder Infobereich). Damit es ab der Anmeldung fragt: „BorgStudio im Hintergrund“ wählen (Extras → Einstellungen → Geplante Sicherungen).</value>
   </data>
   <data name="PlugInTitle" xml:space="preserve">
     <value>Laufwerk angesteckt</value>
@@ -3646,7 +3646,7 @@ Jobs: {1}</value>
     <value>Beim Anstecken fragen „Jetzt sichern?“</value>
   </data>
   <data name="JobEditorDrivePlugInHint" xml:space="preserve">
-    <value>Nur wenn BorgStudio im Hintergrund läuft (Extras → Einstellungen → Geplante Sicherungen). Nicht erneut innerhalb dieser Zeit nach einer erfolgreichen automatischen Sicherung – von Hand gestartete zählen nicht (0: jedes Mal).</value>
+    <value>Fragt, solange BorgStudio geöffnet ist (Fenster oder Infobereich) – mit „BorgStudio im Hintergrund“ ab der Anmeldung (Extras → Einstellungen → Geplante Sicherungen). Nicht erneut innerhalb dieser Zeit nach einer erfolgreichen automatischen Sicherung – von Hand gestartete zählen nicht (0: jedes Mal).</value>
   </data>
   <data name="JobEditorDriveEject" xml:space="preserve">
     <value>Datenträger nach automatischen Läufen auswerfen (geplant oder beim Anstecken)</value>

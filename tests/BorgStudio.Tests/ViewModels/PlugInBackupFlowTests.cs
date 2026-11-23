@@ -171,12 +171,16 @@ public sealed class PlugInBackupFlowTests : IDisposable
     }
 
     [Fact]
-    public async Task Only_in_the_background_and_only_when_switched_on()
+    public async Task Asked_whenever_BorgStudio_is_open_but_only_when_switched_on()
     {
+        // Schedules run by the system's task scheduler: the open app asks all the same.
         var main = await StartAsync(ScheduleRunner.System);
         await AttachAsync(main);
-        Assert.Empty(_test.Dialogs.OnTop);
+        Assert.Single(_test.Dialogs.OnTop);
+        Assert.Equal(2, Backups);
 
+        _test.Dialogs.OnTop.Clear();
+        _test.Borg.Calls.Clear();
         _repository = _repository with { PlugIn = new PlugInBackup { Enabled = false } };
         _test.Drives.Attached.RemoveAt(1);
         main = await StartAsync();

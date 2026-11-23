@@ -129,7 +129,7 @@ it follows the system language (English if that is neither) or the choice under 
   included); a new place is remembered. A local repository on an external drive can be switched over in the editor
   (*Keep as USB drive*). Optionally the drive is ejected safely after scheduled backups and checks (Windows: like
   "Safely remove hardware", Linux: `udisksctl`, macOS: `diskutil eject`) – also after several scheduled runs in a row
-  only once, after the last. *Back up when the drive is attached* (per repository, BorgStudio in the background):
+  only once, after the last. *Back up when the drive is attached* (per repository, while BorgStudio is open – window or notification area):
   BorgStudio asks, then runs all jobs of the repository one after the other; not again while a job backed up
   successfully by itself (scheduled or on attaching – not by hand) within the set hours (default 12). Inside WSL, BorgStudio mounts drives that
   were attached after WSL started (`mount -t drvfs`) and unmounts them again after borg is done.
@@ -140,7 +140,7 @@ it follows the system language (English if that is neither) or the choice under 
   folders on it, with exclusions relative to its root; `System Volume Information`, `.Spotlight-V100`, `.fseventsd`,
   `.Trashes` and `.borgstudio-id` are always left out. Not attached: a run by hand says so, a scheduled run waits for the
   drive like for a condition and is skipped if it does not come. Optionally *ask when the drive is attached* (per job,
-  BorgStudio in the background; all jobs of the drive in one question) and eject it after automatic runs. Archives of a
+  while BorgStudio is open; all jobs of the drive in one question) and eject it after automatic runs. Archives of a
   drive cannot be restored to their "original place" – restore them into a folder, e.g. on the drive.
 
 ## License

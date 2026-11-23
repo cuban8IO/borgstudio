@@ -286,7 +286,8 @@ public sealed class SourceDriveFlowTests : IDisposable
     {
         var drive = new SourceDrive { Id = "volume:" + Uuid, Label = "KAMERA", PlugIn = new PlugInBackup { Enabled = true } };
         _test.Jobs.Save([Job(drive, "Fotos")]);
-        _test.Settings.Save(new AppSettings { ScheduleRunner = ScheduleRunner.Background });
+        // Schedules left to the system: the open app asks all the same.
+        _test.Settings.Save(new AppSettings { ScheduleRunner = ScheduleRunner.System });
         Attach(Stick);
         var main = new MainViewModel(_test.Services) { SchedulerExecutable = "BorgStudio.exe", Clock = () => DateTime.Now };
         await main.CheckBorgCommand.ExecuteAsync(null);
