@@ -42,7 +42,8 @@ public sealed class NetworkDiskProvider(INetworkDiskSystem? system = null, IDriv
 
     public static TimeSpan PollInterval { get; set; } = TimeSpan.FromSeconds(1);
 
-    public INetworkDiskSystem System { get; } = system ?? (OperatingSystem.IsWindows() ? new WindowsIscsi() : new LinuxNetworkDisks());
+    public INetworkDiskSystem System { get; } = system
+        ?? (OperatingSystem.IsWindows() ? new WindowsIscsi() : OperatingSystem.IsMacOS() ? new MacNetworkDisks() : new LinuxNetworkDisks());
 
     public IDriveSystem Drives { get; } = drives ?? new SystemDrives();
 
@@ -200,10 +201,7 @@ public sealed class NetworkDiskProvider(INetworkDiskSystem? system = null, IDriv
         Value(values, FolderKey).Replace('\\', '/').Trim('/');
 
     /// <summary>What this computer cannot do: macOS has no built-in initiator, Windows clients no NVMe/TCP.</summary>
-    private static string? Unsupported(NetworkDiskProtocol protocol) =>
-        OperatingSystem.IsMacOS() ? Strings.UnsupportedMac
-        : OperatingSystem.IsWindows() && protocol == NetworkDiskProtocol.NvmeTcp ? Strings.UnsupportedNvmeWindows
-        : null;
+    private string? Unsupported(NetworkDiskProtocol protocol) => System.Unsupported(protocol);
 
     private static string Value(IReadOnlyDictionary<string, string> values, string key) =>
         values.GetValueOrDefault(key)?.Trim() ?? "";

@@ -11,6 +11,9 @@ namespace BorgStudio.Providers.NetworkDisk;
 /// </summary>
 public sealed class LinuxNetworkDisks : INetworkDiskSystem
 {
+    /// <summary>open-iscsi and nvme-cli cover both protocols.</summary>
+    public string? Unsupported(NetworkDiskProtocol protocol) => null;
+
     private static readonly TimeSpan DeviceWait = TimeSpan.FromSeconds(30);
 
     /// <summary>The block devices mounted for a target, to unmount before logging out.</summary>
