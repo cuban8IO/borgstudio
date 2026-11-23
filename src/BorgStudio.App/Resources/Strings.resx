@@ -1691,6 +1691,75 @@ BorgStudio can do this now (as root in WSL, no password needed). It is the same 
   <data name="MountsHeader" xml:space="preserve">
     <value>Mounted archives</value>
   </data>
+  <data name="TasksNone" xml:space="preserve">
+    <value>No running tasks</value>
+  </data>
+  <data name="TasksOne" xml:space="preserve">
+    <value>1 task</value>
+  </data>
+  <data name="TasksMany" xml:space="preserve">
+    <value>{0} tasks</value>
+  </data>
+  <data name="TasksRemaining" xml:space="preserve">
+    <value>{0} · about {1} left</value>
+  </data>
+  <data name="TasksHeader" xml:space="preserve">
+    <value>Running tasks</value>
+  </data>
+  <data name="TasksEmpty" xml:space="preserve">
+    <value>Nothing runs or waits right now.</value>
+  </data>
+  <data name="TasksTip" xml:space="preserve">
+    <value>Running and waiting tasks – click for the list</value>
+  </data>
+  <data name="TaskShow" xml:space="preserve">
+    <value>Show</value>
+  </data>
+  <data name="TaskArchives" xml:space="preserve">
+    <value>Loading the archive list</value>
+  </data>
+  <data name="TaskMount" xml:space="preserve">
+    <value>Mounting an archive</value>
+  </data>
+  <data name="TaskBackup" xml:space="preserve">
+    <value>Backup “{0}”</value>
+  </data>
+  <data name="TaskCheck" xml:space="preserve">
+    <value>Check of “{0}”</value>
+  </data>
+  <data name="TaskBrowse" xml:space="preserve">
+    <value>Archive “{0}”</value>
+  </data>
+  <data name="TaskRestore" xml:space="preserve">
+    <value>Restore from “{0}”</value>
+  </data>
+  <data name="TaskExport" xml:space="preserve">
+    <value>Export to “{0}”</value>
+  </data>
+  <data name="TaskCompare" xml:space="preserve">
+    <value>Comparing “{0}” with “{1}”</value>
+  </data>
+  <data name="TaskEntriesRead" xml:space="preserve">
+    <value>{0:N0} entries read</value>
+  </data>
+  <data name="TaskUpdate" xml:space="preserve">
+    <value>Downloading the update</value>
+  </data>
+  <data name="TaskQueued" xml:space="preserve">
+    <value>Queued</value>
+  </data>
+  <data name="TaskWaiting" xml:space="preserve">
+    <value>Waiting – {0} Next try at {1}.</value>
+  </data>
+  <data name="TaskWaitingCondition" xml:space="preserve">
+    <value>A condition of the job is not met.</value>
+  </data>
+  <data name="TaskElsewhere" xml:space="preserve">
+    <value>Task scheduler · running since {0}</value>
+  </data>
+  <data name="TaskElsewhereWaiting" xml:space="preserve">
+    <value>Task scheduler · waiting: {0}</value>
+  </data>
   <data name="MountOpen" xml:space="preserve">
     <value>Open</value>
   </data>

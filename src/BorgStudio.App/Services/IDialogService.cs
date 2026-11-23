@@ -96,4 +96,9 @@ public interface IDialogService
 
     /// <summary>Two archives compared; returns when the window is closed.</summary>
     Task ShowArchiveDiffAsync(ArchiveDiffViewModel diff);
+
+    /// <summary>Brings the open window showing <paramref name="viewModel"/> to the front (from the list of running tasks).</summary>
+    void BringToFront(object viewModel)
+    {
+    }
 }

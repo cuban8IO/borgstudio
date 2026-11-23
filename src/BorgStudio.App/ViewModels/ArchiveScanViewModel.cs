@@ -37,6 +37,9 @@ public sealed class ArchiveContentsSource
 
     /// <summary>The restore dialog for entries of an archive; <c>null</c> if restoring isn't possible (no passphrase).</summary>
     public Func<BorgArchive, IReadOnlyList<ArchiveNode>, RestoreViewModel>? RestoreFactory { get; init; }
+
+    /// <summary>Called for each versions window opened on these archives (its work shows in the list of running tasks).</summary>
+    public Action<FileVersionsViewModel>? VersionsOpened { get; init; }
 }
 
 /// <summary>What looking through the archives came to.</summary>

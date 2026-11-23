@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using BorgStudio.App.Resources;
 using BorgStudio.Core.Borg;
 using BorgStudio.Plugins;
 using CommunityToolkit.Mvvm.Input;
@@ -79,7 +80,11 @@ public partial class MainViewModel
         using var cancellation = new CancellationTokenSource();
         diff.Cancel = cancellation.Cancel;
         DiffLoad = LoadDiffAsync(location, access.Ssh.Access, access.Passphrase.Value, diff, cancellation.Token);
-        await _services.Dialogs.ShowArchiveDiffAsync(diff);
+        using (Tasks.Track(new RunningTaskViewModel(BorgTexts.Format(Strings.TaskCompare, older.Name, newer.Name), item.Name,
+                   RunningTaskState.Running,
+                   () => new TaskProgress(diff.IsLoading, null, BorgTexts.Format(Strings.TaskEntriesRead, diff.EntriesRead), CanCancel: true),
+                   cancellation.Cancel, () => _services.Dialogs.BringToFront(diff), diff)))
+            await _services.Dialogs.ShowArchiveDiffAsync(diff);
         // Closed while borg was still comparing: stop it.
         await cancellation.CancelAsync();
         await DiffLoad;

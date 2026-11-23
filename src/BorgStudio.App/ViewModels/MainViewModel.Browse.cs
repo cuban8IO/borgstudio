@@ -56,7 +56,8 @@ public partial class MainViewModel
         else
             BrowserLoad = LoadContentsAsync(repositoryId, location, access.Value, archive.Archive, browser, cancellation);
 
-        await _services.Dialogs.ShowArchiveBrowserAsync(browser);
+        using (Tasks.Track(WindowTask(BorgTexts.Format(Strings.TaskBrowse, archive.Archive.Name), item.Name, browser.Progress, browser)))
+            await _services.Dialogs.ShowArchiveBrowserAsync(browser);
         // Closed (or locked away) while borg was still reading: stop it.
         await cancellation.CancelAsync();
         await BrowserLoad;
@@ -78,7 +79,9 @@ public partial class MainViewModel
         // Without the passphrase only archives read before can be searched.
         if (access is null && !source.Archives.Any(source.IsCached))
             return;
-        await _services.Dialogs.ShowArchiveSearchAsync(new ArchiveSearchViewModel(source));
+        var search = new ArchiveSearchViewModel(source);
+        using (Tasks.Track(WindowTask(search.Title, null, search.Progress, search)))
+            await _services.Dialogs.ShowArchiveSearchAsync(search);
     }
 
     private bool CanSearchArchives() =>
@@ -108,6 +111,7 @@ public partial class MainViewModel
             RestoreFactory = access is { } granted
                 ? (archive, items) => NewRestore(repositoryId, location, granted, archive, items, whole: false, _services.Dialogs)
                 : null,
+            VersionsOpened = versions => Tasks.TrackOnce(WindowTask(versions.Title, item.Name, versions.Progress, versions)),
         };
     }
 
@@ -116,12 +120,14 @@ public partial class MainViewModel
         IDialogService dialogs)
     {
         var borg = Borg!;
-        return new RestoreViewModel(archive.Name, items, whole, borg.Runtime,
+        var restore = new RestoreViewModel(archive.Name, items, whole, borg.Runtime,
             (run, progress, cancellationToken) => Task.Run(() => _services.BorgClient.ExtractAsync(borg, location, archive.Name, run.Paths,
                 run.TargetDirectory, run.StripComponents, access.Passphrase.Value, access.Ssh.Access, progress, cancellationToken)),
             dialogs,
             // borg reads the archive's file list to work out the size first: about as long as listing it took.
             _services.Durations.Get(DurationHistory.Key(repositoryId, "contents")));
+        Tasks.TrackOnce(WindowTask(BorgTexts.Format(Strings.TaskRestore, archive.Name), RepositoryName(repositoryId), restore.Progress, restore));
+        return restore;
     }
 
     private async Task LoadContentsAsync(Guid repositoryId, RepositoryLocation location,

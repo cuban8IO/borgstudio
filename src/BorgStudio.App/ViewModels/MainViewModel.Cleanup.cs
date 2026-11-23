@@ -40,6 +40,7 @@ public partial class MainViewModel
 
         var borg = Borg!;
         var run = new BackupRunViewModel(job, cleanupOnly: true);
+        using var task = Tasks.Track(BackupTask(run, job));
         CurrentBackup = run;
         IsBackupRunning = true;
         using var cancellation = new CancellationTokenSource();
