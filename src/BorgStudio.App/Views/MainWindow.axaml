@@ -67,8 +67,53 @@
         <Border DockPanel.Dock="Bottom" Padding="12,5" Background="{DynamicResource StatusBarBackground}"
                 BorderBrush="{DynamicResource BpLineBrush}" BorderThickness="0,1,0,0">
             <Grid ColumnDefinitions="Auto,*,Auto,Auto">
-                <TextBlock Text="{Binding BorgStatus}" FontSize="12" Foreground="{DynamicResource BpTextSecondaryBrush}"
-                           VerticalAlignment="Center" />
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <TextBlock Text="{Binding BorgStatus}" FontSize="12" Foreground="{DynamicResource BpTextSecondaryBrush}"
+                               VerticalAlignment="Center" />
+
+                    <!-- Running tasks: what works, waits, or runs in the task scheduler – with the time still to go -->
+                    <Button FontSize="12" Padding="8,1" MinHeight="0" ToolTip.Tip="{x:Static res:Strings.TasksTip}"
+                            AutomationProperties.Name="{x:Static res:Strings.TasksHeader}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Data="M3,5 H21 V7 H3 Z M3,11 H21 V13 H3 Z M3,17 H15 V19 H3 Z" Width="12" Height="12"
+                                      Foreground="{DynamicResource BpTextSecondaryBrush}" IsVisible="{Binding !Tasks.IsBusy}" />
+                            <PathIcon Data="M12,2 A10,10 0 1 1 2,12 H5 A7,7 0 1 0 12,5 Z" Width="12" Height="12"
+                                      Foreground="{DynamicResource BpGreenBrush}" IsVisible="{Binding Tasks.IsBusy}" />
+                            <TextBlock Text="{Binding Tasks.SummaryText}" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <Button.Flyout>
+                            <Flyout Placement="TopEdgeAlignedLeft" FlyoutPresenterClasses="mounts">
+                                <StackPanel Spacing="8" Width="480">
+                                    <TextBlock Text="{x:Static res:Strings.TasksHeader}" FontWeight="SemiBold" />
+                                    <TextBlock Text="{x:Static res:Strings.TasksEmpty}" Opacity="0.65" IsVisible="{Binding !Tasks.HasTasks}" />
+                                    <ScrollViewer MaxHeight="420" IsVisible="{Binding Tasks.HasTasks}">
+                                        <ItemsControl ItemsSource="{Binding Tasks.Items}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:RunningTaskViewModel">
+                                                    <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,10">
+                                                        <StackPanel Spacing="2" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
+                                                                       ToolTip.Tip="{Binding Title}" />
+                                                            <TextBlock Text="{Binding Detail}" IsVisible="{Binding HasDetail}" FontSize="11" Opacity="0.65"
+                                                                       TextTrimming="CharacterEllipsis" />
+                                                            <ProgressBar IsVisible="{Binding IsRunning}" Minimum="0" Maximum="1" Value="{Binding Fraction}"
+                                                                         IsIndeterminate="{Binding IsIndeterminate}" Height="4" MinHeight="4" Margin="0,3,0,1" />
+                                                            <TextBlock Text="{Binding Status}" FontSize="11" Opacity="0.8" TextWrapping="Wrap" />
+                                                        </StackPanel>
+                                                        <Button Grid.Column="1" Content="{x:Static res:Strings.TaskShow}" Command="{Binding ShowCommand}"
+                                                                IsVisible="{Binding CanShow}" Margin="8,0,0,0" FontSize="12" VerticalAlignment="Center" />
+                                                        <Button Grid.Column="2" Content="{x:Static res:Strings.Cancel}" Command="{Binding CancelCommand}"
+                                                                IsVisible="{Binding CanCancel}" Margin="6,0,0,0" FontSize="12" VerticalAlignment="Center" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </StackPanel>
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+                </StackPanel>
 
                 <!-- Mounted archives: open or unmount them -->
                 <Button Grid.Column="2" IsVisible="{Binding HasMounts}" FontSize="12" Padding="8,1" MinHeight="0" Margin="0,0,12,0"

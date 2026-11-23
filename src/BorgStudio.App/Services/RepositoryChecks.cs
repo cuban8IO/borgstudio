@@ -47,6 +47,8 @@ public sealed class RepositoryChecks(AppServices services)
     public async Task<CheckRecord> RunScheduledAsync(RepositoryConfig repository, ScheduledAccess access, CancellationToken cancellationToken = default)
     {
         var runner = new ScheduledJobRunner(services, access);
+        using var marker = Core.Progress.RunMarkers.ForDataDirectory(services.Jobs.DataDirectory)
+            .Mark(Core.Progress.RunMarkerKind.Check, repository.Name, repository.Id);
         try
         {
             var (unattended, problem) = await runner.PrepareAsync(repository, cancellationToken);

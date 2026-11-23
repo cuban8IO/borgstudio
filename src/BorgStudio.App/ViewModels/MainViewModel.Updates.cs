@@ -48,7 +48,14 @@ public partial class MainViewModel
 
     /// <summary>Opens the update window; with a release found already, it shows that one without asking again.</summary>
     [RelayCommand]
-    private Task ShowUpdateAsync() => _services.Dialogs.ShowUpdateAsync(new UpdateViewModel(this, _services.Dialogs, AvailableUpdate));
+    private Task ShowUpdateAsync() => ShowUpdateWindowAsync(new UpdateViewModel(this, _services.Dialogs, AvailableUpdate), _services.Dialogs);
+
+    /// <summary>The update window; downloading shows in the list of running tasks.</summary>
+    internal async Task ShowUpdateWindowAsync(UpdateViewModel update, Services.IDialogService dialogs)
+    {
+        using (Tasks.Track(WindowTask(Strings.TaskUpdate, null, update.Progress, update)))
+            await dialogs.ShowUpdateAsync(update);
+    }
 
     /// <summary>"Later": hides the banner until the next start.</summary>
     [RelayCommand]

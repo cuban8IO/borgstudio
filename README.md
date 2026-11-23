@@ -14,6 +14,10 @@ The **[product page](https://borgstudio.cuban8io.net/)** shows what it does, the
   create new ones or connect existing ones; borg runs natively or, on Windows, inside WSL.
 - **Backup jobs** with source folders, exclusions and compression; live progress with upload speed and remaining
   time; cancelling keeps a checkpoint.
+- **Running tasks** in the status bar: backups, checks, restores, exports, searches and downloads with their progress
+  and the time still to go, queued and held back runs, and runs the system's task scheduler started – each with *Show*
+  and, where possible, *Cancel*. The windows of longer work (archive browser, search, versions, comparison, export,
+  update) leave the main window usable.
 - **Schedules**: daily, on chosen weekdays or every few hours – started by the system's task scheduler (also while
   BorgStudio is closed) or by BorgStudio itself in the background (notification area, start at login); missed times
   are made up for. Other programs can start jobs through an incoming webhook.
@@ -81,6 +85,8 @@ it follows the system language (English if that is neither) or the choice under 
   With a PIN, scheduled runs open the vault with its key kept in the system keychain (entry `scheduled-access`) – or,
   without a keychain, in `scheduled-access.key`, readable only by the user. It follows PIN changes and goes when the
   vault is reset.
+- **Running runs:** `running/<process>-<id>.json` in the data folder – each run started without window leaves word of itself
+  there while it waits or works (the window lists it); removed when it ends, ignored once its process is gone.
 - **Moving to another computer:** Tools → Export settings writes everything – repositories, stored passphrases
   (vault and keychain), SSH keys, known servers, settings and, if wanted, the borg keys of the repositories – into one
   `.borgstudio` file, encrypted with a password of its own (at least 12 characters; Argon2id + AES-256-GCM). Tools →

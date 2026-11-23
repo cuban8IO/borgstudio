@@ -90,6 +90,9 @@ public partial class App : Application
         viewModel.DriveTick();
         var drives = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
         drives.Tick += (_, _) => viewModel.DriveTick();
+        // Runs the system's task scheduler started in processes of their own (for the list of running tasks).
+        viewModel.RefreshOtherRuns();
+        drives.Tick += (_, _) => viewModel.RefreshOtherRuns();
         drives.Start();
 
         // The incoming webhook (if switched on, in background mode); it ends with the app.

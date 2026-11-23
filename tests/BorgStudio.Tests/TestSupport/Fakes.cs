@@ -1111,6 +1111,11 @@ public sealed class FakeDialogs : IDialogService
         await export.Begin();
     }
 
+    /// <summary>The view models whose windows were brought to the front (from the list of running tasks).</summary>
+    public List<object> BroughtToFront { get; } = [];
+
+    public void BringToFront(object viewModel) => BroughtToFront.Add(viewModel);
+
     /// <summary>The comparison choices "shown"; <see cref="PickCompare"/> may change the choice (default: as preset), <c>false</c> cancels.</summary>
     public List<ArchiveComparePickerViewModel> ComparePickers { get; } = [];
 

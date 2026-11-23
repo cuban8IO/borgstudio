@@ -37,6 +37,7 @@ public sealed partial class FileVersionsViewModel : ArchiveScanViewModel
         Name = name;
         IsFolder = kind == ArchiveEntryKind.Directory;
         PathText = ArchiveTree.DisplayPathOf(borgPath);
+        source.VersionsOpened?.Invoke(this);
     }
 
     public string Name { get; }

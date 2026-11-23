@@ -99,7 +99,7 @@ public partial class MainViewModel
             return null;
         var borg = Borg!;
         var format = ExportFormats.FromFileName(targetFile) ?? ExportFormat.Zip;
-        return new ArchiveExportViewModel(what, targetFile, format, async (progress, cancellationToken) =>
+        var export = new ArchiveExportViewModel(what, targetFile, format, async (progress, cancellationToken) =>
         {
             var strip = await stripComponents(cancellationToken);
             if (!strip.Succeeded)
@@ -107,6 +107,8 @@ public partial class MainViewModel
             return await _services.BorgClient.ExportAsync(borg, location, archive.Name, paths, strip.Value, targetFile, format, passphrase, ssh,
                 progress, cancellationToken);
         });
+        Tasks.TrackOnce(WindowTask(BorgTexts.Format(Strings.TaskExport, Path.GetFileName(targetFile)), what, export.Progress, export));
+        return export;
     }
 
     /// <summary>

@@ -343,6 +343,7 @@ public partial class MainViewModel
         var key = DurationHistory.Key(item.Config.Id, operation);
         IsWorking = true;
         Work.Start(workingText, _services.Durations.Get(key), cancel);
+        using var task = Tasks.Track(ProgressTask(workingText.TrimEnd(' ', '…', '.'), item.Name, Work, () => ShowJob(item.Config.Id)));
         try
         {
             var result = await Task.Run(work);

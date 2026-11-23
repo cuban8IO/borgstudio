@@ -7,9 +7,34 @@ using BorgStudio.App.Views;
 
 namespace BorgStudio.App.Services;
 
-/// <summary>Dialogs shown modally over <paramref name="owner"/>.</summary>
+/// <summary>
+/// Dialogs shown modally over <paramref name="owner"/>. The windows of longer work (archive browser, search, versions,
+/// comparison, export, update) opened from the main window leave it usable: they stay in front of it, and the status
+/// bar's list of running tasks can bring them back or stop their work.
+/// </summary>
 public sealed class DialogService(Window owner) : IDialogService
 {
+    /// <summary>Over the main window: shown beside it (it stays usable); over any other window: modally, as dialogs are.</summary>
+    private Task ShowWorkWindowAsync(Window window)
+    {
+        if (owner is not MainWindow)
+            return window.ShowDialog(owner);
+        var closed = new TaskCompletionSource();
+        window.Closed += (_, _) => closed.TrySetResult();
+        window.Show(owner);
+        return closed.Task;
+    }
+
+    public void BringToFront(object viewModel)
+    {
+        if (Avalonia.Application.Current?.ApplicationLifetime is not Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+            || desktop.Windows.FirstOrDefault(window => ReferenceEquals(window.DataContext, viewModel)) is not { } found)
+            return;
+        if (found.WindowState == WindowState.Minimized)
+            found.WindowState = WindowState.Normal;
+        found.Activate();
+    }
+
     public Task<bool> ConfirmAsync(string title, string message, string confirmText, string? cancelText = null) =>
         new MessageWindow(title, message, confirmText, cancelText ?? Strings.Cancel).ShowDialog<bool>(owner);
 
@@ -78,7 +103,7 @@ public sealed class DialogService(Window owner) : IDialogService
     }
 
     public Task ShowUpdateAsync(UpdateViewModel update) =>
-        new UpdateWindow { DataContext = update }.ShowDialog(owner);
+        ShowWorkWindowAsync(new UpdateWindow { DataContext = update });
 
     public Task ShowRepositoryEditorAsync(RepositoryEditorViewModel editor) =>
         new RepositoryEditorWindow { DataContext = editor }.ShowDialog(owner);
@@ -90,16 +115,16 @@ public sealed class DialogService(Window owner) : IDialogService
         new PrunePreviewWindow { DataContext = preview }.ShowDialog<bool>(owner);
 
     public Task ShowArchiveBrowserAsync(ArchiveBrowserViewModel browser) =>
-        new ArchiveBrowserWindow { DataContext = browser }.ShowDialog(owner);
+        ShowWorkWindowAsync(new ArchiveBrowserWindow { DataContext = browser });
 
     public Task ShowRestoreAsync(RestoreViewModel restore) =>
         new RestoreWindow { DataContext = restore }.ShowDialog(owner);
 
     public Task ShowArchiveSearchAsync(ArchiveSearchViewModel search) =>
-        new ArchiveSearchWindow { DataContext = search }.ShowDialog(owner);
+        ShowWorkWindowAsync(new ArchiveSearchWindow { DataContext = search });
 
     public Task ShowFileVersionsAsync(FileVersionsViewModel versions) =>
-        new FileVersionsWindow { DataContext = versions }.ShowDialog(owner);
+        ShowWorkWindowAsync(new FileVersionsWindow { DataContext = versions });
 
     public async Task<string?> PickArchiveExportFileAsync(string title, string suggestedName)
     {
@@ -142,11 +167,11 @@ public sealed class DialogService(Window owner) : IDialogService
     }
 
     public Task ShowArchiveExportAsync(ArchiveExportViewModel export) =>
-        new ArchiveExportWindow { DataContext = export }.ShowDialog(owner);
+        ShowWorkWindowAsync(new ArchiveExportWindow { DataContext = export });
 
     public Task<bool> PickArchivesToCompareAsync(ArchiveComparePickerViewModel picker) =>
         new ArchiveCompareWindow { DataContext = picker }.ShowDialog<bool>(owner);
 
     public Task ShowArchiveDiffAsync(ArchiveDiffViewModel diff) =>
-        new ArchiveDiffWindow { DataContext = diff }.ShowDialog(owner);
+        ShowWorkWindowAsync(new ArchiveDiffWindow { DataContext = diff });
 }

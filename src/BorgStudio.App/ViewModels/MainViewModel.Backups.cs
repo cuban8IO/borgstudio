@@ -227,6 +227,7 @@ public partial class MainViewModel
         Func<IBackupRunReport, CancellationToken, Task<BackupRunResult>> start)
     {
         var run = new BackupRunViewModel(job);
+        using var task = Tasks.Track(BackupTask(run, job));
         CurrentBackup = run;
         IsBackupRunning = true;
         using var cancellation = new CancellationTokenSource();

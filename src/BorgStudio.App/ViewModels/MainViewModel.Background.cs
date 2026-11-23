@@ -56,7 +56,11 @@ public partial class MainViewModel
     /// <summary>Something the icon in the notification area shows changed (state, jobs, next run, mode).</summary>
     public event EventHandler? BackgroundStateChanged;
 
-    private void RaiseBackgroundStateChanged() => BackgroundStateChanged?.Invoke(this, EventArgs.Empty);
+    private void RaiseBackgroundStateChanged()
+    {
+        RefreshWaitingTasks();
+        BackgroundStateChanged?.Invoke(this, EventArgs.Empty);
+    }
 
     /// <summary>Switches who starts the scheduled jobs: the system's entries and the start at login follow.</summary>
     public void SetScheduleRunner(ScheduleRunner runner)
@@ -189,6 +193,7 @@ public partial class MainViewModel
                 // The checks after the backups: they wait for the repository anyway.
                 while (_dueJobs.Count == 0 && _dueChecks.TryDequeue(out var repositoryId))
                 {
+                    RefreshWaitingTasks();
                     while (IsBackupRunning)
                         await Task.WhenAny(BackupFinished, Task.Delay(TimeSpan.FromSeconds(2)));
                     if (!Settings.SchedulesPaused && Repositories.FirstOrDefault(item => item.Config.Id == repositoryId) is { } item)
@@ -213,6 +218,8 @@ public partial class MainViewModel
     {
         var vault = OpenVaultCopy(scheduledAccess: false);
         var services = _services with { Vault = vault };
+        using var task = Tasks.Track(RunningTaskViewModel.Fixed(BorgTexts.Format(Strings.TaskCheck, repository.Name), null,
+            RunningTaskState.Running, Strings.CheckWorking, show: () => ShowJob(repository.Id)));
         try
         {
             var record = await Task.Run(() => new RepositoryChecks(services).RunScheduledAsync(repository,
@@ -237,6 +244,7 @@ public partial class MainViewModel
     {
         while (_dueJobs.TryDequeue(out var queued))
         {
+            RefreshWaitingTasks();
             // A backup started in the window goes first.
             while (IsBackupRunning)
                 await Task.WhenAny(BackupFinished, Task.Delay(TimeSpan.FromSeconds(2)));
@@ -271,6 +279,7 @@ public partial class MainViewModel
         if (await Task.Run(() => runner.CheckConditionsAsync(job)) is not { } reason)
         {
             _conditionWaits.Remove(job.Id);
+            _waitReasons.Remove(job.Id);
             services.Vault.Lock();
             return null;
         }
@@ -282,11 +291,15 @@ public partial class MainViewModel
             if (!_conditionWaits.ContainsKey(job.Id))
                 ScheduledRun.Log($"{job.Name} (background): waiting – {BorgTexts.SkipReason(reason)}", _services.Jobs.DataDirectory);
             _conditionWaits[job.Id] = (now + RunConditions.RetryInterval, deadline);
+            _waitReasons[job.Id] = reason;
+            RefreshWaitingTasks();
             services.Vault.Lock();
             return new BackupRunSummary { Started = DateTimeOffset.Now, Duration = TimeSpan.Zero, Outcome = BackupOutcome.Skipped, SkipReason = reason };
         }
 
         _conditionWaits.Remove(job.Id);
+        _waitReasons.Remove(job.Id);
+        RefreshWaitingTasks();
         var skipped = (await Task.Run(() => runner.SkipAsync(job, reason))).Summary;
         ScheduledRun.Log($"{job.Name} (background): {skipped.Outcome} – {BorgTexts.SkipReason(reason)}", _services.Jobs.DataDirectory);
         var index = _jobs.FindIndex(existing => existing.Id == job.Id);

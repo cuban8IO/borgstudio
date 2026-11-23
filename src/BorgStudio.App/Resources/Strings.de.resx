@@ -1671,6 +1671,75 @@ BorgStudio kann das jetzt eintragen (als root in WSL, ohne Passwort). Das entspr
   <data name="MountsHeader" xml:space="preserve">
     <value>Eingehängte Archive</value>
   </data>
+  <data name="TasksNone" xml:space="preserve">
+    <value>Keine laufenden Aufgaben</value>
+  </data>
+  <data name="TasksOne" xml:space="preserve">
+    <value>1 Aufgabe</value>
+  </data>
+  <data name="TasksMany" xml:space="preserve">
+    <value>{0} Aufgaben</value>
+  </data>
+  <data name="TasksRemaining" xml:space="preserve">
+    <value>{0} · noch ca. {1}</value>
+  </data>
+  <data name="TasksHeader" xml:space="preserve">
+    <value>Laufende Aufgaben</value>
+  </data>
+  <data name="TasksEmpty" xml:space="preserve">
+    <value>Gerade läuft und wartet nichts.</value>
+  </data>
+  <data name="TasksTip" xml:space="preserve">
+    <value>Laufende und wartende Aufgaben – Klick zeigt die Liste</value>
+  </data>
+  <data name="TaskShow" xml:space="preserve">
+    <value>Anzeigen</value>
+  </data>
+  <data name="TaskArchives" xml:space="preserve">
+    <value>Archivliste laden</value>
+  </data>
+  <data name="TaskMount" xml:space="preserve">
+    <value>Archiv einhängen</value>
+  </data>
+  <data name="TaskBackup" xml:space="preserve">
+    <value>Backup „{0}“</value>
+  </data>
+  <data name="TaskCheck" xml:space="preserve">
+    <value>Prüfung von „{0}“</value>
+  </data>
+  <data name="TaskBrowse" xml:space="preserve">
+    <value>Archiv „{0}“</value>
+  </data>
+  <data name="TaskRestore" xml:space="preserve">
+    <value>Wiederherstellen aus „{0}“</value>
+  </data>
+  <data name="TaskExport" xml:space="preserve">
+    <value>Export nach „{0}“</value>
+  </data>
+  <data name="TaskCompare" xml:space="preserve">
+    <value>Vergleich „{0}“ mit „{1}“</value>
+  </data>
+  <data name="TaskEntriesRead" xml:space="preserve">
+    <value>{0:N0} Einträge gelesen</value>
+  </data>
+  <data name="TaskUpdate" xml:space="preserve">
+    <value>Update herunterladen</value>
+  </data>
+  <data name="TaskQueued" xml:space="preserve">
+    <value>In der Warteschlange</value>
+  </data>
+  <data name="TaskWaiting" xml:space="preserve">
+    <value>Wartet – {0} Nächster Versuch um {1}.</value>
+  </data>
+  <data name="TaskWaitingCondition" xml:space="preserve">
+    <value>Eine Bedingung des Jobs ist nicht erfüllt.</value>
+  </data>
+  <data name="TaskElsewhere" xml:space="preserve">
+    <value>Aufgabenplanung · läuft seit {0}</value>
+  </data>
+  <data name="TaskElsewhereWaiting" xml:space="preserve">
+    <value>Aufgabenplanung · wartet: {0}</value>
+  </data>
   <data name="MountOpen" xml:space="preserve">
     <value>Öffnen</value>
   </data>

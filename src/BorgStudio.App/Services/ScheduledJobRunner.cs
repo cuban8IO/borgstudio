@@ -1,6 +1,7 @@
 using BorgStudio.App.ViewModels;
 using BorgStudio.Core.Backups;
 using BorgStudio.Core.Borg;
+using BorgStudio.Core.Progress;
 using BorgStudio.Core.Repositories;
 using BorgStudio.Core.Secrets;
 using BorgStudio.Core.Security;
@@ -28,6 +29,8 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
         var job = services.Jobs.Load().FirstOrDefault(candidate => candidate.Id == jobId)
             ?? throw new ArgumentException($"There is no backup job {jobId}.", nameof(jobId));
 
+        // The open app lists runs of other processes (the system's task scheduler) by this.
+        using var marker = Markers.Mark(RunMarkerKind.Backup, job.Name, job.RepositoryId, job.Id);
         try
         {
             var (result, storage) = await RunJobAsync(job, report, cancellationToken);
@@ -39,6 +42,8 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
             services.Vault.Lock();
         }
     }
+
+    private RunMarkers Markers => RunMarkers.ForDataDirectory(services.Jobs.DataDirectory);
 
     /// <summary>What the conditions of scheduled runs ask (battery, connection, target).</summary>
     private ISystemState System => services.SystemState ?? new SystemState();
@@ -69,12 +74,24 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
         wait ??= Task.Delay;
         clock ??= () => DateTime.Now;
         var deadline = ScheduleCalendar.Next(job.Schedules, clock()) ?? clock().AddDays(1);
-        while (await CheckConditionsAsync(job, cancellationToken) is { } reason)
+        RunMarkers.Handle? waiting = null;
+        try
         {
-            if (clock() + RunConditions.RetryInterval >= deadline)
-                return await SkipAsync(job, reason);
-            ScheduledRun.Log($"{job.Name}: waiting – {BorgTexts.SkipReason(reason)}", services.Jobs.DataDirectory);
-            await wait(RunConditions.RetryInterval, cancellationToken);
+            while (await CheckConditionsAsync(job, cancellationToken) is { } reason)
+            {
+                if (clock() + RunConditions.RetryInterval >= deadline)
+                    return await SkipAsync(job, reason);
+                ScheduledRun.Log($"{job.Name}: waiting – {BorgTexts.SkipReason(reason)}", services.Jobs.DataDirectory);
+                if (waiting is null)
+                    waiting = Markers.Mark(RunMarkerKind.Backup, job.Name, job.RepositoryId, job.Id, BorgTexts.SkipReason(reason));
+                else
+                    waiting.SetWaiting(BorgTexts.SkipReason(reason));
+                await wait(RunConditions.RetryInterval, cancellationToken);
+            }
+        }
+        finally
+        {
+            waiting?.Dispose();
         }
         return await RunAsync(jobId, cancellationToken: cancellationToken);
     }

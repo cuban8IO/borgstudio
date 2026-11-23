@@ -149,7 +149,7 @@ public sealed partial class SettingsViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private Task CheckForUpdatesNowAsync() => Dialogs.ShowUpdateAsync(new UpdateViewModel(_main, Dialogs, known: null));
+    private Task CheckForUpdatesNowAsync() => _main.ShowUpdateWindowAsync(new UpdateViewModel(_main, Dialogs, known: null), Dialogs);
 
     private static string LanguageName(CultureInfo culture)
     {
