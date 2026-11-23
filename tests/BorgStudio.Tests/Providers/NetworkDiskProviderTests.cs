@@ -71,9 +71,11 @@ public sealed class NetworkDiskProviderTests : IDisposable
         Assert.Single(_provider.Validate(Values("nas local")));
         Assert.Single(_provider.Validate(new Dictionary<string, string>(Values()) { [NetworkDiskProvider.TargetKey] = "iqn with space" }));
         Assert.Single(_provider.Validate(new Dictionary<string, string>(Values()) { [NetworkDiskProvider.FolderKey] = "../x" }));
-        // NVMe/TCP: Linux has an initiator, Windows clients (and macOS) have none.
-        Assert.Equal(OperatingSystem.IsLinux() ? 0 : 1,
-            _provider.Validate(new Dictionary<string, string>(Values()) { [NetworkDiskProvider.ProtocolKey] = "nvme-tcp" }).Count);
+        // A protocol this computer cannot use is told.
+        var nvme = new Dictionary<string, string>(Values()) { [NetworkDiskProvider.ProtocolKey] = "nvme-tcp" };
+        Assert.Empty(_provider.Validate(nvme));
+        _disks.UnsupportedProtocols.Add(NetworkDiskProtocol.NvmeTcp);
+        Assert.Equal(["not supported here"], _provider.Validate(nvme));
         Assert.Equal("borg/laptop", _provider.GetLocation(Values()).Url);
     }
 
@@ -176,5 +178,20 @@ public sealed class NetworkDiskProviderTests : IDisposable
         Assert.Equal(["nvme", "connect", "-t", "tcp", "-a", "nas.local", "-s", "4420", "-n", Iqn], LinuxNetworkDisks.LoginCommand(nvme));
         Assert.Contains("visudo -cf", LinuxNetworkDisks.SetupScript);
         Assert.Contains("-m node -T $n -p $p --login, $a -m node -T $n -p $p --logout", LinuxNetworkDisks.SetupScript);
+    }
+
+    [Fact]
+    public async Task Each_system_tells_what_it_cannot_do()
+    {
+        // Windows clients: iSCSI only. Linux: both. macOS: neither, and nothing is attempted.
+        Assert.Null(new WindowsIscsi().Unsupported(NetworkDiskProtocol.Iscsi));
+        Assert.NotNull(new WindowsIscsi().Unsupported(NetworkDiskProtocol.NvmeTcp));
+        Assert.Null(new LinuxNetworkDisks().Unsupported(NetworkDiskProtocol.Iscsi));
+        Assert.Null(new LinuxNetworkDisks().Unsupported(NetworkDiskProtocol.NvmeTcp));
+        var mac = new MacNetworkDisks();
+        Assert.NotNull(mac.Unsupported(NetworkDiskProtocol.Iscsi));
+        Assert.NotNull(mac.Unsupported(NetworkDiskProtocol.NvmeTcp));
+        var target = NetworkDiskProvider.Target(Values());
+        await Assert.ThrowsAsync<RepositoryUnavailableException>(() => mac.ConnectAsync(target, "abc", CancellationToken.None));
     }
 }

@@ -1535,6 +1535,11 @@ public sealed class FakeNetworkDisks(FakeDrives drives) : INetworkDiskSystem
 
     public string? SetUpRefusal { get; set; }
 
+    /// <summary>Protocols this fake computer cannot use.</summary>
+    public HashSet<NetworkDiskProtocol> UnsupportedProtocols { get; } = [];
+
+    public string? Unsupported(NetworkDiskProtocol protocol) => UnsupportedProtocols.Contains(protocol) ? "not supported here" : null;
+
     public Task SetUpAsync(NetworkDiskTarget target, string id, string? chapSecret, CancellationToken cancellationToken)
     {
         if (SetUpRefusal is { } refusal)
