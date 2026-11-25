@@ -10,6 +10,7 @@ using BorgStudio.Core.Secrets;
 using BorgStudio.Core.Security;
 using BorgStudio.Core.Ssh;
 using BorgStudio.Plugins;
+using BorgStudio.Providers.Server;
 using BorgStudio.Providers.Usb;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -104,6 +105,33 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         Page = EditorPage.Details;
         RefreshKeys();
         Loading = FindOutIfConvertibleAsync(existing);
+    }
+
+    // --- BorgStudio Server: a paired server and a repository there ---
+
+    /// <summary>A repository on a BorgStudio Server.</summary>
+    public bool IsServer => SelectedProvider?.Provider is ServerProvider;
+
+    /// <summary>Adding: the paired servers and their repositories (<c>null</c> for other providers and when editing).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowServerPicker))]
+    public partial ServerRepositoryPicker? Server { get; private set; }
+
+    public bool ShowServerPicker => Server is not null;
+
+    /// <summary>Editing: where the repository is ("backup.example.org · admin/laptop").</summary>
+    public string? ServerSummary => IsEditing && IsServer
+        ? BorgTexts.Format(Strings.ServerSummary,
+            ServerAddress.Display(_existing!.ProviderValues.GetValueOrDefault(ServerProvider.ServerKey) ?? ""),
+            _existing.ProviderValues.GetValueOrDefault(ServerProvider.RepositoryNameKey) ?? "")
+        : null;
+
+    public bool HasServerSummary => ServerSummary is not null;
+
+    partial void OnCreateNewChanged(bool value)
+    {
+        if (Server is not null)
+            Server.CreateNew = value;
     }
 
     // --- USB drive: backing up when it is attached ---
@@ -201,7 +229,8 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(NextCommand))]
-    [NotifyPropertyChangedFor(nameof(IsSsh), nameof(IsUsb), nameof(IsProvisioned), nameof(ShowInstallOptions), nameof(KeyGenerateText), nameof(IsSftpMount))]
+    [NotifyPropertyChangedFor(nameof(IsSsh), nameof(IsUsb), nameof(IsServer), nameof(IsProvisioned), nameof(ShowInstallOptions), nameof(KeyGenerateText),
+        nameof(IsSftpMount), nameof(ServerSummary), nameof(HasServerSummary))]
     public partial ProviderOptionViewModel? SelectedProvider { get; set; }
 
     // --- Page 2: details ---
@@ -647,6 +676,8 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
         var problems = new List<string>();
         if (string.IsNullOrWhiteSpace(Name))
             problems.Add(Strings.EditorNameRequired);
+        if (Server is not null)
+            problems.AddRange(Server.Validate());
         problems.AddRange(provider.Validate(values));
         if (IsSsh && StorageCapacity == -1)
             problems.Add(Strings.EditorCapacityInvalid);
@@ -1095,6 +1126,18 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
             .Select(field => new FieldViewModel(field, values?.GetValueOrDefault(field.Key)))
             .ToList();
         FillSecrets(provider);
+
+        Server = null;
+        if (provider is ServerProvider server && _existing is null)
+        {
+            var picker = new ServerRepositoryPicker(_services, server, () => Dialogs) { CreateNew = CreateNew };
+            picker.RepositoryChosen += (_, name) =>
+            {
+                if (string.IsNullOrWhiteSpace(Name))
+                    Name = name;
+            };
+            Server = picker;
+        }
     }
 
     /// <summary>
@@ -1129,6 +1172,10 @@ public sealed partial class RepositoryEditorViewModel : ViewModelBase
                 values[key] = value;
         foreach (var field in Fields.Where(field => !field.IsSecret))
             values[field.Key] = field.Value.Trim();
+        // Adding on a BorgStudio Server: the chosen server and repository (or the one to create).
+        if (Server is not null && provider is ServerProvider)
+            foreach (var (key, value) in Server.Values(Name))
+                values[key] = value;
         return values;
     }
 

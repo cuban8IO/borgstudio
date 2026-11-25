@@ -62,6 +62,7 @@ public partial class MainViewModel
         RefreshRepositoryJobs();
         ResetArchives();
         RefreshStatistics();
+        RefreshServerCard();
         // Another repository chosen (added, removed, opened from the tray): it is shown, not the overview.
         if (value is not null)
             IsOverviewShown = false;
@@ -217,6 +218,7 @@ public partial class MainViewModel
             return;
         var usage = await MeasureAfterBackupAsync(item.Config, borg, location, passphrase.Value, ssh.Access, result.Repository);
         await NotifyRunAsync(job, summary);
+        _ = _services.SendReportsAsync();
         await NotifyStorageAsync(item.Config, usage);
         if (check is not null)
             await NotifyCheckAsync(item.Config, check);
@@ -296,7 +298,8 @@ public partial class MainViewModel
 
     /// <summary>Runs backups and clean-ups – the same for the window, the background and scheduled runs.</summary>
     internal BackupRunner Runner => _runner ??= new BackupRunner(_services.BorgClient, _services.Jobs, _services.Durations, BorgTexts.Describe,
-        hooks: _services.Hooks, describeHook: BorgTexts.HookProblem, sourceDrives: SourceDriveLocator.For(_services));
+        hooks: _services.Hooks, describeHook: BorgTexts.HookProblem, sourceDrives: SourceDriveLocator.For(_services),
+        reports: _services.Reports);
 
     private BackupRunner? _runner;
 

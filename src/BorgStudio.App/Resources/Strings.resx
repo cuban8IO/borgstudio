@@ -3746,4 +3746,214 @@ Jobs: {1}</value>
   <data name="JobEditorDriveEject" xml:space="preserve">
     <value>Eject the drive after automatic runs (scheduled or on attaching)</value>
   </data>
+  <data name="PairingTitle" xml:space="preserve">
+    <value>Pair with BorgStudio Server</value>
+  </data>
+  <data name="PairingAddressPrompt" xml:space="preserve">
+    <value>Address of the BorgStudio Server (e.g. https://backup.example.org:8443):</value>
+  </data>
+  <data name="PairingAddressInvalid" xml:space="preserve">
+    <value>That is not a server address (e.g. https://backup.example.org:8443).</value>
+  </data>
+  <data name="PairingUnencrypted" xml:space="preserve">
+    <value>{0} is reached without encryption (http). The access token would go over the network readably – only use this inside a network you trust or behind a reverse proxy with HTTPS.</value>
+  </data>
+  <data name="PairingContinue" xml:space="preserve">
+    <value>Continue</value>
+  </data>
+  <data name="PairingCertificateTitle" xml:space="preserve">
+    <value>Confirm the server's certificate</value>
+  </data>
+  <data name="PairingCertificate" xml:space="preserve">
+    <value>The certificate of {0} is not trusted by this computer (self-signed, as a new server has).
+
+Issued to: {1}
+Valid until: {2}
+SHA-256: {3}
+
+Compare the fingerprint with the one under Settings → HTTPS on the server. Once confirmed, BorgStudio accepts only this certificate from the server.</value>
+  </data>
+  <data name="PairingCertificateChanged" xml:space="preserve">
+    <value>The certificate of {0} is NOT the one confirmed before.
+
+Issued to: {1}
+Valid until: {2}
+SHA-256: {3}
+
+Only confirm it if the certificate was renewed on purpose (compare under Settings → HTTPS on the server). Otherwise someone may be in between.</value>
+  </data>
+  <data name="PairingCertificateTrust" xml:space="preserve">
+    <value>Trust this certificate</value>
+  </data>
+  <data name="PairingServer" xml:space="preserve">
+    <value>Server: {0}</value>
+  </data>
+  <data name="PairingInstructions" xml:space="preserve">
+    <value>Sign in on the server's page in the browser and confirm this computer. The page shows the same code:</value>
+  </data>
+  <data name="PairingOpenBrowser" xml:space="preserve">
+    <value>Open in browser</value>
+  </data>
+  <data name="PairingCopyCode" xml:space="preserve">
+    <value>Copy code</value>
+  </data>
+  <data name="PairingWaiting" xml:space="preserve">
+    <value>Waiting for the confirmation on the server …</value>
+  </data>
+  <data name="PairingDenied" xml:space="preserve">
+    <value>The pairing was denied on the server.</value>
+  </data>
+  <data name="PairingExpired" xml:space="preserve">
+    <value>The code expired. Please start the pairing again.</value>
+  </data>
+  <data name="UnpairTitle" xml:space="preserve">
+    <value>Unpair server</value>
+  </data>
+  <data name="UnpairMessage" xml:space="preserve">
+    <value>Unpair from {0}? This computer's access to the server ends (also on the server, if it can be reached).</value>
+  </data>
+  <data name="UnpairUsed" xml:space="preserve">
+    <value>Unpair from {0}? {1} repositories of this computer are on it: backups to them stop working until the server is paired again. The repositories and their archives stay on the server.</value>
+  </data>
+  <data name="UnpairConfirm" xml:space="preserve">
+    <value>Unpair</value>
+  </data>
+  <data name="ServerLabel" xml:space="preserve">
+    <value>Server</value>
+  </data>
+  <data name="ServerNoneYet" xml:space="preserve">
+    <value>No server paired yet.</value>
+  </data>
+  <data name="ServerPairNew" xml:space="preserve">
+    <value>Pair a server …</value>
+  </data>
+  <data name="ServerRepair" xml:space="preserve">
+    <value>Pair again</value>
+  </data>
+  <data name="ServerRetry" xml:space="preserve">
+    <value>Try again</value>
+  </data>
+  <data name="ServerRepositoryLabel" xml:space="preserve">
+    <value>Repository</value>
+  </data>
+  <data name="ServerNoRepositories" xml:space="preserve">
+    <value>This account has no repositories on the server yet. Choose “Create a new repository” to create one.</value>
+  </data>
+  <data name="ServerCreateTarget" xml:space="preserve">
+    <value>Where</value>
+  </data>
+  <data name="ServerNewRepository" xml:space="preserve">
+    <value>New repository on the server</value>
+  </data>
+  <data name="ServerNewName" xml:space="preserve">
+    <value>Name on the server</value>
+  </data>
+  <data name="ServerNewNameHint" xml:space="preserve">
+    <value>Empty: the name above. Letters, digits, dot, dash and underscore.</value>
+  </data>
+  <data name="ServerDatastore" xml:space="preserve">
+    <value>Datastore</value>
+  </data>
+  <data name="ServerQuota" xml:space="preserve">
+    <value>Quota (optional)</value>
+  </data>
+  <data name="ServerQuotaHint" xml:space="preserve">
+    <value>What the repository may take up on the server; empty: no limit of its own.</value>
+  </data>
+  <data name="ServerQuotaInvalid" xml:space="preserve">
+    <value>The quota is no number.</value>
+  </data>
+  <data name="ServerAllowance" xml:space="preserve">
+    <value>Your quota on the server: {0} of {1} used.</value>
+  </data>
+  <data name="ServerMayNotCreate" xml:space="preserve">
+    <value>This account may not create repositories on the server; an administrator can create one and share it.</value>
+  </data>
+  <data name="ServerChooseServer" xml:space="preserve">
+    <value>Please pair a server first.</value>
+  </data>
+  <data name="ServerSummary" xml:space="preserve">
+    <value>On {0}: {1}</value>
+  </data>
+  <data name="ServerAccessOwner" xml:space="preserve">
+    <value>owner</value>
+  </data>
+  <data name="ServerAccessFull" xml:space="preserve">
+    <value>full access</value>
+  </data>
+  <data name="ServerAccessAppendOnly" xml:space="preserve">
+    <value>append only</value>
+  </data>
+  <data name="ServerUsageOf" xml:space="preserve">
+    <value>{0} of {1}</value>
+  </data>
+  <data name="ServerCardHeader" xml:space="preserve">
+    <value>BorgStudio Server</value>
+  </data>
+  <data name="ServerOpenInServer" xml:space="preserve">
+    <value>Open in server</value>
+  </data>
+  <data name="ServerRefresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="ServerAccessLabel" xml:space="preserve">
+    <value>Access</value>
+  </data>
+  <data name="ServerUsageLabel" xml:space="preserve">
+    <value>Used</value>
+  </data>
+  <data name="ServerUsageQuota" xml:space="preserve">
+    <value>{0} of {1} ({2} %)</value>
+  </data>
+  <data name="ServerUsageNoQuota" xml:space="preserve">
+    <value>{0} (no quota of its own)</value>
+  </data>
+  <data name="ServerOwnerQuota" xml:space="preserve">
+    <value>All repositories of {0}: {1} of {2}</value>
+  </data>
+  <data name="ServerDatastoreFree" xml:space="preserve">
+    <value>{0} ({1} free)</value>
+  </data>
+  <data name="ServerParticipantsLabel" xml:space="preserve">
+    <value>Used by</value>
+  </data>
+  <data name="ServerParticipantsHidden" xml:space="preserve">
+    <value>The server does not show who else uses it.</value>
+  </data>
+  <data name="ServerLastAccessLabel" xml:space="preserve">
+    <value>Last access</value>
+  </data>
+  <data name="ServerLastAccess" xml:space="preserve">
+    <value>{0} by {1} ({2})</value>
+  </data>
+  <data name="ServerNeverAccessed" xml:space="preserve">
+    <value>not yet</value>
+  </data>
+  <data name="ServerMoving" xml:space="preserve">
+    <value>The server is moving this repository to another datastore; backups wait until it is done.</value>
+  </data>
+  <data name="SettingsServersHeader" xml:space="preserve">
+    <value>BorgStudio Server</value>
+  </data>
+  <data name="SettingsServersIntro" xml:space="preserve">
+    <value>Servers this computer is paired with. One pairing serves all repositories on a server; the access is kept in the vault.</value>
+  </data>
+  <data name="SettingsServersNone" xml:space="preserve">
+    <value>No server paired.</value>
+  </data>
+  <data name="SettingsServerDetails" xml:space="preserve">
+    <value>Paired as {0} on {1}  ·  repositories: {2}</value>
+  </data>
+  <data name="SettingsServerPinned" xml:space="preserve">
+    <value>certificate confirmed</value>
+  </data>
+  <data name="SettingsServerUnpair" xml:space="preserve">
+    <value>Unpair</value>
+  </data>
+  <data name="SettingsServerPaired" xml:space="preserve">
+    <value>Paired with {0} as {1}.</value>
+  </data>
+  <data name="SettingsServerUnpaired" xml:space="preserve">
+    <value>Unpaired from {0}.</value>
+  </data>
 </root>

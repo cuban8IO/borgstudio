@@ -11,6 +11,8 @@ using BorgStudio.Core.Security;
 using BorgStudio.Core.Settings;
 using BorgStudio.Core.Updates;
 using BorgStudio.Core.Ssh;
+using BorgStudio.Plugins;
+using BorgStudio.Providers.Server;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -43,6 +45,33 @@ public sealed record AppServices(
 
     /// <summary>Finds or connects repositories before borg uses them (USB drives); shared by everything in this process.</summary>
     public RepositoryConnections Connections { get; init; } = new(Plugins, RepositoryStore);
+
+    /// <summary>Reports of finished runs for providers that want them (BorgStudio Server), until they are delivered.</summary>
+    public RunReports Reports { get; init; } = RunReports.ForDataDirectory(Jobs.DataDirectory, Plugins, RepositoryStore);
+
+    /// <summary>The BorgStudio Server provider – it knows the paired servers; <c>null</c> where it is not registered.</summary>
+    public ServerProvider? Server => Plugins.FindRepositoryProvider(ServerProvider.ProviderId) as ServerProvider;
+
+    /// <summary>Queues a run's report (if the repository's provider wants it).</summary>
+    public void Report(Guid repositoryId, RunReport? report)
+    {
+        if (report is not null)
+            Reports.Add(repositoryId, report);
+    }
+
+    /// <summary>Delivers the waiting reports; problems only go to logs/reports.log (they are tried again later).</summary>
+    public async Task SendReportsAsync()
+    {
+        try
+        {
+            if (Reports.Pending > 0)
+                await Task.Run(() => Reports.SendAsync());
+        }
+        catch (Exception exception)
+        {
+            AppLog.Write("reports.log", $"Sending reports: {exception.Message}", Jobs.DataDirectory);
+        }
+    }
 }
 
 public partial class MainViewModel : ViewModelBase

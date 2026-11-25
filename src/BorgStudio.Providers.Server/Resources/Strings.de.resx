@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Texts of the BorgStudio Server provider, German. -->
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="DisplayName" xml:space="preserve">
+    <value>BorgStudio Server</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>Ihr eigener BorgStudio Server: einmal koppeln, dann Repositories dort auswählen oder anlegen; Schlüssel, Kontingent und Statistiken übernimmt der Server.</value>
+  </data>
+  <data name="ServerRequired" xml:space="preserve">
+    <value>Bitte einen gekoppelten Server wählen.</value>
+  </data>
+  <data name="RepositoryRequired" xml:space="preserve">
+    <value>Bitte ein Repository auf dem Server wählen oder einen Namen für ein neues eingeben.</value>
+  </data>
+  <data name="NotPaired" xml:space="preserve">
+    <value>BorgStudio ist nicht mit dem Server {0} gekoppelt. Koppeln unter Einstellungen oder im Editor des Repositorys.</value>
+  </data>
+  <data name="TokenLocked" xml:space="preserve">
+    <value>Der Zugang zum Server {0} liegt im Tresor, und der ist gesperrt.</value>
+  </data>
+  <data name="RepositoryNotFound" xml:space="preserve">
+    <value>Das Repository gibt es auf dem Server nicht (mehr), oder dieses Konto hat keinen Zugriff darauf.</value>
+  </data>
+  <data name="NotAServer" xml:space="preserve">
+    <value>{0} antwortet nicht wie ein BorgStudio Server. Bitte die Adresse prüfen (z. B. https://backup.example.org:8443).</value>
+  </data>
+  <data name="CertificateChanged" xml:space="preserve">
+    <value>Der Server {0} hat ein anderes Zertifikat vorgelegt als das bestätigte. Wurde es absichtlich erneuert, bitte neu koppeln; sonst könnte sich jemand dazwischengeschaltet haben.</value>
+  </data>
+  <data name="Timeout" xml:space="preserve">
+    <value>keine Antwort in der Zeit</value>
+  </data>
+  <data name="Unreachable" xml:space="preserve">
+    <value>Der Server {0} ist nicht erreichbar ({1}).</value>
+  </data>
+  <data name="Revoked" xml:space="preserve">
+    <value>Der Server {0} nimmt diesen Computer nicht mehr an: Die Kopplung wurde widerrufen. Bitte neu koppeln.</value>
+  </data>
+  <data name="ServerSays" xml:space="preserve">
+    <value>Der Server lehnt ab: {0}</value>
+  </data>
+</root>

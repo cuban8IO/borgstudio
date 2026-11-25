@@ -70,5 +70,6 @@
     <ProjectReference Include="..\BorgStudio.Providers.BorgBase\BorgStudio.Providers.BorgBase.csproj" />
     <ProjectReference Include="..\BorgStudio.Providers.Sftp\BorgStudio.Providers.Sftp.csproj" />
     <ProjectReference Include="..\BorgStudio.Providers.NetworkDisk\BorgStudio.Providers.NetworkDisk.csproj" />
+    <ProjectReference Include="..\BorgStudio.Providers.Server\BorgStudio.Providers.Server.csproj" />
   </ItemGroup>
 </Project>

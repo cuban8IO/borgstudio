@@ -1,0 +1,42 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:BorgStudio.App.ViewModels"
+        xmlns:res="using:BorgStudio.App.Resources"
+        x:Class="BorgStudio.App.Views.ServerPairingWindow"
+        x:DataType="vm:ServerPairingViewModel"
+        Title="{x:Static res:Strings.PairingTitle}"
+        Width="480" SizeToContent="Height" CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+    <StackPanel Margin="20" Spacing="14">
+        <TextBlock Text="{Binding ServerText}" FontWeight="SemiBold" TextWrapping="Wrap" />
+        <TextBlock Text="{x:Static res:Strings.PairingInstructions}" TextWrapping="Wrap" />
+        <Border Background="{StaticResource BpSurface2Brush}" BorderBrush="{StaticResource BpLineBrush}"
+                BorderThickness="1" CornerRadius="6" Padding="16" HorizontalAlignment="Center">
+            <SelectableTextBlock Text="{Binding UserCode}" FontSize="30" FontWeight="SemiBold" LetterSpacing="4"
+                                 FontFamily="Consolas,Menlo,monospace" HorizontalAlignment="Center" />
+        </Border>
+        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+            <Button Content="{x:Static res:Strings.PairingOpenBrowser}" Command="{Binding OpenBrowserCommand}" />
+            <Button Content="{x:Static res:Strings.PairingCopyCode}" Command="{Binding CopyCodeCommand}" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <ProgressBar IsIndeterminate="True" Width="60" IsVisible="{Binding IsWaiting}" VerticalAlignment="Center" />
+            <TextBlock Text="{Binding Status}" TextWrapping="Wrap" VerticalAlignment="Center" MaxWidth="360"
+                       Classes.problem="{Binding HasProblem}" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button Content="{x:Static res:Strings.Cancel}" Command="{Binding CancelCommand}" IsCancel="True"
+                    IsVisible="{Binding IsWaiting}" />
+            <Button Content="{x:Static res:Strings.Close}" Command="{Binding CancelCommand}" IsDefault="True"
+                    IsVisible="{Binding IsFinished}" />
+        </StackPanel>
+    </StackPanel>
+
+    <Window.Styles>
+        <Style Selector="TextBlock.problem">
+            <Setter Property="Foreground" Value="{DynamicResource ErrorForeground}" />
+        </Style>
+    </Window.Styles>
+</Window>

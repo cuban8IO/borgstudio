@@ -452,6 +452,57 @@
                                                          IsVisible="{Binding SelectedRepository.IsSsh}" />
                                 </Grid>
 
+                                <!-- BorgStudio Server -->
+                                <Border Classes="card" IsVisible="{Binding HasServerCard}">
+                                    <Panel DataContext="{Binding ServerCard}">
+                                    <StackPanel Spacing="6" x:DataType="vm:ServerRepositoryCard">
+                                        <Grid ColumnDefinitions="*,Auto,Auto">
+                                            <TextBlock Text="{x:Static res:Strings.ServerCardHeader}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                            <Button Grid.Column="1" Content="{x:Static res:Strings.ServerOpenInServer}" Command="{Binding OpenInServerCommand}"
+                                                    Margin="0,0,8,0" />
+                                            <Button Grid.Column="2" Content="{x:Static res:Strings.ServerRefresh}" Command="{Binding RefreshCommand}" />
+                                        </Grid>
+                                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                                            <Grid.Styles>
+                                                <Style Selector="TextBlock.label">
+                                                    <Setter Property="Opacity" Value="0.7" />
+                                                    <Setter Property="Margin" Value="0,2,16,2" />
+                                                </Style>
+                                                <Style Selector="SelectableTextBlock">
+                                                    <Setter Property="Margin" Value="0,2" />
+                                                    <Setter Property="TextWrapping" Value="Wrap" />
+                                                </Style>
+                                            </Grid.Styles>
+                                            <TextBlock Classes="label" Text="{x:Static res:Strings.ServerLabel}" />
+                                            <SelectableTextBlock Grid.Column="1" Text="{Binding ServerText}" />
+                                            <TextBlock Grid.Row="1" Classes="label" Text="{x:Static res:Strings.ServerRepositoryLabel}" />
+                                            <SelectableTextBlock Grid.Row="1" Grid.Column="1" Text="{Binding RepositoryText}" />
+                                            <TextBlock Grid.Row="2" Classes="label" Text="{x:Static res:Strings.ServerAccessLabel}" IsVisible="{Binding HasDetails}" />
+                                            <SelectableTextBlock Grid.Row="2" Grid.Column="1" Text="{Binding AccessText}" IsVisible="{Binding HasDetails}" />
+                                            <TextBlock Grid.Row="3" Classes="label" Text="{x:Static res:Strings.ServerUsageLabel}" IsVisible="{Binding HasDetails}" />
+                                            <StackPanel Grid.Row="3" Grid.Column="1" IsVisible="{Binding HasDetails}">
+                                                <SelectableTextBlock Text="{Binding UsageText}" />
+                                                <SelectableTextBlock Text="{Binding OwnerQuotaText}" FontSize="12" Opacity="0.8" IsVisible="{Binding HasOwnerQuota}" />
+                                            </StackPanel>
+                                            <TextBlock Grid.Row="4" Classes="label" Text="{x:Static res:Strings.ServerDatastore}" IsVisible="{Binding HasDetails}" />
+                                            <SelectableTextBlock Grid.Row="4" Grid.Column="1" Text="{Binding DatastoreText}" IsVisible="{Binding HasDetails}" />
+                                            <TextBlock Grid.Row="5" Classes="label" Text="{x:Static res:Strings.ServerParticipantsLabel}" IsVisible="{Binding HasDetails}" />
+                                            <SelectableTextBlock Grid.Row="5" Grid.Column="1" Text="{Binding ParticipantsText}" IsVisible="{Binding HasDetails}" />
+                                            <TextBlock Grid.Row="6" Classes="label" Text="{x:Static res:Strings.ServerLastAccessLabel}" IsVisible="{Binding HasLastAccess}" />
+                                            <SelectableTextBlock Grid.Row="6" Grid.Column="1" Text="{Binding LastAccessText}" IsVisible="{Binding HasLastAccess}" />
+                                        </Grid>
+                                        <TextBlock Text="{x:Static res:Strings.ServerMoving}" IsVisible="{Binding HasMoving}" TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource WarningBorder}" />
+                                        <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoading}" />
+                                        <StackPanel Spacing="6" IsVisible="{Binding HasProblem}">
+                                            <TextBlock Text="{Binding Problem}" TextWrapping="Wrap" Foreground="{DynamicResource ErrorForeground}" />
+                                            <Button Content="{x:Static res:Strings.ServerRepair}" Command="{Binding RepairCommand}" IsVisible="{Binding CanRepair}"
+                                                    Classes="accent" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                    </Panel>
+                                </Border>
+
                                 <!-- Storage -->
                                 <Border Classes="card">
                                     <StackPanel Spacing="6">

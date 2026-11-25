@@ -126,6 +126,16 @@ public async Task<StorageQuota?> GetQuotaAsync(StorageQuotaRequest request, Canc
     request.RunCommandAsync is { } run && await run("quota", cancellationToken) is { } output ? Parse(output) : null;
 ```
 
+### Reports of runs
+
+If the service wants to know what BorgStudio did with a repository (e.g. for statistics of its own), implement
+`IRunReportReceiver`. After every backup, check, prune and compact BorgStudio writes a `RunReport` – kind, outcome,
+start, duration and borg's figures – to a queue in its data folder and hands it to `SendReportAsync`. Throw
+`RepositoryUnavailableException` when it cannot be delivered now (the service is unreachable, credentials are not
+readable): the report stays queued and is tried again later, in order, per repository. Throw
+`RunReportRejectedException` when the service will never take it (e.g. the repository is gone there): it is dropped.
+The BorgStudio Server provider (`src/BorgStudio.Providers.Server`) is an example.
+
 ### Repositories that have to be found or connected first
 
 If a repository is not simply at the same place every time – a drive that may get another letter, a share to mount,

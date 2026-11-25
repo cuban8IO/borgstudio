@@ -59,8 +59,10 @@ public sealed record BackupRunResult(BackupRunSummary Summary, IReadOnlyList<str
 /// <param name="hooks">Runs the jobs' commands (a real shell unless a test says otherwise).</param>
 /// <param name="describeHook">Turns a failed command into the text kept with the run (localized by the app).</param>
 /// <param name="sourceDrives">Finds the drives of jobs backing up a <see cref="SourceDrive"/>; without it they are never found.</param>
+/// <param name="reports">Where backups, prunes and compacts are reported for providers that want to know (BorgStudio Server).</param>
 public sealed class BackupRunner(BorgClient borg, BackupJobStore jobs, DurationHistory durations, Func<BorgError, string> describe,
-    TimeProvider? time = null, HookRunner? hooks = null, Func<HookProblem, string>? describeHook = null, ISourceDriveLocator? sourceDrives = null)
+    TimeProvider? time = null, HookRunner? hooks = null, Func<HookProblem, string>? describeHook = null, ISourceDriveLocator? sourceDrives = null,
+    Repositories.RunReports? reports = null)
 {
     private readonly TimeProvider _time = time ?? TimeProvider.System;
 
@@ -142,6 +144,7 @@ public sealed class BackupRunner(BorgClient borg, BackupJobStore jobs, DurationH
                     };
                     failed = await RunAfterAsync(request, failed, report);
                     failed = Keep(failed);
+                    Report(job.RepositoryId, Repositories.RunReports.FromBackup(failed, null));
                     return new BackupRunResult(failed, []);
                 }
             }
@@ -167,6 +170,7 @@ public sealed class BackupRunner(BorgClient borg, BackupJobStore jobs, DurationH
         var repository = created.Value?.Repository is { } stats && summary.Cleanup?.FreedBytes is { } freed
             ? stats with { UniqueCompressedSize = Math.Max(0, stats.UniqueCompressedSize - freed) }
             : created.Value?.Repository;
+        Report(job.RepositoryId, Repositories.RunReports.FromBackup(summary, repository));
         return new BackupRunResult(summary, created.Value?.Warnings ?? [], repository, sourceRoot);
     }
 
@@ -238,6 +242,12 @@ public sealed class BackupRunner(BorgClient borg, BackupJobStore jobs, DurationH
         SkipReason = reason,
     };
 
+    private void Report(Guid repositoryId, RunReport? run)
+    {
+        if (run is not null)
+            reports?.Add(repositoryId, run);
+    }
+
     /// <summary>Keeps a run in the job's history and, by default, as its last run.</summary>
     public void Record(Guid jobId, BackupRunSummary run, bool asLastRun = true)
     {
@@ -255,8 +265,10 @@ public sealed class BackupRunner(BorgClient borg, BackupJobStore jobs, DurationH
 
         var pruneKey = DurationHistory.Key(job.RepositoryId, "prune");
         phase.Start(BackupRunPhase.Pruning, durations.Get(pruneKey));
+        var pruneStarted = _time.GetUtcNow();
         var pruned = await borg.PruneAsync(request.Borg, request.Location, BackupNames.ArchiveGlob(job.Name), retention.Arguments(),
             dryRun: false, request.Passphrase, request.Ssh, phase, cancellationToken);
+        Report(job.RepositoryId, CleanupReport(RunReportKind.Prune, pruneStarted, pruned.Error));
         if (!pruned.Succeeded)
             return Failed(pruned.Error!);
         durations.Record(pruneKey, phase.Elapsed);
@@ -266,13 +278,19 @@ public sealed class BackupRunner(BorgClient borg, BackupJobStore jobs, DurationH
 
         var compactKey = DurationHistory.Key(job.RepositoryId, "compact");
         phase.Start(BackupRunPhase.Compacting, durations.Get(compactKey));
+        var compactStarted = _time.GetUtcNow();
         var compacted = await borg.CompactAsync(request.Borg, request.Location, request.Ssh, phase, cancellationToken, request.Throttle);
+        Report(job.RepositoryId, CleanupReport(RunReportKind.Compact, compactStarted, compacted.Error));
         if (compacted.Succeeded)
             durations.Record(compactKey, phase.Elapsed);
         return compacted.Succeeded
             ? new CleanupSummary { PrunedArchives = count, FreedBytes = compacted.Value!.FreedBytes }
             : Failed(compacted.Error!) with { PrunedArchives = count };
     }
+
+    private RunReport CleanupReport(RunReportKind kind, DateTimeOffset started, BorgError? error) =>
+        Repositories.RunReports.Cleanup(kind, started, _time.GetUtcNow() - started, error?.Kind == BorgErrorKind.Cancelled,
+            error is null || error.Kind == BorgErrorKind.Cancelled ? null : describe(error));
 
     private CleanupSummary Failed(BorgError error) => error.Kind == BorgErrorKind.Cancelled
         ? new CleanupSummary { Cancelled = true }

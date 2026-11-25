@@ -97,6 +97,15 @@ public interface IDialogService
     /// <summary>Two archives compared; returns when the window is closed.</summary>
     Task ShowArchiveDiffAsync(ArchiveDiffViewModel diff);
 
+    /// <summary>Opens a web page in the browser.</summary>
+    Task OpenUrlAsync(string url) => Task.CompletedTask;
+
+    /// <summary>
+    /// Shows the pairing code of a BorgStudio Server until the user confirmed it on the server (or cancelled); the outcome
+    /// is in <see cref="ServerPairingViewModel.Result"/>. Without a window it only waits.
+    /// </summary>
+    Task ShowServerPairingAsync(ServerPairingViewModel pairing) => pairing.RunAsync();
+
     /// <summary>Brings the open window showing <paramref name="viewModel"/> to the front (from the list of running tasks).</summary>
     void BringToFront(object viewModel)
     {

@@ -82,6 +82,7 @@ public sealed class RepositoryChecks(AppServices services)
                 await notifications.NotifyCheckAsync(repository, record, services.Vault, cancellationToken);
                 foreach (var (job, test) in LastRestoreTests)
                     await notifications.NotifyRestoreTestAsync(job, repository.Name, test, services.Vault, cancellationToken);
+                await services.SendReportsAsync();
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
@@ -121,6 +122,7 @@ public sealed class RepositoryChecks(AppServices services)
                 services.Durations.Record(key, duration);
             record = ToRecord(depth, started, duration, result);
             // With an automatic check, the jobs' restore tests – while the repository is still locked for this.
+            services.Report(repository.Id, RunReports.FromCheck(record));
             if (automatic && record.IsVerdict)
             {
                 Store.Add(repository.Id, record with { Automatic = true });

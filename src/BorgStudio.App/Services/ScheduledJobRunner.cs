@@ -19,7 +19,8 @@ namespace BorgStudio.App.Services;
 public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess access)
 {
     private readonly BackupRunner _runner = new(services.BorgClient, services.Jobs, services.Durations, BorgTexts.Describe,
-        hooks: services.Hooks, describeHook: BorgTexts.HookProblem, sourceDrives: SourceDriveLocator.For(services));
+        hooks: services.Hooks, describeHook: BorgTexts.HookProblem, sourceDrives: SourceDriveLocator.For(services),
+        reports: services.Reports);
 
     private readonly SourceDriveLocator? _sourceDrives = SourceDriveLocator.For(services);
 
@@ -145,6 +146,8 @@ public sealed class ScheduledJobRunner(AppServices services, ScheduledAccess acc
                 await notifications.NotifyCheckAsync(storage.Repository, check, services.Vault);
             foreach (var (tested, test) in storage?.RestoreTests ?? [])
                 await notifications.NotifyRestoreTestAsync(tested, storage!.Repository.Name, test, services.Vault);
+            // The vault is open now: the BorgStudio Server's token can be read for the run's reports.
+            await services.SendReportsAsync();
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {

@@ -112,9 +112,12 @@ public partial class MainViewModel
             _services.BorgClient.DeleteArchivesAsync(borg, location, names, passphrase, ssh));
         if (!deleted || !await _services.Dialogs.ConfirmAsync(Strings.ArchiveCompactTitle, Strings.ArchiveCompactMessage, Strings.FreeSpace, Strings.Later))
             return;
+        var repositoryId = SelectedRepository!.Config.Id;
         await ChangeArchivesAsync(Strings.CleanupCompacting, async (borg, location, _, ssh) =>
         {
+            var started = DateTimeOffset.Now;
             var compacted = await _services.BorgClient.CompactAsync(borg, location, ssh, throttle: Throttle(SelectedRepository!.Config, location));
+            ReportCompact(repositoryId, started, compacted.Error);
             if (compacted.Value is { } result)
                 OnViewModelThread(() => ArchivesStatus = result.FreedBytes is { } freed
                     ? BorgTexts.Format(Strings.SpaceFreed, BorgTexts.Size(freed))

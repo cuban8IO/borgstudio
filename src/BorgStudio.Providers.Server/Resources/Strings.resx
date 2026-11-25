@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Texts of the BorgStudio Server provider, English (default). German: Strings.de.resx. -->
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="DisplayName" xml:space="preserve">
+    <value>BorgStudio Server</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>Your own BorgStudio Server: pair once, then pick or create repositories there; keys, quota and statistics are handled by the server.</value>
+  </data>
+  <data name="ServerRequired" xml:space="preserve">
+    <value>Please choose a paired server.</value>
+  </data>
+  <data name="RepositoryRequired" xml:space="preserve">
+    <value>Please choose a repository on the server or enter a name for a new one.</value>
+  </data>
+  <data name="NotPaired" xml:space="preserve">
+    <value>BorgStudio is not paired with the server {0}. Pair it under Settings or in the repository's editor.</value>
+  </data>
+  <data name="TokenLocked" xml:space="preserve">
+    <value>The access to the server {0} is in the vault, which is locked.</value>
+  </data>
+  <data name="RepositoryNotFound" xml:space="preserve">
+    <value>The repository does not exist on the server (any more), or this account has no access to it.</value>
+  </data>
+  <data name="NotAServer" xml:space="preserve">
+    <value>{0} does not answer like a BorgStudio Server. Check the address (e.g. https://backup.example.org:8443).</value>
+  </data>
+  <data name="CertificateChanged" xml:space="preserve">
+    <value>The server {0} presented a different certificate than the one confirmed. If it was renewed on purpose, pair again; otherwise someone may be in between.</value>
+  </data>
+  <data name="Timeout" xml:space="preserve">
+    <value>no answer in time</value>
+  </data>
+  <data name="Unreachable" xml:space="preserve">
+    <value>The server {0} cannot be reached ({1}).</value>
+  </data>
+  <data name="Revoked" xml:space="preserve">
+    <value>The server {0} no longer accepts this computer: its pairing was revoked. Pair it again.</value>
+  </data>
+  <data name="ServerSays" xml:space="preserve">
+    <value>The server refused: {0}</value>
+  </data>
+</root>

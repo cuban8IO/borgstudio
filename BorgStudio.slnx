@@ -11,6 +11,7 @@
     <Project Path="src/BorgStudio.Providers.Local/BorgStudio.Providers.Local.csproj" />
     <Project Path="src/BorgStudio.Providers.NetworkDisk/BorgStudio.Providers.NetworkDisk.csproj" />
     <Project Path="src/BorgStudio.Providers.RsyncNet/BorgStudio.Providers.RsyncNet.csproj" />
+    <Project Path="src/BorgStudio.Providers.Server/BorgStudio.Providers.Server.csproj" />
     <Project Path="src/BorgStudio.Providers.Sftp/BorgStudio.Providers.Sftp.csproj" />
     <Project Path="src/BorgStudio.Providers.Ssh/BorgStudio.Providers.Ssh.csproj" />
     <Project Path="src/BorgStudio.Providers.Usb/BorgStudio.Providers.Usb.csproj" />

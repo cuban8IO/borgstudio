@@ -145,6 +145,18 @@ public sealed class DialogService(Window owner) : IDialogService
         return file?.TryGetLocalPath();
     }
 
+    public async Task OpenUrlAsync(string url)
+    {
+        if (Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme is "https" or "http")
+            await owner.Launcher.LaunchUriAsync(uri);
+    }
+
+    public Task ShowServerPairingAsync(ServerPairingViewModel pairing)
+    {
+        pairing.Dialogs = this;
+        return new ServerPairingWindow { DataContext = pairing }.ShowDialog(owner);
+    }
+
     public Task<bool> ShowPublicKeyAsync(string title, string instructions, string publicKey) =>
         new PublicKeyWindow(title, instructions, publicKey).ShowDialog<bool>(owner);
 

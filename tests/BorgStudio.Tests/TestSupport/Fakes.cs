@@ -857,6 +857,12 @@ public sealed class TestServices : IDisposable
     /// <summary>BorgBase's GraphQL API.</summary>
     public FakeBorgBase BorgBaseApi { get; } = new();
 
+    /// <summary>A BorgStudio Server's interface.</summary>
+    public FakeBorgStudioServer ServerApi { get; } = new();
+
+    /// <summary>The paired BorgStudio Servers (tokens in <see cref="Vault"/>).</summary>
+    public BorgStudio.Providers.Server.ServerAccounts ServerAccounts { get; }
+
     /// <summary>The drives the USB provider searches and ejects.</summary>
     public FakeDrives Drives { get; } = new();
 
@@ -870,7 +876,10 @@ public sealed class TestServices : IDisposable
         Vault = new Vault(Directory.Combine("vault.json"), FastKdf, Time);
         Settings = new SettingsStore(Directory.Combine("settings.json"));
         Jobs = new BackupJobStore(Directory.Combine("jobs.json"));
-        var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new UsbProviderPlugin(Drives), new NetworkDiskProviderPlugin(NetworkDisks, Drives), new SshProviderPlugin(), new SftpProviderPlugin(), new HetznerProviderPlugin(), new RsyncNetProviderPlugin(), new BorgBaseProviderPlugin(BorgBaseApi)], "no-plugins-here");
+        ServerAccounts = new BorgStudio.Providers.Server.ServerAccounts(Directory.Combine("servers.json"),
+            new BorgStudio.App.Services.VaultServerSecrets(Vault, Secrets, Directory.Combine("scheduled-access.key")));
+        var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new UsbProviderPlugin(Drives), new NetworkDiskProviderPlugin(NetworkDisks, Drives), new SshProviderPlugin(), new SftpProviderPlugin(), new HetznerProviderPlugin(), new RsyncNetProviderPlugin(), new BorgBaseProviderPlugin(BorgBaseApi),
+            new BorgStudio.Providers.Server.ServerProviderPlugin(ServerAccounts, new BorgStudio.Providers.Server.ServerHttp(ServerApi))], "no-plugins-here");
         Archives = new ArchiveCache(Directory.Combine("archives"), Vault);
         Durations = new DurationHistory(Directory.Combine("durations.json"));
         System.IO.Directory.CreateDirectory(AppFolder);
@@ -976,6 +985,24 @@ public sealed class FakeDialogs : IDialogService
 
     /// <summary>What the text prompts were filled in with.</summary>
     public List<string> TextInitials { get; } = [];
+
+    /// <summary>Web pages opened in the browser.</summary>
+    public List<string> OpenedUrls { get; } = [];
+
+    public Task OpenUrlAsync(string url)
+    {
+        OpenedUrls.Add(url);
+        return Task.CompletedTask;
+    }
+
+    /// <summary>The pairings shown (they wait for the fake server's answer right away).</summary>
+    public List<ServerPairingViewModel> Pairings { get; } = [];
+
+    public Task ShowServerPairingAsync(ServerPairingViewModel pairing)
+    {
+        Pairings.Add(pairing);
+        return pairing.RunAsync();
+    }
 
     public Task<string?> AskTextAsync(string title, string prompt, string initial)
     {

@@ -133,6 +133,11 @@ public partial class MainViewModel
         if (_services.Vault.State != VaultState.Unlocked)
             return;
 
+        // The BorgStudio Server's token can be read now.
+        SendWaitingReports();
+        if (ServerCard is { HasProblem: true })
+            RefreshServerCard();
+
         foreach (var id in _pendingVaultRemovals)
             _services.Vault.RemovePassphrase(id);
         _pendingVaultRemovals.Clear();

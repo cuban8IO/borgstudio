@@ -113,6 +113,39 @@
             </StackPanel>
         </Border>
 
+        <!-- BorgStudio Servers -->
+        <Border Classes="card" IsVisible="{Binding SupportsServers}">
+            <StackPanel Spacing="10">
+                <TextBlock Text="{x:Static res:Strings.SettingsServersHeader}" FontSize="16" FontWeight="SemiBold" />
+                <TextBlock Text="{x:Static res:Strings.SettingsServersIntro}" TextWrapping="Wrap" Opacity="0.8" />
+                <TextBlock Text="{x:Static res:Strings.SettingsServersNone}" Opacity="0.7" IsVisible="{Binding HasNoPairedServers}" />
+                <ItemsControl ItemsSource="{Binding PairedServers}" IsVisible="{Binding HasPairedServers}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Spacing="8" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:PairedServerItem">
+                            <Grid ColumnDefinitions="*,Auto,Auto">
+                                <StackPanel Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding Details}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="{x:Static res:Strings.ServerRepair}" Command="{Binding RepairCommand}"
+                                        Margin="8,0,0,0" VerticalAlignment="Center" />
+                                <Button Grid.Column="2" Content="{x:Static res:Strings.SettingsServerUnpair}" Command="{Binding UnpairCommand}"
+                                        Margin="8,0,0,0" VerticalAlignment="Center" />
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Button Content="{x:Static res:Strings.ServerPairNew}" Command="{Binding PairServerCommand}" />
+                <TextBlock Text="{Binding ServerMessage}" TextWrapping="Wrap"
+                           IsVisible="{Binding ServerMessage, Converter={x:Static ObjectConverters.IsNotNull}}" />
+            </StackPanel>
+        </Border>
+
         <!-- Vault -->
         <Border Classes="card">
             <StackPanel Spacing="10">

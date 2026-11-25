@@ -106,6 +106,8 @@ public partial class MainViewModel
         var record = RepositoryChecks.ToRecord(depth, started, duration, result);
         CheckStore.Add(item.Config.Id, record);
         RefreshChecks(item.Config.Id);
+        _services.Report(item.Config.Id, RunReports.FromCheck(record));
+        _ = _services.SendReportsAsync();
         return record;
     }
 

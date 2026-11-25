@@ -10,8 +10,9 @@ The **[product page](https://borgstudio.cuban8io.net/)** shows what it does, the
 ## Features
 
 - **Repositories** in a local folder, on a USB or external drive, on a network disk (iSCSI, NVMe/TCP), on an SSH server,
-  on an SFTP-only server, on a Hetzner Storage Box, at rsync.net or at BorgBase –
-  create new ones or connect existing ones; borg runs natively or, on Windows, inside WSL.
+  on an SFTP-only server, on a Hetzner Storage Box, at rsync.net, at BorgBase or on your own
+  [BorgStudio Server](https://github.com/cuban8IO/borgstudio-server) – create new ones or connect existing ones; borg
+  runs natively or, on Windows, inside WSL.
 - **Backup jobs** with source folders – or a removable drive (USB stick, external disk, memory card), recognized
   wherever it is attached – exclusions and compression; live progress with upload speed and remaining time; cancelling
   keeps a checkpoint.
@@ -136,6 +137,18 @@ it follows the system language (English if that is neither) or the choice under 
   (the repository's, or the account's). Without a token the editor shows the public key to add in BorgBase's web
   interface, and the repository's address is entered by hand. The key gets full access (BorgStudio prunes and
   compacts).
+- **BorgStudio Server:** the computer is paired with the server once – BorgStudio shows a code and opens the server's
+  confirmation page in the browser; after signing in there and confirming, the access token is kept in the vault and
+  serves all repositories on that server. A certificate the system does not trust (a new server's self-signed one) is
+  shown with its SHA-256 fingerprint to compare with the server's *Settings → HTTPS*; once confirmed, only that
+  certificate is accepted. The editor lists the repositories the account may use (own and shared, with access and
+  usage) or creates a new one on the server (name, datastore, quota); BorgStudio registers its login key there and
+  trusts the host key the server reports. The repository's page shows the access, usage and quotas, who else uses it
+  and the last access (unless the server hides that) and opens it in the server's web interface. After every backup,
+  check, prune and compact BorgStudio reports borg's figures for the server's statistics; what cannot be delivered
+  (server unreachable, vault locked) is sent later. A pairing revoked on the server is shown with *Pair again*, which
+  registers the keys of this computer's repositories there again. *Settings → BorgStudio Server* lists the paired
+  servers; unpairing also ends the access on the server.
 - **USB or external drive:** the repository is found by its borg repository ID wherever the drive is attached – where
   it was last seen, at the same folder on every drive, then up to two levels deep on every drive (network drives
   included); a new place is remembered. A local repository on an external drive can be switched over in the editor
@@ -177,7 +190,8 @@ BorgStudio.slnx
 │   ├── BorgStudio.Providers.Usb        Built-in provider: USB or external drive
 │   ├── BorgStudio.Providers.NetworkDisk Built-in provider: network disk (iSCSI, NVMe/TCP)
 │   ├── BorgStudio.Providers.RsyncNet   Built-in provider: rsync.net
-│   └── BorgStudio.Providers.BorgBase   Built-in provider: BorgBase (GraphQL API)
+│   ├── BorgStudio.Providers.BorgBase   Built-in provider: BorgBase (GraphQL API)
+│   └── BorgStudio.Providers.Server     Built-in provider: BorgStudio Server (pairing, its API)
 ├── samples/
 │   └── BorgStudio.SamplePlugin         Example external plugin (not part of the release)
 ├── tests/
@@ -193,7 +207,7 @@ Shared build settings (target framework, nullable, version) live in `Directory.B
 ## Plugins
 
 Repository providers (local folder, USB drive, network disk, SSH server, SFTP server, Hetzner Storage Box, rsync.net,
-BorgBase, …) are plugins. Built-in providers use the same
+BorgBase, BorgStudio Server, …) are plugins. Built-in providers use the same
 API as external ones; see [docs/plugins.md](docs/plugins.md) for writing and installing a plugin.
 
 ## Build, test, run

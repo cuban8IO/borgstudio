@@ -3726,4 +3726,214 @@ Jobs: {1}</value>
   <data name="JobEditorDriveEject" xml:space="preserve">
     <value>Datenträger nach automatischen Läufen auswerfen (geplant oder beim Anstecken)</value>
   </data>
+  <data name="PairingTitle" xml:space="preserve">
+    <value>Mit BorgStudio Server koppeln</value>
+  </data>
+  <data name="PairingAddressPrompt" xml:space="preserve">
+    <value>Adresse des BorgStudio Servers (z. B. https://backup.example.org:8443):</value>
+  </data>
+  <data name="PairingAddressInvalid" xml:space="preserve">
+    <value>Das ist keine Server-Adresse (z. B. https://backup.example.org:8443).</value>
+  </data>
+  <data name="PairingUnencrypted" xml:space="preserve">
+    <value>{0} wird unverschlüsselt erreicht (http). Das Zugangs-Token ginge lesbar über das Netz – nur in einem vertrauenswürdigen Netz oder hinter einem Reverse-Proxy mit HTTPS verwenden.</value>
+  </data>
+  <data name="PairingContinue" xml:space="preserve">
+    <value>Fortfahren</value>
+  </data>
+  <data name="PairingCertificateTitle" xml:space="preserve">
+    <value>Zertifikat des Servers bestätigen</value>
+  </data>
+  <data name="PairingCertificate" xml:space="preserve">
+    <value>Das Zertifikat von {0} ist diesem Computer nicht bekannt (selbst signiert, wie bei einem neuen Server).
+
+Ausgestellt für: {1}
+Gültig bis: {2}
+SHA-256: {3}
+
+Bitte den Fingerabdruck mit dem unter Einstellungen → HTTPS auf dem Server vergleichen. Einmal bestätigt, nimmt BorgStudio vom Server nur noch dieses Zertifikat an.</value>
+  </data>
+  <data name="PairingCertificateChanged" xml:space="preserve">
+    <value>Das Zertifikat von {0} ist NICHT das zuvor bestätigte.
+
+Ausgestellt für: {1}
+Gültig bis: {2}
+SHA-256: {3}
+
+Nur bestätigen, wenn das Zertifikat absichtlich erneuert wurde (Vergleich unter Einstellungen → HTTPS auf dem Server). Sonst könnte sich jemand dazwischengeschaltet haben.</value>
+  </data>
+  <data name="PairingCertificateTrust" xml:space="preserve">
+    <value>Diesem Zertifikat vertrauen</value>
+  </data>
+  <data name="PairingServer" xml:space="preserve">
+    <value>Server: {0}</value>
+  </data>
+  <data name="PairingInstructions" xml:space="preserve">
+    <value>Melden Sie sich auf der Seite des Servers im Browser an und bestätigen Sie diesen Computer. Die Seite zeigt denselben Code:</value>
+  </data>
+  <data name="PairingOpenBrowser" xml:space="preserve">
+    <value>Im Browser öffnen</value>
+  </data>
+  <data name="PairingCopyCode" xml:space="preserve">
+    <value>Code kopieren</value>
+  </data>
+  <data name="PairingWaiting" xml:space="preserve">
+    <value>Warte auf die Bestätigung am Server …</value>
+  </data>
+  <data name="PairingDenied" xml:space="preserve">
+    <value>Die Kopplung wurde am Server abgelehnt.</value>
+  </data>
+  <data name="PairingExpired" xml:space="preserve">
+    <value>Der Code ist abgelaufen. Bitte die Kopplung neu starten.</value>
+  </data>
+  <data name="UnpairTitle" xml:space="preserve">
+    <value>Server entkoppeln</value>
+  </data>
+  <data name="UnpairMessage" xml:space="preserve">
+    <value>Von {0} entkoppeln? Der Zugang dieses Computers zum Server endet (auch am Server, wenn er erreichbar ist).</value>
+  </data>
+  <data name="UnpairUsed" xml:space="preserve">
+    <value>Von {0} entkoppeln? {1} Repositories dieses Computers liegen dort: Sicherungen dorthin funktionieren erst wieder nach einer neuen Kopplung. Die Repositories und ihre Archive bleiben auf dem Server.</value>
+  </data>
+  <data name="UnpairConfirm" xml:space="preserve">
+    <value>Entkoppeln</value>
+  </data>
+  <data name="ServerLabel" xml:space="preserve">
+    <value>Server</value>
+  </data>
+  <data name="ServerNoneYet" xml:space="preserve">
+    <value>Noch kein Server gekoppelt.</value>
+  </data>
+  <data name="ServerPairNew" xml:space="preserve">
+    <value>Server koppeln …</value>
+  </data>
+  <data name="ServerRepair" xml:space="preserve">
+    <value>Neu koppeln</value>
+  </data>
+  <data name="ServerRetry" xml:space="preserve">
+    <value>Erneut versuchen</value>
+  </data>
+  <data name="ServerRepositoryLabel" xml:space="preserve">
+    <value>Repository</value>
+  </data>
+  <data name="ServerNoRepositories" xml:space="preserve">
+    <value>Dieses Konto hat noch keine Repositories auf dem Server. Mit „Neues Repository anlegen“ wird eines angelegt.</value>
+  </data>
+  <data name="ServerCreateTarget" xml:space="preserve">
+    <value>Wo</value>
+  </data>
+  <data name="ServerNewRepository" xml:space="preserve">
+    <value>Neues Repository auf dem Server</value>
+  </data>
+  <data name="ServerNewName" xml:space="preserve">
+    <value>Name auf dem Server</value>
+  </data>
+  <data name="ServerNewNameHint" xml:space="preserve">
+    <value>Leer: der Name oben. Buchstaben, Ziffern, Punkt, Binde- und Unterstrich.</value>
+  </data>
+  <data name="ServerDatastore" xml:space="preserve">
+    <value>Datenspeicher</value>
+  </data>
+  <data name="ServerQuota" xml:space="preserve">
+    <value>Kontingent (optional)</value>
+  </data>
+  <data name="ServerQuotaHint" xml:space="preserve">
+    <value>Wie viel das Repository auf dem Server belegen darf; leer: keine eigene Grenze.</value>
+  </data>
+  <data name="ServerQuotaInvalid" xml:space="preserve">
+    <value>Das Kontingent ist keine Zahl.</value>
+  </data>
+  <data name="ServerAllowance" xml:space="preserve">
+    <value>Ihr Kontingent auf dem Server: {0} von {1} belegt.</value>
+  </data>
+  <data name="ServerMayNotCreate" xml:space="preserve">
+    <value>Dieses Konto darf auf dem Server keine Repositories anlegen; ein Administrator kann eines anlegen und freigeben.</value>
+  </data>
+  <data name="ServerChooseServer" xml:space="preserve">
+    <value>Bitte zuerst einen Server koppeln.</value>
+  </data>
+  <data name="ServerSummary" xml:space="preserve">
+    <value>Auf {0}: {1}</value>
+  </data>
+  <data name="ServerAccessOwner" xml:space="preserve">
+    <value>Besitzer</value>
+  </data>
+  <data name="ServerAccessFull" xml:space="preserve">
+    <value>Vollzugriff</value>
+  </data>
+  <data name="ServerAccessAppendOnly" xml:space="preserve">
+    <value>Nur anhängen</value>
+  </data>
+  <data name="ServerUsageOf" xml:space="preserve">
+    <value>{0} von {1}</value>
+  </data>
+  <data name="ServerCardHeader" xml:space="preserve">
+    <value>BorgStudio Server</value>
+  </data>
+  <data name="ServerOpenInServer" xml:space="preserve">
+    <value>Im Server öffnen</value>
+  </data>
+  <data name="ServerRefresh" xml:space="preserve">
+    <value>Aktualisieren</value>
+  </data>
+  <data name="ServerAccessLabel" xml:space="preserve">
+    <value>Zugriff</value>
+  </data>
+  <data name="ServerUsageLabel" xml:space="preserve">
+    <value>Belegt</value>
+  </data>
+  <data name="ServerUsageQuota" xml:space="preserve">
+    <value>{0} von {1} ({2} %)</value>
+  </data>
+  <data name="ServerUsageNoQuota" xml:space="preserve">
+    <value>{0} (kein eigenes Kontingent)</value>
+  </data>
+  <data name="ServerOwnerQuota" xml:space="preserve">
+    <value>Alle Repositories von {0}: {1} von {2}</value>
+  </data>
+  <data name="ServerDatastoreFree" xml:space="preserve">
+    <value>{0} ({1} frei)</value>
+  </data>
+  <data name="ServerParticipantsLabel" xml:space="preserve">
+    <value>Genutzt von</value>
+  </data>
+  <data name="ServerParticipantsHidden" xml:space="preserve">
+    <value>Der Server zeigt nicht, wer es noch nutzt.</value>
+  </data>
+  <data name="ServerLastAccessLabel" xml:space="preserve">
+    <value>Letzter Zugriff</value>
+  </data>
+  <data name="ServerLastAccess" xml:space="preserve">
+    <value>{0} von {1} ({2})</value>
+  </data>
+  <data name="ServerNeverAccessed" xml:space="preserve">
+    <value>noch keiner</value>
+  </data>
+  <data name="ServerMoving" xml:space="preserve">
+    <value>Der Server verschiebt dieses Repository gerade auf einen anderen Datenspeicher; Sicherungen warten, bis das fertig ist.</value>
+  </data>
+  <data name="SettingsServersHeader" xml:space="preserve">
+    <value>BorgStudio Server</value>
+  </data>
+  <data name="SettingsServersIntro" xml:space="preserve">
+    <value>Server, mit denen dieser Computer gekoppelt ist. Eine Kopplung gilt für alle Repositories auf einem Server; der Zugang liegt im Tresor.</value>
+  </data>
+  <data name="SettingsServersNone" xml:space="preserve">
+    <value>Kein Server gekoppelt.</value>
+  </data>
+  <data name="SettingsServerDetails" xml:space="preserve">
+    <value>Gekoppelt als {0} am {1}  ·  Repositories: {2}</value>
+  </data>
+  <data name="SettingsServerPinned" xml:space="preserve">
+    <value>Zertifikat bestätigt</value>
+  </data>
+  <data name="SettingsServerUnpair" xml:space="preserve">
+    <value>Entkoppeln</value>
+  </data>
+  <data name="SettingsServerPaired" xml:space="preserve">
+    <value>Mit {0} gekoppelt als {1}.</value>
+  </data>
+  <data name="SettingsServerUnpaired" xml:space="preserve">
+    <value>Von {0} entkoppelt.</value>
+  </data>
 </root>

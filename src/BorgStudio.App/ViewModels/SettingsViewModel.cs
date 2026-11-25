@@ -4,6 +4,7 @@ using BorgStudio.App.Services;
 using BorgStudio.Core.Security;
 using BorgStudio.Core.Settings;
 using BorgStudio.Core.Trigger;
+using BorgStudio.Providers.Server;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -50,6 +51,64 @@ public sealed partial class SettingsViewModel : ViewModelBase
         _restoreTestSizeOnly = restoreTest.Comparison == Core.Checks.RestoreTestComparison.SizeOnly;
         main.PropertyChanged += OnMainPropertyChanged;
         Refresh();
+        RefreshServers();
+    }
+
+    // --- BorgStudio Servers ---
+
+    /// <summary>The servers this computer is paired with.</summary>
+    public System.Collections.ObjectModel.ObservableCollection<PairedServerItem> PairedServers { get; } = [];
+
+    public bool HasPairedServers => PairedServers.Count > 0;
+
+    public bool HasNoPairedServers => PairedServers.Count == 0;
+
+    /// <summary>Whether BorgStudio Servers are known at all (the provider is built in).</summary>
+    public bool SupportsServers => _main.Services.Server is not null;
+
+    [ObservableProperty]
+    public partial string? ServerMessage { get; private set; }
+
+    private void RefreshServers()
+    {
+        PairedServers.Clear();
+        if (_main.Services.Server is { } provider)
+            foreach (var account in provider.Accounts.All())
+                PairedServers.Add(new PairedServerItem(account, RepairServerAsync, UnpairServerAsync,
+                    _main.ServerConnections().RepositoriesOn(account.Url).Count));
+        OnPropertyChanged(nameof(HasPairedServers));
+        OnPropertyChanged(nameof(HasNoPairedServers));
+    }
+
+    [RelayCommand]
+    private async Task PairServerAsync()
+    {
+        ServerMessage = null;
+        var outcome = await _main.ServerConnections(Dialogs).PairNewAsync();
+        AfterPairing(outcome);
+    }
+
+    private async Task RepairServerAsync(PairedServerItem item)
+    {
+        ServerMessage = null;
+        AfterPairing(await _main.ServerConnections(Dialogs).PairAsync(item.Account.Url));
+    }
+
+    private void AfterPairing(PairingOutcome outcome)
+    {
+        RefreshServers();
+        ServerMessage = outcome.Problem
+            ?? (outcome.Account is { } account ? BorgTexts.Format(Strings.SettingsServerPaired, account.ToString(), account.UserName) : null);
+        if (outcome.Account is not null)
+            _main.SendWaitingReports();
+    }
+
+    private async Task UnpairServerAsync(PairedServerItem item)
+    {
+        ServerMessage = null;
+        if (await _main.ServerConnections(Dialogs).UnpairAsync(item.Account))
+            ServerMessage = BorgTexts.Format(Strings.SettingsServerUnpaired, item.Account.ToString());
+        RefreshServers();
     }
 
     /// <summary>Where the PIN dialogs appear; set by the settings window.</summary>
@@ -444,4 +503,22 @@ public sealed partial class SettingsViewModel : ViewModelBase
         IsUnlocked = state == VaultState.Unlocked;
         VaultStatus = BorgTexts.VaultState(state);
     }
+}
+
+/// <summary>A paired BorgStudio Server in the settings.</summary>
+public sealed partial class PairedServerItem(ServerAccount account, Func<PairedServerItem, Task> repair, Func<PairedServerItem, Task> unpair, int repositories)
+{
+    public ServerAccount Account { get; } = account;
+
+    public string Title => Account.ToString();
+
+    /// <summary>"Paired as admin on 25.11.2026 · 2 repositories · certificate confirmed".</summary>
+    public string Details => BorgTexts.Format(Strings.SettingsServerDetails, Account.UserName, Account.PairedAt.ToLocalTime().ToString("d"), repositories)
+        + (Account.PinnedCertificate is null ? "" : "  ·  " + Strings.SettingsServerPinned);
+
+    [RelayCommand]
+    private Task RepairAsync() => repair(this);
+
+    [RelayCommand]
+    private Task UnpairAsync() => unpair(this);
 }

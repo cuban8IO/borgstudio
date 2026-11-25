@@ -100,9 +100,11 @@ public partial class MainViewModel
         using var cancellation = new CancellationTokenSource();
         // Progress after borg has finished is ignored (the panel is stopped then).
         var progress = new ViewModelProgress<double>(this, fraction => Work.Report(fraction));
+        var started = DateTimeOffset.Now;
         var result = await RunAsync(item, Strings.CleanupCompacting, "compact",
             () => _services.BorgClient.CompactAsync(borg, location, ssh.Access, progress, cancellation.Token, Throttle(item.Config, location)),
             cancellation.Cancel);
+        ReportCompact(item.Config.Id, started, result.Error);
 
         if (result.Value is { } compacted)
             item.ShowResult(compacted.FreedBytes is { } freed ? BorgTexts.Format(Strings.SpaceFreed, BorgTexts.Size(freed)) : Strings.SpaceFreedNoSize,

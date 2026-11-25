@@ -29,6 +29,7 @@
     <ProjectReference Include="..\..\src\BorgStudio.Providers.BorgBase\BorgStudio.Providers.BorgBase.csproj" />
     <ProjectReference Include="..\..\src\BorgStudio.Providers.Sftp\BorgStudio.Providers.Sftp.csproj" />
     <ProjectReference Include="..\..\src\BorgStudio.Providers.NetworkDisk\BorgStudio.Providers.NetworkDisk.csproj" />
+    <ProjectReference Include="..\..\src\BorgStudio.Providers.Server\BorgStudio.Providers.Server.csproj" />
   </ItemGroup>
 
   <!-- The sample plugin's build output, as it would be installed: test output/plugins/BorgStudio.SamplePlugin/ -->

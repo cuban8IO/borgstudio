@@ -25,6 +25,7 @@ using BorgStudio.Providers.Hetzner;
 using BorgStudio.Providers.Local;
 using BorgStudio.Providers.NetworkDisk;
 using BorgStudio.Providers.RsyncNet;
+using BorgStudio.Providers.Server;
 using BorgStudio.Providers.Sftp;
 using BorgStudio.Providers.Ssh;
 using BorgStudio.Providers.Usb;
@@ -95,6 +96,12 @@ public partial class App : Application
         drives.Tick += (_, _) => viewModel.RefreshOtherRuns();
         drives.Start();
 
+        // Reports for BorgStudio Servers that could not be delivered yet: now and every hour.
+        viewModel.SendWaitingReports();
+        var reports = new DispatcherTimer { Interval = TimeSpan.FromHours(1) };
+        reports.Tick += (_, _) => viewModel.SendWaitingReports();
+        reports.Start();
+
         // The incoming webhook (if switched on, in background mode); it ends with the app.
         viewModel.ApplyTrigger();
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
@@ -109,14 +116,18 @@ public partial class App : Application
     /// <summary>The real services – for the window, and for runs without window (scheduled backups).</summary>
     public static AppServices CreateServices(IDialogService dialogs)
     {
-        // Built-in providers use the same plugin API as external ones.
-        var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new UsbProviderPlugin(), new NetworkDiskProviderPlugin(), new SshProviderPlugin(), new SftpProviderPlugin(), new HetznerProviderPlugin(), new RsyncNetProviderPlugin(), new BorgBaseProviderPlugin()], AppPaths.PluginsDirectory);
         var vault = Vault.CreateDefault();
+        var keychain = SecretStores.CreateDefault();
+        // The servers this computer is paired with; their tokens are in the vault.
+        var servers = new ServerAccounts(Path.Combine(AppPaths.DataDirectory, "servers.json"),
+            new VaultServerSecrets(vault, keychain, Path.Combine(AppPaths.DataDirectory, "scheduled-access.key")));
+        // Built-in providers use the same plugin API as external ones.
+        var plugins = PluginCatalog.Load([new LocalProviderPlugin(), new UsbProviderPlugin(), new NetworkDiskProviderPlugin(), new SshProviderPlugin(), new SftpProviderPlugin(), new HetznerProviderPlugin(), new RsyncNetProviderPlugin(), new BorgBaseProviderPlugin(), new ServerProviderPlugin(servers)], AppPaths.PluginsDirectory);
         return new AppServices(
             BorgDetector.CreateDefault(),
             plugins,
             RepositoryStore.CreateDefault(),
-            SecretStores.CreateDefault(),
+            keychain,
             BorgClient.CreateDefault(),
             new SshNetService(),
             SshKeyStore.CreateDefault(),
